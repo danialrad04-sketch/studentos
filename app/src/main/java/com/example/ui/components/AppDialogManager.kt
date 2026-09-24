@@ -26,6 +26,7 @@ import com.example.ui.models.AppTab
 import com.example.ui.models.ExamItem
 import com.example.ui.models.SystemNotification
 import com.example.ui.models.ThemeMode
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppDialogManager(
@@ -50,6 +51,7 @@ fun AppDialogManager(
     onSendDeviceTestNotif: () -> Unit,
     onRequestNotificationPermission: () -> Unit = {}
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val dismiss = { onUpdateDialogState(AppDialogState.None) }
 
     val systemDark = isSystemInDarkTheme()
@@ -126,7 +128,7 @@ fun AppDialogManager(
                     if (activity == null) {
                         Toast.makeText(context, "امکان باز کردن ورود گوگل در این محیط وجود ندارد.", Toast.LENGTH_LONG).show()
                     } else {
-                        rememberCoroutineScope().launch {
+                        coroutineScope.launch {
                             GoogleSignInManager.getIdToken(activity)
                                 .fold(
                                     onSuccess = { idToken ->
