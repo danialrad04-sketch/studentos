@@ -299,8 +299,6 @@ fun MainAppScreen(
                                             onResult(false, "ورود با گوگل ناموفق بود.")
                                         }
                                     )
-                                        }
-                                    )
                             }
                         }
                     }
