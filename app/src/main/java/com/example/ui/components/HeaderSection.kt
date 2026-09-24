@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FlashOn
@@ -65,6 +66,9 @@ fun HeaderSection(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     onToggleTheme: () -> Unit,
     onOpenProfile: () -> Unit,
+    accountEmail: String? = null,
+    isAccountConnected: Boolean = false,
+    onOpenAccount: () -> Unit = {},
     onOpenNotifications: () -> Unit,
     onOpenAndroidInfo: () -> Unit,
     onResetDefaults: () -> Unit,
@@ -143,6 +147,28 @@ fun HeaderSection(
                     )
                 }
                 Spacer(modifier = Modifier.height(1.dp))
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f))
+                        .tactileClickable { onOpenAccount() }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = if (isAccountConnected) "حساب متصل • همگام‌سازی فعال" else "حساب مهمان • فقط روی دستگاه",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(modifier = Modifier.height(1.dp))
                 Text(
                     text = termDisplayText,
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
@@ -183,6 +209,21 @@ fun HeaderSection(
                     onDismissRequest = { showMenu = false },
                     shape = RoundedCornerShape(18.dp)
                 ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = "☁️ حساب کاربری و همگام‌سازی",
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                            )
+                        },
+                        onClick = {
+                            showMenu = false
+                            onOpenAccount()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.AccountCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                        }
+                    )
                     DropdownMenuItem(
                         text = {
                             Text(
