@@ -68,7 +68,10 @@ object BackendSyncManager {
         try {
             val response = client.api.pushDataType(dataType, SyncPushRequest(payload, updatedAt))
             when {
-                response.isSuccessful -> Result.success(Unit)
+                response.isSuccessful -> {
+                    dao.upsertSyncMetadata(SyncMetadataEntity(dataType, updatedAt, dirty = false))
+                    Result.success(Unit)
+                }
                 response.code() == 409 -> pullDataType(context, dataType)
                 else -> Result.failure(Exception("HTTP ${response.code()}"))
             }
@@ -90,7 +93,7 @@ object BackendSyncManager {
             when (dataType) {
                 "semesters" -> {
                     val t = Types.newParameterizedType(List::class.java, SemesterEntity::class.java)
-                    dao.clearSemesters(); decode<List<SemesterEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertSemesters(it) }
+                    dao.getAllSemestersSync().forEach { dao.deleteSemester(it.id) }; decode<List<SemesterEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertSemesters(it) }
                 }
                 "courses" -> {
                     val t = Types.newParameterizedType(List::class.java, CourseEntity::class.java)
@@ -104,7 +107,7 @@ object BackendSyncManager {
                 }
                 "attendance" -> {
                     val t = Types.newParameterizedType(List::class.java, AttendanceEntity::class.java)
-                    dao.clearAttendance(); decode<List<AttendanceEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertAttendances(it) }
+                    dao.clearAttendance(); decode<List<AttendanceEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertAllAttendance(it) }
                 }
                 "grades" -> {
                     val t = Types.newParameterizedType(List::class.java, GradeEntity::class.java)
@@ -116,14 +119,14 @@ object BackendSyncManager {
                 }
                 "tasks" -> {
                     val t = Types.newParameterizedType(List::class.java, TaskEntity::class.java)
-                    dao.clearTasks(); decode<List<TaskEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertTasks(it) }
+                    dao.clearTasks(); decode<List<TaskEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertAllTasks(it) }
                 }
                 "notes" -> {
                     val t = Types.newParameterizedType(List::class.java, NoteEntity::class.java)
-                    dao.clearNotes(); decode<List<NoteEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertNotes(it) }
+                    dao.getAllNotesSync().forEach { dao.deleteNote(it.id) }; decode<List<NoteEntity>>(payload, t)?.forEach { dao.insertNote(it) }
                 }
             }
-            dao.upsertSyncMetadata(SyncMetadataEntity(dataType, remoteUpdatedAt))
+            dao.upsertSyncMetadata(SyncMetadataEntity(dataType, remoteUpdatedAt, dirty = false))
         }
 
     suspend fun pullDataType(context: Context, dataType: String): Result<Unit> = withContext(Dispatchers.IO) {
@@ -143,7 +146,7 @@ object BackendSyncManager {
                     ?: return@withContext Result.success(Unit)
                 BackendSyncScheduler.withSuppressedSync {
                     dao.insertProfile(profile.copy(id = 1, updatedAt = body.updatedAt))
-                    dao.upsertSyncMetadata(SyncMetadataEntity("profile", body.updatedAt))
+                    dao.upsertSyncMetadata(SyncMetadataEntity("profile", body.updatedAt, dirty = false))
                 }
             } else {
                 applyListSnapshot(context, dataType, body.payload, body.updatedAt)
