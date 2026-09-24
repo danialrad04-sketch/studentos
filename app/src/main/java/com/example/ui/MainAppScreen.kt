@@ -273,12 +273,6 @@ fun MainAppScreen(
                     onSignUpBackend = { name, email, pass, onResult ->
                         studentViewModel.signUpWithBackend(name, email, pass, onResult)
                     },
-                    onSignInFirebase = { email, pass, onResult ->
-                        studentViewModel.signInWithEmail(email, pass, onResult)
-                    },
-                    onSignUpFirebase = { name, email, pass, onResult ->
-                        studentViewModel.signUpWithEmail(name, email, pass, onResult)
-                    },
                     onForgotPassword = { email ->
                         studentViewModel.sendPasswordResetEmail(email) { ok, msg ->
                             Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
@@ -422,6 +416,9 @@ fun MainAppScreen(
                                         studentViewModel.toggleThemeQuickly()
                                     },
                                     onOpenProfile = { dialogState = AppDialogState.Profile },
+                                    accountEmail = currentUser.email,
+                                    isAccountConnected = !currentUser.isGuest,
+                                    onOpenAccount = { dialogState = AppDialogState.Auth },
                                     onOpenNotifications = { dialogState = AppDialogState.Notifications },
                                     onOpenAndroidInfo = { dialogState = AppDialogState.ApkInfo },
                                     onResetDefaults = {
