@@ -555,10 +555,10 @@ class StudentViewModel @JvmOverloads constructor(
 
     private fun triggerCloudSync(dataType: String? = null) {
         try {
-            com.example.data.cloud.worker.FirestoreSyncWorker.triggerImmediateSync(application)
+            // Node.js/PostgreSQL is the single data-sync backend.
             com.example.data.cloud.worker.BackendSyncWorker.triggerImmediateSync(application, dataType)
         } catch (e: Throwable) {
-            android.util.Log.w("StudentViewModel", "Failed to trigger cloud sync: ${e.message}")
+            android.util.Log.w("StudentViewModel", "Failed to trigger backend sync: ${e.message}")
         }
     }
 
@@ -1189,11 +1189,7 @@ class StudentViewModel @JvmOverloads constructor(
 
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             val db = repository.database ?: AppDatabase.getDatabase(application, viewModelScope)
-            val result = com.example.data.cloud.FirestoreSyncManager.restoreAllDataFromCloud(
-                userId = user.uid,
-                dao = db.studentDao(),
-                curriculumDao = db.curriculumDao()
-            )
+            val result = com.example.data.cloud.BackendSyncManager.pullAllData(application)
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                 if (result.isSuccess) {
                     val count = result.getOrNull() ?: 0
@@ -1386,31 +1382,24 @@ class StudentViewModel @JvmOverloads constructor(
                 val exams = dao.getAllExamsSync()
                 val notes = dao.getAllNotesSync()
 
-                // 1. Push local changes to cloud
-                val pushResult = com.example.data.cloud.FirestoreSyncManager.syncAllDataToCloud(
-                    userId = user.uid,
-                    profile = profile,
-                    courses = courses,
-                    grades = grades,
-                    tasks = tasks,
-                    attendance = attendance,
-                    exams = exams,
-                    notes = notes
-                )
+                val pushResult = com.example.data.cloud.BackendSyncManager.pushAllData(application)
 
-                // 2. Pull down any remote changes from cloud
-                val pullResult = com.example.data.cloud.FirestoreSyncManager.restoreAllDataFromCloud(
-                    userId = user.uid,
-                    dao = dao,
-                    curriculumDao = db.curriculumDao()
-                )
-
-                if (pushResult.isSuccess || pullResult.isSuccess) {
-                    onResult(true, "همگام‌سازی دوطرفه ابری با موفقیت کامل شد. ✨")
+                if (pushResult.isSuccess) {
+                    val restoreResult = com.example.data.cloud.BackendSyncManager.pullAllData(application)
+                    val success = restoreResult.isSuccess
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        onResult(
+                            success,
+                            if (success) "همگام‌سازی با سرور اختصاصی با موفقیت انجام شد."
+                            else "ارسال انجام شد، اما دریافت نهایی از سرور ناموفق بود."
+                        )
+                    }
                 } else {
-                    val errMsg = pushResult.exceptionOrNull()?.message ?: pullResult.exceptionOrNull()?.message ?: "خطای ناشناخته شبکه"
-                    onResult(false, "خطا در همگام‌سازی: $errMsg")
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        onResult(false, "ارسال اطلاعات به سرور اختصاصی ناموفق بود.")
+                    }
                 }
+
             } catch (e: Exception) {
                 android.util.Log.e("StudentViewModel", "Manual cloud sync failed: ${e.message}", e)
                 onResult(false, "خطا در اتصال به سرور: ${e.localizedMessage}")
