@@ -711,7 +711,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_8_9 = object : Migration(8, 9) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("CREATE TABLE IF NOT EXISTS " + char(96) + "sync_metadata" + char(96) + " (" + char(96) + "dataType" + char(96) + " TEXT NOT NULL PRIMARY KEY, " + char(96) + "updatedAt" + char(96) + " INTEGER NOT NULL)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `sync_metadata` (`dataType` TEXT NOT NULL PRIMARY KEY, `updatedAt` INTEGER NOT NULL)")
             }
         }
 
