@@ -44,7 +44,7 @@ jobs:
 
       - name: Build signed APK and AAB
         env:
-          KEYSTORE_PATH: app/studentos-release.jks
+          KEYSTORE_PATH: studentos-release.jks
           STORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
