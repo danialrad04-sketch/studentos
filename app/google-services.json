@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "745175701566",
+    "project_id": "dani-87c77",
+    "storage_bucket": "dani-87c77.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:745175701566:android:122594b14468ba56ac996f",
+        "android_client_info": {
+          "package_name": "com.aistudio.studentos.appvzk"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "745175701566-eu2g718m66rhivfouoc4senbhat53aqh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aistudio.studentos.appvzk",
+            "certificate_hash": "6521402dd8fc5744fa49b198ef21374ffd63d25c"
+          }
+        },
+        {
+          "client_id": "745175701566-5q7j89fpe9hdt9mmtga4dfh57qq56odp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpT-tZVPRf_KkQxJU8GyWSHLTzeXDrdA0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "745175701566-5q7j89fpe9hdt9mmtga4dfh57qq56odp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
