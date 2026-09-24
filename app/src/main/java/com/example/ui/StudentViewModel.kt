@@ -1286,9 +1286,9 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    fun signInWithGoogle(onResult: (Boolean, String) -> Unit) {
+    fun signInWithGoogle(idToken: String, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            when (val res = authManager.signInWithGoogle()) {
+            when (val res = authManager.signInWithGoogle(idToken)) {
                 is com.example.domain.model.AuthResult.Success -> {
                     addNotification("ورود گوگل", "اتصال به حساب گوگل با موفقیت برقرار شد.")
                     _userMessage.emit(res.message)
