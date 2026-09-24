@@ -69,7 +69,7 @@ object BackendSyncManager {
             val response = client.api.pushDataType(dataType, SyncPushRequest(payload, updatedAt))
             when {
                 response.isSuccessful -> {
-                    dao.upsertSyncMetadata(SyncMetadataEntity(dataType, updatedAt, dirty = false))
+                    dao.upsertSyncMetadata(SyncMetadataEntity(dataType, updatedAt))
                     Result.success(Unit)
                 }
                 response.code() == 409 -> pullDataType(context, dataType)
@@ -126,7 +126,7 @@ object BackendSyncManager {
                     dao.getAllNotesSync().forEach { dao.deleteNote(it.id) }; decode<List<NoteEntity>>(payload, t)?.forEach { dao.insertNote(it) }
                 }
             }
-            dao.upsertSyncMetadata(SyncMetadataEntity(dataType, remoteUpdatedAt, dirty = false))
+            dao.upsertSyncMetadata(SyncMetadataEntity(dataType, remoteUpdatedAt))
         }
 
     suspend fun pullDataType(context: Context, dataType: String): Result<Unit> = withContext(Dispatchers.IO) {
@@ -146,7 +146,7 @@ object BackendSyncManager {
                     ?: return@withContext Result.success(Unit)
                 BackendSyncScheduler.withSuppressedSync {
                     dao.insertProfile(profile.copy(id = 1, updatedAt = body.updatedAt))
-                    dao.upsertSyncMetadata(SyncMetadataEntity("profile", body.updatedAt, dirty = false))
+                    dao.upsertSyncMetadata(SyncMetadataEntity("profile", body.updatedAt))
                 }
             } else {
                 applyListSnapshot(context, dataType, body.payload, body.updatedAt)
