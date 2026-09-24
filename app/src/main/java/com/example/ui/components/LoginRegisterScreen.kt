@@ -29,9 +29,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ExitToApp
 import androidx.compose.material.icons.rounded.AlternateEmail
+import androidx.compose.material.icons.rounded.CloudDone
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.School
+import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material3.Button
@@ -78,6 +80,8 @@ import com.example.ui.theme.cardBorderStroke
 fun LoginRegisterScreen(
     onSignInBackend: (String, String, (Boolean, String) -> Unit) -> Unit,
     onSignUpBackend: (String, String, String, (Boolean, String) -> Unit) -> Unit,
+    onSignInFirebase: (String, String, (Boolean, String) -> Unit) -> Unit,
+    onSignUpFirebase: (String, String, String, (Boolean, String) -> Unit) -> Unit,
     onForgotPassword: (String) -> Unit,
     onGoogleSignIn: ((Boolean, String) -> Unit) -> Unit,
     modifier: Modifier = Modifier
@@ -85,6 +89,7 @@ fun LoginRegisterScreen(
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     var selectedTab by remember { mutableIntStateOf(0) } // 0: Login, 1: Register
+    var selectedProvider by remember { mutableIntStateOf(0) } // 0: Custom Node.js Backend, 1: Firebase Auth
     
     // Form Inputs
     var email by remember { mutableStateOf("") }
@@ -503,27 +508,71 @@ fun LoginRegisterScreen(
                             isLoading = true
                             errorMessage = null
                             
-                            if (selectedTab == 0) {
-                                onSignInBackend(email, password) { success, msg ->
-                                    isLoading = false
-                                    if (!success) errorMessage = msg
+                            if (selectedProvider == 0) {
+                                // Custom Node.js & PostgreSQL Backend
+                                if (selectedTab == 0) {
+                                    onSignInBackend(email, password) { success, msg ->
+                                        isLoading = false
+                                        if (!success) {
+                                            errorMessage = msg
+                                        } else {
+                                            Toast.makeText(context, "ورود به سرور اختصاصی با موفقیت انجام شد 🌱", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                } else {
+                                    if (name.isBlank()) {
+                                        isLoading = false
+                                        errorMessage = "لطفاً نام و نام خانوادگی خود را وارد نمایید."
+                                        return@Button
+                                    }
+                                    if (password != confirmPassword) {
+                                        isLoading = false
+                                        errorMessage = "رمز عبور و تکرار آن با یکدیگر مطابقت ندارند."
+                                        return@Button
+                                    }
+
+                                    onSignUpBackend(name, email, password) { success, msg ->
+                                        isLoading = false
+                                        if (!success) {
+                                            errorMessage = msg
+                                        } else {
+                                            Toast.makeText(context, "حساب کاربری در سرور اختصاصی ایجاد شد ✨", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
                                 }
                             } else {
-                                if (name.isBlank()) {
-                                    isLoading = false
-                                    errorMessage = "لطفاً نام و نام خانوادگی خود را وارد نمایید."
-                                    return@Button
+                                // Cloud Firebase Auth
+                                if (selectedTab == 0) {
+                                    onSignInFirebase(email, password) { success, msg ->
+                                        isLoading = false
+                                        if (!success) {
+                                            errorMessage = msg
+                                        } else {
+                                            Toast.makeText(context, "با موفقیت وارد شدید 🌱", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                } else {
+                                    if (name.isBlank()) {
+                                        isLoading = false
+                                        errorMessage = "لطفاً نام و نام خانوادگی خود را وارد نمایید."
+                                        return@Button
+                                    }
+                                    if (password != confirmPassword) {
+                                        isLoading = false
+                                        errorMessage = "رمز عبور و تکرار آن با یکدیگر مطابقت ندارند."
+                                        return@Button
+                                    }
+
+                                    onSignUpFirebase(name, email, password) { success, msg ->
+                                        isLoading = false
+                                        if (!success) {
+                                            errorMessage = msg
+                                        } else {
+                                            Toast.makeText(context, "حساب کاربری با موفقیت ساخته شد ✨", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
                                 }
-                                if (password != confirmPassword) {
-                                    isLoading = false
-                                    errorMessage = "رمز عبور و تکرار آن با یکدیگر مطابقت ندارند."
-                                    return@Button
-                                }
-                                onSignUpBackend(name, email, password) { success, msg ->
-                                    isLoading = false
-                                    if (!success) errorMessage = msg
-                                }
-                            }                            }
+                            }
                         },
                         shape = RoundedCornerShape(StudentOsShapes.button),
                         colors = ButtonDefaults.buttonColors(
@@ -542,10 +591,11 @@ fun LoginRegisterScreen(
                             )
                         } else {
                             Text(
-                                text = if (selectedTab == 0) {
-                                    "ورود به حساب و همگام‌سازی خودکار"
-                                } else {
-                                    "ساخت حساب و فعال‌سازی همگام‌سازی"
+                                text = when {
+                                    selectedTab == 0 && selectedProvider == 0 -> "ورود به سرور اختصاصی دانشجو OS"
+                                    selectedTab == 0 && selectedProvider == 1 -> "ورود با ایمیل ابری فایربیس"
+                                    selectedTab == 1 && selectedProvider == 0 -> "ثبت‌نام در سرور اختصاصی Node.js"
+                                    else -> "ایجاد حساب در ابر فایربیس"
                                 },
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Bold,
