@@ -167,6 +167,33 @@ fun AppDialogManager(
             }
         }
 
+        is AppDialogState.Upgrade -> {
+            SubscriptionUpgradeDialog(
+                userAccount = userAccount,
+                onUpgradeTier = { tier ->
+                    studentViewModel.upgradeSubscriptionTier(tier) { success, msg ->
+                        if (success) {
+                            Toast.makeText(
+                                context,
+                                "اشتراک شما به ${tier.titleFa} ارتقا یافت! ★",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            dismiss()
+                        } else {
+                            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                },
+                onApplyPromoCode = { code ->
+                    studentViewModel.applyPromoCode(code) { success, msg ->
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        if (success) dismiss()
+                    }
+                },
+                onDismiss = dismiss
+            )
+        }
+
         is AppDialogState.BackupRestore -> {
             val lastTimestamp by studentViewModel.lastSavedTimestamp.collectAsStateWithLifecycle()
             BackupRestoreDialog(
