@@ -109,28 +109,14 @@ fun AppDialogManager(
                 userAccount = userAccount,
                 onSignInEmail = { email, password ->
                     studentViewModel.signInWithBackend(email, password) { ok, msg ->
-                        if (ok) {
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                            dismiss()
-                        } else {
-                            studentViewModel.signInWithEmail(email, password) { okFb, msgFb ->
-                                Toast.makeText(context, if (okFb) msgFb else msg, Toast.LENGTH_SHORT).show()
-                                if (okFb) dismiss()
-                            }
-                        }
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        if (ok) dismiss()
                     }
                 },
                 onSignUpEmail = { name, email, password ->
                     studentViewModel.signUpWithBackend(name, email, password) { ok, msg ->
-                        if (ok) {
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                            dismiss()
-                        } else {
-                            studentViewModel.signUpWithEmail(name, email, password) { okFb, msgFb ->
-                                Toast.makeText(context, if (okFb) msgFb else msg, Toast.LENGTH_SHORT).show()
-                                if (okFb) dismiss()
-                            }
-                        }
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        if (ok) dismiss()
                     }
                 },
                 onGoogleSignIn = {
