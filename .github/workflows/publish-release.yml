@@ -11,6 +11,9 @@ on:
         description: "Release title"
         required: true
         default: "Student OS v1.0.0"
+  push:
+    branches:
+      - "production-release/**"
 
 permissions:
   contents: write
@@ -47,7 +50,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: ./gradlew assembleRelease bundleRelease --stacktrace
 
-      - name: Verify signing and outputs
+      - name: Verify signed outputs
         run: |
           test -s app/build/outputs/apk/release/app-release.apk
           test -s app/build/outputs/bundle/release/app-release.aab
@@ -57,4 +60,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ inputs.tag }}"             app/build/outputs/apk/release/app-release.apk             app/build/outputs/bundle/release/app-release.aab             --title "${{ inputs.title }}"             --generate-notes
+          TAG="${{ inputs.tag }}"
+          TITLE="${{ inputs.title }}"
+          if [ -z "$TAG" ]; then
+            TAG="${GITHUB_REF_NAME#production-release/}"
+          fi
+          if [ -z "$TITLE" ]; then
+            TITLE="Student OS $TAG"
+          fi
+          gh release create "$TAG"             app/build/outputs/apk/release/app-release.apk             app/build/outputs/bundle/release/app-release.aab             --title "$TITLE"             --generate-notes
