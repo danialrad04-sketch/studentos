@@ -24,9 +24,6 @@ interface StudentDao : CourseDao, TaskDao, AttendanceDao, ProfileDao, ExamDao, G
     @Query("SELECT * FROM sync_metadata")
     suspend fun getAllSyncMetadata(): List<com.example.data.local.entity.SyncMetadataEntity>
 
-    @Query("SELECT * FROM sync_metadata WHERE dirty = 1")
-    suspend fun getDirtySyncMetadata(): List<com.example.data.local.entity.SyncMetadataEntity>
-
     // ==========================================
     // Orphan Cleanup Across Multi-Entity Relations
     // ==========================================
