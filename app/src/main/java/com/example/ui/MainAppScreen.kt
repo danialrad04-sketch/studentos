@@ -289,7 +289,7 @@ fun MainAppScreen(
                         if (activity == null) {
                             onResult(false, "امکان باز کردن ورود گوگل در این محیط وجود ندارد.")
                         } else {
-                            rememberCoroutineScope().launch {
+                            coroutineScope.launch {
                                 com.example.ui.components.GoogleSignInManager.getIdToken(activity)
                                     .fold(
                                         onSuccess = { idToken ->
