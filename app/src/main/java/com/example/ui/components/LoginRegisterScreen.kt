@@ -80,8 +80,8 @@ import com.example.ui.theme.cardBorderStroke
 fun LoginRegisterScreen(
     onSignInBackend: (String, String, (Boolean, String) -> Unit) -> Unit,
     onSignUpBackend: (String, String, String, (Boolean, String) -> Unit) -> Unit,
-    onSignInFirebase: (String, String, (Boolean, String) -> Unit) -> Unit,
-    onSignUpFirebase: (String, String, String, (Boolean, String) -> Unit) -> Unit,
+    onSignInFirebase: (String, String, (Boolean, String) -> Unit) -> Unit = { _, _, _ -> },
+    onSignUpFirebase: (String, String, String, (Boolean, String) -> Unit) -> Unit = { _, _, _, _ -> },
     onForgotPassword: (String) -> Unit,
     onGoogleSignIn: ((Boolean, String) -> Unit) -> Unit,
     modifier: Modifier = Modifier
