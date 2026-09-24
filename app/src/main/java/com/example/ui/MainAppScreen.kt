@@ -1,5 +1,6 @@
 package com.example.ui
 
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -96,10 +97,7 @@ import java.util.Locale
 @Composable
 fun MainAppScreen(
     studentViewModel: StudentViewModel = viewModel(),
-    modifier: Modifier = Modifier,
-    onGoogleSignIn: suspend (onResult: (Boolean, String) -> Unit) -> Unit = { onResult ->
-        studentViewModel.signInWithGoogle(onResult)
-    }
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -287,7 +285,30 @@ fun MainAppScreen(
                         }
                     },
                     onGoogleSignIn = { onResult ->
-                        onGoogleSignIn(onResult)
+                        val activity = context as? Activity
+                        if (activity == null) {
+                            onResult(false, "امکان باز کردن ورود گوگل در این محیط وجود ندارد.")
+                        } else {
+                            rememberCoroutineScope().launch {
+                                com.example.ui.components.GoogleSignInManager.getIdToken(activity)
+                                    .fold(
+                                        onSuccess = { idToken ->
+                                            studentViewModel.signInWithGoogle(idToken, onResult)
+                                        },
+                                        onFailure = { error ->
+                                            onResult(
+                                                false,
+                                                when (error) {
+                                                    is androidx.credentials.exceptions.GetCredentialCancellationException ->
+                                                        "ورود با گوگل لغو شد.",
+                                                    else ->
+                                                        "ورود با گوگل ناموفق بود: ${error.localizedMessage ?: "خطای ناشناخته"}"
+                                                }
+                                            )
+                                        }
+                                    )
+                            }
+                        }
                     }
                 )
             } else {
