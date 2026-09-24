@@ -1,0 +1,35 @@
+name: Publish Preview Release
+
+on:
+  push:
+    branches:
+      - "release/**"
+
+permissions:
+  contents: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build preview APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Publish preview GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME#release/}"
+          gh release create "$TAG"             app/build/outputs/apk/debug/app-debug.apk             --title "Student OS $TAG (Preview)"             --prerelease             --notes "Developer preview build. This APK is signed with the Android debug certificate and is NOT the production Cafe Bazaar release."
