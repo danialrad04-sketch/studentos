@@ -295,16 +295,10 @@ fun MainAppScreen(
                                         onSuccess = { idToken ->
                                             studentViewModel.signInWithGoogle(idToken, onResult)
                                         },
-                                        onFailure = { error ->
-                                            onResult(
-                                                false,
-                                                when (error) {
-                                                    is androidx.credentials.exceptions.GetCredentialCancellationException ->
-                                                        "ورود با گوگل لغو شد.",
-                                                    else ->
-                                                        "ورود با گوگل ناموفق بود: ${error.localizedMessage ?: "خطای ناشناخته"}"
-                                                }
-                                            )
+                                        onFailure = {
+                                            onResult(false, "ورود با گوگل ناموفق بود.")
+                                        }
+                                    )
                                         }
                                     )
                             }
