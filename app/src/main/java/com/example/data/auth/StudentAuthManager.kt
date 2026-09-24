@@ -242,7 +242,7 @@ class StudentAuthManager(private val context: Context) {
             return@withContext AuthResult.Error("ایمیل وارد شده نامعتبر است.")
         }
         if (password.length < 8) {
-            return@withContext AuthResult.Error("رمز عبور باید حداقل ۶ کاراکتر باشد.")
+            return@withContext AuthResult.Error("رمز عبور باید حداقل ۸ کاراکتر باشد.")
         }
 
         try {
@@ -337,7 +337,7 @@ class StudentAuthManager(private val context: Context) {
             return@withContext AuthResult.Error("ایمیل وارد شده نامعتبر است.")
         }
         if (password.length < 8) {
-            return@withContext AuthResult.Error("رمز عبور باید حداقل ۶ کاراکتر باشد.")
+            return@withContext AuthResult.Error("رمز عبور باید حداقل ۸ کاراکتر باشد.")
         }
 
         try {
