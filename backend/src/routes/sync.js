@@ -8,6 +8,7 @@ router.use(requireAuth);
 
 const ALLOWED_DATA_TYPES = [
   'profile',
+  'semesters',
   'courses',
   'sessions',
   'attendance',

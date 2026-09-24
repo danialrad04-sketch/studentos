@@ -1,11 +1,18 @@
 package com.example.data.api.backend
 
+import com.example.BuildConfig
+
 /**
- * Set this to your own backend's domain once setup.sh has finished
- * provisioning it (must end with a trailing slash, and must match both
- * the DOMAIN in the VPS's .env AND the <domain> entry in
- * network_security_config.xml exactly, or requests will fail SSL pinning).
+ * Single source of truth for the self-hosted Node.js backend base URL.
+ * Configure STUDENTOS_API_BASE_URL in the local .env file.
  */
 object BackendConfig {
-    const val BASE_URL = "https://api.yourdomain.com/"
+    private const val FALLBACK_URL = "https://api.example.com/"
+
+    val BASE_URL: String
+        get() {
+            val configured = BuildConfig.STUDENTOS_API_BASE_URL.trim()
+                .ifBlank { FALLBACK_URL }
+            return if (configured.endsWith("/")) configured else configured + "/"
+        }
 }

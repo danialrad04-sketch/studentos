@@ -1,5 +1,6 @@
 package com.example.ui
 
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -284,7 +285,22 @@ fun MainAppScreen(
                         }
                     },
                     onGoogleSignIn = { onResult ->
-                        studentViewModel.signInWithGoogle(onResult)
+                        val activity = context as? Activity
+                        if (activity == null) {
+                            onResult(false, "امکان باز کردن ورود گوگل در این محیط وجود ندارد.")
+                        } else {
+                            coroutineScope.launch {
+                                com.example.ui.components.GoogleSignInManager.getIdToken(activity)
+                                    .fold(
+                                        onSuccess = { idToken ->
+                                            studentViewModel.signInWithGoogle(idToken, onResult)
+                                        },
+                                        onFailure = {
+                                            onResult(false, "ورود با گوگل ناموفق بود.")
+                                        }
+                                    )
+                            }
+                        }
                     }
                 )
             } else {

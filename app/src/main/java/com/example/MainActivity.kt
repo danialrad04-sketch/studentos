@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.data.cloud.worker.BackendSyncWorker
-import com.example.data.cloud.worker.FirestoreSyncWorker
 import com.example.ui.MainAppScreen
 import com.example.ui.theme.MyApplicationTheme
 
@@ -20,7 +19,6 @@ class MainActivity : ComponentActivity() {
     
     // Schedule periodic background cloud sync via WorkManager
     try {
-      FirestoreSyncWorker.schedulePeriodicSync(applicationContext)
       BackendSyncWorker.schedulePeriodicSync(applicationContext)
     } catch (_: Throwable) {}
 

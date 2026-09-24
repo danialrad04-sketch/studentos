@@ -18,10 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
-/**
- * Production WorkManager Worker for offline-first synchronization with the
- * self-hosted Node.js / PostgreSQL backend.
- */
+/** WorkManager bridge for reliable offline-to-online backend synchronization. */
 class BackendSyncWorker(
     appContext: Context,
     workerParams: WorkerParameters
@@ -29,32 +26,22 @@ class BackendSyncWorker(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val client = BackendApiClient.getInstance(applicationContext)
-        val token = client.tokenStore().getAccessToken()
-        if (token == null) {
-            Log.d(TAG, "Backend sync skipped: No access token stored.")
-            return@withContext Result.success()
-        }
+        if (client.tokenStore().getAccessToken() == null) return@withContext Result.success()
 
         val dataType = inputData.getString(KEY_DATA_TYPE)
-        val isPullOnly = inputData.getBoolean(KEY_PULL_ONLY, false)
+        val pullOnly = inputData.getBoolean(KEY_PULL_ONLY, false)
 
         try {
-            if (isPullOnly) {
-                if (dataType != null) {
-                    BackendSyncManager.pullDataType(applicationContext, dataType)
-                } else {
-                    BackendSyncManager.pullAllData(applicationContext)
-                }
+            val syncResult = if (pullOnly) {
+                if (dataType != null) BackendSyncManager.pullDataType(applicationContext, dataType)
+                else BackendSyncManager.pullAllData(applicationContext)
             } else {
-                if (dataType != null) {
-                    BackendSyncManager.pushDataType(applicationContext, dataType)
-                } else {
-                    BackendSyncManager.pushAllData(applicationContext)
-                }
+                if (dataType != null) BackendSyncManager.pushDataType(applicationContext, dataType)
+                else BackendSyncManager.pushAllData(applicationContext)
             }
-            Result.success()
+            if (syncResult.isSuccess) Result.success() else Result.retry()
         } catch (e: Exception) {
-            Log.e(TAG, "BackendSyncWorker error: ${e.message}", e)
+            Log.e(TAG, "Backend sync worker failed", e)
             Result.retry()
         }
     }
@@ -65,57 +52,50 @@ class BackendSyncWorker(
         const val KEY_PULL_ONLY = "pull_only"
         const val WORK_NAME_PERIODIC = "BackendSyncPeriodicWork"
 
-        /**
-         * Schedules periodic background sync every 1 hour when network is connected.
-         */
         fun schedulePeriodicSync(context: Context) {
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build()
 
-            val syncRequest = PeriodicWorkRequestBuilder<BackendSyncWorker>(
-                repeatInterval = 1,
-                repeatIntervalTimeUnit = TimeUnit.HOURS
-            )
+            val request = PeriodicWorkRequestBuilder<BackendSyncWorker>(1, TimeUnit.HOURS)
                 .setConstraints(constraints)
                 .build()
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 WORK_NAME_PERIODIC,
                 ExistingPeriodicWorkPolicy.KEEP,
-                syncRequest
+                request
             )
         }
 
-        /**
-         * Enqueues an immediate background sync request for a specific data type or all data.
-         */
-        fun triggerImmediateSync(context: Context, dataType: String? = null, pullOnly: Boolean = false) {
+        fun triggerImmediateSync(
+            context: Context,
+            dataType: String? = null,
+            pullOnly: Boolean = false
+        ) {
             try {
                 val constraints = Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
                     .build()
 
-                val dataBuilder = Data.Builder()
-                if (dataType != null) {
-                    dataBuilder.putString(KEY_DATA_TYPE, dataType)
-                }
-                dataBuilder.putBoolean(KEY_PULL_ONLY, pullOnly)
+                val data = Data.Builder().apply {
+                    dataType?.let { putString(KEY_DATA_TYPE, it) }
+                    putBoolean(KEY_PULL_ONLY, pullOnly)
+                }.build()
 
-                val syncRequest = OneTimeWorkRequestBuilder<BackendSyncWorker>()
+                val request = OneTimeWorkRequestBuilder<BackendSyncWorker>()
                     .setConstraints(constraints)
-                    .setInputData(dataBuilder.build())
+                    .setInputData(data)
                     .build()
 
-                val uniqueName = if (dataType != null) "BackendSync_$dataType" else "BackendSync_Immediate"
+                val name = if (dataType != null) "BackendSync_$dataType" else "BackendSync_Immediate"
                 WorkManager.getInstance(context).enqueueUniqueWork(
-                    uniqueName,
+                    name,
                     ExistingWorkPolicy.REPLACE,
-                    syncRequest
+                    request
                 )
-                Log.d(TAG, "Enqueued backend sync job (dataType=$dataType, pullOnly=$pullOnly)")
             } catch (e: Throwable) {
-                Log.w(TAG, "Failed enqueuing backend sync job: ${e.message}")
+                Log.w(TAG, "Failed to enqueue backend sync", e)
             }
         }
     }

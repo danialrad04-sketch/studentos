@@ -1,11 +1,13 @@
 package com.example.ui.components
 
+import android.app.Activity
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import com.example.ui.theme.MyApplicationTheme
@@ -24,6 +26,7 @@ import com.example.ui.models.AppTab
 import com.example.ui.models.ExamItem
 import com.example.ui.models.SystemNotification
 import com.example.ui.models.ThemeMode
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppDialogManager(
@@ -48,6 +51,7 @@ fun AppDialogManager(
     onSendDeviceTestNotif: () -> Unit,
     onRequestNotificationPermission: () -> Unit = {}
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val dismiss = { onUpdateDialogState(AppDialogState.None) }
 
     val systemDark = isSystemInDarkTheme()
@@ -109,34 +113,35 @@ fun AppDialogManager(
                 userAccount = userAccount,
                 onSignInEmail = { email, password ->
                     studentViewModel.signInWithBackend(email, password) { ok, msg ->
-                        if (ok) {
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                            dismiss()
-                        } else {
-                            studentViewModel.signInWithEmail(email, password) { okFb, msgFb ->
-                                Toast.makeText(context, if (okFb) msgFb else msg, Toast.LENGTH_SHORT).show()
-                                if (okFb) dismiss()
-                            }
-                        }
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        if (ok) dismiss()
                     }
                 },
                 onSignUpEmail = { name, email, password ->
                     studentViewModel.signUpWithBackend(name, email, password) { ok, msg ->
-                        if (ok) {
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                            dismiss()
-                        } else {
-                            studentViewModel.signUpWithEmail(name, email, password) { okFb, msgFb ->
-                                Toast.makeText(context, if (okFb) msgFb else msg, Toast.LENGTH_SHORT).show()
-                                if (okFb) dismiss()
-                            }
-                        }
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        if (ok) dismiss()
                     }
                 },
                 onGoogleSignIn = {
-                    studentViewModel.signInWithGoogle { ok, msg ->
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                        if (ok) dismiss()
+                    val activity = context as? Activity
+                    if (activity == null) {
+                        Toast.makeText(context, "امکان باز کردن ورود گوگل در این محیط وجود ندارد.", Toast.LENGTH_LONG).show()
+                    } else {
+                        coroutineScope.launch {
+                            GoogleSignInManager.getIdToken(activity)
+                                .fold(
+                                    onSuccess = { idToken ->
+                                        studentViewModel.signInWithGoogle(idToken) { ok, msg ->
+                                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                            if (ok) dismiss()
+                                        }
+                                    },
+                                    onFailure = {
+                                        Toast.makeText(context, "ورود با گوگل ناموفق بود.", Toast.LENGTH_LONG).show()
+                                    }
+                                )
+                        }
                     }
                 },
                 onForgotPassword = { email ->

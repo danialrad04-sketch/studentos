@@ -6,6 +6,8 @@ import com.example.di.AppContainer
 import com.example.ui.util.NotificationHelper
 import com.example.util.CrashLogger
 import com.example.data.api.GeminiApiClient
+import com.example.data.cloud.BackendSyncScheduler
+import com.example.data.local.AppDatabase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
@@ -19,6 +21,7 @@ class StudentApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        BackendSyncScheduler.install(this, AppDatabase.getDatabase(this))
 
         // Global Uncaught Exception Handler
         val previousDefaultHandler = Thread.getDefaultUncaughtExceptionHandler()

@@ -1,6 +1,8 @@
 package com.example.data.local.dao
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 
@@ -12,6 +14,15 @@ import androidx.room.Transaction
  */
 @Dao
 interface StudentDao : CourseDao, TaskDao, AttendanceDao, ProfileDao, ExamDao, GradeDao, NoteDao {
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertSyncMetadata(metadata: com.example.data.local.entity.SyncMetadataEntity)
+
+    @Query("SELECT updatedAt FROM sync_metadata WHERE dataType = :dataType LIMIT 1")
+    suspend fun getSyncUpdatedAt(dataType: String): Long?
+
+    @Query("SELECT * FROM sync_metadata")
+    suspend fun getAllSyncMetadata(): List<com.example.data.local.entity.SyncMetadataEntity>
 
     // ==========================================
     // Orphan Cleanup Across Multi-Entity Relations

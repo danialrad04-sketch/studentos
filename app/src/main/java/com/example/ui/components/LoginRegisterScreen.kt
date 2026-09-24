@@ -500,8 +500,8 @@ fun LoginRegisterScreen(
                                 errorMessage = "آدرس ایمیل وارد شده معتبر نمی‌باشد."
                                 return@Button
                             }
-                            if (password.length < 6) {
-                                errorMessage = "رمز عبور باید حداقل شامل ۶ کاراکتر باشد."
+                            if (password.length < 8) {
+                                errorMessage = "رمز عبور باید حداقل شامل ۸ کاراکتر باشد."
                                 return@Button
                             }
                             

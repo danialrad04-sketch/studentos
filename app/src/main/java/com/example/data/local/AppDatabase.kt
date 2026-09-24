@@ -23,6 +23,7 @@ import com.example.data.local.entity.ProfessorEntity
 import com.example.data.local.entity.SemesterEntity
 import com.example.data.local.entity.StudentCourseAttemptEntity
 import com.example.data.local.entity.StudentProfileEntity
+import com.example.data.local.entity.SyncMetadataEntity
 import com.example.data.local.entity.TaskEntity
 import com.example.data.local.entity.UniversityEntity
 import com.example.data.seed.CurriculumSeedData
@@ -47,9 +48,10 @@ import kotlinx.coroutines.launch
         StudentCourseAttemptEntity::class,
         ProfessorEntity::class,
         ExamEntity::class,
-        NoteEntity::class
+        NoteEntity::class,
+        SyncMetadataEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -707,6 +709,12 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `sync_metadata` (`dataType` TEXT NOT NULL PRIMARY KEY, `updatedAt` INTEGER NOT NULL)")
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope = CoroutineScope(Dispatchers.IO)): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -714,9 +722,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "student_os_db"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                     .addCallback(DatabaseCallback(scope))
-                    .enableMultiInstanceInvalidation()
                     .build()
                 INSTANCE = instance
                 instance

@@ -204,8 +204,8 @@ class StudentAuthManager(private val context: Context) {
         if (email.isBlank() || !email.contains("@")) {
             return@withContext AuthResult.Error("لطفاً یک ایمیل معتبر دانشگاهی یا شخصی وارد کنید.")
         }
-        if (password.length < 6) {
-            return@withContext AuthResult.Error("رمز عبور باید حداقل شامل ۶ کاراکتر باشد.")
+        if (password.length < 8) {
+            return@withContext AuthResult.Error("رمز عبور باید حداقل شامل ۸ کاراکتر باشد.")
         }
 
         try {
@@ -241,8 +241,8 @@ class StudentAuthManager(private val context: Context) {
         if (email.isBlank() || !email.contains("@")) {
             return@withContext AuthResult.Error("ایمیل وارد شده نامعتبر است.")
         }
-        if (password.length < 6) {
-            return@withContext AuthResult.Error("رمز عبور باید حداقل ۶ کاراکتر باشد.")
+        if (password.length < 8) {
+            return@withContext AuthResult.Error("رمز عبور باید حداقل ۸ کاراکتر باشد.")
         }
 
         try {
@@ -279,8 +279,8 @@ class StudentAuthManager(private val context: Context) {
         if (email.isBlank() || !email.contains("@")) {
             return@withContext AuthResult.Error("لطفاً یک ایمیل معتبر وارد کنید.")
         }
-        if (password.length < 6) {
-            return@withContext AuthResult.Error("رمز عبور باید حداقل شامل ۶ کاراکتر باشد.")
+        if (password.length < 8) {
+            return@withContext AuthResult.Error("رمز عبور باید حداقل شامل ۸ کاراکتر باشد.")
         }
 
         try {
@@ -336,8 +336,8 @@ class StudentAuthManager(private val context: Context) {
         if (email.isBlank() || !email.contains("@")) {
             return@withContext AuthResult.Error("ایمیل وارد شده نامعتبر است.")
         }
-        if (password.length < 6) {
-            return@withContext AuthResult.Error("رمز عبور باید حداقل ۶ کاراکتر باشد.")
+        if (password.length < 8) {
+            return@withContext AuthResult.Error("رمز عبور باید حداقل ۸ کاراکتر باشد.")
         }
 
         try {
