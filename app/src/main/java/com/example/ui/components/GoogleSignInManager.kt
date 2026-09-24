@@ -44,7 +44,18 @@ object GoogleSignInManager {
                 )
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            val raw = e.localizedMessage.orEmpty()
+            val text = raw.lowercase()
+            val userMessage = when {
+                text.contains("12500") || text.contains("developer_error") || text.contains("10:") ->
+                    "ورود گوگل برای نسخه Release تنظیم نشده است؛ SHA-1 نسخه Release و OAuth Client را در Firebase بررسی کنید."
+                text.contains("403") || text.contains("forbidden") || text.contains("<!doctype html") || text.contains("<html") ->
+                    "گوگل درخواست ورود را رد کرد؛ SHA-1 نسخه Release یا تنظیمات OAuth/Firebase نیاز به اصلاح دارد."
+                text.contains("cancel") || text.contains("canceled") -> "ورود گوگل لغو شد."
+                text.contains("network") -> "اتصال اینترنت را بررسی کنید و دوباره تلاش کنید."
+                else -> "ورود با گوگل انجام نشد. تنظیمات حساب گوگل و Firebase را بررسی کنید."
+            }
+            Result.failure(IllegalStateException(userMessage, e))
         }
     }
 }

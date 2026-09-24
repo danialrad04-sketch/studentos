@@ -12,7 +12,13 @@ object BackendConfig {
     val BASE_URL: String
         get() {
             val configured = BuildConfig.STUDENTOS_API_BASE_URL.trim()
-                .ifBlank { FALLBACK_URL }
-            return if (configured.endsWith("/")) configured else configured + "/"
+            return if (configured.isBlank()) FALLBACK_URL
+            else if (configured.endsWith("/")) configured else "$configured/"
+        }
+
+    val isConfigured: Boolean
+        get() {
+            val configured = BuildConfig.STUDENTOS_API_BASE_URL.trim()
+            return configured.isNotBlank() && !configured.contains("api.example.com", ignoreCase = true)
         }
 }

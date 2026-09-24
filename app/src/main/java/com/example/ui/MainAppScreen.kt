@@ -295,8 +295,8 @@ fun MainAppScreen(
                                         onSuccess = { idToken ->
                                             studentViewModel.signInWithGoogle(idToken, onResult)
                                         },
-                                        onFailure = {
-                                            onResult(false, "ورود با گوگل ناموفق بود.")
+                                        onFailure = { error ->
+                                            onResult(false, error.message ?: "ورود با گوگل ناموفق بود.")
                                         }
                                     )
                             }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import com.example.data.api.backend.BackendApiClient
+import com.example.data.api.backend.BackendConfig
 import com.example.data.api.backend.LoginRequest
 import com.example.data.api.backend.SignUpRequest
 import com.example.data.cloud.FirestoreSyncManager
@@ -14,6 +15,7 @@ import com.example.domain.model.SubscriptionTier
 import com.example.domain.model.UserAccount
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.auth
@@ -224,13 +226,7 @@ class StudentAuthManager(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Sign in failed: ${e.message}", e)
             com.example.util.CrashLogger.recordException(e)
-            val friendlyMsg = when {
-                e.message?.contains("user-not-found", ignoreCase = true) == true -> "حسابی با این ایمیل یافت نشد. لطفاً ثبت‌نام کنید."
-                e.message?.contains("wrong-password", ignoreCase = true) == true -> "رمز عبور وارد شده اشتباه است."
-                e.message?.contains("network", ignoreCase = true) == true -> "خطا در اتصال به اینترنت. لطفاً شبکه را بررسی کنید."
-                else -> "خطای احراز هویت: ${e.localizedMessage ?: "اطلاعات نامعتبر است."}"
-            }
-            AuthResult.Error(friendlyMsg)
+            AuthResult.Error(friendlyFirebaseAuthError(e, isSignUp = false))
         }
     }
 
@@ -266,16 +262,14 @@ class StudentAuthManager(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Sign up failed: ${e.message}", e)
             com.example.util.CrashLogger.recordException(e)
-            val friendlyMsg = when {
-                e.message?.contains("email-already-in-use", ignoreCase = true) == true -> "این ایمیل قبلاً ثبت‌نام شده است. لطفاً وارد شوید."
-                e.message?.contains("weak-password", ignoreCase = true) == true -> "رمز عبور انتخابی ضعیف است."
-                else -> "خطا در ثبت‌نام: ${e.localizedMessage ?: "لطفاً مجدداً تلاش نمایید."}"
-            }
-            AuthResult.Error(friendlyMsg)
+            AuthResult.Error(friendlyFirebaseAuthError(e, isSignUp = true))
         }
     }
 
     suspend fun signInWithBackend(email: String, password: String): AuthResult = withContext(Dispatchers.IO) {
+        if (!BackendConfig.isConfigured) {
+            return@withContext AuthResult.Error("سرور حساب کاربری برای این نسخه تنظیم نشده است. از ورود فایربیس استفاده کنید.")
+        }
         if (email.isBlank() || !email.contains("@")) {
             return@withContext AuthResult.Error("لطفاً یک ایمیل معتبر وارد کنید.")
         }
@@ -325,11 +319,14 @@ class StudentAuthManager(private val context: Context) {
             AuthResult.Error(errorMsg)
         } catch (e: Exception) {
             Log.e(TAG, "Backend login exception: ${e.message}", e)
-            AuthResult.Error("عدم برقراری ارتباط با سرور: ${e.localizedMessage ?: "خطای اتصال"}")
+            AuthResult.Error(friendlyBackendAuthError(e))
         }
     }
 
     suspend fun signUpWithBackend(name: String, email: String, password: String): AuthResult = withContext(Dispatchers.IO) {
+        if (!BackendConfig.isConfigured) {
+            return@withContext AuthResult.Error("سرور حساب کاربری برای این نسخه تنظیم نشده است. از ثبت‌نام فایربیس استفاده کنید.")
+        }
         if (name.isBlank()) {
             return@withContext AuthResult.Error("لطفاً نام و نام خانوادگی خود را وارد کنید.")
         }
@@ -388,7 +385,7 @@ class StudentAuthManager(private val context: Context) {
             AuthResult.Error(errorMsg)
         } catch (e: Exception) {
             Log.e(TAG, "Backend signUp exception: ${e.message}", e)
-            AuthResult.Error("خطا در اتصال به سرور: ${e.localizedMessage ?: "عدم اتصال"}")
+            AuthResult.Error(friendlyBackendAuthError(e))
         }
     }
 
@@ -422,7 +419,7 @@ class StudentAuthManager(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Google sign in error: ${e.message}", e)
             com.example.util.CrashLogger.recordException(e)
-            AuthResult.Error("خطا در اتصال به گوگل: ${e.localizedMessage}")
+            AuthResult.Error(friendlyGoogleAuthError(e))
         }
     }
 
@@ -554,6 +551,55 @@ class StudentAuthManager(private val context: Context) {
             } catch (e: Throwable) {
                 Log.w(TAG, "Automatic cloud restore error: ${e.message}")
             }
+        }
+    }
+
+    private fun friendlyBackendAuthError(e: Exception): String {
+        val raw = e.localizedMessage.orEmpty()
+        val text = raw.lowercase()
+        return when {
+            text.contains("json") || text.contains("conversion") || text.contains("<!doctype html") || text.contains("<html") ->
+                "سرور احراز هویت پاسخ نامعتبر برگرداند. آدرس API یا تنظیمات سرور را بررسی کنید."
+            text.contains("unknownhost") || text.contains("unable to resolve host") ->
+                "سرور حساب کاربری در دسترس نیست. اتصال اینترنت و آدرس API را بررسی کنید."
+            text.contains("timeout") || text.contains("timed out") ->
+                "ارتباط با سرور بیش از حد طول کشید. دوباره تلاش کنید."
+            text.contains("certificate") || text.contains("ssl") ->
+                "گواهی امنیتی سرور معتبر نیست."
+            else ->
+                "ارتباط با سرور احراز هویت برقرار نشد. لطفاً دوباره تلاش کنید."
+        }
+    }
+
+    private fun friendlyFirebaseAuthError(e: Exception, isSignUp: Boolean): String {
+        val authCode = (e as? FirebaseAuthException)?.errorCode?.lowercase().orEmpty()
+        val raw = e.localizedMessage.orEmpty()
+        val text = "$authCode $raw".lowercase()
+        return when {
+            text.contains("email-already-in-use") -> "این ایمیل قبلاً ثبت‌نام شده است. لطفاً وارد شوید."
+            text.contains("user-not-found") -> "حسابی با این ایمیل یافت نشد."
+            text.contains("wrong-password") || text.contains("invalid-credential") -> "ایمیل یا رمز عبور اشتباه است."
+            text.contains("invalid-email") -> "ایمیل وارد شده معتبر نیست."
+            text.contains("weak-password") -> "رمز عبور انتخابی ضعیف است."
+            text.contains("user-disabled") -> "این حساب غیرفعال شده است."
+            text.contains("too-many-requests") -> "تعداد تلاش‌ها بیش از حد مجاز است. کمی بعد دوباره تلاش کنید."
+            text.contains("network-request-failed") || text.contains("network") -> "اتصال اینترنت را بررسی کنید و دوباره تلاش کنید."
+            text.contains("api_key_service_blocked") || text.contains("api key") || text.contains("service blocked") -> "سرویس احراز هویت Firebase برای این برنامه مسدود یا محدود شده است. تنظیمات API Key پروژه را بررسی کنید."
+            text.contains("403") || text.contains("forbidden") || text.contains("<!doctype html") || text.contains("<html") -> "سرویس احراز هویت یک پاسخ غیرمجاز دریافت کرد. تنظیمات Firebase، API Key و SHA-1 نسخه Release را بررسی کنید."
+            isSignUp -> "ثبت‌نام انجام نشد. تنظیمات حساب Firebase یا اتصال اینترنت را بررسی کنید."
+            else -> "ورود انجام نشد. اطلاعات حساب و اتصال اینترنت را بررسی کنید."
+        }
+    }
+
+    private fun friendlyGoogleAuthError(e: Exception): String {
+        val raw = e.localizedMessage.orEmpty()
+        val text = raw.lowercase()
+        return when {
+            text.contains("12500") || text.contains("10:") || text.contains("developer_error") -> "ورود گوگل تنظیم نشده است؛ SHA-1 نسخه Release و OAuth Client را در Firebase بررسی کنید."
+            text.contains("403") || text.contains("forbidden") || text.contains("<!doctype html") || text.contains("<html") -> "گوگل درخواست ورود را رد کرد؛ SHA-1 نسخه Release یا تنظیمات OAuth/Firebase نیاز به اصلاح دارد."
+            text.contains("cancel") || text.contains("canceled") -> "ورود گوگل لغو شد."
+            text.contains("network") -> "اتصال اینترنت را بررسی کنید و دوباره تلاش کنید."
+            else -> "ورود با گوگل انجام نشد. تنظیمات حساب گوگل و Firebase را بررسی کنید."
         }
     }
 

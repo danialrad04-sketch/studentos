@@ -70,6 +70,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.api.backend.BackendConfig
 import com.example.ui.theme.StudentOsColors
 import com.example.ui.theme.StudentOsGlassTokens
 import com.example.ui.theme.StudentOsShapes
@@ -89,7 +90,7 @@ fun LoginRegisterScreen(
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     var selectedTab by remember { mutableIntStateOf(0) } // 0: Login, 1: Register
-    var selectedProvider by remember { mutableIntStateOf(0) } // 0: Custom Node.js Backend, 1: Firebase Auth
+    var selectedProvider by remember { mutableIntStateOf(if (BackendConfig.isConfigured) 0 else 1) } // 0: Custom Node.js Backend, 1: Firebase Auth
     
     // Form Inputs
     var email by remember { mutableStateOf("") }
