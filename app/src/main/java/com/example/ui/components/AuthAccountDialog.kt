@@ -128,96 +128,38 @@ fun AuthAccountDialog(
             }
 
             if (userAccount.isGuest) {
-                TabRow(
-                    selectedTabIndex = selectedTab,
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                    modifier = Modifier.clip(RoundedCornerShape(14.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Tab(
-                        selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 },
-                        text = { Text("ورود به حساب", fontSize = 11.5.sp, fontWeight = FontWeight.Bold) }
-                    )
-                    Tab(
-                        selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 },
-                        text = { Text("ساخت حساب جدید", fontSize = 11.5.sp, fontWeight = FontWeight.Bold) }
-                    )
-                }
-
-                if (selectedTab == 0) {
-                    // Sign In Form
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("ایمیل یا شناسه کاربری", fontSize = 11.sp) },
-                        leadingIcon = { Icon(Icons.Rounded.AlternateEmail, contentDescription = null, modifier = Modifier.size(18.dp)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        shape = RoundedCornerShape(14.dp)
-                    )
-
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("رمز عبور", fontSize = 11.sp) },
-                        leadingIcon = { Icon(Icons.Rounded.Lock, contentDescription = null, modifier = Modifier.size(18.dp)) },
-                        trailingIcon = {
-                            IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                                Icon(
-                                    if (isPasswordVisible) Icons.Rounded.VisibilityOff else Icons.Rounded.Visibility,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        },
-                        visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        shape = RoundedCornerShape(14.dp)
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        Icon(
+                            Icons.Rounded.AccountCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(42.dp)
+                        )
                         Text(
-                            text = "فراموشی رمز عبور؟",
-                            color = StudentOsColors.ElectricBlue,
+                            "ورود و ثبت‌نام فقط از صفحه اصلی",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            "برای جلوگیری از دو رابط کاربری متفاوت، احراز هویت در همان صفحه ورود اصلی انجام می‌شود.",
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .clickable { onForgotPassword(email) }
-                                .padding(vertical = 4.dp)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
 
-                    Button(
-                        onClick = { onSignInEmail(email, password) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.ElectricBlue),
-                        enabled = email.isNotBlank() && password.isNotBlank()
-                    ) {
-                        Text("ورود به حساب و همگام‌سازی داده‌ها", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
-                    }
-
-                    OutlinedButton(
-                        onClick = onGoogleSignIn,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Icon(Icons.Rounded.CloudDone, contentDescription = null, tint = StudentOsColors.EmeraldNeon, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("ورود سریع با حساب دانشگاهی یا گوگل", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
-                    }
-                } else {
+            } else {
                     // Sign Up Form
                     OutlinedTextField(
                         value = name,
