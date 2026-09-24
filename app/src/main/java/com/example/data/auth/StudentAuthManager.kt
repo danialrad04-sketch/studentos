@@ -422,7 +422,17 @@ class StudentAuthManager(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Google sign in error: ${e.message}", e)
             com.example.util.CrashLogger.recordException(e)
-            AuthResult.Error("خطا در اتصال به گوگل: ${e.localizedMessage}")
+            val message = when {
+                e.message?.contains("invalid-credential", ignoreCase = true) == true ->
+                    "اعتبار Google برای این برنامه معتبر نیست. SHA-1 و Client ID را بررسی کنید."
+                e.message?.contains("credential", ignoreCase = true) == true ->
+                    "اعتبار ورود Google پذیرفته نشد. تنظیمات OAuth و Firebase را بررسی کنید."
+                e.message?.contains("network", ignoreCase = true) == true ->
+                    "اتصال اینترنت برای ورود با Google در دسترس نیست."
+                else ->
+                    "ورود با Google انجام نشد. لطفاً دوباره تلاش کنید."
+            }
+            AuthResult.Error(message)
         }
     }
 
