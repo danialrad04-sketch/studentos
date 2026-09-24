@@ -111,17 +111,20 @@ object AcademicExportManager {
             val displayName = "StudentOS_Transcript_$timestamp.pdf"
 
             val values = ContentValues().apply {
-                put(MediaStore.Downloads.DISPLAY_NAME, displayName)
-                put(MediaStore.Downloads.MIME_TYPE, "application/pdf")
+                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/StudentOS")
-                    put(MediaStore.Downloads.IS_PENDING, 1)
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/StudentOS")
+                    put(MediaStore.MediaColumns.IS_PENDING, 1)
                 }
             }
 
             val resolver = context.contentResolver
-            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
-                ?: throw IOException("امکان ایجاد فایل PDF در پوشه دانلودها وجود ندارد.")
+            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+            } else {
+                resolver.insert(MediaStore.Files.getContentUri("external"), values)
+            } ?: throw IOException("امکان ایجاد فایل PDF در پوشه دانلودها وجود ندارد.")
 
             try {
                 val outputStream = resolver.openOutputStream(uri)
@@ -133,7 +136,7 @@ object AcademicExportManager {
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     values.clear()
-                    values.put(MediaStore.Downloads.IS_PENDING, 0)
+                    values.put(MediaStore.MediaColumns.IS_PENDING, 0)
                     resolver.update(uri, values, null, null)
                 }
 
