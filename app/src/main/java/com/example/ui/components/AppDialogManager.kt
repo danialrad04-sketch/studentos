@@ -109,93 +109,62 @@ fun AppDialogManager(
         }
 
         is AppDialogState.Auth -> {
-            AuthAccountDialog(
-                userAccount = userAccount,
-                onSignInEmail = { email, password ->
-                    studentViewModel.signInWithBackend(email, password) { ok, msg ->
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                        if (ok) dismiss()
-                    }
-                },
-                onSignUpEmail = { name, email, password ->
-                    studentViewModel.signUpWithBackend(name, email, password) { ok, msg ->
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                        if (ok) dismiss()
-                    }
-                },
-                onGoogleSignIn = {
-                    val activity = context as? Activity
-                    if (activity == null) {
-                        Toast.makeText(context, "امکان باز کردن ورود گوگل در این محیط وجود ندارد.", Toast.LENGTH_LONG).show()
-                    } else {
-                        coroutineScope.launch {
-                            GoogleSignInManager.getIdToken(activity)
-                                .fold(
-                                    onSuccess = { idToken ->
-                                        studentViewModel.signInWithGoogle(idToken) { ok, msg ->
-                                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                                            if (ok) dismiss()
-                                        }
-                                    },
-                                    onFailure = {
-                                        Toast.makeText(context, "ورود با گوگل ناموفق بود.", Toast.LENGTH_LONG).show()
-                                    }
-                                )
+            if (!userAccount.isGuest) {
+                AuthAccountDialog(
+                    userAccount = userAccount,
+                    onSignInEmail = { email, password ->
+                        studentViewModel.signInWithBackend(email, password) { ok, msg ->
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            if (ok) dismiss()
                         }
-                    }
-                },
-                onForgotPassword = { email ->
-                    if (email.isBlank() || !email.contains("@")) {
-                        Toast.makeText(context, "لطفاً ابتدا ایمیل معتبر خود را در کادر مربوطه وارد نمایید.", Toast.LENGTH_LONG).show()
-                    } else {
+                    },
+                    onSignUpEmail = { name, email, password ->
+                        studentViewModel.signUpWithBackend(name, email, password) { ok, msg ->
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            if (ok) dismiss()
+                        }
+                    },
+                    onGoogleSignIn = {
+                        val activity = context as? Activity
+                        if (activity == null) {
+                            Toast.makeText(context, "امکان باز کردن ورود گوگل در این محیط وجود ندارد.", Toast.LENGTH_LONG).show()
+                        } else {
+                            coroutineScope.launch {
+                                GoogleSignInManager.getIdToken(activity)
+                                    .fold(
+                                        onSuccess = { idToken ->
+                                            studentViewModel.signInWithGoogle(idToken) { ok, msg ->
+                                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                                if (ok) dismiss()
+                                            }
+                                        },
+                                        onFailure = {
+                                            Toast.makeText(context, "ورود با گوگل ناموفق بود.", Toast.LENGTH_LONG).show()
+                                        }
+                                    )
+                            }
+                        }
+                    },
+                    onForgotPassword = { email ->
                         studentViewModel.sendPasswordResetEmail(email) { ok, msg ->
                             Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                         }
-                    }
-                },
-                onSignOut = {
-                    studentViewModel.signOutUser()
-                    Toast.makeText(context, "از حساب کاربری خارج شدید.", Toast.LENGTH_SHORT).show()
-                },
-                onDeleteAccount = {
-                    studentViewModel.deleteUserAccount {
-                        Toast.makeText(context, "حساب و داده‌ها حذف شدند.", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                onOpenUpgrade = {
-                    onUpdateDialogState(AppDialogState.Upgrade)
-                },
-                onSyncNow = {
-                    studentViewModel.triggerManualCloudSync { _, _ -> }
-                    studentViewModel.syncWithBackendNow { ok, msg ->
-                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                    }
-                },
-                onDismiss = dismiss
-            )
-        }
-
-        is AppDialogState.Upgrade -> {
-            SubscriptionUpgradeDialog(
-                userAccount = userAccount,
-                onUpgradeTier = { tier ->
-                    studentViewModel.upgradeSubscriptionTier(tier) { success, msg ->
-                        if (success) {
-                            Toast.makeText(context, "اشتراک شما به ${tier.titleFa} ارتقا یافت! ★", Toast.LENGTH_LONG).show()
-                            dismiss()
+                    },
+                    onSignOut = {
+                        studentViewModel.signOutUser()
+                        Toast.makeText(context, "از حساب خارج شدید.", Toast.LENGTH_SHORT).show()
+                        dismiss()
+                    },
+                    onDeleteAccount = {
+                        studentViewModel.deleteUserAccount {
+                            Toast.makeText(context, "حساب و داده‌ها حذف شدند.", Toast.LENGTH_SHORT).show()
                         }
-                    }
-                },
-                onApplyPromoCode = { code ->
-                    studentViewModel.applyPromoCode(code) { success, msg ->
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                        if (success) {
-                            dismiss()
-                        }
-                    }
-                },
-                onDismiss = dismiss
-            )
+                    },
+                    onOpenUpgrade = { onUpdateDialogState(AppDialogState.Upgrade) },
+                    onSyncNow = { studentViewModel.syncWithBackendNow { _, _ -> } },
+                    onDismiss = dismiss
+                )
+            }
         }
 
         is AppDialogState.BackupRestore -> {
