@@ -1,0 +1,6 @@
+{
+  "name": "Student OS",
+  "description": "سامانه هوشمند مدیریت تحصیلی دانشجویی، برنامه کلاسی، کارنامه، رادار غیبت‌ها و امتحانات",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

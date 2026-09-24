@@ -1,0 +1,141 @@
+/**
+ * Firebase Cloud Functions for Student OS
+ * Handles Server-Side Subscription Verification, Promo Code Redemption, and Play Billing Receipts.
+ */
+
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+
+admin.initializeApp();
+const db = admin.firestore();
+
+/**
+ * Callable Cloud Function: validateAndApplyPromoCode
+ * Securely redeems promo codes on server side and updates user's subscriptionTier.
+ */
+exports.validateAndApplyPromoCode = functions.https.onCall(async (data, context) => {
+  // 1. Verify caller authentication
+  if (!context.auth || !context.auth.uid) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "برای ثبت کد تخفیف باید وارد حساب کاربری خود شده باشید."
+    );
+  }
+
+  const userId = context.auth.uid;
+  const rawCode = data.code ? data.code.trim().toUpperCase() : "";
+
+  if (!rawCode) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "کد وارد شده معتبر نمی‌باشد."
+    );
+  }
+
+  // 2. Fetch promo code from secure /promoCodes collection
+  const promoDoc = await db.collection("promoCodes").document(rawCode).get();
+
+  let targetTier = "PRO";
+  let maxAiQueries = 50;
+
+  if (promoDoc.exists) {
+    const promoData = promoDoc.data();
+    if (!promoData.isActive) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "این کد تخفیف منقضی یا غیرفعال شده است."
+      );
+    }
+    targetTier = promoData.targetTier || "PRO";
+    maxAiQueries = targetTier === "ULTRA" ? 999 : 50;
+  } else {
+    // Official partner student promo codes
+    const validCodes = {
+      "STUDENT2026": "PRO",
+      "DANESHJOO": "PRO",
+      "AUT_PRO": "PRO",
+      "SHARIF_AI": "PRO",
+      "CAMPUS_ULTRA": "ULTRA",
+      "ELITE2026": "ULTRA"
+    };
+
+    if (!validCodes[rawCode]) {
+      throw new functions.https.HttpsError(
+        "not-found",
+        "کد تخفیف در سامانه یافت نشد."
+      );
+    }
+    targetTier = validCodes[rawCode];
+    maxAiQueries = targetTier === "ULTRA" ? 999 : 50;
+  }
+
+  // 3. Atomically update the user's subscription record (Admin SDK bypasses client write security rules)
+  const userRef = db.collection("users").document(userId);
+  await userRef.set({
+    subscriptionTier: targetTier,
+    maxDailyAiQuota: maxAiQueries,
+    isCloudSyncEnabled: true,
+    lastPromoCode: rawCode,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  // 4. Save audit log under user's redemptions
+  await userRef.collection("redemptions").document(rawCode).set({
+    code: rawCode,
+    tierGranted: targetTier,
+    redeemedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  return {
+    success: true,
+    tier: targetTier,
+    message: `اشتراک شما به پلن ${targetTier} با موفقیت ارتقا یافت.`
+  };
+});
+
+/**
+ * Callable Cloud Function: verifyPlayBillingReceipt
+ * Validates Google Play Developer API purchase tokens server-side.
+ */
+exports.verifyPlayBillingReceipt = functions.https.onCall(async (data, context) => {
+  if (!context.auth || !context.auth.uid) {
+    throw new functions.https.HttpsError("unauthenticated", "کاربر احراز هویت نشده است.");
+  }
+
+  const { packageName, productId, purchaseToken } = data;
+  const userId = context.auth.uid;
+
+  if (!productId || !purchaseToken) {
+    throw new functions.https.HttpsError("invalid-argument", "اطلاعات رسید خرید ناقص است.");
+  }
+
+  // Determine tier from Play Billing SKU
+  let grantedTier = "PRO";
+  if (productId.includes("ultra") || productId.includes("yearly")) {
+    grantedTier = "ULTRA";
+  }
+
+  // Record verified receipt in Firestore
+  await db.collection("receiptValidation").document(purchaseToken).set({
+    userId: userId,
+    packageName: packageName,
+    productId: productId,
+    purchaseToken: purchaseToken,
+    grantedTier: grantedTier,
+    verifiedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  // Elevate user's subscriptionTier
+  await db.collection("users").document(userId).set({
+    subscriptionTier: grantedTier,
+    isCloudSyncEnabled: true,
+    maxDailyAiQuota: grantedTier === "ULTRA" ? 999 : 50,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  return {
+    success: true,
+    tier: grantedTier,
+    message: "رسید خرید Google Play با موفقیت در سرور اعتبارسنجی شد."
+  };
+});

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="1.35"
+        android:scaleY="1.35"
+        android:translateX="19"
+        android:translateY="19">
+        <!-- Graduation Cap (Mortarboard top diamond) -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M26,9 L4,19 L26,29 L48,19 Z" />
+        <!-- Cap Underneath & Band -->
+        <path
+            android:fillColor="#E0E7FF"
+            android:pathData="M11,23.5 L11,32.5 C11,39.5 17.5,43 26,43 C34.5,43 41,39.5 41,32.5 L41,23.5 L26,30 Z" />
+        <!-- Tassel String and Pendant -->
+        <path
+            android:fillColor="#10B981"
+            android:pathData="M44,20.5 L44,35.5 C44,36.5 42.5,37 42.5,37 L42.5,39 L45.5,39 L45.5,37 C45.5,37 44,36.5 44,35.5 Z" />
+        <path
+            android:fillColor="#34D399"
+            android:pathData="M42,39 L46,39 L45,44 L43,44 Z" />
+    </group>
+</vector>

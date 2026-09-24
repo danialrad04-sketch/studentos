@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if caller is the authenticated owner of the document
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // User account document & cloud synced academic data
+    match /users/{userId} {
+      // Users can read their own profile & subscription metadata
+      allow read: if isOwner(userId);
+      
+      // Client can create its initial user doc, but CANNOT tamper with subscriptionTier or admin fields
+      allow create: if isOwner(userId) && (!request.resource.data.keys().hasAny(['subscriptionTier', 'isAdmin']) || request.resource.data.subscriptionTier == 'FREE');
+      
+      // On update, client can update normal fields, but CANNOT modify subscriptionTier (writeable ONLY by Cloud Functions / Admin SDK)
+      allow update: if isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['subscriptionTier', 'maxDailyAiQuota', 'isAdmin']);
+      
+      // Allow deletion only by the authenticated owner
+      allow delete: if isOwner(userId);
+
+      // Sub-collections: courses, attendance, grades, tasks, profile
+      match /{subcollection}/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // Promo codes repository - Read-only from clients, modified only by Admin
+    match /promoCodes/{code} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only manageable through Firebase Console or Cloud Functions
+    }
+    
+    // In-App Purchases & Play Billing Receipts - Server-side write only
+    match /receiptValidation/{receiptId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow write: if false; // Written exclusively by verifyPlayBillingReceipt Cloud Function
+    }
+  }
+}
