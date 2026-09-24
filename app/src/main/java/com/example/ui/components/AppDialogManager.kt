@@ -1,11 +1,13 @@
 package com.example.ui.components
 
+import android.app.Activity
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import com.example.ui.theme.MyApplicationTheme
@@ -120,9 +122,24 @@ fun AppDialogManager(
                     }
                 },
                 onGoogleSignIn = {
-                    studentViewModel.signInWithGoogle { ok, msg ->
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                        if (ok) dismiss()
+                    val activity = context as? Activity
+                    if (activity == null) {
+                        Toast.makeText(context, "امکان باز کردن ورود گوگل در این محیط وجود ندارد.", Toast.LENGTH_LONG).show()
+                    } else {
+                        rememberCoroutineScope().launch {
+                            GoogleSignInManager.getIdToken(activity)
+                                .fold(
+                                    onSuccess = { idToken ->
+                                        studentViewModel.signInWithGoogle(idToken) { ok, msg ->
+                                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                            if (ok) dismiss()
+                                        }
+                                    },
+                                    onFailure = {
+                                        Toast.makeText(context, "ورود با گوگل ناموفق بود.", Toast.LENGTH_LONG).show()
+                                    }
+                                )
+                        }
                     }
                 },
                 onForgotPassword = { email ->
