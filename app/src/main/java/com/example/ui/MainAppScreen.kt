@@ -96,7 +96,10 @@ import java.util.Locale
 @Composable
 fun MainAppScreen(
     studentViewModel: StudentViewModel = viewModel(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onGoogleSignIn: suspend (onResult: (Boolean, String) -> Unit) -> Unit = { onResult ->
+        studentViewModel.signInWithGoogle(onResult)
+    }
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -284,7 +287,7 @@ fun MainAppScreen(
                         }
                     },
                     onGoogleSignIn = { onResult ->
-                        studentViewModel.signInWithGoogle(onResult)
+                        onGoogleSignIn(onResult)
                     }
                 )
             } else {
