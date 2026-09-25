@@ -331,6 +331,7 @@ class DataPersistenceAndBackupTest {
                 title = "تکلیف خصوصی",
                 courseName = course.name,
                 courseId = course.id,
+                dueDate = "2026-10-01T12:00:00",
                 semesterId = semester.id
             )
         )
