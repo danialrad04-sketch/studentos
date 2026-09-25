@@ -862,8 +862,7 @@ private fun CopilotActionProposalCard(
     onDismiss: () -> Unit
 ) {
     var showConfirmation by remember(proposal.id) { mutableStateOf(false) }
-    val requiresConfirmation =
-        proposal.impactType == ActionImpactType.REQUIRES_CONFIRMATION || proposal.isDestructive
+    val requiresConfirmation = proposal.requiresExplicitConfirmation
 
     Card(
         modifier = Modifier
