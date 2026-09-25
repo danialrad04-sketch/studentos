@@ -362,7 +362,7 @@ fun AcademicCopilotScreen(
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(16.dp),
                                     strokeWidth = 2.dp,
-                                    color = BrandIndigo600
+                                    color = AcademicNavy
                                 )
                                 Text(
                                     text = "دستیار در حال تحلیل وضعیت تحصیلی و تولید پاسخ...",
@@ -505,7 +505,7 @@ private fun CopilotContextHudHeader(
                 .fillMaxWidth()
                 .border(
                     width = 1.dp,
-                    brush = Brush.horizontalGradient(listOf(BrandIndigo600.copy(alpha = 0.4f), AcademicOlive.copy(alpha = 0.2f))),
+                    brush = Brush.horizontalGradient(listOf(AcademicNavy.copy(alpha = 0.4f), AcademicOlive.copy(alpha = 0.2f))),
                     shape = RoundedCornerShape(20.dp)
                 )
                 .padding(12.dp)
@@ -524,7 +524,7 @@ private fun CopilotContextHudHeader(
                             modifier = Modifier
                                 .size(28.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(BrandIndigo600),
+                                .background(AcademicNavy),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -844,7 +844,7 @@ private fun CopilotMessageItem(
                             text = reply,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
-                            color = BrandIndigo600,
+                            color = AcademicNavy,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
