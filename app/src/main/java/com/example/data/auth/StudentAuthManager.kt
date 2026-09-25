@@ -115,7 +115,14 @@ class StudentAuthManager(private val context: Context) {
                         isGpaPredictorUnlocked = false,
                         maxDailyAiQuota = 5
                     )
-                )
+                )                scope.launch(Dispatchers.IO) {
+                    val entitlement = fetchBackendEntitlement(client)
+                    if (_currentUser.value.uid == userId) {
+                        _currentUser.value = _currentUser.value.copy(subscription = entitlement)
+                    }
+                }
+
+
                 // Schedule periodic sync and pull latest data on startup
                 BackendSyncWorker.schedulePeriodicSync(context)
                 BackendSyncWorker.triggerImmediateSync(context, pullOnly = true)
@@ -303,16 +310,7 @@ class StudentAuthManager(private val context: Context) {
                         displayName = dispName,
                         photoUrl = null,
                         isGuest = false,
-                        subscription = SubscriptionDetails(
-                        // Backend identity alone does not grant a paid entitlement.
-                        // Cloud sync is account-level here; paid capabilities require
-                        // a server-authoritative entitlement source.
-                        tier = SubscriptionTier.FREE,
-                        isCloudSyncEnabled = true,
-                        isUnlimitedExportEnabled = false,
-                        isGpaPredictorUnlocked = false,
-                        maxDailyAiQuota = 5
-                    )
+                        subscription = fetchBackendEntitlement(client)
                     )
                     _currentUser.value = userAccount
 
@@ -369,14 +367,7 @@ class StudentAuthManager(private val context: Context) {
                         displayName = dispName,
                         photoUrl = null,
                         isGuest = false,
-                        subscription = SubscriptionDetails(
-                            // Backend identity alone does not grant a paid entitlement.
-                            tier = SubscriptionTier.FREE,
-                            isCloudSyncEnabled = true,
-                            isUnlimitedExportEnabled = false,
-                            isGpaPredictorUnlocked = false,
-                            maxDailyAiQuota = 5
-                        )
+                        subscription = fetchBackendEntitlement(client)
                     )
                     _currentUser.value = userAccount
 
@@ -629,6 +620,38 @@ class StudentAuthManager(private val context: Context) {
             Result.failure(e)
         }
     }
+    private suspend fun fetchBackendEntitlement(client: BackendApiClient): SubscriptionDetails {
+        val fallback = SubscriptionDetails(
+            tier = SubscriptionTier.FREE,
+            maxDailyAiQuota = 5,
+            isCloudSyncEnabled = true,
+            isUnlimitedExportEnabled = false,
+            isGpaPredictorUnlocked = false
+        )
+
+        return try {
+            val response = client.api.getEntitlement()
+            if (!response.isSuccessful) return fallback
+            val body = response.body() ?: return fallback
+            val tier = runCatching {
+                SubscriptionTier.valueOf(body.tier.trim().uppercase(java.util.Locale.ROOT))
+            }.getOrDefault(SubscriptionTier.FREE)
+
+            SubscriptionDetails(
+                tier = tier,
+                expiresAt = body.expiresAt,
+                dailyAiQuotaUsed = 0,
+                maxDailyAiQuota = body.maxDailyAiQuota.coerceAtLeast(0),
+                isCloudSyncEnabled = body.allowsCloudSync,
+                isUnlimitedExportEnabled = body.allowsPdfExport,
+                isGpaPredictorUnlocked = body.gpaPredictorUnlocked
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to load backend entitlement: " + e.message)
+            fallback
+        }
+    }
+
     private fun restoreCloudDataIfLocalEmpty(userId: String) {
         if (userId.isBlank() || userId.startsWith("guest_")) return
         scope.launch(Dispatchers.IO) {
