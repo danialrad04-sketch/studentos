@@ -109,7 +109,7 @@ fun AuthAccountDialog(
                     Icon(
                         imageVector = Icons.Rounded.AccountCircle,
                         contentDescription = null,
-                        tint = StudentOsColors.ElectricBlue,
+                        tint = AcademicNavy,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -187,7 +187,7 @@ fun AuthAccountDialog(
                     ) {
                         Text(
                             text = "فراموشی رمز عبور؟",
-                            color = StudentOsColors.ElectricBlue,
+                            color = AcademicNavy,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier
@@ -202,7 +202,7 @@ fun AuthAccountDialog(
                             .fillMaxWidth()
                             .height(48.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.ElectricBlue),
+                        colors = ButtonDefaults.buttonColors(containerColor = AcademicNavy),
                         enabled = email.isNotBlank() && password.isNotBlank()
                     ) {
                         Text("ورود به حساب و همگام‌سازی داده‌ها", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
@@ -281,7 +281,7 @@ fun AuthAccountDialog(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = StudentOsColors.CrimsonRose.copy(alpha = 0.12f)),
                     shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, StudentOsColors.CrimsonRose.copy(alpha = 0.4f))
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(
