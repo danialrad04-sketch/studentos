@@ -60,7 +60,7 @@ fun HeaderSection(
     courseCount: Int,
     gpa: String,
     passedUnits: Int,
-    totalRequiredCredits: Int = 140,
+    totalRequiredCredits: Int = 0,
     notifCount: Int,
     isDarkTheme: Boolean,
     themeMode: ThemeMode = ThemeMode.SYSTEM,
