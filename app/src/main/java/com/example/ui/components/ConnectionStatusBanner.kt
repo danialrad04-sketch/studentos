@@ -15,9 +15,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -38,7 +36,7 @@ fun OfflineStatusBanner(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    var online by rememberConnectivityState(context)
+    val online = rememberConnectivityState(context)
 
     if (!online) {
         Surface(
@@ -68,7 +66,7 @@ fun OfflineStatusBanner(
 }
 
 @Composable
-private fun rememberConnectivityState(context: Context): androidx.compose.runtime.MutableState<Boolean> {
+private fun rememberConnectivityState(context: Context): Boolean {
     val state = androidx.compose.runtime.remember { mutableStateOf(context.hasValidatedNetwork()) }
 
     DisposableEffect(context) {
@@ -90,5 +88,5 @@ private fun rememberConnectivityState(context: Context): androidx.compose.runtim
         }
     }
 
-    return state
+    return state.value
 }
