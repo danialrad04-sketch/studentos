@@ -76,6 +76,8 @@ import com.example.ui.theme.NumericDisplayStat
 import com.example.ui.theme.Rose500
 import com.example.ui.theme.Rose600
 import com.example.ui.theme.StudentOsColors
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.StudentSpacing
 import com.example.ui.theme.StudentOsGlassTokens
 
 @Composable
@@ -156,7 +158,7 @@ fun AttendanceRadarScreen(
                 onClick = {
                     onEvaluateAlerts()
                 },
-                shape = RoundedCornerShape(14.dp),
+                shape = StudentShapeTokens.Compact,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
             ) {
@@ -242,7 +244,7 @@ fun AttendanceRadarScreen(
                     selectedFilter = "all"
                 },
                 label = { Text("همه دروس (${allCourseNames.size})", fontSize = 11.5.sp) },
-                shape = RoundedCornerShape(12.dp),
+                shape = StudentShapeTokens.Compact,
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = StudentOsColors.CyanAccent,
                     selectedLabelColor = Color.Black
@@ -342,7 +344,7 @@ fun AttendanceRadarScreen(
         AlertDialog(
             onDismissRequest = { courseForDirectEdit = null },
             containerColor = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(22.dp),
+            shape = StudentShapeTokens.Card,
             title = {
                 Text(
                     text = "ثبت تعداد غیبت درس",
@@ -660,7 +662,7 @@ fun AttendanceCard(
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = StudentShapeTokens.Compact,
                     color = when {
                         isDanger -> Rose500.copy(alpha = 0.2f)
                         isWarning -> Amber500.copy(alpha = 0.18f)
