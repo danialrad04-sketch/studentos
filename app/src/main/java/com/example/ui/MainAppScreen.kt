@@ -86,6 +86,7 @@ import com.example.ui.components.HeaderSection
 import com.example.ui.components.MainTabContent
 import com.example.ui.components.OnboardingScreen
 import com.example.ui.components.OfflineStatusBanner
+import com.example.ui.components.StudentAdaptiveNavigationRail
 import com.example.ui.components.SubScreenHeaderSection
 import com.example.ui.components.export.ExportSourcePayload
 import com.example.ui.models.AppDialogState
@@ -94,6 +95,7 @@ import com.example.ui.models.ThemeMode
 import com.example.ui.theme.BrandIndigo600
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.rememberStudentAdaptiveMetrics
+import com.example.ui.theme.StudentWindowWidth
 import java.util.Locale
 
 @Composable
@@ -361,22 +363,38 @@ fun MainAppScreen(
                     containerColor = MaterialTheme.colorScheme.background,
                     snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                     bottomBar = {
-                        FloatingIslandNavigationBar(
-                            selectedTab = selectedTab,
-                            onTabSelected = {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                studentViewModel.selectTab(it)
-                            }
-                        )
+                        if (adaptiveMetrics.width == StudentWindowWidth.Compact) {
+                            FloatingIslandNavigationBar(
+                                selectedTab = selectedTab,
+                                onTabSelected = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    studentViewModel.selectTab(it)
+                                }
+                            )
+                        }
                     }
                 ) { innerPadding ->
-                    Box(
+                    Row(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.background)
-                            .padding(innerPadding),
-                        contentAlignment = Alignment.TopCenter
+                            .padding(innerPadding)
                     ) {
+                        if (adaptiveMetrics.width != StudentWindowWidth.Compact) {
+                            StudentAdaptiveNavigationRail(
+                                selectedTab = selectedTab,
+                                onTabSelected = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    studentViewModel.selectTab(it)
+                                }
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            contentAlignment = Alignment.TopCenter
+                        ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
