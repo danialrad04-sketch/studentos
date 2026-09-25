@@ -211,6 +211,22 @@ class DataPersistenceAndBackupTest {
         assertTrue((persistedProfile?.updatedAt ?: 0L) > staleTimestamp)
     }
     @Test
+    fun testFreshSlateDefaultsDoNotCreateSyntheticIdentity() = runBlocking {
+        repository.clearToFreshSlate()
+
+        val profile = db.studentDao().getProfileSync()
+        assertNotNull(profile)
+        assertEquals("دانشجو", profile?.name)
+        assertEquals("", profile?.studentId)
+        assertEquals("", profile?.university)
+        assertEquals("", profile?.major)
+        assertEquals("", profile?.faculty)
+        assertEquals("", profile?.term)
+        assertEquals(0, profile?.entryYear)
+        assertEquals(0, profile?.currentSemester)
+    }
+
+    @Test
     fun testNewProfileDefaultsContainNoPersonalAcademicIdentity() {
         val profile = com.example.data.local.entity.StudentProfileEntity()
         assertEquals("دانشجو", profile.name)
