@@ -123,3 +123,13 @@ data class AcademicProfile(
     val declaredPassedCredits: Int?,
     val gpaState: GpaState
 )
+
+
+data class ExamItem(
+    val id: String,
+    val courseName: String,
+    val solarDate: String,
+    val time: String,
+    val location: String,
+    val units: Int
+)
