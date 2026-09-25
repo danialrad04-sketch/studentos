@@ -122,7 +122,7 @@ data class StudentSemanticColors(
 )
 
 private val LightStudentSemanticColors = StudentSemanticColors(
-    studyFocus = Color(0xFF4F46E5),
+    studyFocus = Color(0xFF0F3B4D),
     streakFire = Color(0xFFF59E0B),
     passedUnitBadge = Color(0xFF10B981),
     attendanceSafe = Color(0xFF059669),
@@ -130,13 +130,13 @@ private val LightStudentSemanticColors = StudentSemanticColors(
     attendanceCritical = Color(0xFFE11D48),
     gpaAlpha = Color(0xFF059669),
     gpaProbation = Color(0xFFE11D48),
-    brandGradient = Brush.linearGradient(listOf(Color(0xFF4F46E5), Color(0xFF6366F1), Color(0xFF059669))),
+    brandGradient = Brush.linearGradient(listOf(Color(0xFF0F3B4D), Color(0xFF1E5367), Color(0xFF6B705C))),
     copilotGradient = Brush.horizontalGradient(listOf(Color(0xFF8B5CF6), Color(0xFF06B6D4))),
-    heroPassportGradient = Brush.linearGradient(listOf(Color(0xFF1D4ED8), Color(0xFF0284C7), Color(0xFF0D9488))),
+    heroPassportGradient = Brush.linearGradient(listOf(Color(0xFF0F3B4D), Color(0xFF285A6C), Color(0xFF6B705C))),
     cardBorderGlow = Color(0x1A4F46E5),
     cyanAccent = Color(0xFF06B6D4),
     emeraldAccent = Color(0xFF10B981),
-    purpleAccent = Color(0xFF8B5CF6),
+    purpleAccent = Color(0xFF7B6D5A),
     deepSpaceCanvas = Color(0xFFF8FAFC),
     glassSurface = Color(0xFFFFFFFF),
     glassSurfaceElevated = Color(0xFFF1F5F9),
@@ -145,7 +145,7 @@ private val LightStudentSemanticColors = StudentSemanticColors(
 )
 
 private val DarkStudentSemanticColors = StudentSemanticColors(
-    studyFocus = Color(0xFF0D9488),
+    studyFocus = Color(0xFF6FA7B8),
     streakFire = Color(0xFFD97757),
     passedUnitBadge = Color(0xFF10B981),
     attendanceSafe = Color(0xFF10B981),
@@ -153,13 +153,13 @@ private val DarkStudentSemanticColors = StudentSemanticColors(
     attendanceCritical = Color(0xFFF43F5E),
     gpaAlpha = Color(0xFF0D9488),
     gpaProbation = Color(0xFFF43F5E),
-    brandGradient = Brush.linearGradient(listOf(Color(0xFF0D9488), Color(0xFF14B8A6), Color(0xFFD97757))),
-    copilotGradient = Brush.horizontalGradient(listOf(Color(0xFF0D9488), Color(0xFFD97757))),
-    heroPassportGradient = Brush.linearGradient(listOf(Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF0D9488))),
+    brandGradient = Brush.linearGradient(listOf(Color(0xFF163F4D), Color(0xFF3C7180), Color(0xFFA7AD78))),
+    copilotGradient = Brush.horizontalGradient(listOf(Color(0xFF3C7180), Color(0xFFA7AD78))),
+    heroPassportGradient = Brush.linearGradient(listOf(Color(0xFF0F2731), Color(0xFF163F4D), Color(0xFF6B705C))),
     cardBorderGlow = Color(0x330D9488),
-    cyanAccent = Color(0xFF0D9488),
+    cyanAccent = Color(0xFF6FA7B8),
     emeraldAccent = Color(0xFF10B981),
-    purpleAccent = Color(0xFFD97757),
+    purpleAccent = Color(0xFFA7AD78),
     deepSpaceCanvas = Color(0xFF0F172A),
     glassSurface = Color(0xFF1E293B),
     glassSurfaceElevated = Color(0xFF334155),
