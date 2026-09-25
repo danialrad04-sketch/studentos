@@ -9,18 +9,18 @@ import org.junit.Test
 class AcademicCommandEngineTest {
     @Test
     fun resolves_today_schedule() {
-        assertEquals(AcademicCommand.TodaySchedule, AcademicCommandEngine.resolve("برنامه امروز"))
+        assertEquals(AcademicCommand.TODAY_SCHEDULE, AcademicCommandEngine.resolve("برنامه امروز"))
     }
 
     @Test
     fun normalizes_persian_spacing_and_letters() {
-        assertEquals(AcademicCommand.Attendance, AcademicCommandEngine.resolve(" حضور  و غیاب "))
-        assertEquals(AcademicCommand.Grades, AcademicCommandEngine.resolve("کارنامه"))
+        assertEquals(AcademicCommand.ATTENDANCE, AcademicCommandEngine.resolve(" حضور  و غیاب "))
+        assertEquals(AcademicCommand.GRADES, AcademicCommandEngine.resolve("کارنامه"))
     }
 
     @Test
     fun resolves_focus_alias() {
-        assertEquals(AcademicCommand.Focus, AcademicCommandEngine.resolve("پومودورو"))
+        assertEquals(AcademicCommand.FOCUS, AcademicCommandEngine.resolve("پومودورو"))
     }
 
     @Test
