@@ -163,18 +163,6 @@ class StudentRepository(
                 )
             }
             dao.insertCourseSessions(sessionsToInsert)
-        } else {
-            // Default 1 session slot if none provided
-            dao.insertCourseSession(
-                CourseSessionEntity(
-                    id = "sess_${courseId.take(8)}_0",
-                    courseId = courseId,
-                    day = 0,
-                    start = "08:00",
-                    end = "10:00",
-                    location = ""
-                )
-            )
         }
 
         // Ensure Attendance record with courseId as primary key
