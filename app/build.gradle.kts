@@ -112,6 +112,7 @@ dependencies {
   implementation(libs.firebase.appcheck.debug)
   // Uncomment to use Firestore:
   implementation(libs.firebase.firestore)
+  implementation("com.google.firebase:firebase-functions")
   // implementation(libs.firebase.crashlytics)
 
   // Uncomment ALL FOUR of the following dependencies together to use Firebase Auth and Google
