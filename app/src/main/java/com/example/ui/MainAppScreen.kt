@@ -94,7 +94,6 @@ import com.example.ui.components.export.ExportSourcePayload
 import com.example.ui.models.AppDialogState
 import com.example.ui.models.AppTab
 import com.example.ui.models.ThemeMode
-import com.example.ui.theme.BrandIndigo600
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.rememberStudentAdaptiveMetrics
 import com.example.ui.theme.StudentWindowWidth
