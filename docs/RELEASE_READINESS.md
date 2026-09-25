@@ -31,9 +31,10 @@
 - [ ] Release artifact build/signing succeeds
 - [ ] Install/upgrade migration tested
 - [ ] Firebase Auth startup/logout/data purge tested
+- [ ] Backend account deletion endpoint implemented and verified for Backend-authenticated users
 - [ ] Offline -> online sync conflict behavior tested
 - [ ] Persian RTL + font scaling reviewed on physical devices
 - [ ] Accessibility pass: TalkBack, touch targets, content descriptions
 - [ ] Play/Bazaar release metadata and signing configuration verified
 
-No production-release claim is made until the unchecked release gates above are verified.
+No production-release claim is made until the unchecked release gates above are verified. In particular, the Android client must not claim full account deletion while a backend-authenticated account has no verified server-side deletion path.
