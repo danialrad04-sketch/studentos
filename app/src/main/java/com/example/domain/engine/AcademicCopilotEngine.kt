@@ -34,8 +34,14 @@ object AcademicCopilotEngine {
     ): CopilotMessage {
         val totalActiveUnits = courses.sumOf { it.units }.coerceAtLeast(profile.activeUnits)
         val passedUnits = profile.passedUnits
-        val totalRequired = 140
-        val remainingUnits = (totalRequired - passedUnits - totalActiveUnits).coerceAtLeast(0)
+        val curriculumTotalUnits = CurriculumSeedData.getCoursesForMajor(profile.major)
+            .sumOf { it.units }
+        val totalRequired = curriculumTotalUnits.takeIf { it > 0 } ?: 0
+        val remainingUnits = if (totalRequired > 0) {
+            (totalRequired - passedUnits - totalActiveUnits).coerceAtLeast(0)
+        } else {
+            0
+        }
         val gpa = computeGpa(grades, profile.declaredGpa)
 
         val criticalAbsences = attendanceList.count { it.absentCount >= it.maxAllowed && it.maxAllowed > 0 }
@@ -89,7 +95,7 @@ object AcademicCopilotEngine {
         val cleanQuery = query.trim().lowercase(Locale.ROOT)
         val gpa = computeGpa(grades, profile.declaredGpa)
         val totalActiveUnits = courses.sumOf { it.units }
-        val majorCurriculum = if (curriculumCourses.isNotEmpty()) curriculumCourses else CurriculumSeedData.getCoursesForMajor(profile.major)
+        val majorCurriculum = curriculumCourses.ifEmpty { CurriculumSeedData.getCoursesForMajor(profile.major) }
 
         val todayWeekdayIdx = JalaliCalendarUtil.getTodayWeekdayIndex()
         val todayWeekdayName = JalaliCalendarUtil.getWeekdayName(todayWeekdayIdx)
