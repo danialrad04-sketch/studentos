@@ -54,6 +54,8 @@ import com.example.domain.model.EvaluatedCurriculumCourse
 import com.example.domain.model.SemesterPlan
 import com.example.ui.models.CurriculumMatchUiState
 import com.example.ui.theme.StudentOsColors
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.StudentSpacing
 import com.example.ui.theme.StudentOsShapes
 import com.example.ui.theme.StudentOsSpacing
 
@@ -105,7 +107,7 @@ fun SemesterPlannerScreen(
 
                 if (candidatePlans.size >= 2) {
                     Surface(
-                        shape = RoundedCornerShape(StudentOsShapes.pill),
+                        shape = StudentShapeTokens.Compact,
                         color = if (showComparison) StudentOsColors.LightIndigoSoft else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier.tactileClickable(performHaptic = true) {
                             showComparison = !showComparison
@@ -142,7 +144,7 @@ fun SemesterPlannerScreen(
                 }
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(StudentOsShapes.mediumCard),
+                    shape = StudentShapeTokens.Card,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
                     ),
@@ -214,7 +216,7 @@ fun SemesterPlannerScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(StudentOsShapes.largeContainer),
+                    shape = StudentShapeTokens.Hero,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),
