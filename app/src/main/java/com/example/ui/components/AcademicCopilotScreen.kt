@@ -50,6 +50,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -553,6 +554,7 @@ private fun CopilotContextHudHeader(
                         // AI Key config button
                         Surface(
                             modifier = Modifier
+                                .minimumInteractiveComponentSize()
                                 .clip(RoundedCornerShape(10.dp))
                                 .clickable { onOpenApiKeyDialog() },
                             color = MaterialTheme.colorScheme.secondaryContainer,
@@ -581,6 +583,7 @@ private fun CopilotContextHudHeader(
                         // Button to edit/adjust semester and past records
                         Surface(
                             modifier = Modifier
+                                .minimumInteractiveComponentSize()
                                 .clip(RoundedCornerShape(10.dp))
                                 .clickable { onOpenPastSemesters() },
                             color = MaterialTheme.colorScheme.primaryContainer,
