@@ -105,13 +105,21 @@ fun AcademicStatusChip(
     modifier: Modifier = Modifier,
     icon: (@Composable (() -> Unit))? = null
 ) {
-    AssistChip(
-        onClick = {},
+    Surface(
         modifier = modifier.semantics { contentDescription = label },
-        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
-        leadingIcon = icon,
-        shape = RoundedCornerShape(10.dp)
-    )
+        shape = RoundedCornerShape(10.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = StudentSpacing.Sm, vertical = StudentSpacing.Xs),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            icon?.invoke()
+            if (icon != null) Spacer(Modifier.width(StudentSpacing.Xs))
+            Text(label, style = MaterialTheme.typography.labelMedium)
+        }
+    }
 }
 
 @Composable
