@@ -176,6 +176,26 @@ router.post('/logout-all', requireAuth, async (req, res) => {
   }
 });
 
+// ── Delete current account and all server-owned data ──────────────────────
+// The user id comes exclusively from the verified access token. The foreign
+// keys in the migration schema cascade deletion to refresh_tokens and user_data,
+// so the operation removes the account and its server-owned data together.
+router.delete('/account', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'DELETE FROM users WHERE id = $1 RETURNING id',
+      [req.userId]
+    );
+    if (!result.rows[0]) {
+      return res.status(404).json({ error: 'USER_NOT_FOUND' });
+    }
+    return res.status(204).send();
+  } catch (err) {
+    console.error('[auth/delete-account]', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR' });
+  }
+});
+
 // ── Current user (sanity/profile check) ──────────────────────────────────
 router.get('/me', requireAuth, async (req, res) => {
   try {
