@@ -79,10 +79,16 @@ object FirestoreSyncManager {
 
             if (snapshot != null && snapshot.exists()) {
                 val tierStr = snapshot.getString("subscriptionTier") ?: "FREE"
-                val tier = try {
-                    SubscriptionTier.valueOf(tierStr.uppercase())
-                } catch (_: Throwable) {
+                val expiresAt = snapshot.getTimestamp("subscriptionExpiresAt")?.toDate()?.time
+                val expired = expiresAt != null && expiresAt <= System.currentTimeMillis()
+                val tier = if (expired) {
                     SubscriptionTier.FREE
+                } else {
+                    try {
+                        SubscriptionTier.valueOf(tierStr.uppercase())
+                    } catch (_: Throwable) {
+                        SubscriptionTier.FREE
+                    }
                 }
                 trySend(tier)
             } else {
