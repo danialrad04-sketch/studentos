@@ -766,10 +766,10 @@ class StudentRepository(
     suspend fun clearToFreshSlate(
         name: String = "دانشجو",
         studentId: String = "",
-        university: String = "دانشگاه",
-        major: String = "مهندسی",
-        entryYear: Int = 1403,
-        currentSemester: Int = 1
+        university: String = "",
+        major: String = "",
+        entryYear: Int = 0,
+        currentSemester: Int = 0
     ) {
         val performClear = suspend {
             dao.clearCourses()
@@ -802,8 +802,8 @@ class StudentRepository(
                 major = major,
                 entryYear = entryYear,
                 currentSemester = currentSemester,
-                faculty = "دانشکده $major · ۰ واحد فعال",
-                term = "ترم $currentSemester $major",
+                faculty = if (major.isNotBlank()) "دانشکده $major · ۰ واحد فعال" else "",
+                term = if (currentSemester > 0 && major.isNotBlank()) "ترم $currentSemester $major" else "",
                 activeUnits = 0,
                 passedUnits = 0,
                 notes = "",
