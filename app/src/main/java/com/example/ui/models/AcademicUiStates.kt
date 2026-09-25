@@ -27,3 +27,10 @@ sealed interface CurriculumMatchUiState {
     data class NotFound(val reason: ResolutionFailureReason, val explanation: String) : CurriculumMatchUiState
     data class Error(val message: String) : CurriculumMatchUiState
 }
+
+sealed interface SyncUiState {
+    data object Idle : SyncUiState
+    data object Syncing : SyncUiState
+    data class Success(val message: String, val completedAt: Long) : SyncUiState
+    data class Error(val message: String, val failedAt: Long) : SyncUiState
+}
