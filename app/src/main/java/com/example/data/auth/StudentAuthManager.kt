@@ -485,7 +485,14 @@ class StudentAuthManager(private val context: Context) {
             return@withContext Result.failure(IllegalStateException("برای فعال‌سازی کد اشتراک ابتدا وارد حساب خود شوید."))
         }
 
-        // Server-side validation via FirestoreSyncManager
+        // Backend-authenticated accounts must use a backend entitlement service.
+        // Until that endpoint exists, never mutate the local tier from this path.
+        if (safeFirebaseAuth?.currentUser?.uid != current.uid) {
+            return@withContext Result.failure(
+                IllegalStateException("فعال‌سازی اشتراک این حساب هنوز از مسیر سرور اختصاصی پشتیبانی نمی‌شود.")
+            )
+        }
+
         val result = FirestoreSyncManager.redeemPromoCode(current.uid, code)
         result.onSuccess { tier ->
             _currentUser.value = current.copy(
@@ -503,19 +510,30 @@ class StudentAuthManager(private val context: Context) {
 
     suspend fun upgradeSubscriptionTier(tier: SubscriptionTier): Result<SubscriptionTier> = withContext(Dispatchers.IO) {
         val current = _currentUser.value
-        // Server update through Firestore
-        val result = FirestoreSyncManager.redeemPromoCode(current.uid, "UPGRADE_${tier.name}")
-        val effectiveTier = if (result.isSuccess) tier else tier // Local fallback with cloud sync trigger
-        _currentUser.value = current.copy(
-            subscription = current.subscription.copy(
-                tier = effectiveTier,
-                isCloudSyncEnabled = true,
-                isUnlimitedExportEnabled = true,
-                isGpaPredictorUnlocked = true,
-                maxDailyAiQuota = if (tier == SubscriptionTier.FREE) 5 else 999
+        if (current.isGuest) {
+            return@withContext Result.failure(IllegalStateException("برای تغییر اشتراک ابتدا وارد حساب خود شوید."))
+        }
+
+        // No client-side subscription fallback. The server must confirm the entitlement.
+        if (safeFirebaseAuth?.currentUser?.uid != current.uid) {
+            return@withContext Result.failure(
+                IllegalStateException("ارتقای اشتراک حساب سروری هنوز به endpoint اشتراک متصل نشده است.")
             )
-        )
-        Result.success(effectiveTier)
+        }
+
+        val result = FirestoreSyncManager.redeemPromoCode(current.uid, "UPGRADE_${tier.name}")
+        result.onSuccess { effectiveTier ->
+            _currentUser.value = current.copy(
+                subscription = current.subscription.copy(
+                    tier = effectiveTier,
+                    isCloudSyncEnabled = true,
+                    isUnlimitedExportEnabled = true,
+                    isGpaPredictorUnlocked = true,
+                    maxDailyAiQuota = if (effectiveTier == SubscriptionTier.FREE) 5 else 999
+                )
+            )
+        }
+        result
     }
 
     suspend fun signOutUser() = withContext(Dispatchers.IO) {
