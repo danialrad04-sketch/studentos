@@ -87,6 +87,10 @@ Existing parsing/date systems include RegistrationTextParser and DateTimeNormali
 - Saving a course without provided sessions no longer creates a default 08:00–10:00 session.
 - Backend sync course pulls no longer clear unrelated attendance/grade/exam/task data.
 
+## Additional correctness hardening
+- Grade calculations now use the repository's 20-point contract: 6-point midterm + 14-point final; Copilot, Gamification and the grade simulator are aligned.
+- Backend-authenticated users no longer receive an implicit Pro entitlement; paid capabilities require a server-authoritative entitlement source.
+
 ## Remaining gaps
 
 ### Phase 1 — Design system adoption
