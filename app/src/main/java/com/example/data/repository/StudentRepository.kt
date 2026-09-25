@@ -307,8 +307,8 @@ class StudentRepository(
         studentId: String = "",
         university: String = "",
         major: String = "",
-        entryYear: Int = 1403,
-        currentSemester: Int = 1,
+        entryYear: Int = 0,
+        currentSemester: Int = 0,
         passedCredits: Int = 0,
         declaredGpa: Double = 0.0
     ) = withContext(Dispatchers.IO) {
@@ -366,14 +366,28 @@ class StudentRepository(
         studentId: String = "",
         university: String = "",
         major: String = "",
-        entryYear: Int = 1403,
-        currentSemester: Int = 1
+        entryYear: Int = 0,
+        currentSemester: Int = 0
     ) {
         val performImport = suspend {
-            val resolvedSemNum = if (currentSemester > 0) currentSemester else 1
-            val resolvedMajor = major.ifBlank { "دانشگاهی" }
-            val activeSemId = if (semesterId.isNotBlank() && semesterId != "current") semesterId else "sem_$resolvedSemNum"
-            val calculatedAcademicYear = entryYear + ((resolvedSemNum - 1) / 2)
+            val currentProfile = dao.getProfileSync()
+            val resolvedSemNum = currentSemester.takeIf { it > 0 }
+                ?: currentProfile?.currentSemester?.takeIf { it > 0 }
+                ?: 0
+            val resolvedMajor = major.ifBlank { currentProfile?.major.orEmpty() }
+            val activeSemId = if (semesterId.isNotBlank() && semesterId != "current") {
+                semesterId
+            } else {
+                "sem_current"
+            }
+            val baseEntryYear = entryYear.takeIf { it > 0 }
+                ?: currentProfile?.entryYear?.takeIf { it > 0 }
+                ?: 0
+            val calculatedAcademicYear = if (baseEntryYear > 0 && resolvedSemNum > 0) {
+                baseEntryYear + ((resolvedSemNum - 1) / 2)
+            } else {
+                0
+            }
 
             // Ensure active current semester exists in database
             dao.clearCurrentSemesterFlag()
@@ -514,19 +528,21 @@ class StudentRepository(
                 }
             }
 
-            val current = dao.getProfileSync()
+            val current = currentProfile
             val totalUnits = insertedCourses.sumOf { it.units }
-            val resolvedProfileMajor = if (major.isNotBlank()) major else (current?.major ?: "مهندسی شیمی")
+            val resolvedProfileMajor = major.ifBlank { current?.major.orEmpty() }
+            val resolvedUniversity = university.ifBlank { current?.university.orEmpty() }
+            val resolvedEntryYear = entryYear.takeIf { it > 0 } ?: current?.entryYear ?: 0
             val profileToSave = (current ?: StudentProfileEntity(id = 1)).copy(
                 name = if (studentName.isNotBlank()) studentName else (current?.name ?: "دانشجو"),
                 studentId = if (studentId.isNotBlank()) studentId else (current?.studentId ?: ""),
-                university = if (university.isNotBlank()) university else (current?.university ?: "دانشگاه"),
+                university = resolvedUniversity,
                 major = resolvedProfileMajor,
-                entryYear = if (entryYear > 0) entryYear else (current?.entryYear ?: 1403),
+                entryYear = resolvedEntryYear,
                 activeUnits = totalUnits,
                 currentSemester = resolvedSemNum,
-                term = "ترم $resolvedSemNum $resolvedProfileMajor",
-                faculty = "دانشکده $resolvedProfileMajor · $totalUnits واحد فعال",
+                term = if (resolvedSemNum > 0 && resolvedProfileMajor.isNotBlank()) "ترم $resolvedSemNum $resolvedProfileMajor" else (current?.term ?: ""),
+                faculty = if (resolvedProfileMajor.isNotBlank()) "دانشکده $resolvedProfileMajor · $totalUnits واحد فعال" else (current?.faculty ?: ""),
                 isOnboardingCompleted = true,
                 updatedAt = System.currentTimeMillis()
             )
