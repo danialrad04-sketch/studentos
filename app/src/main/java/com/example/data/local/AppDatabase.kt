@@ -844,12 +844,12 @@ abstract class AppDatabase : RoomDatabase() {
             if (existingSemesters.isEmpty()) {
                 dao.insertSemester(
                     SemesterEntity(
-                        id = "sem_1",
-                        title = "ترم ۱ (پاییز ۱۴۰۳)",
-                        year = 1403,
-                        academicYear = 1403,
-                        semesterNumber = 1,
-                        termNumber = 1,
+                        id = "sem_current",
+                        title = "ترم جاری",
+                        year = 0,
+                        academicYear = 0,
+                        semesterNumber = 0,
+                        termNumber = 0,
                         isCurrent = true,
                         isArchived = false,
                         totalUnits = 0,
