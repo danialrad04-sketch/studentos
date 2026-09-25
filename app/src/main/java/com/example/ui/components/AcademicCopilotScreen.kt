@@ -279,36 +279,6 @@ fun AcademicCopilotScreen(
         )
     }
 
-    if (showConfirmation) {
-        AlertDialog(
-            onDismissRequest = { showConfirmation = false },
-            title = { Text("تأیید اجرای تغییر") },
-            text = {
-                Text(
-                    if (proposal.isDestructive)
-                        "این عملیات می‌تواند روی اطلاعات شما اثر دائمی داشته باشد. قبل از ادامه، جزئیات بالا را بررسی کنید."
-                    else
-                        "این عملیات اطلاعات Student OS را تغییر می‌دهد. برای اجرای آن تأیید نهایی شما لازم است."
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showConfirmation = false
-                        onApply()
-                    },
-                    shape = StudentShapeTokens.Compact
-                ) { Text("تأیید و اعمال") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showConfirmation = false }) {
-                    Text("انصراف")
-                }
-            },
-            shape = StudentShapeTokens.Card
-        )
-    }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -382,7 +352,7 @@ fun AcademicCopilotScreen(
                         Surface(
                             shape = RoundedCornerShape(16.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                            border = androidx.compose.foundation.BorderStroke(0.8.dp, BrandIndigo600.copy(alpha = 0.2f))
+                            border = androidx.compose.foundation.BorderStroke(0.8.dp, AcademicNavy.copy(alpha = 0.2f))
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
@@ -535,7 +505,7 @@ private fun CopilotContextHudHeader(
                 .fillMaxWidth()
                 .border(
                     width = 1.dp,
-                    brush = Brush.horizontalGradient(listOf(BrandIndigo600.copy(alpha = 0.4f), VioletNeon.copy(alpha = 0.2f))),
+                    brush = Brush.horizontalGradient(listOf(BrandIndigo600.copy(alpha = 0.4f), AcademicOlive.copy(alpha = 0.2f))),
                     shape = RoundedCornerShape(20.dp)
                 )
                 .padding(12.dp)
@@ -654,7 +624,7 @@ private fun CopilotContextHudHeader(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     HudPill(label = "ترم فعلی", value = "ترم ${profile.currentSemester}", color = MaterialTheme.colorScheme.primary)
-                    HudPill(label = "واحدهای فعال", value = "$totalActiveUnits واحد", color = CyanNeon)
+                    HudPill(label = "واحدهای فعال", value = "$totalActiveUnits واحد", color = AcademicNavy)
                     HudPill(label = "پاس‌شده", value = "${profile.passedUnits} واحد", color = Emerald600)
                     HudPill(label = "معدل", value = String.format(Locale.US, "%.2f", currentGpa), color = Amber600)
                     if (criticalAbsences > 0) {
@@ -868,7 +838,7 @@ private fun CopilotMessageItem(
                             .clickable { onQuickReplyClicked(reply) },
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                         shape = RoundedCornerShape(8.dp),
-                        border = androidx.compose.foundation.BorderStroke(0.6.dp, BrandIndigo400.copy(alpha = 0.25f))
+                        border = androidx.compose.foundation.BorderStroke(0.6.dp, AcademicNavy.copy(alpha = 0.25f))
                     ) {
                         Text(
                             text = reply,
