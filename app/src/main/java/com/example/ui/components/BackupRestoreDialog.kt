@@ -75,6 +75,8 @@ fun BackupRestoreDialog(
     var restoreStatusMessage by remember { mutableStateOf<String?>(null) }
     var isRestoring by remember { mutableStateOf(false) }
     var isCloudRestoring by remember { mutableStateOf(false) }
+    var showRestoreConfirmation by remember { mutableStateOf(false) }
+    var pendingRestoreType by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(selectedTab) {
         if (selectedTab == 0 && exportedJsonText.isBlank()) {
@@ -234,8 +236,10 @@ fun BackupRestoreDialog(
                         Spacer(modifier = Modifier.height(10.dp))
                         Button(
                             onClick = {
-                                isCloudRestoring = true
-                                onRestoreFromCloud { success, msg ->
+                                pendingRestoreType = "cloud"
+                                showRestoreConfirmation = true
+                            }
+                        }, enabled = !isCloudRestoring && !isRestoring
                                     isCloudRestoring = false
                                     restoreStatusMessage = msg
                                     if (success) {
@@ -319,8 +323,9 @@ fun BackupRestoreDialog(
                     Button(
                         onClick = {
                             if (jsonInputToRestore.isNotBlank()) {
-                                isRestoring = true
-                                onImportJson(jsonInputToRestore) { success, msg ->
+                                pendingRestoreType = "json"
+                                showRestoreConfirmation = true
+                            }
                                     isRestoring = false
                                     restoreStatusMessage = msg
                                     if (success) {
@@ -355,6 +360,61 @@ fun BackupRestoreDialog(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+            }
+
+            if (showRestoreConfirmation) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showRestoreConfirmation = false
+                        pendingRestoreType = null
+                    },
+                    title = { Text("تأیید بازیابی اطلاعات") },
+                    text = {
+                        Text(
+                            "بازیابی اطلاعات می‌تواند داده‌های فعلی روی دستگاه را با نسخه انتخاب‌شده جایگزین کند. قبل از ادامه مطمئن شوید نسخه درست را انتخاب کرده‌اید."
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showRestoreConfirmation = false
+                                when (pendingRestoreType) {
+                                    "cloud" -> {
+                                        isCloudRestoring = true
+                                        onRestoreFromCloud { success, msg ->
+                                            isCloudRestoring = false
+                                            restoreStatusMessage = msg
+                                            if (success) {
+                                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                                onDismiss()
+                                            }
+                                        }
+                                    }
+                                    "json" -> {
+                                        isRestoring = true
+                                        onImportJson(jsonInputToRestore) { success, msg ->
+                                            isRestoring = false
+                                            restoreStatusMessage = msg
+                                            if (success) {
+                                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                                onDismiss()
+                                            }
+                                        }
+                                    }
+                                }
+                                pendingRestoreType = null
+                            },
+                            shape = StudentShapeTokens.Compact
+                        ) { Text("تأیید و بازیابی") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showRestoreConfirmation = false
+                            pendingRestoreType = null
+                        }) { Text("انصراف") }
+                    },
+                    shape = StudentShapeTokens.Card
+                )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
