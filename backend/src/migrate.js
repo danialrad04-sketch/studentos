@@ -38,6 +38,27 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 );
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 
+-- Server-authoritative entitlement codes. Codes are never written by the client;
+-- redemption is transactional and recorded per user to prevent duplicate use.
+CREATE TABLE IF NOT EXISTS entitlement_codes (
+  code TEXT PRIMARY KEY,
+  subscription_tier TEXT NOT NULL,
+  expires_at TIMESTAMPTZ,
+  max_redemptions INTEGER NOT NULL DEFAULT 1 CHECK (max_redemptions > 0),
+  redeemed_count INTEGER NOT NULL DEFAULT 0 CHECK (redeemed_count >= 0),
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS entitlement_redemptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code TEXT NOT NULL REFERENCES entitlement_codes(code) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  redeemed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (code, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_entitlement_redemptions_user_id ON entitlement_redemptions(user_id);
+
 -- Generic per-user synced data store, mirroring the app's existing
 -- Firestore document-per-collection sync model: one row per
 -- (user, data_type), storing the full JSON payload for that data type
