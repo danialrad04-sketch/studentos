@@ -85,6 +85,7 @@ import com.example.ui.components.FloatingIslandNavigationBar
 import com.example.ui.components.HeaderSection
 import com.example.ui.components.MainTabContent
 import com.example.ui.components.OnboardingScreen
+import com.example.ui.components.OfflineStatusBanner
 import com.example.ui.components.SubScreenHeaderSection
 import com.example.ui.components.export.ExportSourcePayload
 import com.example.ui.models.AppDialogState
@@ -381,6 +382,8 @@ fun MainAppScreen(
                                 .verticalScroll(rememberScrollState())
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
+                            OfflineStatusBanner()
+                            Spacer(modifier = Modifier.height(8.dp))
                             val totalCurriculumUnits = when (val state = academicProgressState) {
                                 is com.example.ui.models.AcademicProgressUiState.Ready -> state.progress.totalRequiredCredits
                                 is com.example.ui.models.AcademicProgressUiState.Partial -> state.progress.totalRequiredCredits
