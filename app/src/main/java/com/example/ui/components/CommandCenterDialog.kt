@@ -1,5 +1,13 @@
 package com.example.ui.components
 
+import com.example.ui.theme.AcademicOlive
+
+import com.example.ui.theme.AcademicNavy
+
+import com.example.ui.theme.StudentSpacing
+
+import com.example.ui.theme.StudentShapeTokens
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -68,8 +76,8 @@ import com.example.data.local.entity.CourseEntity
 import com.example.data.local.entity.TaskEntity
 import com.example.ui.models.ExamItem
 import com.example.ui.theme.Amber500
-import com.example.ui.theme.CyanNeon
-import com.example.ui.theme.Emerald600
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.Rose600
 
 /**
@@ -212,7 +220,7 @@ fun CommandCenterDialog(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = StudentShapeTokens.Card,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
@@ -233,7 +241,7 @@ fun CommandCenterDialog(
                     if (totalMatches == 0) {
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = StudentShapeTokens.Compact,
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
                         ) {
                             Text(
