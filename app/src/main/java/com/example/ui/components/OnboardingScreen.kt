@@ -307,7 +307,7 @@ fun OnboardingScreen(
     var studentName by remember { mutableStateOf(initialName) }
     var studentId by remember { mutableStateOf(initialStudentId) }
     var university by remember { mutableStateOf(initialUniversity.ifBlank { "دانشگاه مراغه" }) }
-    var major by remember { mutableStateOf(initialMajor.ifBlank { "مهندسی شیمی" }) }
+    var major by remember { mutableStateOf(initialMajor) }
     var entryYear by remember { mutableIntStateOf(if (initialEntryYear > 0) initialEntryYear else 1402) }
     var currentSemester by remember { mutableIntStateOf(if (initialSemester > 0) initialSemester else 3) }
 
