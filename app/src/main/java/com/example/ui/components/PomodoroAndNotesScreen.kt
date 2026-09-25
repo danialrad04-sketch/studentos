@@ -322,7 +322,7 @@ fun PomodoroAndNotesScreen(
                                 text = "${studyRecommendations.size} اولویت",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = BrandIndigo600,
+                                color = AcademicNavy,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
@@ -385,13 +385,13 @@ fun PomodoroAndNotesScreen(
 
                                     Surface(
                                         shape = RoundedCornerShape(8.dp),
-                                        color = BrandIndigo600.copy(alpha = 0.1f)
+                                        color = AcademicNavy.copy(alpha = 0.1f)
                                     ) {
                                         Text(
                                             text = "${rec.recommendedDurationMinutes} دقیقه",
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = BrandIndigo600,
+                                            color = AcademicNavy,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                         )
                                     }
