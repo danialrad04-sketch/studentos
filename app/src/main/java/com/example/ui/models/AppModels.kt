@@ -22,6 +22,7 @@ enum class AppTab(
 ) {
     DASHBOARD("داشبورد بنتو", "⚡"),
     COPILOT("دستیار هوشمند", "🤖"),
+    ACADEMIC_INTELLIGENCE("هوش تحصیلی", "🧠"),
     PASSPORT("شناسنامه تحصیلی", "📜"),
     SCHEDULE("برنامه کلاسی", "🗓️"),
     ATTENDANCE("رادار غیبت‌ها", "🚨"),
