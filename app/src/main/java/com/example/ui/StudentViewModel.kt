@@ -21,6 +21,7 @@ import com.example.ui.models.ExamItem
 import com.example.ui.models.SemesterCurriculum
 import com.example.ui.models.SystemNotification
 import com.example.ui.models.ThemeMode
+import com.example.ui.models.SyncUiState
 import com.example.ui.util.NotificationHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -474,6 +475,9 @@ class StudentViewModel @JvmOverloads constructor(
         SharingStarted.WhileSubscribed(5000),
         AcademicGamificationEngine.calculateGamificationProfile(emptyList(), emptyList(), emptyList(), 0)
     )
+
+    private val _syncUiState = MutableStateFlow<SyncUiState>(SyncUiState.Idle)
+    val syncUiState: StateFlow<SyncUiState> = _syncUiState.asStateFlow()
 
     // Global Search Query and Results (Phase 24)
     private val _searchQuery = MutableStateFlow("")
@@ -1271,17 +1275,21 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun syncWithBackendNow(onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
+            _syncUiState.value = SyncUiState.Syncing
             try {
                 com.example.data.cloud.worker.BackendSyncWorker.triggerImmediateSync(application, pullOnly = false)
                 val pullRes = com.example.data.cloud.BackendSyncManager.pullAllData(application)
                 if (pullRes.isSuccess) {
+                    _syncUiState.value = SyncUiState.Success("اطلاعات با سرور همگام شد.", System.currentTimeMillis())
                     _userMessage.emit("همگام‌سازی با سرور اختصاصی با موفقیت انجام شد.")
                     onResult(true, "اطلاعات با سرور همگام شد.")
                 } else {
+                    _syncUiState.value = SyncUiState.Error("برخی داده‌ها در همگام‌سازی دریافت نشدند.", System.currentTimeMillis())
                     onResult(false, "برخی داده‌ها در همگام‌سازی دریافت نشدند.")
                 }
             } catch (e: Exception) {
-                onResult(false, "خطا در همگام‌سازی: ${e.message}")
+                _syncUiState.value = SyncUiState.Error("خطا در همگام‌سازی: ${e.localizedMessage ?: "اتصال برقرار نشد."}", System.currentTimeMillis())
+                onResult(false, "خطا در همگام‌سازی: ${e.localizedMessage ?: "اتصال برقرار نشد."}")
             }
         }
     }
@@ -1381,6 +1389,7 @@ class StudentViewModel @JvmOverloads constructor(
         }
 
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            _syncUiState.value = SyncUiState.Syncing
             try {
                 val db = AppDatabase.getDatabase(application)
                 val dao = db.studentDao()
@@ -1398,6 +1407,11 @@ class StudentViewModel @JvmOverloads constructor(
                     val restoreResult = com.example.data.cloud.BackendSyncManager.pullAllData(application)
                     val success = restoreResult.isSuccess
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        if (success) {
+                            _syncUiState.value = SyncUiState.Success("همگام‌سازی با سرور اختصاصی با موفقیت انجام شد.", System.currentTimeMillis())
+                        } else {
+                            _syncUiState.value = SyncUiState.Error("ارسال انجام شد، اما دریافت نهایی از سرور ناموفق بود.", System.currentTimeMillis())
+                        }
                         onResult(
                             success,
                             if (success) "همگام‌سازی با سرور اختصاصی با موفقیت انجام شد."
@@ -1406,13 +1420,15 @@ class StudentViewModel @JvmOverloads constructor(
                     }
                 } else {
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        _syncUiState.value = SyncUiState.Error("ارسال اطلاعات به سرور اختصاصی ناموفق بود.", System.currentTimeMillis())
                         onResult(false, "ارسال اطلاعات به سرور اختصاصی ناموفق بود.")
                     }
                 }
 
             } catch (e: Exception) {
+                _syncUiState.value = SyncUiState.Error("خطا در اتصال به سرور: ${e.localizedMessage ?: "اتصال برقرار نشد."}", System.currentTimeMillis())
                 android.util.Log.e("StudentViewModel", "Manual cloud sync failed: ${e.message}", e)
-                onResult(false, "خطا در اتصال به سرور: ${e.localizedMessage}")
+                onResult(false, "خطا در اتصال به سرور: ${e.localizedMessage ?: "اتصال برقرار نشد."}")
             }
         }
     }
