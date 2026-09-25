@@ -226,44 +226,46 @@ object SemesterPlannerEngine {
 object StudyPlannerEngine {
 
     /**
-     * Generates a deterministic study prioritization plan based on exams and pending tasks.
+     * Generates a deterministic study prioritization plan based on the actual
+     * upcoming exam dates and pending tasks. Duplicate recommendations are removed.
      */
     fun generateStudyPlan(
         exams: List<ExamItem>,
         tasks: List<TaskEntity>
     ): List<StudySessionRecommendation> {
-        val recommendations = mutableListOf<StudySessionRecommendation>()
-
-        // 1. Upcoming exams
-        exams.forEach { exam ->
-            recommendations.add(
+        val examRecommendations = exams
+            .filter { it.courseName.isNotBlank() && it.solarDate.isNotBlank() }
+            .distinctBy { it.id }
+            .sortedWith(compareBy<ExamItem>({ it.solarDate.trim() }, { it.time.trim() }, { it.courseName.trim() }))
+            .map { exam ->
                 StudySessionRecommendation(
                     id = "study_exam_${exam.id}",
-                    courseName = exam.courseName,
+                    courseName = exam.courseName.trim(),
                     recommendedDurationMinutes = 60,
-                    priorityReason = "آمادگی آزمون مورخ ${exam.solarDate}",
+                    priorityReason = "آمادگی آزمون مورخ ${exam.solarDate.trim()}",
                     targetType = "آمادگی آزمون"
                 )
-            )
-        }
+            }
 
-        // 2. Urgent pending tasks
-        tasks.filter { !it.isCompleted }.take(3).forEach { task ->
-            recommendations.add(
+        val taskRecommendations = tasks
+            .filter { !it.isCompleted && it.courseName.isNotBlank() && it.title.isNotBlank() }
+            .distinctBy { it.id }
+            .take(5)
+            .map { task ->
                 StudySessionRecommendation(
                     id = "study_task_${task.id}",
-                    courseName = task.courseName,
+                    courseName = task.courseName.trim(),
                     recommendedDurationMinutes = 45,
-                    priorityReason = "انجام تکلیف «${task.title}»",
+                    priorityReason = "انجام تکلیف «${task.title.trim()}»",
                     targetType = "تکمیل تکلیف"
                 )
-            )
-        }
+            }
 
-        return recommendations
+        return (examRecommendations + taskRecommendations)
+            .distinctBy { it.id }
+            .take(8)
     }
 }
-
 object GlobalSearchEngine {
 
     /**
@@ -293,7 +295,7 @@ object GlobalSearchEngine {
                     GlobalSearchResult.CourseItem(
                         courseId = course.id,
                         name = course.name,
-                        code = "کد ثبت‌شده",
+                        code = course.courseCode.ifBlank { "بدون کد" },
                         units = course.units,
                         state = CourseState.CURRENT
                     )
