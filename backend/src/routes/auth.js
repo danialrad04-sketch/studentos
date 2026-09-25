@@ -176,6 +176,40 @@ router.post('/logout-all', requireAuth, async (req, res) => {
   }
 });
 
+// ── Server-authoritative entitlement ─────────────────────────────────────
+router.get('/entitlement', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT subscription_tier, subscription_expires_at FROM users WHERE id = $1 AND is_active = true',
+      [req.userId]
+    );
+    const row = result.rows[0];
+    if (!row) return res.status(404).json({ error: 'USER_NOT_FOUND' });
+
+    const expiresAt = row.subscription_expires_at
+      ? new Date(row.subscription_expires_at).getTime()
+      : null;
+    const expired = expiresAt != null && expiresAt <= Date.now();
+    const tier = expired ? 'FREE' : String(row.subscription_tier || 'FREE').toUpperCase();
+
+    const capabilities = {
+      maxDailyAiQuota: tier === 'FREE' ? 5 : 999,
+      allowsCloudSync: true,
+      allowsPdfExport: tier !== 'FREE',
+      gpaPredictorUnlocked: tier !== 'FREE',
+    };
+
+    return res.json({
+      tier,
+      expiresAt: expired ? null : expiresAt,
+      ...capabilities,
+    });
+  } catch (err) {
+    console.error('[auth/entitlement]', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR' });
+  }
+});
+
 // ── Delete current account and all server-owned data ──────────────────────
 // The user id comes exclusively from the verified access token. The foreign
 // keys in the migration schema cascade deletion to refresh_tokens and user_data,
