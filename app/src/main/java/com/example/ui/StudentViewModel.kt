@@ -323,6 +323,7 @@ class StudentViewModel @JvmOverloads constructor(
         combine(repository.curriculumUniversities, repository.curriculumMajors) { universities, majors -> Pair(universities, majors) },
         repository.curriculumVersions
     ) { profileAndCourses, curriculumAndAttempts, referenceData, versionRows ->
+        fun buildMatchState(): CurriculumMatchUiState {
         val p = profileAndCourses.first
         val currentCoursesList = profileAndCourses.second
         val currCoursesList = curriculumAndAttempts.first
@@ -335,7 +336,7 @@ class StudentViewModel @JvmOverloads constructor(
         val entryYear = p.entryYear
 
         if (universityId.isBlank() || majorId.isBlank() || entryYear <= 0) {
-            return@combine CurriculumMatchUiState.Empty
+            return CurriculumMatchUiState.Empty
         }
 
         val universities = universityRows.map {
@@ -357,7 +358,7 @@ class StudentViewModel @JvmOverloads constructor(
 
         val curriculumForMajor = currCoursesList.filter { it.majorId == majorId }
         if (curriculumForMajor.isEmpty()) {
-            return@combine CurriculumMatchUiState.NotFound(
+            return CurriculumMatchUiState.NotFound(
                 ResolutionFailureReason.MAJOR_NOT_SUPPORTED,
                 "چارت دروس این رشته در پایگاه داده مرجع ثبت نشده است"
             )
@@ -447,6 +448,8 @@ class StudentViewModel @JvmOverloads constructor(
                 )
             }
         }
+        }
+        buildMatchState()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CurriculumMatchUiState.Loading)
     val academicProgressUiState: StateFlow<AcademicProgressUiState> = combine(
         profile,
