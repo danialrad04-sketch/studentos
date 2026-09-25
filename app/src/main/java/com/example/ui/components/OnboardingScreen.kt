@@ -623,8 +623,11 @@ private fun StepOneAcademicIdentity(
         }
     }
 
-    val activeFacultyMajors = remember(selectedFacultyIndex) {
-        if (selectedFacultyIndex == 0) {
+    val supportsMaraghehMajorCatalog = university == "دانشگاه مراغه"
+    val activeFacultyMajors = remember(selectedFacultyIndex, supportsMaraghehMajorCatalog) {
+        if (!supportsMaraghehMajorCatalog) {
+            emptyList()
+        } else if (selectedFacultyIndex == 0) {
             MARAGHEH_FACULTIES.flatMap { it.majors }
         } else {
             MARAGHEH_FACULTIES.getOrNull(selectedFacultyIndex - 1)?.majors ?: emptyList()
@@ -854,7 +857,7 @@ private fun StepOneAcademicIdentity(
                         )
                         TextButton(onClick = { isCustomMajorInput = !isCustomMajorInput }) {
                             Text(
-                                text = if (isCustomMajorInput) "انتخاب از دانشکده‌ها 🏛️" else "تایپ رشته دلخواه ✍️",
+                                text = if (isCustomMajorInput || !supportsMaraghehMajorCatalog) "انتخاب از فهرست رشته‌ها" else "تایپ رشته دلخواه ✍️",
                                 fontSize = 10.5.sp,
                                 color = AccentSecondary
                             )
@@ -863,7 +866,7 @@ private fun StepOneAcademicIdentity(
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    if (isCustomMajorInput) {
+                    if (isCustomMajorInput || !supportsMaraghehMajorCatalog) {
                         OutlinedTextField(
                             value = major,
                             onValueChange = onMajorChange,
@@ -882,6 +885,9 @@ private fun StepOneAcademicIdentity(
                             )
                         )
                     } else {
+                        // Faculty catalog is currently maintained for Maragheh only.
+                        // Other universities intentionally use explicit major entry rather than
+                        // showing another university's faculty catalog.
                         // Faculty Tabs Row
                         Row(
                             modifier = Modifier
