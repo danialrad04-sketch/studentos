@@ -254,6 +254,7 @@ class DataPersistenceAndBackupTest {
         assertEquals("", profile?.term)
         assertEquals(0, profile?.entryYear)
         assertEquals(0, profile?.currentSemester)
+        assertFalse(profile?.isOnboardingCompleted ?: true)
     }
 
     @Test
