@@ -106,11 +106,14 @@ class StudentAuthManager(private val context: Context) {
                     photoUrl = null,
                     isGuest = false,
                     subscription = SubscriptionDetails(
-                        tier = SubscriptionTier.PRO,
+                        // Backend identity alone does not grant a paid entitlement.
+                        // Cloud sync is account-level here; paid capabilities require
+                        // a server-authoritative entitlement source.
+                        tier = SubscriptionTier.FREE,
                         isCloudSyncEnabled = true,
-                        isUnlimitedExportEnabled = true,
-                        isGpaPredictorUnlocked = true,
-                        maxDailyAiQuota = 999
+                        isUnlimitedExportEnabled = false,
+                        isGpaPredictorUnlocked = false,
+                        maxDailyAiQuota = 5
                     )
                 )
                 // Schedule periodic sync and pull latest data on startup
@@ -301,12 +304,15 @@ class StudentAuthManager(private val context: Context) {
                         photoUrl = null,
                         isGuest = false,
                         subscription = SubscriptionDetails(
-                            tier = SubscriptionTier.PRO,
-                            isCloudSyncEnabled = true,
-                            isUnlimitedExportEnabled = true,
-                            isGpaPredictorUnlocked = true,
-                            maxDailyAiQuota = 999
-                        )
+                        // Backend identity alone does not grant a paid entitlement.
+                        // Cloud sync is account-level here; paid capabilities require
+                        // a server-authoritative entitlement source.
+                        tier = SubscriptionTier.FREE,
+                        isCloudSyncEnabled = true,
+                        isUnlimitedExportEnabled = false,
+                        isGpaPredictorUnlocked = false,
+                        maxDailyAiQuota = 5
+                    )
                     )
                     _currentUser.value = userAccount
 
