@@ -33,8 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.models.ExamItem
-import com.example.ui.theme.BrandIndigo600
-import com.example.ui.theme.Emerald600
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.AcademicOlive
 
 @Composable
 fun ExamsScreen(
@@ -65,7 +65,7 @@ fun ExamsScreen(
 
             val totalExamUnits = exams.sumOf { it.units }
             Surface(
-                shape = RoundedCornerShape(10.dp),
+                shape = StudentShapeTokens.Compact,
                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
             ) {
                 Text(
@@ -112,7 +112,7 @@ fun ExamCard(
         modifier = modifier
             .fillMaxWidth()
             .tactileClickable { onSetReminder() },
-        shape = RoundedCornerShape(20.dp),
+        shape = StudentShapeTokens.Card,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
@@ -143,7 +143,7 @@ fun ExamCard(
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
+                    shape = StudentShapeTokens.Compact,
                     color = MaterialTheme.colorScheme.surfaceContainerHigh
                 ) {
                     Text(
@@ -206,13 +206,13 @@ fun ExamCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = Emerald600.copy(alpha = 0.14f)
+                    color = AcademicOlive.copy(alpha = 0.14f)
                 ) {
                     Text(
                         text = "⏳ آزمون شماره #$index",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Emerald600,
+                        color = AcademicOlive,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
