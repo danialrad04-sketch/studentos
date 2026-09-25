@@ -3,6 +3,7 @@
 Branch: `feat/academic-premium-design-system`
 
 ## Completed in this phase
+- Phase 0 audit report is now captured in `docs/PHASE_0_AUDIT.md`
 - Academic Premium design tokens: petrol/navy + olive
 - Shared spacing and shape tokens
 - Reusable academic UI primitives
@@ -13,7 +14,7 @@ Branch: `feat/academic-premium-design-system`
 - Layered Account Center: Identity / Security / Data
 - Data transparency surface
 - Offline connection status banner
-- CI quality gates: unit tests + lint + debug build
+- CI quality gates: unit tests + lint + debug build + backend syntax
 - Release workflow quality gates
 - Design-system and release documentation
 - Adaptive navigation now keeps all secondary academic destinations reachable on tablet/large-screen layouts through the shared module hub.
@@ -31,7 +32,7 @@ No phase is considered release-complete until:
 
 - Latest source branch head must pass Android CI: unit tests, debug lint, debug APK build and artifact upload.
 - Release artifacts additionally require signed release APK/AAB verification.
-- Account privacy release gate remains blocked until a verified server-side delete endpoint exists for Backend-authenticated accounts.
+- Backend account deletion endpoint is implemented and wired to the Android client; live deployment/endpoint verification remains a release gate.
 
 ## Current implementation notes
 
