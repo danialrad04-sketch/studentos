@@ -53,6 +53,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -129,6 +130,25 @@ fun MainAppScreen(
     var showNotificationRationaleDialog by remember { mutableStateOf(false) }
     var postPermissionAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
+    LaunchedEffect(studentViewModel) {
+        studentViewModel.undoActions.collect { action ->
+            val result = snackbarHostState.showSnackbar(
+                message = action.message,
+                actionLabel = "واگردانی",
+                duration = SnackbarDuration.Long
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                val restoreResult = studentViewModel.undo(action)
+                if (restoreResult.isFailure) {
+                    snackbarHostState.showSnackbar(
+                        message = restoreResult.exceptionOrNull()?.localizedMessage
+                            ?: "واگردانی انجام نشد؛ داده‌های شما بدون تغییر باقی ماند.",
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
+        }
+    }
     // Notification Permission Launcher (Android 13+ / Samsung One UI)
     val notifPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
