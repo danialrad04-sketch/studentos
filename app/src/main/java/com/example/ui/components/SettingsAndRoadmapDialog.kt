@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.BuildConfig
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -81,6 +83,9 @@ import com.example.ui.models.ThemeMode
 import com.example.ui.theme.Emerald600
 import com.example.ui.theme.Rose600
 import com.example.ui.theme.StudentOsColors
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
+import com.example.ui.theme.StudentShapeTokens
 
 @Composable
 fun SettingsAndRoadmapDialog(
@@ -151,7 +156,7 @@ fun SettingsAndRoadmapDialog(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Student OS v2.4.0 · نسخه تجاری ۲۰۲۶",
+                                text = "Student OS · نسخه ${BuildConfig.VERSION_NAME}",
                                 fontSize = 10.5.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -181,7 +186,7 @@ fun SettingsAndRoadmapDialog(
                     selectedTabIndex = selectedSection,
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
                     contentColor = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clip(RoundedCornerShape(14.dp))
+                    modifier = Modifier.clip(StudentShapeTokens.Compact)
                 ) {
                     Tab(
                         selected = selectedSection == 0,
@@ -240,8 +245,8 @@ fun SettingsAndRoadmapDialog(
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 val themeOptions = listOf(
                                     Triple(ThemeMode.SYSTEM, Icons.Default.SettingsBrightness, "مطابق سیستم (پیش‌فرض)"),
-                                    Triple(ThemeMode.LIGHT, Icons.Default.LightMode, "تم روشن بلورین (Crystal Light)"),
-                                    Triple(ThemeMode.DARK, Icons.Default.DarkMode, "تم تاریک مخملی (Dark Velvet)")
+                                    Triple(ThemeMode.LIGHT, Icons.Default.LightMode, "تم روشن"),
+                                    Triple(ThemeMode.DARK, Icons.Default.DarkMode, "تم تاریک")
                                 )
 
                                 themeOptions.forEach { (mode, icon, title) ->
@@ -329,7 +334,7 @@ fun SettingsAndRoadmapDialog(
 
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
+                                shape = StudentShapeTokens.Card,
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
                             ) {
                                 Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -379,7 +384,7 @@ fun SettingsAndRoadmapDialog(
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         Surface(
-                                            shape = RoundedCornerShape(10.dp),
+                                            shape = StudentShapeTokens.Compact,
                                             color = Emerald600.copy(alpha = 0.12f),
                                             modifier = Modifier.weight(1f)
                                         ) {
@@ -408,7 +413,7 @@ fun SettingsAndRoadmapDialog(
                                             onOpenEditProfile()
                                         },
                                         modifier = Modifier.fillMaxWidth().height(42.dp),
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = StudentShapeTokens.Compact,
                                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                                     ) {
                                         Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -980,7 +985,7 @@ fun SettingsAndRoadmapDialog(
     if (showResetConfirmDialog) {
         Dialog(onDismissRequest = { showResetConfirmDialog = false }) {
             Card(
-                shape = RoundedCornerShape(20.dp),
+                shape = StudentShapeTokens.Card,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier.fillMaxWidth()
             ) {
