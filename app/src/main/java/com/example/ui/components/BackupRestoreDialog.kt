@@ -27,6 +27,7 @@ import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -263,7 +264,7 @@ fun BackupRestoreDialog(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = AcademicNavy.copy(alpha = 0.12f)),
                     shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, StudentOsColors.CyanAccent.copy(alpha = 0.35f))
+                    border = androidx.compose.foundation.BorderStroke(1.dp, AcademicNavy.copy(alpha = 0.35f))
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text("بازیابی از متن پشتیبان JSON", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
