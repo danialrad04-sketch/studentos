@@ -782,7 +782,7 @@ fun GradeWhatIfSimulatorCard(
     val neededFinalPoints = targetTotalPoints - earnedMidtermPoints
     val requiredFinalAverage = if (totalUnits > 0) neededFinalPoints / totalUnits else 0.0
 
-    val isFeasible = requiredFinalAverage <= 20.0
+    val isFeasible = requiredFinalAverage <= 14.0
     val isAlreadyPassed = requiredFinalAverage <= 0.0
 
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
@@ -872,8 +872,8 @@ fun GradeWhatIfSimulatorCard(
                 color = when {
                     isAlreadyPassed -> Emerald600.copy(alpha = 0.12f)
                     requiredFinalAverage in 0.0..14.0 -> Emerald600.copy(alpha = 0.12f)
-                    requiredFinalAverage in 14.0..17.5 -> Sky600.copy(alpha = 0.12f)
-                    requiredFinalAverage in 17.5..20.0 -> Amber500.copy(alpha = 0.12f)
+                    requiredFinalAverage in 10.0..12.5 -> Sky600.copy(alpha = 0.12f)
+                    requiredFinalAverage in 12.5..14.0 -> Amber500.copy(alpha = 0.12f)
                     else -> Rose600.copy(alpha = 0.12f)
                 }
             ) {
@@ -894,7 +894,7 @@ fun GradeWhatIfSimulatorCard(
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = when {
-                                isAlreadyPassed || requiredFinalAverage in 0.0..14.0 -> Emerald600
+                                isAlreadyPassed || requiredFinalAverage in 0.0..10.0 -> Emerald600
                                 requiredFinalAverage in 14.0..17.5 -> Sky600
                                 requiredFinalAverage in 17.5..20.0 -> Amber500
                                 else -> Rose600
@@ -938,7 +938,7 @@ fun GradeWhatIfSimulatorCard(
                 Button(
                     onClick = {
                         val simulated = grades.map { g ->
-                            val simulatedFinal = (requiredFinalAverage).coerceIn(0.0, 14.0)
+                            val simulatedFinal = requiredFinalAverage.coerceIn(0.0, 14.0)
                             Triple(g, g.midtermGrade, simulatedFinal)
                         }
                         onApplySimulation(simulated)
