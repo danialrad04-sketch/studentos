@@ -202,7 +202,7 @@ class StudentAuthManager(private val context: Context) {
                                 isCloudSyncEnabled = tier != SubscriptionTier.FREE,
                                 isUnlimitedExportEnabled = tier != SubscriptionTier.FREE,
                                 isGpaPredictorUnlocked = tier != SubscriptionTier.FREE,
-                                maxDailyAiQuota = if (tier == SubscriptionTier.FREE) 5 else 999
+                                maxDailyAiQuota = tier.maxAiQueriesPerDay
                             )
                         )
                     }
@@ -494,7 +494,7 @@ class StudentAuthManager(private val context: Context) {
                     isCloudSyncEnabled = true,
                     isUnlimitedExportEnabled = true,
                     isGpaPredictorUnlocked = true,
-                    maxDailyAiQuota = 999
+                    maxDailyAiQuota = tier.maxAiQueriesPerDay
                 )
             )
         }
@@ -522,7 +522,7 @@ class StudentAuthManager(private val context: Context) {
                     isCloudSyncEnabled = true,
                     isUnlimitedExportEnabled = true,
                     isGpaPredictorUnlocked = true,
-                    maxDailyAiQuota = if (effectiveTier == SubscriptionTier.FREE) 5 else 999
+                    maxDailyAiQuota = effectiveTier.maxAiQueriesPerDay
                 )
             )
         }
