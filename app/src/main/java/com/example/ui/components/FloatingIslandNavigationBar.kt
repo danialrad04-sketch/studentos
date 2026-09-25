@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -48,6 +49,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.ui.models.AppTab
 import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.StudentSpacing
 
 /**
  * 2026 Redesigned Floating Island Navigation Bar with Squircle Emoji Pack
@@ -292,7 +295,7 @@ private fun AllModulesModalSheet(
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = StudentSpacing.Sm, vertical = StudentSpacing.Xs)
                     )
                 }
             }
@@ -315,7 +318,7 @@ private fun AllModulesModalSheet(
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(StudentSpacing.Sm),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -325,7 +328,7 @@ private fun AllModulesModalSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .tactileClickable { onSelectTab(item.tab) },
-                        shape = MaterialTheme.shapes.medium,
+                        shape = StudentShapeTokens.Card,
                         colors = CardDefaults.cardColors(
                             containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
                             else MaterialTheme.colorScheme.surfaceContainer
@@ -337,7 +340,7 @@ private fun AllModulesModalSheet(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(12.dp),
+                                .padding(StudentSpacing.Md),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             AppEmoji(
@@ -347,7 +350,7 @@ private fun AllModulesModalSheet(
                                 elevation = 2.dp
                             )
 
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(modifier = Modifier.width(StudentSpacing.Sm))
 
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
