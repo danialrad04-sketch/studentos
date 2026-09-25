@@ -297,8 +297,25 @@ fun MainAppScreen(
                                         onSuccess = { idToken ->
                                             studentViewModel.signInWithGoogle(idToken, onResult)
                                         },
-                                        onFailure = {
-                                            onResult(false, "ورود با گوگل ناموفق بود.")
+                                        onFailure = { error ->
+                                            val raw = error.message.orEmpty()
+                                            val friendly = when {
+                                                raw.contains("403", ignoreCase = true) ||
+                                                    raw.contains("forbidden", ignoreCase = true) ->
+                                                    "دسترسی ورود Google رد شد؛ تنظیمات OAuth و Web Client ID را بررسی کنید."
+                                                raw.contains("network", ignoreCase = true) ||
+                                                    raw.contains("timeout", ignoreCase = true) ->
+                                                    "اتصال اینترنت برای ورود با Google در دسترس نیست."
+                                                raw.contains("cancel", ignoreCase = true) ->
+                                                    "ورود با Google لغو شد."
+                                                raw.contains("Json", ignoreCase = true) ||
+                                                    raw.contains("DOCTYPE", ignoreCase = true) ||
+                                                    raw.contains("<html", ignoreCase = true) ->
+                                                    "پاسخ نامعتبر از سرویس ورود Google دریافت شد؛ لطفاً دوباره تلاش کنید."
+                                                else ->
+                                                    "ورود با Google ناموفق بود؛ لطفاً دوباره تلاش کنید."
+                                            }
+                                            onResult(false, friendly)
                                         }
                                     )
                             }
