@@ -9,12 +9,8 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: android-ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  build-debug:
+  android-quality:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -43,3 +39,20 @@ jobs:
         with:
           name: studentos-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+
+  backend-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify backend JavaScript syntax
+        working-directory: backend
+        run: |
+          node --check src/db.js
+          node --check src/server.js
+          node --check src/migrate.js
+          node --check src/middleware/auth.js
+          node --check src/routes/auth.js
+          node --check src/routes/sync.js
+          node --check src/utils/jwt.js
