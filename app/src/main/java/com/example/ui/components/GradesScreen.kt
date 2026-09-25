@@ -922,7 +922,7 @@ fun GradeWhatIfSimulatorCard(
 
                     Text(
                         text = if (isFeasible) {
-                            "اگر میانگین نمرات پایان‌ترم شما به ${String.format(Locale.US, "%.1f", requiredFinalAverage.coerceAtLeast(0.0))} از ۱۲ نمره باقی‌مانده برسد، معدل کل ترم شما دقیقاً ${String.format(Locale.US, "%.1f", targetGpa)} خواهد شد."
+                            "اگر میانگین نمرات پایان‌ترم شما به ${String.format(Locale.US, "%.1f", requiredFinalAverage.coerceAtLeast(0.0))} از ۱۴ نمره باقی‌مانده برسد، معدل کل ترم شما دقیقاً ${String.format(Locale.US, "%.1f", targetGpa)} خواهد شد."
                         } else {
                             "مجموع نمرات میان‌ترم کسب‌شده برای این ترم به گونه‌ای است که حتی با نمره ۲۰ در تمامی امتحانات پایان‌ترم، دستیابی به این معدل امکان‌پذیر نیست."
                         },
