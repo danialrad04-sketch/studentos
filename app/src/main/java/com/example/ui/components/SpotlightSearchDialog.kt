@@ -408,7 +408,7 @@ private fun SearchResultItemCard(
                             Triple(Icons.Default.Bookmark, Amber600, "چارت مصوب")
                         }
                     }
-                    is GlobalSearchResult.TaskItem -> Triple(Icons.AutoMirrored.Filled.FormatListBulleted, Emerald600, "تکلیف")
+                    is GlobalSearchResult.TaskItem -> Triple(Icons.AutoMirrored.Filled.FormatListBulleted, AcademicOlive, "تکلیف")
                     is GlobalSearchResult.ExamItem -> Triple(Icons.Default.Warning, Rose600, "امتحان")
                     is GlobalSearchResult.NoteFormulaItem -> Triple(Icons.Default.AutoAwesome, MaterialTheme.colorScheme.primary, "فرمول")
                 }
