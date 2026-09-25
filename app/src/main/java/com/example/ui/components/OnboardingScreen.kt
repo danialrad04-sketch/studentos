@@ -191,67 +191,24 @@ data class FacultyInfo(
     val majors: List<String>
 )
 
-private val MARAGHEH_FACULTIES = listOf(
+private val AUT_FACULTIES = listOf(
     FacultyInfo(
         name = "فنی و مهندسی",
         iconEmoji = "⚙️",
         majors = listOf(
             "مهندسی شیمی",
-            "مهندسی عمران",
-            "مهندسی مکانیک",
-            "مهندسی کامپیوتر",
-            "مهندسی مواد و متالورژی",
-            "مهندسی برق",
-            "مهندسی پلیمر",
-            "مهندسی معدن",
-            "مهندسی صنایع"
+            "مهندسی کامپیوتر"
         )
     ),
     FacultyInfo(
-        name = "علوم پایه",
+        name = "مهندسی شیمی و نفت",
         iconEmoji = "🧪",
-        majors = listOf(
-            "شیمی کاربردی",
-            "شیمی محض",
-            "ریاضیات و کاربردها",
-            "علوم کامپیوتر",
-            "فیزیک",
-            "زیست‌شناسی سلولی و مولکولی",
-            "زیست‌شناسی گیاهی",
-            "زیست‌شناسی جانوری",
-            "زیست‌فناوری (بیوتکنولوژی)",
-            "آمار و کاربردها"
-        )
+        majors = listOf("مهندسی شیمی")
     ),
     FacultyInfo(
-        name = "کشاورزی",
-        iconEmoji = "🌾",
-        majors = listOf(
-            "مهندسی تولید و ژنتیک گیاهی",
-            "علوم و مهندسی باغبانی",
-            "علوم دامی",
-            "مهندسی آب",
-            "گیاه‌پزشکی",
-            "علوم و مهندسی خاک",
-            "صنایع غذایی",
-            "اقتصاد کشاورزی و ترویج"
-        )
-    ),
-    FacultyInfo(
-        name = "علوم انسانی",
-        iconEmoji = "📚",
-        majors = listOf(
-            "حقوق",
-            "زبان و ادبیات فارسی",
-            "زبان و ادبیات انگلیسی",
-            "آموزش زبان انگلیسی",
-            "روانشناسی",
-            "علوم تربیتی",
-            "معارف اسلامی و علوم قرآن",
-            "مدیریت بازرگانی",
-            "مدیریت دولتی",
-            "حسابداری"
-        )
+        name = "مهندسی کامپیوتر",
+        iconEmoji = "💻",
+        majors = listOf("مهندسی کامپیوتر")
     )
 )
 
@@ -623,12 +580,12 @@ private fun StepOneAcademicIdentity(
         }
     }
 
-    val supportsMaraghehMajorCatalog = university == "دانشگاه مراغه"
-    val activeFacultyMajors = remember(selectedFacultyIndex, supportsMaraghehMajorCatalog) {
-        if (!supportsMaraghehMajorCatalog) {
+    val supportsReferenceMajorCatalog = university == "دانشگاه صنعتی امیرکبیر"
+    val activeFacultyMajors = remember(selectedFacultyIndex, supportsReferenceMajorCatalog) {
+        if (!supportsReferenceMajorCatalog) {
             emptyList()
         } else if (selectedFacultyIndex == 0) {
-            MARAGHEH_FACULTIES.flatMap { it.majors }
+            AUT_FACULTIES.flatMap { it.majors }
         } else {
             MARAGHEH_FACULTIES.getOrNull(selectedFacultyIndex - 1)?.majors ?: emptyList()
         }
@@ -789,7 +746,7 @@ private fun StepOneAcademicIdentity(
                         OutlinedTextField(
                             value = university,
                             onValueChange = onUniversityChange,
-                            placeholder = { Text("مثال: دانشگاه مراغه", color = TextPlaceholder, fontSize = 11.sp) },
+                            placeholder = { Text("مثال: دانشگاه صنعتی امیرکبیر", color = TextPlaceholder, fontSize = 11.sp) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -857,7 +814,7 @@ private fun StepOneAcademicIdentity(
                         )
                         TextButton(onClick = { isCustomMajorInput = !isCustomMajorInput }) {
                             Text(
-                                text = if (isCustomMajorInput || !supportsMaraghehMajorCatalog) "انتخاب از فهرست رشته‌ها" else "تایپ رشته دلخواه ✍️",
+                                text = if (isCustomMajorInput || !supportsReferenceMajorCatalog) "انتخاب از فهرست رشته‌ها" else "تایپ رشته دلخواه ✍️",
                                 fontSize = 10.5.sp,
                                 color = AccentSecondary
                             )
