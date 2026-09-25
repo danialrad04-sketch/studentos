@@ -113,6 +113,46 @@ class StudentViewModel @JvmOverloads constructor(
     private val _userMessage = MutableSharedFlow<String>(extraBufferCapacity = 5)
     val userMessage: SharedFlow<String> = _userMessage.asSharedFlow()
 
+    /** One-step recovery action backed by a complete local Room snapshot. */
+    data class UndoAction(
+        val message: String,
+        val snapshot: String,
+        val generation: Long
+    )
+
+    private val _undoActions = MutableSharedFlow<UndoAction>(extraBufferCapacity = 2)
+    val undoActions: SharedFlow<UndoAction> = _undoActions.asSharedFlow()
+    private var undoGeneration: Long = 0L
+
+    private suspend fun captureUndoSnapshot(): String? = try {
+        repository.exportFullBackupJson()
+    } catch (error: Throwable) {
+        android.util.Log.w("StudentViewModel", "Undo snapshot failed: " + error.message)
+        null
+    }
+
+    private fun publishUndo(message: String, snapshot: String) {
+        _undoActions.tryEmit(UndoAction(message, snapshot, undoGeneration))
+    }
+
+    private suspend fun restoreUndoSnapshot(action: UndoAction): Result<Int> {
+        if (action.generation != undoGeneration) {
+            return Result.failure(IllegalStateException("این عملیات دیگر قابل واگردانی نیست."))
+        }
+        return repository.restoreFullBackupJson(action.snapshot)
+    }
+
+    private fun invalidateUndoHistory() {
+        undoGeneration++
+    }
+
+    suspend fun undo(action: UndoAction): Result<Int> {
+        val result = restoreUndoSnapshot(action)
+        if (result.isSuccess) {
+            addNotification("واگردانی انجام شد", "آخرین تغییر مخرب با موفقیت برگردانده شد.")
+        }
+        return result
+    }
     init {
         try {
             NotificationHelper.initNotificationChannel(application)
