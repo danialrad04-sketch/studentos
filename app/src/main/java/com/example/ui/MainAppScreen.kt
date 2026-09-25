@@ -356,7 +356,7 @@ fun MainAppScreen(
                         initialStudentId = profile.studentId,
                         initialUniversity = effectiveInitialUni,
                         initialMajor = effectiveInitialMaj,
-                        initialEntryYear = if (profile.entryYear > 0) profile.entryYear else 1403,
+                        initialEntryYear = profile.entryYear,
                         initialSemester = if (profile.currentSemester > 0) profile.currentSemester else 1,
                         onOpenPrivacyPolicy = { dialogState = AppDialogState.PrivacyPolicy },
                         onCompleteQuickSetup = { name, stdId, uni, maj, yr, sem, passed, gpa, selCourses ->
