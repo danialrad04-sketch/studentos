@@ -536,41 +536,74 @@ class StudentAuthManager(private val context: Context) {
 
     suspend fun deleteUserAccount(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val user = safeFirebaseAuth?.currentUser
-            val userId = user?.uid
-            if (userId != null && !userId.startsWith("guest_")) {
-                val cloudDeletion = try {
-                    com.example.data.cloud.FirestoreSyncManager.deleteAllUserDataFromCloud(userId)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed wiping cloud documents for user $userId: ${e.message}", e)
-                    com.example.util.CrashLogger.recordException(e)
-                    Result.failure(e)
+            val firebaseUser = safeFirebaseAuth?.currentUser
+
+            if (firebaseUser != null) {
+                // Firebase accounts own their Firestore data and Firebase identity.
+                val userId = firebaseUser.uid
+                if (!userId.startsWith("guest_")) {
+                    val cloudDeletion = try {
+                        com.example.data.cloud.FirestoreSyncManager.deleteAllUserDataFromCloud(userId)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed wiping Firestore documents for user \${e.message}", e)
+                        com.example.util.CrashLogger.recordException(e)
+                        Result.failure(e)
+                    }
+                    if (cloudDeletion.isFailure) {
+                        return@withContext Result.failure(
+                            cloudDeletion.exceptionOrNull()
+                                ?: IllegalStateException("حذف اطلاعات ابری حساب با موفقیت انجام نشد.")
+                        )
+                    }
                 }
-                if (cloudDeletion.isFailure) {
-                    return@withContext Result.failure(
-                        cloudDeletion.exceptionOrNull()
-                            ?: IllegalStateException("حذف اطلاعات ابری حساب با موفقیت انجام نشد.")
-                    )
-                }
-            }
-            if (user != null) {
+
                 try {
-                    user.delete().awaitResult()
+                    firebaseUser.delete().awaitResult()
                 } catch (e: Exception) {
-                    Log.e(TAG, "Firebase account deletion failed: ${e.message}", e)
+                    Log.e(TAG, "Firebase account deletion failed: \${e.message}", e)
                     com.example.util.CrashLogger.recordException(e)
                     return@withContext Result.failure(e)
                 }
+
+                signOutUser()
+                return@withContext Result.success(Unit)
             }
+
+            // Backend-authenticated accounts do not have a Firebase user.
+            val backendClient = BackendApiClient.getInstance(context)
+            val backendUserId = backendClient.tokenStore().getUserId()
+            if (!backendUserId.isNullOrBlank()) {
+                val response = try {
+                    backendClient.api.deleteAccount()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Backend account deletion request failed: \${e.message}", e)
+                    com.example.util.CrashLogger.recordException(e)
+                    return@withContext Result.failure(e)
+                }
+
+                if (!response.isSuccessful) {
+                    val reason = when (response.code()) {
+                        401 -> "نشست حساب منقضی شده است. دوباره وارد شوید."
+                        404 -> "حساب کاربری در سرور یافت نشد."
+                        else -> "حذف حساب از سرور انجام نشد (کد \${response.code()})."
+                    }
+                    return@withContext Result.failure(IllegalStateException(reason))
+                }
+
+                // Server deletion cascades refresh tokens and synced data.
+                signOutUser()
+                return@withContext Result.success(Unit)
+            }
+
+            // Local/guest account: no remote identity exists to delete.
             signOutUser()
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Error deleting user: ${e.message}", e)
+            Log.e(TAG, "Error deleting user account: \${e.message}", e)
             com.example.util.CrashLogger.recordException(e)
             Result.failure(e)
         }
     }
-
     private fun restoreCloudDataIfLocalEmpty(userId: String) {
         if (userId.isBlank() || userId.startsWith("guest_")) return
         scope.launch(Dispatchers.IO) {
