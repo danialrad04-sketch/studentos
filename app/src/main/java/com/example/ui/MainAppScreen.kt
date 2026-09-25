@@ -1,5 +1,7 @@
 package com.example.ui
 
+import androidx.compose.foundation.layout.fillMaxHeight
+
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
