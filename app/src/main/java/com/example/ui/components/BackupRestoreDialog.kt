@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.ui.theme.StudentOsColors
+
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -53,7 +55,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.StudentOsColors
 import com.example.ui.theme.StudentShapeTokens
 import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.AcademicOlive
@@ -176,7 +177,7 @@ fun BackupRestoreDialog(
 
                 if (isExporting) {
                     Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(modifier = Modifier.size(28.dp), color = StudentOsColors.CyberViolet)
+                        CircularProgressIndicator(modifier = Modifier.size(28.dp), color = AcademicNavy)
                     }
                 } else {
                     OutlinedTextField(
@@ -202,7 +203,7 @@ fun BackupRestoreDialog(
                             .fillMaxWidth()
                             .height(46.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.CyberViolet)
+                        colors = ButtonDefaults.buttonColors(containerColor = AcademicNavy)
                     ) {
                         Icon(Icons.Rounded.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
@@ -214,13 +215,13 @@ fun BackupRestoreDialog(
                 // Cloud Restore Card & Action
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = StudentOsColors.CyberViolet.copy(alpha = 0.12f)),
+                    colors = CardDefaults.cardColors(containerColor = AcademicNavy.copy(alpha = 0.12f)),
                     shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, StudentOsColors.CyberViolet.copy(alpha = 0.35f))
+                    border = androidx.compose.foundation.BorderStroke(1.dp, AcademicNavy.copy(alpha = 0.35f))
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.CloudDownload, contentDescription = null, tint = StudentOsColors.CyberViolet, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Rounded.CloudDownload, contentDescription = null, tint = AcademicNavy, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("بازیابی مستقیم از فضای ابری (Cloud Sync)", fontWeight = FontWeight.Bold, fontSize = 12.5.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
@@ -245,7 +246,7 @@ fun BackupRestoreDialog(
                             },
                             enabled = !isCloudRestoring && !isRestoring,
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.CyberViolet),
+                            colors = ButtonDefaults.buttonColors(containerColor = AcademicNavy),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(44.dp)
