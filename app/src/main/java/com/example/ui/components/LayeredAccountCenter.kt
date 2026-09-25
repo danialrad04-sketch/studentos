@@ -80,11 +80,37 @@ fun LayeredAccountCenter(
                 }
             }
             2 -> {
+                DataTransparencyCard()
                 DataControlsCard(
                     onSyncNow = onSyncNow,
                     onDeleteAccount = onDeleteAccount
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun DataTransparencyCard() {
+    Card(
+        shape = StudentShapeTokens.Card,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(StudentSpacing.Xl),
+            verticalArrangement = Arrangement.spacedBy(StudentSpacing.Sm)
+        ) {
+            Text("شفافیت داده", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                "داده‌های تحصیلی برای برنامه‌ریزی، تحلیل و همگام‌سازی استفاده می‌شوند. اطلاعات هویت حساب از داده‌های تحصیلی جدا نگه داشته می‌شود.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text("• دروس، برنامه و تکالیف → داده‌های تحصیلی", style = MaterialTheme.typography.bodySmall)
+            Text("• ایمیل و ورود → داده‌های هویتی/امنیتی", style = MaterialTheme.typography.bodySmall)
+            Text("• همگام‌سازی → فقط برای حساب متصل", style = MaterialTheme.typography.bodySmall)
         }
     }
 }
