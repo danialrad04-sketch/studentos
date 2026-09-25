@@ -200,9 +200,11 @@ Release credentials در Repository Secrets نگهداری می‌شوند و د
 
 ## 📌 وضعیت پروژه
 
-**Production Release آماده است.**
+آخرین نسخه رسمی منتشرشده در `main` برابر `v1.0.2-production` است.
 
-برای دریافت نسخه قابل نصب، از بخش **Releases** استفاده کنید.
+شاخه `feat/academic-premium-design-system` در حال تکمیل verificationهای کیفیت، همگام‌سازی، دسترسی‌پذیری و release است و تا بسته‌شدن gateهای تعریف‌شده، به‌عنوان نسخه جدید production معرفی نمی‌شود.
+
+برای دریافت آخرین نسخه منتشرشده، از بخش **Releases** استفاده کنید.
 
 ---
 
