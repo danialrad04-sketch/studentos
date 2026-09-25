@@ -155,36 +155,13 @@ private fun rememberOnboardingColors(): OnboardingColors {
 
 // Extended Universities List
 private val COMPREHENSIVE_UNIVERSITIES = listOf(
-    "دانشگاه مراغه",
-    "دانشگاه تبریز",
-    "دانشگاه صنعتی سهند",
+    "دانشگاه صنعتی امیرکبیر",
     "دانشگاه تهران",
     "دانشگاه صنعتی شریف",
-    "دانشگاه صنعتی امیرکبیر (پلی‌تکنیک)",
-    "دانشگاه علم و صنعت ایران",
-    "دانشگاه شهید بهشتی",
-    "دانشگاه فردوسی مشهد",
-    "دانشگاه شیراز",
-    "دانشگاه صنعتی اصفهان",
-    "دانشگاه اصفهان",
-    "دانشگاه خواجه نصیرالدین طوسی",
-    "دانشگاه ارومیه",
-    "دانشگاه زنجان",
-    "دانشگاه بناب",
-    "دانشگاه بوعلی سینا همدان",
-    "دانشگاه رازی کرمانشاه",
-    "دانشگاه گیلان",
-    "دانشگاه مازندران",
-    "دانشگاه یزد",
-    "دانشگاه کاشان",
-    "دانشگاه فرهنگیان",
-    "دانشگاه پیام نور",
-    "دانشگاه آزاد اسلامی",
-    "دانشگاه فنی و حرفه‌ای",
     "سایر دانشگاه‌ها"
 )
 
-// Maragheh University Faculties & Extensive Majors
+// Reference faculty/major catalog currently bundled with this release.
 data class FacultyInfo(
     val name: String,
     val iconEmoji: String,
@@ -193,20 +170,12 @@ data class FacultyInfo(
 
 private val AUT_FACULTIES = listOf(
     FacultyInfo(
-        name = "فنی و مهندسی",
-        iconEmoji = "⚙️",
-        majors = listOf(
-            "مهندسی شیمی",
-            "مهندسی کامپیوتر"
-        )
-    ),
-    FacultyInfo(
-        name = "مهندسی شیمی و نفت",
+        name = "دانشکده مهندسی شیمی و نفت",
         iconEmoji = "🧪",
         majors = listOf("مهندسی شیمی")
     ),
     FacultyInfo(
-        name = "مهندسی کامپیوتر",
+        name = "دانشکده مهندسی کامپیوتر",
         iconEmoji = "💻",
         majors = listOf("مهندسی کامپیوتر")
     )
