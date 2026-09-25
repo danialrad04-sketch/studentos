@@ -295,7 +295,7 @@ fun CommandCenterDialog(
                                         modifier = Modifier.padding(10.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(imageVector = Icons.Default.BookmarkBorder, contentDescription = null, tint = Emerald600, modifier = Modifier.size(16.dp))
+                                        Icon(imageVector = Icons.Default.BookmarkBorder, contentDescription = null, tint = AcademicOlive, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Column {
                                             Text(text = "تکلیف: ${task.title}", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
