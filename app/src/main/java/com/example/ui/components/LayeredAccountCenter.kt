@@ -38,6 +38,13 @@ import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.StudentShapeTokens
 import com.example.ui.theme.StudentSpacing
 
+sealed interface SyncUiState {
+    data object Idle : SyncUiState
+    data object Syncing : SyncUiState
+    data class Success(val message: String) : SyncUiState
+    data class Error(val message: String) : SyncUiState
+}
+
 @Composable
 fun LayeredAccountCenter(
     userAccount: UserAccount,
