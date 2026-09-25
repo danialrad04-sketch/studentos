@@ -1347,10 +1347,10 @@ class StudentViewModel @JvmOverloads constructor(
             _isOnboardingCompleted.value = false
             _optimisticProfile.value = null
             
-            // Clear the local cache to prevent previous user data residue
-            repository.clearToFreshSlate("دانشجو", "۴۰۳۰۰۰۰۱", "دانشگاه سراسری", "مهندسی", 1403, 1)
-            
-            addNotification("خروج از حساب", "از حساب کاربری خارج شدید و به حالت مهمان تغییر کردید.")
+            // Remove the previous account's local academic data without inserting demo/default identity.
+            repository.clearAllUserData()
+
+            addNotification("خروج از حساب", "از حساب کاربری خارج شدید؛ اطلاعات حساب قبلی از این دستگاه پاک شد.")
         }
     }
 
@@ -1358,14 +1358,7 @@ class StudentViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             val result = authManager.deleteUserAccount()
             if (result.isSuccess) {
-                repository.clearToFreshSlate(
-                    name = "دانشجوی جدید",
-                    studentId = "",
-                    university = "",
-                    major = "",
-                    entryYear = 1403,
-                    currentSemester = 1
-                )
+                repository.clearAllUserData()
                 preferencesRepository.setOnboardingCompleted(false)
                 _isOnboardingCompleted.value = false
                 _optimisticProfile.value = null
