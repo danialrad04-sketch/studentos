@@ -22,6 +22,7 @@ data class LoginRequest(
 )
 
 data class RefreshRequest(val refreshToken: String)
+data class RedeemEntitlementRequest(val code: String)
 data class LogoutRequest(val refreshToken: String)
 
 data class BackendUser(val id: String, val email: String, val displayName: String)
@@ -71,6 +72,9 @@ interface BackendApi {
 
     @retrofit2.http.GET("api/auth/entitlement")
     suspend fun getEntitlement(): Response<BackendEntitlement>
+
+    @POST("api/auth/entitlement/redeem")
+    suspend fun redeemEntitlement(@Body body: RedeemEntitlementRequest): Response<BackendEntitlement>
 
     @DELETE("api/auth/account")
     suspend fun deleteAccount(): Response<Unit>
