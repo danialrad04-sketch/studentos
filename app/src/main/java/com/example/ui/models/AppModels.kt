@@ -1,13 +1,6 @@
 package com.example.ui.models
 
-data class ExamItem(
-    val id: String,
-    val courseName: String,
-    val solarDate: String,
-    val time: String,
-    val location: String,
-    val units: Int
-)
+typealias ExamItem = com.example.domain.model.ExamItem
 
 data class SemesterCurriculum(
     val title: String,
