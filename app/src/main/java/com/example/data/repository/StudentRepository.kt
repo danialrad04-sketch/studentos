@@ -823,6 +823,14 @@ class StudentRepository(
         }
     }
 
+    suspend fun clearAllUserData() {
+        if (database != null) {
+            database.withTransaction { dao.clearAllUserData() }
+        } else {
+            dao.clearAllUserData()
+        }
+    }
+
     suspend fun clearToFreshSlate(
         name: String = "دانشجو",
         studentId: String = "",
