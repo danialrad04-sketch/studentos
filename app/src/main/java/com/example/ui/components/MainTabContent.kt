@@ -277,8 +277,7 @@ fun MainTabContent(
             }
             AppTab.CURRICULUM -> {
                 CurriculumScreen(
-                    matchState = curriculumMatchState,
-                    curriculumList = studentViewModel.curriculumList
+                    matchState = curriculumMatchState
                 )
             }
             AppTab.POMODORO -> {
