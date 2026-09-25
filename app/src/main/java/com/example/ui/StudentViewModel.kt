@@ -602,18 +602,6 @@ class StudentViewModel @JvmOverloads constructor(
         _pomodoroSeconds.value = 25 * 60
     }
 
-    // 8 Semester Curriculum Map for Chemical Engineering
-    val curriculumList = listOf(
-        SemesterCurriculum("ترم 1 (پاییز)", 17, listOf("ریاضی عمومی 1", "فیزیک عمومی 1", "شیمی عمومی و آزمایشگاه", "زبان عمومی")),
-        SemesterCurriculum("ترم 2 (بهار)", 18, listOf("ریاضی عمومی 2", "معادلات دیفرانسیل", "فیزیک عمومی 2", "شیمی آلی 1")),
-        SemesterCurriculum("ترم 3 (ترم جاری)", 19, listOf("ترمودینامیک مهندسی شیمی 1", "مکانیک سیالات 1", "ریاضی مهندسی", "محاسبات عددی"), isCurrent = true),
-        SemesterCurriculum("ترم 4 (پیش‌رو)", 20, listOf("ترمودینامیک مهندسی شیمی 2", "انتقال حرارت 1", "موازنه انرژی و مواد", "کنترل فرآیندها")),
-        SemesterCurriculum("ترم 5", 18, listOf("انتقال جرم", "عملیات واحد 1", "سینتیک و طراحی رآکتور", "شیمی تجزیه")),
-        SemesterCurriculum("ترم 6", 17, listOf("عملیات واحد 2", "انتقال حرارت 2", "کاربرد کامپیوتر در مهندسی شیمی", "ایمنی در صنایع نفت")),
-        SemesterCurriculum("ترم 7", 16, listOf("طراحی فرآیند به کمک نرم‌افزار", "شبیه‌سازی فرآیندها", "آزمایشگاه عملیات واحد", "پروژه کارشناسی 1")),
-        SemesterCurriculum("ترم 8 (فارغ‌التحصیلی)", 15, listOf("پروژه کارشناسی 2", "کارآموزی صنعت نفت و پتروشیمی", "اقتصاد مهندسی", "دروس عمومی اختیاری"))
-    )
-
     // Actions
     fun saveCourse(course: CourseEntity, sessions: List<com.example.data.local.entity.CourseSessionEntity> = emptyList()) {
         viewModelScope.launch {
