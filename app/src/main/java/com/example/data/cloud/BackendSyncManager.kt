@@ -98,7 +98,9 @@ object BackendSyncManager {
                 "courses" -> {
                     val t = Types.newParameterizedType(List::class.java, CourseEntity::class.java)
                     val items = decode<List<CourseEntity>>(payload, t) ?: emptyList()
-                    dao.clearCourseSessions(); dao.clearAttendance(); dao.clearGrades(); dao.clearExams(); dao.clearTasks(); dao.clearCourses()
+                    // Pulling one data type must not destroy unrelated local data.
+                    // Sessions have their own sync boundary and are pulled separately.
+                    dao.clearCourses()
                     if (items.isNotEmpty()) dao.insertCourses(items)
                 }
                 "sessions" -> {
