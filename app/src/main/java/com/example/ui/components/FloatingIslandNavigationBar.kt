@@ -75,7 +75,8 @@ fun FloatingIslandNavigationBar(
         Triple(AppTab.SCHEDULE, AppEmojiType.CALENDAR, "برنامه"),
         Triple(AppTab.TASKS, AppEmojiType.CHECK, "تسک‌ها"),
         Triple(AppTab.GRADES, AppEmojiType.CHART, "کارنامه"),
-        Triple(AppTab.COPILOT, AppEmojiType.COPILOT, "کوپایلت")
+        Triple(AppTab.COPILOT, AppEmojiType.COPILOT, "کوپایلت"),
+        Triple(AppTab.ACADEMIC_INTELLIGENCE, AppEmojiType.CHART, "هوش تحصیلی")
     )
 
     val isOtherTab = primaryTabs.none { it.first == selectedTab }
@@ -305,6 +306,7 @@ private fun AllModulesModalSheet(
             val hubModules = listOf(
                 HubItem(AppTab.DASHBOARD, AppEmojiType.HOME, "داشبورد مرکزی", "نمای بنتو و خلاصه آمار"),
                 HubItem(AppTab.COPILOT, AppEmojiType.COPILOT, "دستیار Copilot", "مشاور تحصیلی و هوش مصنوعی"),
+                HubItem(AppTab.ACADEMIC_INTELLIGENCE, AppEmojiType.CHART, "هوش تحصیلی", "خلاصه و تحلیل وضعیت تحصیلی"),
                 HubItem(AppTab.SCHEDULE, AppEmojiType.CALENDAR, "برنامه هفتگی", "تقویم کلاس‌ها و تداخل‌ها"),
                 HubItem(AppTab.ATTENDANCE, AppEmojiType.TARGET, "رادار حضور و غیاب", "مانیتور قانون ۳/۱۶ غیبت"),
                 HubItem(AppTab.TASKS, AppEmojiType.CHECK, "مدیریت تکالیف", "اسپرینت و پروژه‌های درسی"),
