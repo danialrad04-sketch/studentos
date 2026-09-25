@@ -610,26 +610,9 @@ class StudentRepository(
             )
             dao.insertProfile(updatedProfile)
 
-            // 4. Seed passed course attempts for prior semesters (1 until currentSemester - 1)
-            dao.clearStudentAttempts(1)
-            val pastCourses = fullCurriculum.filter { it.recommendedSemester < currentSemester }
-            pastCourses.forEach { pastCourse ->
-                dao.insertStudentAttempt(
-                    StudentCourseAttemptEntity(
-                        id = UUID.randomUUID().toString(),
-                        profileId = 1,
-                        courseId = pastCourse.id,
-                        courseName = pastCourse.name,
-                        units = pastCourse.units,
-                        attemptNumber = 1,
-                        semesterIndex = pastCourse.recommendedSemester,
-                        status = "PASSED",
-                        grade = currentGpa,
-                        source = "QUICK_SETUP"
-                    )
-                )
-            }
+            // 4. Passed credits/GPA remain user-declared summary values until real attempts are entered.
 
+            // 5. Populate active enrolled courses for current semester.
             // 5. Populate active enrolled courses for current semester
             if (selectedCourses.isNotEmpty()) {
                 dao.clearCourses()
@@ -640,11 +623,7 @@ class StudentRepository(
 
                 val colors = listOf("#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#8B5CF6", "#0EA5E9", "#6366F1")
                 selectedCourses.forEachIndexed { index, cc ->
-                    val day = index % 5
-                    val start = if (index % 2 == 0) "08:00" else "10:00"
-                    val end = if (index % 2 == 0) "10:00" else "12:00"
                     val courseId = UUID.randomUUID().toString()
-                    val loc = "کلاس 10${index + 1} دانشکده"
 
                     val course = CourseEntity(
                         id = courseId,
@@ -652,25 +631,11 @@ class StudentRepository(
                         colorHex = colors[index % colors.size],
                         units = cc.units,
                         semesterId = activeSemesterId,
-                        courseCode = cc.code,
-                        professor = "استاد دانشکده",
-                        examDate = "1403/10/${15 + index}",
-                        examTime = "09:00",
-                        examLocation = "سالن امتحانات دانشکده"
+                        courseCode = cc.code
                     )
                     dao.insertCourse(course)
 
-                    dao.insertCourseSession(
-                        CourseSessionEntity(
-                            id = "sess_${courseId.take(8)}_0",
-                            courseId = courseId,
-                            day = day,
-                            start = start,
-                            end = end,
-                            location = loc
-                        )
-                    )
-
+                    // Attendance starts at zero absences; no schedule, professor, exam or grade is inferred.
                     val maxAllowed = if (cc.courseType == "آزمایشگاهی") 2 else 3
                     dao.insertAttendance(
                         AttendanceEntity(
@@ -681,28 +646,7 @@ class StudentRepository(
                         )
                     )
 
-                    val midtermEst = (currentGpa * 0.35).coerceIn(4.0, 7.0)
-                    val finalEst = (currentGpa * 0.65).coerceIn(8.0, 13.0)
-                    dao.insertGrade(
-                        GradeEntity(
-                            courseId = courseId,
-                            courseName = cc.name,
-                            units = cc.units,
-                            midtermGrade = midtermEst,
-                            finalGrade = finalEst
-                        )
-                    )
-
-                    dao.insertExam(
-                        ExamEntity(
-                            id = "exam_$courseId",
-                            courseId = courseId,
-                            courseName = cc.name,
-                            date = course.examDate,
-                            time = course.examTime,
-                            location = course.examLocation
-                        )
-                    )
+                    // No grades or exams are synthesized during quick setup.
                 }
             }
         }
