@@ -51,3 +51,7 @@ No production-release claim is made until the unchecked release gates above are 
 
 
 - Android emulator instrumentation smoke and accessibility smoke gates are configured; latest green CI remains mandatory before release.
+
+- [x] Backend promo redemption is transactional and server-authoritative.
+
+- [ ] Play Billing purchase verification is not enabled until a real Google Play verification service is configured; the server currently fails closed for unverified purchase tokens.
