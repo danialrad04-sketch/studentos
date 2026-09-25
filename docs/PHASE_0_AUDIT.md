@@ -91,7 +91,7 @@ Existing parsing/date systems include RegistrationTextParser and DateTimeNormali
 - Subscription quota calculation is now driven by `SubscriptionTier.maxAiQueriesPerDay`; PRO uses 50 daily AI queries and higher tiers retain their configured limits.
 - `clearToFreshSlate()` no longer has fabricated student identity defaults, and Copilot course enrollment no longer invents a class location.
 - Grade calculations now use the repository's 20-point contract: 6-point midterm + 14-point final; Copilot, Gamification and the grade simulator are aligned.
-- Backend-authenticated users no longer receive an implicit Pro entitlement; paid capabilities require a server-authoritative entitlement source.
+- Backend-authenticated users no longer receive an implicit Pro entitlement; paid capabilities now consume a server-authoritative entitlement endpoint.
 
 ## Remaining gaps
 
@@ -115,7 +115,7 @@ Existing parsing/date systems include RegistrationTextParser and DateTimeNormali
 ### Phase 6 — Account / privacy
 - Backend delete endpoint is implemented in the repository.
 - Production deployment and live endpoint verification remain required.
-- Subscription/entitlement behavior for backend-authenticated accounts needs a server-authoritative policy before production monetization.
+- Server-authoritative entitlement endpoint and client consumption are implemented; live deployment and paid-tier administration remain release gates.
 
 ### Phase 7 — Offline / sync
 - Local-first data model and LWW infrastructure exist.
@@ -123,6 +123,8 @@ Existing parsing/date systems include RegistrationTextParser and DateTimeNormali
 - Pulling a single data type was hardened so a course pull no longer wipes unrelated attendance/grade/exam/task data.
 
 ### Phase 8 — Quality
+- One-step local Undo is implemented for course deletion, Reset, Demo and Clean Slate; device UX verification remains.
+
 Still required:
 - Final CI run on the release commit
 - Device/emulator UX regression
