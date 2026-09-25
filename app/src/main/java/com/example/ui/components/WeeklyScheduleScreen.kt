@@ -1,4 +1,4 @@
-package com.example.ui.components
+import com.example.data.local.entity.CourseSessionEntity
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
