@@ -27,6 +27,9 @@ data class CopilotActionProposal(
     val isDestructive: Boolean = false
 )
 
+val CopilotActionProposal.requiresExplicitConfirmation: Boolean
+    get() = impactType == ActionImpactType.REQUIRES_CONFIRMATION || isDestructive
+
 enum class CopilotSender {
     USER,
     COPILOT,
