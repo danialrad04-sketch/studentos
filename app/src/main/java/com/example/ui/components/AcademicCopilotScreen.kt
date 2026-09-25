@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.domain.model.requiresExplicitConfirmation
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
