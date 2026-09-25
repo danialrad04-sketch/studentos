@@ -25,6 +25,7 @@ import com.example.domain.usecase.SemesterTransitionResult
 import com.example.domain.usecase.SemesterTransitionUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
@@ -55,6 +56,9 @@ class StudentRepository(
     val notes: Flow<List<NoteEntity>> = dao.getAllNotes()
     val profile: Flow<StudentProfileEntity?> = dao.getProfile()
     val curriculumCourses: Flow<List<CurriculumCourseEntity>>? = curriculumDao?.getAllCurriculumCourses()
+    val curriculumUniversities: Flow<List<UniversityEntity>> = curriculumDao?.getAllUniversities() ?: flowOf(emptyList())
+    val curriculumMajors: Flow<List<MajorEntity>> = curriculumDao?.getAllMajors() ?: flowOf(emptyList())
+    val curriculumVersions: Flow<List<CurriculumVersionEntity>> = curriculumDao?.getAllCurriculumVersions() ?: flowOf(emptyList())
     val studentAttempts: Flow<List<StudentCourseAttemptEntity>> = dao.getStudentAttempts(1)
 
     // ==========================================
