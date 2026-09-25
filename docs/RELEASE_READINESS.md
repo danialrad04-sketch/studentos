@@ -32,6 +32,7 @@
 - [x] Performance budget documented
 
 ## Before production release
+- [ ] Release workflow is triggered manually with an explicitly verified versionCode/versionName pair; automated push-based release is disabled.
 - [ ] Server-authoritative subscription/entitlement endpoint defined and consumed; Backend login must not grant Pro implicitly.
 - [ ] Latest CI run is green on the final commit
 - [ ] Release artifact build/signing succeeds
