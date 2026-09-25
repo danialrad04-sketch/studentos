@@ -211,6 +211,18 @@ class DataPersistenceAndBackupTest {
         assertTrue((persistedProfile?.updatedAt ?: 0L) > staleTimestamp)
     }
     @Test
+    fun testUndoActionCarriesRecoverySnapshotAndGeneration() {
+        val action = com.example.ui.StudentViewModel.UndoAction(
+            message = "واگردانی قابل واگردانی است.",
+            snapshot = """{"profile":{"name":"Student"}}""",
+            generation = 7L
+        )
+
+        assertEquals("واگردانی قابل واگردانی است.", action.message)
+        assertTrue(action.snapshot.contains("Student"))
+        assertEquals(7L, action.generation)
+    }
+    @Test
     fun testFreshSlateDefaultsDoNotCreateSyntheticIdentity() = runBlocking {
         repository.clearToFreshSlate()
 
