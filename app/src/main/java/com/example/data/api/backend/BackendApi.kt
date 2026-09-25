@@ -34,6 +34,15 @@ data class AuthResponse(
 
 data class TokenPairResponse(val accessToken: String, val refreshToken: String)
 
+data class BackendEntitlement(
+    val tier: String = "FREE",
+    val expiresAt: Long? = null,
+    val maxDailyAiQuota: Int = 5,
+    val allowsCloudSync: Boolean = true,
+    val allowsPdfExport: Boolean = false,
+    val gpaPredictorUnlocked: Boolean = false
+)
+
 data class SyncPushRequest(val payload: Any, val updatedAt: Long)
 data class SyncPullResponse(val payload: Any?, val updatedAt: Long)
 data class SyncPushResult(val ok: Boolean, val updatedAt: Long)
@@ -59,6 +68,9 @@ interface BackendApi {
 
     @POST("api/auth/logout-all")
     suspend fun logoutAllDevices(): Response<Unit>
+
+    @retrofit2.http.GET("api/auth/entitlement")
+    suspend fun getEntitlement(): Response<BackendEntitlement>
 
     @DELETE("api/auth/account")
     suspend fun deleteAccount(): Response<Unit>
