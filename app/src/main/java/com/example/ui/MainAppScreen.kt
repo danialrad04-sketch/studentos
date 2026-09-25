@@ -459,6 +459,7 @@ fun MainAppScreen(
                                         studentViewModel.toggleThemeQuickly()
                                     },
                                     onOpenProfile = { dialogState = AppDialogState.Profile },
+                                    studyStreakDays = gamificationProfile.studyStreakDays,
                                     accountEmail = currentUser.email,
                                     isAccountConnected = !currentUser.isGuest,
                                     onOpenAccount = { dialogState = AppDialogState.Auth },
