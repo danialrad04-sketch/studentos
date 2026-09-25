@@ -42,6 +42,10 @@ jobs:
           test -n "$RELEASE_KEYSTORE_BASE64"
           echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > studentos-release.jks
 
+      - name: Run release quality gates
+        run: |
+          ./gradlew testDebugUnitTest lintDebug --stacktrace
+
       - name: Build signed APK and AAB
         env:
           KEYSTORE_PATH: studentos-release.jks
