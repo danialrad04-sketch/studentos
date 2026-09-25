@@ -787,7 +787,7 @@ private fun StepOneAcademicIdentity(
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    if (isCustomMajorInput || !supportsMaraghehMajorCatalog) {
+                    if (isCustomMajorInput || !supportsReferenceMajorCatalog) {
                         OutlinedTextField(
                             value = major,
                             onValueChange = onMajorChange,
