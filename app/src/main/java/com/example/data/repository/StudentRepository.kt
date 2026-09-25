@@ -710,13 +710,18 @@ class StudentRepository(
     }
 
     suspend fun resetDefaults() {
-        dao.clearCourses()
-        dao.clearAttendance()
-        dao.clearGrades()
-        dao.clearTasks()
-        dao.clearExams()
-        dao.clearStudentAttempts(1)
-        AppDatabase.populateInitialData(dao, curriculumDao)
+        val reset = suspend {
+            // Reset is a full local-data operation, not a partial field cleanup.
+            // Reference curriculum data is preserved; personal academic records are recreated blank.
+            dao.clearAllUserData()
+            AppDatabase.populateInitialData(dao, curriculumDao)
+        }
+
+        if (database != null) {
+            database.withTransaction { reset() }
+        } else {
+            reset()
+        }
     }
 
     suspend fun loadRichDemoData() {
