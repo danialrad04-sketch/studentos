@@ -42,6 +42,7 @@ import com.example.ui.theme.StudentSpacing
 fun LayeredAccountCenter(
     userAccount: UserAccount,
     onSyncNow: () -> Unit,
+    syncState: SyncUiState = SyncUiState.Idle,
     onSignOut: () -> Unit,
     onDeleteAccount: () -> Unit,
     onOpenUpgrade: () -> Unit,
@@ -83,7 +84,8 @@ fun LayeredAccountCenter(
                 DataTransparencyCard()
                 DataControlsCard(
                     onSyncNow = onSyncNow,
-                    onDeleteAccount = onDeleteAccount
+                    onDeleteAccount = onDeleteAccount,
+                    syncState = syncState
                 )
             }
         }
@@ -162,7 +164,8 @@ private fun SecurityInfoCard() {
 @Composable
 private fun DataControlsCard(
     onSyncNow: () -> Unit,
-    onDeleteAccount: () -> Unit
+    onDeleteAccount: () -> Unit,
+    syncState: SyncUiState
 ) {
     Card(shape = StudentShapeTokens.Card, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))) {
         Column(modifier = Modifier.padding(StudentSpacing.Xl), verticalArrangement = Arrangement.spacedBy(StudentSpacing.Md)) {
@@ -173,6 +176,25 @@ private fun DataControlsCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            when (syncState) {
+                SyncUiState.Idle -> Unit
+                SyncUiState.Syncing -> Text(
+                    "در حال همگام‌سازی اطلاعات…",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = AcademicNavy
+                )
+                is SyncUiState.Success -> Text(
+                    syncState.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = AcademicOlive
+                )
+                is SyncUiState.Error -> Text(
+                    syncState.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
             Button(onClick = onSyncNow, modifier = Modifier.fillMaxWidth(), shape = StudentShapeTokens.Compact) {
                 Text("همگام‌سازی اکنون")
             }
