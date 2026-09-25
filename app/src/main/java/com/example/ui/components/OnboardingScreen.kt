@@ -174,11 +174,6 @@ private val AUT_FACULTIES = listOf(
         iconEmoji = "🧪",
         majors = listOf("مهندسی شیمی")
     ),
-    FacultyInfo(
-        name = "دانشکده مهندسی کامپیوتر",
-        iconEmoji = "💻",
-        majors = listOf("مهندسی کامپیوتر")
-    )
 )
 
 private val ALL_ENTRY_YEARS = listOf(1405, 1404, 1403, 1402, 1401, 1400, 1399, 1398, 1397)
