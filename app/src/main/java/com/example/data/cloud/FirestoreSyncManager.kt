@@ -356,19 +356,19 @@ object FirestoreSyncManager {
                 } else if (userDoc != null) {
                     val profileDoc = userDoc.collection("profile").document("current").get().awaitResult()
                     if (profileDoc != null && profileDoc.exists()) {
-                        val cloudSemester = profileDoc.getLong("currentSemester")?.toInt() ?: 1
+                        val cloudSemester = profileDoc.getLong("currentSemester")?.toInt() ?: 0
                         val cloudMajor = profileDoc.getString("major") ?: ""
                         CloudProfileData(
                             name = profileDoc.getString("name") ?: "",
                             studentId = profileDoc.getString("studentId") ?: "",
                             major = cloudMajor,
                             university = profileDoc.getString("university") ?: "",
-                            entryYear = profileDoc.getLong("entryYear")?.toInt() ?: 1403,
+                            entryYear = profileDoc.getLong("entryYear")?.toInt() ?: 0,
                             currentSemester = cloudSemester,
                             passedUnits = profileDoc.getLong("passedUnits")?.toInt() ?: 0,
                             activeUnits = profileDoc.getLong("activeUnits")?.toInt() ?: 0,
                             declaredGpa = profileDoc.getDouble("declaredGpa"),
-                            term = profileDoc.getString("term") ?: "ترم $cloudSemester $cloudMajor",
+                            term = profileDoc.getString("term") ?: "",
                             updatedAt = profileDoc.getTimestamp("updatedAt")?.toDate()?.time
                                 ?: profileDoc.getLong("updatedAt")
                                 ?: userLastSyncedAt
@@ -386,7 +386,7 @@ object FirestoreSyncManager {
                     val cloudPassed = cloudProfile.passedUnits
                     val cloudActive = cloudProfile.activeUnits
                     val cloudGpa = cloudProfile.declaredGpa
-                    val cloudTerm = cloudProfile.term ?: "ترم $cloudSemester $cloudMajor"
+                    val cloudTerm = cloudProfile.term ?: ""
                     val cloudUpdatedAt = cloudProfile.updatedAt
 
                     val localProfile = dao.getProfileSync()
@@ -410,17 +410,17 @@ object FirestoreSyncManager {
                                 id = 1,
                                 name = cloudName.ifBlank { localProfile?.name ?: "دانشجو" },
                                 studentId = cloudStdId.ifBlank { localProfile?.studentId ?: "" },
-                                university = cloudUni.ifBlank { localProfile?.university ?: "دانشگاه" },
-                                major = cloudMajor.ifBlank { localProfile?.major ?: "مهندسی" },
-                                entryYear = if (cloudEntryYear > 0) cloudEntryYear else (localProfile?.entryYear ?: 1403),
-                                currentSemester = if (cloudSemester > 0) cloudSemester else (localProfile?.currentSemester ?: 1),
+                                university = cloudUni.ifBlank { localProfile?.university ?: "" },
+                                major = cloudMajor.ifBlank { localProfile?.major ?: "" },
+                                entryYear = if (cloudEntryYear > 0) cloudEntryYear else (localProfile?.entryYear ?: 0),
+                                currentSemester = if (cloudSemester > 0) cloudSemester else (localProfile?.currentSemester ?: 0),
                                 passedUnits = if (cloudPassed > 0) cloudPassed else (localProfile?.passedUnits ?: 0),
                                 declaredPassedCredits = if (cloudPassed > 0) cloudPassed else (localProfile?.declaredPassedCredits ?: 0),
                                 activeUnits = if (cloudActive > 0) cloudActive else (localProfile?.activeUnits ?: 0),
                                 declaredGpa = cloudGpa ?: localProfile?.declaredGpa,
                                 term = cloudTerm,
-                                faculty = "دانشکده ${cloudMajor.ifBlank { "مهندسی" }}",
-                                isOnboardingCompleted = true,
+                                faculty = if (cloudMajor.isNotBlank()) "دانشکده $cloudMajor" else (localProfile?.faculty ?: ""),
+                                isOnboardingCompleted = localProfile?.isOnboardingCompleted ?: hasCloudIdentity,
                                 updatedAt = cloudUpdatedAt
                             )
                             dao.insertProfile(restoredProfile)
