@@ -1,5 +1,9 @@
 package com.example.ui.components
 
+import com.example.ui.theme.Emerald600
+
+import com.example.ui.theme.BrandIndigo600
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
