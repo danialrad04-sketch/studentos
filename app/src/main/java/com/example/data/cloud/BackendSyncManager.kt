@@ -145,13 +145,38 @@ object BackendSyncManager {
 
     suspend fun pullAllData(context: Context): Result<Unit> = withContext(Dispatchers.IO) {
         var failed = false
-        // Pull child snapshots first. If a remote course was deleted, removing it
-        // later may cascade to its dependent child rows without harming unrelated data.
-        DATA_TYPES.filter { it != "courses" }.forEach {
-            if (pullDataType(context, it).isFailure) failed = true
+
+        // Parent data must exist before child rows are restored because Room
+        // enforces foreign keys for sessions/exams/attendance/grades.
+        val restoreOrder = listOf(
+            "profile",
+            "semesters",
+            "courses",
+            "sessions",
+            "attendance",
+            "grades",
+            "exams",
+            "tasks",
+            "notes"
+        )
+
+        // First upsert courses without deletion so newly restored child rows
+        // always have their parent course available.
+        restoreOrder.forEach { type ->
+            if (type == "courses") {
+                if (pullDataType(context, "courses").isFailure) failed = true
+            } else {
+                if (pullDataType(context, type).isFailure) failed = true
+            }
         }
-        val coursesResult = pullDataTypeInternal(context, "courses", reconcileCourseDeletes = true)
-        if (coursesResult.isFailure) failed = true
+
+        // Re-fetch the canonical course snapshot and reconcile remote deletions last.
+        // Deleting a course may cascade to its dependent rows, which are now already
+        // restored from their authoritative child snapshots.
+        if (pullDataTypeInternal(context, "courses", reconcileCourseDeletes = true).isFailure) {
+            failed = true
+        }
+
         if (failed) Result.failure(Exception("Some data types failed to pull")) else Result.success(Unit)
     }
 
@@ -171,7 +196,9 @@ object BackendSyncManager {
             val body = response.body() ?: return@withContext Result.success(Unit)
             val dao = AppDatabase.getDatabase(context).studentDao()
             val localUpdated = localUpdatedAt(dao, dataType)
-            if (body.updatedAt <= localUpdated) return@withContext Result.success(Unit)
+            if (body.updatedAt <= localUpdated && !(dataType == "courses" && reconcileCourseDeletes)) {
+                return@withContext Result.success(Unit)
+            }
 
             if (dataType == "profile") {
                 val profile = decode<StudentProfileEntity>(body.payload, StudentProfileEntity::class.java)
