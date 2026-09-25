@@ -261,6 +261,12 @@ class AuthAndCopilotEngineTest {
     }
 
     @Test
+    fun testComputeGpaWithoutGradesDoesNotInventValue() {
+        assertEquals(0.0, AcademicCopilotEngine.computeGpa(emptyList(), null), 0.001)
+        assertEquals(17.5, AcademicCopilotEngine.computeGpa(emptyList(), 17.5), 0.001)
+    }
+
+    @Test
     fun testRequiredPersianAcademicCopilotPrompts() = runBlocking {
         val sampleProfile = StudentProfileEntity(
             id = 1,
