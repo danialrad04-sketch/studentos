@@ -355,7 +355,19 @@ fun AppDialogManager(
                     dismiss()
                 },
                 onExecuteCommand = { command: AcademicCommand ->
-                    studentViewModel.selectTab(command.tab)
+                    studentViewModel.selectTab(
+                        when (command.destination) {
+                            com.example.domain.model.AcademicCommandDestination.SCHEDULE -> AppTab.SCHEDULE
+                            com.example.domain.model.AcademicCommandDestination.TASKS -> AppTab.TASKS
+                            com.example.domain.model.AcademicCommandDestination.EXAMS -> AppTab.EXAMS
+                            com.example.domain.model.AcademicCommandDestination.GRADES -> AppTab.GRADES
+                            com.example.domain.model.AcademicCommandDestination.ATTENDANCE -> AppTab.ATTENDANCE
+                            com.example.domain.model.AcademicCommandDestination.FOCUS -> AppTab.POMODORO
+                            com.example.domain.model.AcademicCommandDestination.INTELLIGENCE -> AppTab.ACADEMIC_INTELLIGENCE
+                            com.example.domain.model.AcademicCommandDestination.CURRICULUM -> AppTab.CURRICULUM
+                            com.example.domain.model.AcademicCommandDestination.SEMESTER_PLANNER -> AppTab.SEMESTER_PLANNER
+                        }
+                    )
                     studentViewModel.setSearchQuery("")
                 }
             )
