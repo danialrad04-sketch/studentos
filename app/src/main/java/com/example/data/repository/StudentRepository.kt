@@ -772,13 +772,15 @@ class StudentRepository(
             dao.clearExams()
             dao.clearStudentAttempts(1)
 
+            val normalizedSemester = currentSemester.takeIf { it > 0 } ?: 0
+            val normalizedYear = entryYear.takeIf { it > 0 } ?: 0
             val freshSem = SemesterEntity(
-                id = "sem_1",
-                title = "ترم $currentSemester",
-                year = entryYear,
-                academicYear = entryYear,
-                semesterNumber = currentSemester,
-                termNumber = currentSemester,
+                id = "sem_current",
+                title = if (normalizedSemester > 0) "ترم $normalizedSemester" else "ترم جاری",
+                year = normalizedYear,
+                academicYear = normalizedYear,
+                semesterNumber = normalizedSemester,
+                termNumber = normalizedSemester,
                 isCurrent = true,
                 isArchived = false,
                 totalUnits = 0
