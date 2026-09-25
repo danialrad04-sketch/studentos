@@ -306,17 +306,17 @@ fun OnboardingScreen(
     // Identity & Academic Info State (initialized from existing state if available)
     var studentName by remember { mutableStateOf(initialName) }
     var studentId by remember { mutableStateOf(initialStudentId) }
-    var university by remember { mutableStateOf(initialUniversity.ifBlank { "دانشگاه مراغه" }) }
+    var university by remember { mutableStateOf(initialUniversity) }
     var major by remember { mutableStateOf(initialMajor) }
-    var entryYear by remember { mutableIntStateOf(if (initialEntryYear > 0) initialEntryYear else 1402) }
-    var currentSemester by remember { mutableIntStateOf(if (initialSemester > 0) initialSemester else 3) }
+    var entryYear by remember { mutableIntStateOf(initialEntryYear) }
+    var currentSemester by remember { mutableIntStateOf(initialSemester) }
 
     // Setup Option State
     var selectedMode by remember { mutableStateOf(SetupMode.QUICK_SETUP) }
 
     // Quick Setup States (Dynamically compute passed credits for the selected semester: e.g. (3 - 1) * 18 = 36)
-    var passedCreditsInput by remember { mutableStateOf("36") }
-    var currentGpaInput by remember { mutableStateOf("17.40") }
+    var passedCreditsInput by remember { mutableStateOf("") }
+    var currentGpaInput by remember { mutableStateOf("") }
 
     // Text Paste States
     var rawRegistrationText by remember { mutableStateOf("") }
@@ -327,8 +327,7 @@ fun OnboardingScreen(
         CurriculumSeedData.getCoursesForMajor(major)
     }
     val activeSemesterCourses = remember(major, currentSemester, activeMajorCourses) {
-        val filtered = activeMajorCourses.filter { it.recommendedSemester == currentSemester }
-        if (filtered.isNotEmpty()) filtered else activeMajorCourses.take(6)
+        activeMajorCourses.filter { it.recommendedSemester == currentSemester }
     }
     var selectedCurriculumCourseIds by remember(activeSemesterCourses) {
         mutableStateOf(activeSemesterCourses.map { it.id }.toSet())
@@ -336,8 +335,8 @@ fun OnboardingScreen(
 
     // Auto-update estimated passed credits when user changes currentSemester
     LaunchedEffect(currentSemester) {
-        val estimatedPassed = ((currentSemester - 1).coerceAtLeast(0) * 18).toString()
-        passedCreditsInput = estimatedPassed
+        passedCreditsInput = if (currentSemester > 0) "" else ""
+        currentGpaInput = ""
     }
 
     Box(
@@ -486,8 +485,8 @@ fun OnboardingScreen(
                         entryYear = entryYear,
                         semester = currentSemester,
                         mode = selectedMode,
-                        passedCredits = passedCreditsInput.toIntOrNull() ?: ((currentSemester - 1).coerceAtLeast(0) * 18),
-                        currentGpa = currentGpaInput.toDoubleOrNull() ?: 17.40,
+                        passedCredits = passedCreditsInput.toIntOrNull() ?: 0,
+                        currentGpa = currentGpaInput.toDoubleOrNull() ?: 0.0,
                         parsedDrafts = parsedDrafts,
                         selectedCourses = activeSemesterCourses.filter { selectedCurriculumCourseIds.contains(it.id) },
                         onConfirm = {
@@ -506,8 +505,8 @@ fun OnboardingScreen(
                                         major,
                                         entryYear,
                                         currentSemester,
-                                        passedCreditsInput.toIntOrNull() ?: ((currentSemester - 1).coerceAtLeast(0) * 18),
-                                        currentGpaInput.toDoubleOrNull() ?: 17.40,
+                                        passedCreditsInput.toIntOrNull() ?: 0,
+                                        currentGpaInput.toDoubleOrNull() ?: 0.0,
                                         activeCourses
                                     )
                                 }
