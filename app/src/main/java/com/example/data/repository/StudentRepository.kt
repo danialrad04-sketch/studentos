@@ -180,20 +180,13 @@ class StudentRepository(
             dao.updateAttendance(existingAtt.copy(courseName = entity.name))
         }
 
-        // Ensure Grade record with courseId relation
-        val existingGrade = dao.getGradeByCourseId(courseId)
-        if (existingGrade == null) {
-            dao.insertGrade(
-                GradeEntity(
-                    courseId = courseId,
-                    courseName = entity.name,
-                    units = entity.units,
-                    midtermGrade = 0.0,
-                    finalGrade = 0.0
-                )
-            )
-        } else if (existingGrade.courseName != entity.name || existingGrade.units != entity.units) {
-            dao.updateGrade(existingGrade.copy(courseName = entity.name, units = entity.units))
+        // Existing grades are updated when present; a new course does not receive
+        // a fabricated zero grade. A grade record is created only when the user
+        // actually records a score.
+        dao.getGradeByCourseId(courseId)?.let { existingGrade ->
+            if (existingGrade.courseName != entity.name || existingGrade.units != entity.units) {
+                dao.updateGrade(existingGrade.copy(courseName = entity.name, units = entity.units))
+            }
         }
 
         // Sync Exam record if exam details are provided
