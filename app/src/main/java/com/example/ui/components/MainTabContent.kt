@@ -131,6 +131,22 @@ fun MainTabContent(
                     onSaveCustomApiKey = { studentViewModel.setCustomGeminiApiKey(it) }
                 )
             }
+            AppTab.ACADEMIC_INTELLIGENCE -> {
+                AcademicIntelligenceScreen(
+                    gpa = currentTermGpa,
+                    passedUnits = profile.passedUnits,
+                    totalRequiredCredits = totalCurriculumUnits,
+                    courses = courses,
+                    attendance = attendance,
+                    tasks = tasks,
+                    grades = grades,
+                    risks = academicRisks,
+                    onOpenTab = { targetTab ->
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        studentViewModel.selectTab(targetTab)
+                    }
+                )
+            }
             AppTab.PASSPORT -> {
                 AcademicPassportScreen(
                     profile = profile,
