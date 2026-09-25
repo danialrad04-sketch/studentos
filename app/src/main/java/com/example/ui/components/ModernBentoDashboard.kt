@@ -70,6 +70,8 @@ import com.example.data.local.relation.CourseWithSessions
 import com.example.ui.models.AppTab
 import com.example.ui.theme.NumericBadgeText
 import com.example.ui.theme.NumericDisplayStat
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.StudentOsColors
 import com.example.ui.theme.StudentOsGlassTokens
 import com.example.ui.theme.studentColors
@@ -281,13 +283,13 @@ private fun AnalyticsKpiSection(
     onNavigateToTasks: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val displayGpa = if (gpa.isNotBlank() && gpa != "۰.۰۰") gpa else "۱۷.۸۲"
-    val displayPassed = if (passedUnits > 0) "$passedUnits" else "۶۴"
+    val displayGpa = gpa.takeIf { it.isNotBlank() } ?: "۰.۰۰"
+    val displayPassed = passedUnits.toString()
     val pendingTasksCount = tasks.count { !it.isCompleted }
-    val displayTasks = if (pendingTasksCount > 0) "$pendingTasksCount" else "۳"
+    val displayTasks = pendingTasksCount.toString()
 
     val dangerCourses = attendanceList.count { it.absentCount >= it.maxAllowed && it.maxAllowed > 0 }
-    val displayAttendance = if (attendanceList.isEmpty()) "۹۲٪" else {
+    val displayAttendance = if (attendanceList.isEmpty()) "—" else {
         val safeRatio = ((attendanceList.size - dangerCourses).toFloat() / attendanceList.size.toFloat() * 100).toInt()
         "$safeRatio٪"
     }
@@ -306,7 +308,7 @@ private fun AnalyticsKpiSection(
                 value = displayGpa,
                 subtitle = "هدف: ۱۸.۵۰ 🎯",
                 emojiType = AppEmojiType.CHART,
-                accentColor = StudentOsColors.CyanAccent,
+                accentColor = AcademicNavy,
                 onClick = onNavigateToGrades,
                 modifier = Modifier.weight(1f)
             )
@@ -316,7 +318,7 @@ private fun AnalyticsKpiSection(
                 value = "$displayPassed / $totalRequiredCredits",
                 subtitle = "${((passedUnits.toFloat() / totalRequiredCredits.coerceAtLeast(1)) * 100).toInt()}% چارت 📈",
                 emojiType = AppEmojiType.CHECK,
-                accentColor = StudentOsColors.EmeraldNeon,
+                accentColor = AcademicOlive,
                 onClick = onNavigateToPassport,
                 modifier = Modifier.weight(1f)
             )
@@ -330,9 +332,9 @@ private fun AnalyticsKpiSection(
             BentoKpiTile(
                 title = "حضور و غیاب",
                 value = displayAttendance,
-                subtitle = if (dangerCourses > 0) "$dangerCourses هشدار غیبت!" else "وضعیت ۱۰۰٪ امن 🛡️",
+                subtitle = if (dangerCourses > 0) "$dangerCourses هشدار غیبت!" else if (attendanceList.isEmpty()) "هنوز داده‌ای ثبت نشده" else "وضعیت پایدار 🛡️",
                 emojiType = AppEmojiType.CALENDAR,
-                accentColor = if (dangerCourses > 0) StudentOsColors.CrimsonRose else StudentOsColors.EmeraldNeon,
+                accentColor = if (dangerCourses > 0) StudentOsColors.CrimsonRose else AcademicOlive,
                 onClick = onNavigateToAttendance,
                 modifier = Modifier.weight(1f)
             )
