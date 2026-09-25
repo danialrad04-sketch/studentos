@@ -88,6 +88,7 @@ Existing parsing/date systems include RegistrationTextParser and DateTimeNormali
 - Backend sync course pulls no longer clear unrelated attendance/grade/exam/task data.
 
 ## Additional correctness hardening
+- Subscription quota calculation is now driven by `SubscriptionTier.maxAiQueriesPerDay`; PRO uses 50 daily AI queries and higher tiers retain their configured limits.
 - `clearToFreshSlate()` no longer has fabricated student identity defaults, and Copilot course enrollment no longer invents a class location.
 - Grade calculations now use the repository's 20-point contract: 6-point midterm + 14-point final; Copilot, Gamification and the grade simulator are aligned.
 - Backend-authenticated users no longer receive an implicit Pro entitlement; paid capabilities require a server-authoritative entitlement source.
