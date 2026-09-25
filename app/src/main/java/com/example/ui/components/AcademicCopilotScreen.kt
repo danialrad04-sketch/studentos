@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -77,6 +78,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.StudentOsColors
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.StudentSpacing
 import com.example.ui.theme.StudentOsGlassTokens
 import com.example.data.local.entity.AttendanceEntity
 import com.example.data.local.entity.CourseEntity
@@ -271,6 +276,36 @@ fun AcademicCopilotScreen(
                 }
             },
             shape = RoundedCornerShape(24.dp)
+        )
+    }
+
+    if (showConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showConfirmation = false },
+            title = { Text("تأیید اجرای تغییر") },
+            text = {
+                Text(
+                    if (proposal.isDestructive)
+                        "این عملیات می‌تواند روی اطلاعات شما اثر دائمی داشته باشد. قبل از ادامه، جزئیات بالا را بررسی کنید."
+                    else
+                        "این عملیات اطلاعات Student OS را تغییر می‌دهد. برای اجرای آن تأیید نهایی شما لازم است."
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showConfirmation = false
+                        onApply()
+                    },
+                    shape = StudentShapeTokens.Compact
+                ) { Text("تأیید و اعمال") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmation = false }) {
+                    Text("انصراف")
+                }
+            },
+            shape = StudentShapeTokens.Card
         )
     }
 
