@@ -6,53 +6,56 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Master Student OS Design Tokens (2026 Architectural Specification).
- * 
- * Aesthetic:
- * - Deep blue-black canvas: Dark Velvet (#07090E), Deep Space Paper (#0E1322)
- * - Glassmorphic surface tokens: GlassSurface (#161C2D with alpha), White/Gradients highlight borders
- * - Vibrant Accents: Cyber Cyan (#06B6D4), Emerald Neon (#10B981), Cyber Purple (#8B5CF6), Electric Blue (#1D4ED8), Amber Glow (#F59E0B)
+ * Compatibility token layer for Student OS.
+ *
+ * The product source of truth is the Academic Premium palette:
+ * Petrol/Navy + Olive with separate semantic status colors.
+ *
+ * Existing public token names are retained so feature screens can migrate
+ * incrementally without a wholesale rewrite.
  */
 object StudentOsColors {
-    // Light Theme Tokens (Crisp Academic Frost White 2026)
-    val LightCanvas = Color(0xFFF8FAFC)
-    val LightPaper = Color(0xFFF1F5F9)
-    val LightSurface = Color(0xFFFFFFFF)
-    val LightSurface2 = Color(0xFFF1F5F9)
-    val LightInk = Color(0xFF0F172A)
-    val LightInkSoft = Color(0xFF475569)
-    val LightInkFaint = Color(0xFF94A3B8)
-    val LightBrand = Color(0xFF0F3B4D)
+    // Core Academic Premium surfaces
+    val LightCanvas = LightCanvas
+    val LightPaper = LightSurfaceVariant
+    val LightSurface = LightSurface
+    val LightSurface2 = LightSurfaceVariant
+    val LightInk = LightInk
+    val LightInkSoft = LightInkSoft
+    val LightInkFaint = Slate400
+    val LightBrand = AcademicNavy
     val LightIndigoStrong = Color(0xFF0A2D3A)
     val LightIndigoSoft = Color(0xFFE8EFF2)
-    val LightAmber = Color(0xFFD97706)
-    val LightMint = Color(0xFF6B705C)
-    val LightCoral = Color(0xFFE11D48)
-    val LightSky = Color(0xFF0284C7)
 
-    // Dark Velvet & Deep Blue-Black Canvas Tokens
-    val DarkCanvas = Color(0xFF07090E)        // Master deep blue-black / Dark Velvet (#07090E)
-    val DarkNavyBlack = Color(0xFF0A0E1A)     // Deep Navy Space
-    val DarkPaper = Color(0xFF0E1322)        // Container Layer Paper
-    val DarkSurface = Color(0xFF161C2D)      // Primary Glass/Card Surface
-    val DarkSurface2 = Color(0xFF1C2438)     // Secondary Elevated Glass Surface
-    val DarkInk = Color(0xFFEEF0F6)          // Primary High-Contrast Ink
-    val DarkInkSoft = Color(0xFF9FA8BD)      // Secondary Slate Ink
-    val DarkInkFaint = Color(0xFF6D7690)     // Faint Caption Ink
-    val DarkLine = Color(0xFF28324D)         // Divider Line
+    // Semantic status colors — deliberately separate from brand colors
+    val LightAmber = LightAmber
+    val LightMint = AcademicOlive
+    val LightCoral = LightError
+    val LightSky = Sky600
 
-    // Signature Accents
-    val CyanAccent = Color(0xFF6FA7B8)       // Cyber Cyan #06B6D4
-    val CyanGlow = Color(0xFF38BDF8)         // Sky Cyan Glow #38BDF8
-    val EmeraldAccent = Color(0xFF7C8461)    // Emerald Neon #10B981
-    val EmeraldGlow = Color(0xFF34D399)      // Mint Glow #34D399
-    val PurpleAccent = Color(0xFF7B6D5A)     // Cyber Violet / Purple #8B5CF6
-    val PurpleGlow = Color(0xFFA78BFA)       // Light Purple Glow #A78BFA
-    val ElectricBlue = Color(0xFF285A6C)     // Electric Blue #1D4ED8
-    val AmberAccent = Color(0xFFF59E0B)      // Amber Glow #F59E0B
-    val CrimsonAccent = Color(0xFFF43F5E)    // Crimson Rose #F43F5E
+    // Dark academic surfaces
+    val DarkCanvas = DarkVelvetCanvas
+    val DarkNavyBlack = DeepNavyBlack
+    val DarkPaper = DeepSpacePaper
+    val DarkSurface = OledCardSurface
+    val DarkSurface2 = OledSurfaceElevated
+    val DarkInk = Color(0xFFEEF0F6)
+    val DarkInkSoft = Color(0xFF9FA8BD)
+    val DarkInkFaint = Color(0xFF6D7690)
+    val DarkLine = Color(0xFF28324D)
 
-    // 2026 Semantic Tokens Aliases
+    // Compatibility accent names mapped to the restrained Academic Premium system
+    val CyanAccent = AcademicNavyDark
+    val CyanGlow = Color(0xFF6FA7B8)
+    val EmeraldAccent = AcademicOlive
+    val EmeraldGlow = AcademicOliveLight
+    val PurpleAccent = Color(0xFF7B6D5A)
+    val PurpleGlow = Color(0xFF9A8A73)
+    val ElectricBlue = AcademicNavy
+    val AmberAccent = AmberGlow
+    val CrimsonAccent = CrimsonRose
+
+    // Compatibility aliases
     val CyberCyan = CyanAccent
     val SkyCyan = CyanGlow
     val EmeraldNeon = EmeraldAccent
@@ -63,72 +66,68 @@ object StudentOsColors {
     val DarkVelvetCanvas = DarkCanvas
     val VioletAccent = PurpleAccent
 
-    // Legacy Aliases
-    val DarkIndigo = Color(0xFF8579FF)
+    // Legacy aliases retained for source compatibility; no neon values are introduced here.
+    val DarkIndigo = AcademicNavyDark
     val DarkAmber = Color(0xFFF0B054)
-    val DarkMint = Color(0xFF4FD5A6)
+    val DarkMint = AcademicOliveLight
     val DarkCoral = Color(0xFFF0897A)
     val DarkSky = Color(0xFF79A8F2)
 }
 
 /**
- * Glassmorphic 2.0 specific tokens for translucent layers and ambient glow
+ * Surface/border compatibility tokens.
+ *
+ * These remain available to older components, but use opaque/low-noise
+ * Academic Premium surfaces rather than prominent glass effects.
  */
 object StudentOsGlassTokens {
-    val glassPrimary = Color(0xB3161C2D)          // rgba(22, 28, 45, 0.70)
-    val glassElevated = Color(0xCC1A233A)         // rgba(26, 35, 58, 0.80)
-    val glassSubtle = Color(0x66161C2D)           // rgba(22, 28, 45, 0.40)
-    val glassHighlight = Color(0x1FFFFFFF)        // Ultra-subtle white wash
+    val glassPrimary = OledCardSurface
+    val glassElevated = OledSurfaceElevated
+    val glassSubtle = DeepSpacePaper
+    val glassHighlight = Color(0x14FFFFFF)
 
-    // 2026 Semantic Tokens
     val GlassSurfaceDark = glassPrimary
     val GlassSurfaceElevated = glassElevated
     val glassDark = glassPrimary
-    val GlassSurfaceLight = Color(0xF2FFFFFF)      // Frost white glass for light mode (95% opaque with light sheen)
+    val GlassSurfaceLight = LightSurface
     val GlassSurfaceElevatedLight = Color(0xFFFFFFFF)
+
     val GlassBorderGradient = Brush.linearGradient(
-        listOf(Color.White.copy(alpha = 0.24f), Color.White.copy(alpha = 0.04f))
+        listOf(Color(0xFFE2E8F0), Color(0xFFCBD5E1))
     )
-    val GlassBorderLightGradient = Brush.linearGradient(
-        listOf(Color(0xFFCBD5E1).copy(alpha = 0.70f), Color(0xFFE2E8F0).copy(alpha = 0.35f))
-    )
+    val GlassBorderLightGradient = GlassBorderGradient
 
-    val borderLight = Color(0x2EFFFFFF)           // 1px subtle white border
-    val borderGradient = Brush.linearGradient(
-        listOf(Color.White.copy(alpha = 0.24f), Color.White.copy(alpha = 0.04f))
-    )
+    val borderLight = LightOutline
+    val borderGradient = GlassBorderGradient
     val borderHighlightGradient = Brush.linearGradient(
-        listOf(Color.White.copy(alpha = 0.38f), Color.White.copy(alpha = 0.08f))
+        listOf(AcademicNavy.copy(alpha = 0.16f), AcademicNavy.copy(alpha = 0.04f))
     )
 
-    // Colored Border Highlights
+    // Compatibility border names, now using brand/semantic tones.
     val borderCyanGradient = Brush.linearGradient(
-        listOf(Color(0xFF06B6D4).copy(alpha = 0.55f), Color(0xFF06B6D4).copy(alpha = 0.08f))
+        listOf(AcademicNavy.copy(alpha = 0.22f), AcademicNavy.copy(alpha = 0.05f))
     )
     val borderEmeraldGradient = Brush.linearGradient(
-        listOf(Color(0xFF10B981).copy(alpha = 0.55f), Color(0xFF10B981).copy(alpha = 0.08f))
+        listOf(AcademicOlive.copy(alpha = 0.24f), AcademicOlive.copy(alpha = 0.05f))
     )
     val borderPurpleGradient = Brush.linearGradient(
-        listOf(Color(0xFF8B5CF6).copy(alpha = 0.55f), Color(0xFF8B5CF6).copy(alpha = 0.08f))
+        listOf(Color(0xFF7B6D5A).copy(alpha = 0.20f), Color(0xFF7B6D5A).copy(alpha = 0.05f))
     )
     val borderVioletGradient = borderPurpleGradient
 
-    // Master Hero Gradients
+    // Subtle branded gradients retained only for legacy callers.
     val heroPassport = Brush.linearGradient(
-        listOf(Color(0xFF1D4ED8), Color(0xFF0284C7), Color(0xFF0D9488))
+        listOf(AcademicNavyDark, AcademicNavy, AcademicOlive)
     )
     val copilotAi = Brush.horizontalGradient(
-        listOf(Color(0xFF8B5CF6), Color(0xFF06B6D4))
+        listOf(AcademicNavy, AcademicOlive)
     )
     val emeraldProgress = Brush.horizontalGradient(
-        listOf(Color(0xFF059669), Color(0xFF10B981), Color(0xFF34D399))
+        listOf(AcademicOlive, AcademicOliveLight)
     )
 }
 
-/**
- * Centralized Spacing tokens according to the Student OS System specification:
- * 4, 8, 10, 12, 14, 16, 20, 24, 32
- */
+/** Centralized spacing tokens. */
 object StudentOsSpacing {
     val xs: Dp = 4.dp
     val sm: Dp = 8.dp
@@ -141,19 +140,11 @@ object StudentOsSpacing {
     val hero: Dp = 32.dp
 }
 
-/**
- * Centralized Shape tokens:
- * Large containers: 28dp - 32dp
- * Medium cards: 20dp - 24dp
- * Small chips/buttons: 14dp - 16dp
- * Pills: 999dp
- */
-// StudentOsShapes reference tokens
+/** Centralized shape compatibility tokens. */
 object StudentOsShapes {
-    val largeContainer: Dp = 26.dp
-    val heroCard: Dp = 38.dp
-    val mediumCard: Dp = 26.dp
-    val button: Dp = 16.dp
+    val largeContainer: Dp = 24.dp
+    val heroCard: Dp = 20.dp
+    val mediumCard: Dp = 16.dp
+    val button: Dp = 10.dp
     val pill: Dp = 999.dp
 }
-
