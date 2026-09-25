@@ -281,9 +281,13 @@ class StudentViewModel @JvmOverloads constructor(
         curriculumCourses,
         repository.studentAttempts
     ) { p, currentCoursesList, currCoursesList, attemptsList ->
-        val universityId = p.universityId ?: "UNI_AUT"
-        val majorId = p.majorId ?: "MAJ_AUT_CHEM_ENG"
-        val entryYear = 1401
+        val universityId = p.universityId.orEmpty()
+        val majorId = p.majorId.orEmpty()
+        val entryYear = p.entryYear
+
+        if (universityId.isBlank() || majorId.isBlank() || entryYear <= 0) {
+            return@combine CurriculumMatchUiState.Empty
+        }
 
         val universities = listOf(
             ResolvedUniversity("UNI_AUT", "دانشگاه صنعتی امیرکبیر", "پلی‌تکنیک تهران")
