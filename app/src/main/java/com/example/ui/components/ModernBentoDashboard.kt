@@ -268,7 +268,7 @@ fun ModernBentoDashboard(
         val chartUnitsText = when (academicProgressState) {
             is com.example.ui.models.AcademicProgressUiState.Ready -> "${academicProgressState.progress.totalRequiredCredits} واحد مصوب"
             is com.example.ui.models.AcademicProgressUiState.Partial -> "${academicProgressState.progress.totalRequiredCredits} واحد مصوب"
-            else -> "۱۴۰ واحد مصوب"
+            else -> "اطلاعات چارت ثبت نشده"
         }
 
         CurriculumAndExamActionBanner(
@@ -1378,7 +1378,7 @@ private fun TasksSprintBentoTile(
 // -------------------------------------------------------------
 @Composable
 private fun CurriculumAndExamActionBanner(
-    chartUnitsText: String = "۱۴۰ واحد مصوب",
+    chartUnitsText: String = "اطلاعات چارت ثبت نشده",
     onOpenCurriculum: () -> Unit,
     onOpenExams: () -> Unit,
     modifier: Modifier = Modifier
