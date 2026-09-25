@@ -223,6 +223,23 @@ class DataPersistenceAndBackupTest {
         assertEquals(7L, action.generation)
     }
     @Test
+    fun testOnboardingPersistsReferenceIdsForKnownUniversityAndMajor() = runBlocking {
+        repository.setOnboardingCompleted(
+            completed = true,
+            name = "دانشجو",
+            university = "دانشگاه صنعتی امیرکبیر",
+            major = "مهندسی شیمی",
+            entryYear = 1404,
+            currentSemester = 1
+        )
+
+        val profile = db.studentDao().getProfileSync()
+        assertEquals("UNI_AUT", profile?.universityId)
+        assertEquals("MAJ_AUT_CHEM_ENG", profile?.majorId)
+        assertEquals("FAC_AUT_CHEM_OIL", profile?.facultyId)
+    }
+
+    @Test
     fun testFreshSlateDefaultsDoNotCreateSyntheticIdentity() = runBlocking {
         repository.clearToFreshSlate()
 
