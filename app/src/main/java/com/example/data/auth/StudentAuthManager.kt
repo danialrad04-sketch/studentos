@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.example.data.api.backend.BackendApiClient
 import com.example.data.api.backend.LogoutRequest
+import com.example.data.api.backend.RedeemEntitlementRequest
 import com.example.data.api.backend.LoginRequest
 import com.example.data.api.backend.SignUpRequest
 import com.example.data.cloud.FirestoreSyncManager
@@ -478,27 +479,48 @@ class StudentAuthManager(private val context: Context) {
             return@withContext Result.failure(IllegalStateException("برای فعال‌سازی کد اشتراک ابتدا وارد حساب خود شوید."))
         }
 
-        // Backend-authenticated accounts must use a backend entitlement service.
-        // Until that endpoint exists, never mutate the local tier from this path.
-        if (safeFirebaseAuth?.currentUser?.uid != current.uid) {
-            return@withContext Result.failure(
-                IllegalStateException("فعال‌سازی اشتراک این حساب هنوز از مسیر سرور اختصاصی پشتیبانی نمی‌شود.")
-            )
+        val firebaseUserId = safeFirebaseAuth?.currentUser?.uid
+        if (firebaseUserId != null && firebaseUserId == current.uid) {
+            val result = FirestoreSyncManager.redeemPromoCode(current.uid, code)
+            result.onSuccess { tier ->
+                _currentUser.value = current.copy(
+                    subscription = current.subscription.copy(
+                        tier = tier,
+                        isCloudSyncEnabled = true,
+                        isUnlimitedExportEnabled = true,
+                        isGpaPredictorUnlocked = true,
+                        maxDailyAiQuota = tier.maxAiQueriesPerDay
+                    )
+                )
+            }
+            return@withContext result
         }
 
-        val result = FirestoreSyncManager.redeemPromoCode(current.uid, code)
-        result.onSuccess { tier ->
-            _currentUser.value = current.copy(
-                subscription = current.subscription.copy(
-                    tier = tier,
-                    isCloudSyncEnabled = true,
-                    isUnlimitedExportEnabled = true,
-                    isGpaPredictorUnlocked = true,
-                    maxDailyAiQuota = tier.maxAiQueriesPerDay
-                )
-            )
+        // Backend account: redemption is fully server-authoritative in PostgreSQL.
+        val client = BackendApiClient.getInstance(context)
+        if (client.tokenStore().getAccessToken().isNullOrBlank()) {
+            return@withContext Result.failure(IllegalStateException("نشست حساب سروری معتبر نیست. دوباره وارد شوید."))
         }
-        result
+        try {
+            val response = client.api.redeemEntitlement(RedeemEntitlementRequest(code.trim()))
+            if (!response.isSuccessful) {
+                val message = when (response.code()) {
+                    404 -> "کد اشتراک معتبر یا فعال نیست."
+                    409 -> "این کد قبلاً مصرف شده یا ظرفیت مصرف آن تکمیل شده است."
+                    410 -> "این کد اشتراک منقضی شده است."
+                    401 -> "نشست حساب سروری معتبر نیست. دوباره وارد شوید."
+                    else -> "فعال‌سازی اشتراک انجام نشد (کد ${response.code()})."
+                }
+                return@withContext Result.failure(IllegalStateException(message))
+            }
+
+            val entitlement = fetchBackendEntitlement(client)
+            _currentUser.value = current.copy(subscription = entitlement)
+            Result.success(entitlement.tier)
+        } catch (e: Exception) {
+            Log.e(TAG, "Backend entitlement redemption failed", e)
+            Result.failure(e)
+        }
     }
 
     suspend fun upgradeSubscriptionTier(tier: SubscriptionTier): Result<SubscriptionTier> = withContext(Dispatchers.IO) {
