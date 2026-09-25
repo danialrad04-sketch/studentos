@@ -276,8 +276,8 @@ fun OnboardingScreen(
     initialStudentId: String = "",
     initialUniversity: String = "",
     initialMajor: String = "",
-    initialEntryYear: Int = 1402,
-    initialSemester: Int = 3,
+    initialEntryYear: Int = 0,
+    initialSemester: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val (
@@ -441,8 +441,10 @@ fun OnboardingScreen(
                         currentSemester = currentSemester,
                         onSemesterChange = { currentSemester = it },
                         onNext = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            currentStep = 2
+                            if (entryYear > 0 && currentSemester > 0) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                currentStep = 2
+                            }
                         }
                     )
                     2 -> StepTwoSetupMode(
