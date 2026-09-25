@@ -28,4 +28,18 @@ No phase is considered release-complete until:
 
 ## Current gate
 
-The GitHub Actions build is being used as the authoritative compile/test gate. A failure is fixed from its concrete log before further release claims are made.
+- Latest source branch head must pass Android CI: unit tests, debug lint, debug APK build and artifact upload.
+- Release artifacts additionally require signed release APK/AAB verification.
+- Account privacy release gate remains blocked until a verified server-side delete endpoint exists for Backend-authenticated accounts.
+
+## Current implementation notes
+
+- Academic Premium brand system is applied across the primary academic and account surfaces.
+- Offline/sync status is visible in the account data layer.
+- Logout and local account-data purge no longer inject demo/default student records.
+- State-changing Copilot actions require explicit confirmation.
+- Restore actions require explicit confirmation before replacing local data.
+- Omnibox supports deterministic Search + Command routing.
+- Backend sync remains Last Write Wins at the data-type level.
+
+No production release is considered complete while a required gate above is unchecked.
