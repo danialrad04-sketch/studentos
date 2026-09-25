@@ -73,10 +73,8 @@ exports.validateAndApplyPromoCode = functions.https.onCall(async (data, context)
   maxAiQueries = targetTier === "FREE" ? 5 : targetTier === "PRO" ? 50 : 999;
 
   await db.runTransaction(async (transaction) => {
-    const [userDoc, redemptionDoc] = await Promise.all([
-      transaction.get(userRef),
-      transaction.get(redemptionRef)
-    ]);
+    const userDoc = await transaction.get(userRef);
+    const redemptionDoc = await transaction.get(redemptionRef);
 
     if (!userDoc.exists) {
       throw new functions.https.HttpsError("not-found", "حساب کاربری یافت نشد.");
