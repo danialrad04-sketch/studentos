@@ -205,7 +205,7 @@ private fun PassportHeaderCard(
                     color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
                 ) {
                     Text(
-                        text = profile.term.ifEmpty { "ترم ۳ مهندسی شیمی" },
+                        text = profile.term.ifEmpty { "اطلاعات ترم ثبت نشده" },
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
