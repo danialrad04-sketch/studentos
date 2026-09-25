@@ -1087,6 +1087,7 @@ private fun StepOneAcademicIdentity(
 
         Button(
             onClick = onNext,
+            enabled = entryYear > 0 && currentSemester > 0,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
