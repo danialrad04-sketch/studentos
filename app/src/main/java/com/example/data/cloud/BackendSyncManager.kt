@@ -98,12 +98,15 @@ object BackendSyncManager {
         when (dataType) {
             "semesters" -> {
                 val t = Types.newParameterizedType(List::class.java, SemesterEntity::class.java)
+                val items = decode<List<SemesterEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid semesters payload; local data preserved")
                 dao.getAllSemestersSync().forEach { dao.deleteSemester(it.id) }
-                decode<List<SemesterEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertSemesters(it) }
+                if (items.isNotEmpty()) dao.insertSemesters(items)
             }
             "courses" -> {
                 val t = Types.newParameterizedType(List::class.java, CourseEntity::class.java)
-                val items = decode<List<CourseEntity>>(payload, t) ?: emptyList()
+                val items = decode<List<CourseEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid courses payload; local data preserved")
                 // Single-type course pulls only upsert. Clearing a course can cascade
                 // into sessions/exams/attendance/grades because of Room foreign keys.
                 if (items.isNotEmpty()) dao.insertCourses(items)
@@ -114,27 +117,45 @@ object BackendSyncManager {
             }
             "sessions" -> {
                 val t = Types.newParameterizedType(List::class.java, CourseSessionEntity::class.java)
-                dao.clearCourseSessions(); decode<List<CourseSessionEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertCourseSessions(it) }
+                val items = decode<List<CourseSessionEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid sessions payload; local data preserved")
+                dao.clearCourseSessions()
+                if (items.isNotEmpty()) dao.insertCourseSessions(items)
             }
             "attendance" -> {
                 val t = Types.newParameterizedType(List::class.java, AttendanceEntity::class.java)
-                dao.clearAttendance(); decode<List<AttendanceEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertAllAttendance(it) }
+                val items = decode<List<AttendanceEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid attendance payload; local data preserved")
+                dao.clearAttendance()
+                if (items.isNotEmpty()) dao.insertAllAttendance(items)
             }
             "grades" -> {
                 val t = Types.newParameterizedType(List::class.java, GradeEntity::class.java)
-                dao.clearGrades(); decode<List<GradeEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertAllGrades(it) }
+                val items = decode<List<GradeEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid grades payload; local data preserved")
+                dao.clearGrades()
+                if (items.isNotEmpty()) dao.insertAllGrades(items)
             }
             "exams" -> {
                 val t = Types.newParameterizedType(List::class.java, ExamEntity::class.java)
-                dao.clearExams(); decode<List<ExamEntity>>(payload, t)?.forEach { dao.insertExam(it) }
+                val items = decode<List<ExamEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid exams payload; local data preserved")
+                dao.clearExams()
+                items.forEach { dao.insertExam(it) }
             }
             "tasks" -> {
                 val t = Types.newParameterizedType(List::class.java, TaskEntity::class.java)
-                dao.clearTasks(); decode<List<TaskEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertAllTasks(it) }
+                val items = decode<List<TaskEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid tasks payload; local data preserved")
+                dao.clearTasks()
+                if (items.isNotEmpty()) dao.insertAllTasks(items)
             }
             "notes" -> {
                 val t = Types.newParameterizedType(List::class.java, NoteEntity::class.java)
-                dao.getAllNotesSync().forEach { dao.deleteNote(it.id) }; decode<List<NoteEntity>>(payload, t)?.forEach { dao.insertNote(it) }
+                val items = decode<List<NoteEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid notes payload; local data preserved")
+                dao.getAllNotesSync().forEach { dao.deleteNote(it.id) }
+                items.forEach { dao.insertNote(it) }
             }
         }
         dao.upsertSyncMetadata(SyncMetadataEntity(dataType, remoteUpdatedAt))
