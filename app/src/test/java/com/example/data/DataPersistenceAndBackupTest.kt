@@ -224,6 +224,7 @@ class DataPersistenceAndBackupTest {
     }
     @Test
     fun testOnboardingPersistsReferenceIdsForKnownUniversityAndMajor() = runBlocking {
+        AppDatabase.populateInitialData(db.studentDao(), db.curriculumDao())
         repository.setOnboardingCompleted(
             completed = true,
             name = "دانشجو",
