@@ -68,12 +68,15 @@ import com.example.data.local.entity.GradeEntity
 import com.example.data.local.entity.TaskEntity
 import com.example.data.local.relation.CourseWithSessions
 import com.example.ui.models.AppTab
+import com.example.domain.model.StudySessionRecommendation
 import com.example.ui.theme.NumericBadgeText
 import com.example.ui.theme.NumericDisplayStat
 import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.StudentOsColors
 import com.example.ui.theme.StudentOsGlassTokens
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.StudentSpacing
 import com.example.ui.theme.studentColors
 import java.util.Calendar
 import java.util.Locale
@@ -108,6 +111,7 @@ fun ModernBentoDashboard(
     academicProgressState: com.example.ui.models.AcademicProgressUiState? = null,
     academicRisks: List<com.example.domain.model.AcademicRisk> = emptyList(),
     weeklyWorkload: com.example.domain.model.WeeklyAcademicWorkload? = null,
+    studyRecommendations: List<StudySessionRecommendation> = emptyList(),
     pomodoroSeconds: Int,
     isPomodoroRunning: Boolean,
     onTogglePomodoro: () -> Unit,
@@ -244,6 +248,13 @@ fun ModernBentoDashboard(
             }
         )
 
+        if (studyRecommendations.isNotEmpty()) {
+            StudyRecommendationsSection(
+                recommendations = studyRecommendations,
+                onOpenFocus = { onNavigateTab(AppTab.POMODORO) }
+            )
+        }
+
         // 6. GAMIFICATION / STREAK BANNER
         if (gamificationProfile != null) {
             BentoGamificationBanner(
@@ -267,6 +278,37 @@ fun ModernBentoDashboard(
     }
 }
 
+@Composable
+private fun StudyRecommendationsSection(
+    recommendations: List<StudySessionRecommendation>,
+    onOpenFocus: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AcademicCard(modifier = modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(StudentSpacing.Xxl)) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("پیشنهادهای مطالعه", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text("اولویت‌بندی قطعی بر اساس امتحان‌ها و تکالیف باز", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                TextButton(onClick = onOpenFocus) { Text("شروع تمرکز") }
+            }
+            Spacer(Modifier.height(StudentSpacing.Md))
+            recommendations.take(3).forEach { item ->
+                Row(modifier = Modifier.fillMaxWidth().padding(vertical = StudentSpacing.Xs), verticalAlignment = Alignment.CenterVertically) {
+                    Surface(shape = StudentShapeTokens.Compact, color = AcademicNavy.copy(alpha = 0.10f)) {
+                        Text("${item.recommendedDurationMinutes} دقیقه", style = NumericBadgeText, color = AcademicNavy, modifier = Modifier.padding(horizontal = StudentSpacing.Sm, vertical = StudentSpacing.Xs))
+                    }
+                    Spacer(Modifier.width(StudentSpacing.Md))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(item.courseName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        Text(item.priorityReason, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+    }
+}
 // -------------------------------------------------------------
 // 1. 2x2 BENTO STAT TILES SECTION
 // -------------------------------------------------------------
