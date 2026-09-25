@@ -162,4 +162,23 @@ class RoadmapEnginesComprehensiveTest {
         assertTrue(studySessions.any { it.courseName == "کنترل فرایند" && it.targetType == "آمادگی آزمون" })
         assertTrue(studySessions.any { it.courseName == "کنترل فرایند" && it.targetType == "تکمیل تکلیف" })
     }
+    @Test
+    fun `test StudyPlannerEngine removes duplicate recommendations and sorts exams`() {
+        val exams = listOf(
+            ExamItem(id = "e2", courseName = "فیزیک", solarDate = "۱۴۰۳/۱۰/۲۰", time = "۱۰:۰۰", location = "۲", units = 3),
+            ExamItem(id = "e1", courseName = "ریاضی", solarDate = "۱۴۰۳/۱۰/۱۰", time = "۰۹:۰۰", location = "۱", units = 3),
+            ExamItem(id = "e1", courseName = "ریاضی", solarDate = "۱۴۰۳/۱۰/۱۰", time = "۰۹:۰۰", location = "۱", units = 3)
+        )
+        val tasks = listOf(
+            TaskEntity(id = 10L, title = "تمرین", courseName = "ریاضی", dueDate = "۱۴۰۳/۱۰/۰۸", isCompleted = false),
+            TaskEntity(id = 10L, title = "تمرین", courseName = "ریاضی", dueDate = "۱۴۰۳/۱۰/۰۸", isCompleted = false)
+        )
+
+        val sessions = StudyPlannerEngine.generateStudyPlan(exams, tasks)
+
+        assertEquals(3, sessions.size)
+        assertEquals("ریاضی", sessions[0].courseName)
+        assertEquals("آمادگی آزمون", sessions[0].targetType)
+        assertTrue(sessions.none { it.id.count { ch -> ch == '_' } > 4 })
+    }
 }
