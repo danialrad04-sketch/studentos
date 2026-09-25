@@ -238,18 +238,9 @@ fun BackupRestoreDialog(
                             onClick = {
                                 pendingRestoreType = "cloud"
                                 showRestoreConfirmation = true
-                            }
-                        }, enabled = !isCloudRestoring && !isRestoring
-                                    isCloudRestoring = false
-                                    restoreStatusMessage = msg
-                                    if (success) {
-                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                                        onDismiss()
-                                    }
-                                }
                             },
                             enabled = !isCloudRestoring && !isRestoring,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = StudentShapeTokens.Compact,
                             colors = ButtonDefaults.buttonColors(containerColor = AcademicNavy),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -326,17 +317,9 @@ fun BackupRestoreDialog(
                                 pendingRestoreType = "json"
                                 showRestoreConfirmation = true
                             }
-                                    isRestoring = false
-                                    restoreStatusMessage = msg
-                                    if (success) {
-                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                                        onDismiss()
-                                    }
-                                }
-                            }
                         },
                         enabled = jsonInputToRestore.isNotBlank() && !isRestoring,
-                        shape = RoundedCornerShape(14.dp),
+                        shape = StudentShapeTokens.Compact,
                         colors = ButtonDefaults.buttonColors(containerColor = AcademicOlive),
                         modifier = Modifier
                             .weight(1.3f)
