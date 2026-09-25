@@ -60,8 +60,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.entity.GradeEntity
 import com.example.ui.theme.Amber500
-import com.example.ui.theme.BrandIndigo600
-import com.example.ui.theme.CyanNeon
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.Emerald50
 import com.example.ui.theme.Emerald600
 import com.example.ui.theme.NumericBadgeText
@@ -71,7 +71,6 @@ import com.example.ui.theme.Rose50
 import com.example.ui.theme.Rose600
 import com.example.ui.theme.Sky50
 import com.example.ui.theme.Sky600
-import com.example.ui.theme.StudentOsColors
 import com.example.ui.theme.StudentShapeTokens
 import com.example.ui.theme.StudentSpacing
 import com.example.ui.theme.StudentOsGlassTokens
