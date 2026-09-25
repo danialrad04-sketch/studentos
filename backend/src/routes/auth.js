@@ -190,7 +190,9 @@ router.get('/entitlement', requireAuth, async (req, res) => {
       ? new Date(row.subscription_expires_at).getTime()
       : null;
     const expired = expiresAt != null && expiresAt <= Date.now();
-    const tier = expired ? 'FREE' : String(row.subscription_tier || 'FREE').toUpperCase();
+    const rawTier = String(row.subscription_tier || 'FREE').trim().toUpperCase();
+    const allowedTiers = new Set(['FREE', 'PRO', 'ULTRA', 'CAMPUS_UNLIMITED']);
+    const tier = expired || !allowedTiers.has(rawTier) ? 'FREE' : rawTier;
 
     const capabilities = {
       maxDailyAiQuota: tier === 'FREE' ? 5 : tier === 'PRO' ? 50 : 999,
