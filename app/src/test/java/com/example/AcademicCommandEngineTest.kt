@@ -19,6 +19,14 @@ class AcademicCommandEngineTest {
     }
 
     @Test
+    fun normalizes_tabs_and_newlines_inside_queries() {
+        assertEquals(
+            AcademicCommand.TODAY_SCHEDULE,
+            AcademicCommandEngine.resolve("برنامه\n\tامروز")
+        )
+    }
+
+    @Test
     fun resolves_focus_alias() {
         assertEquals(AcademicCommand.FOCUS, AcademicCommandEngine.resolve("پومودورو"))
     }
