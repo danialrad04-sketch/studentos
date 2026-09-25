@@ -370,11 +370,12 @@ class StudentAuthManager(private val context: Context) {
                         photoUrl = null,
                         isGuest = false,
                         subscription = SubscriptionDetails(
-                            tier = SubscriptionTier.PRO,
+                            // Backend identity alone does not grant a paid entitlement.
+                            tier = SubscriptionTier.FREE,
                             isCloudSyncEnabled = true,
-                            isUnlimitedExportEnabled = true,
-                            isGpaPredictorUnlocked = true,
-                            maxDailyAiQuota = 999
+                            isUnlimitedExportEnabled = false,
+                            isGpaPredictorUnlocked = false,
+                            maxDailyAiQuota = 5
                         )
                     )
                     _currentUser.value = userAccount
