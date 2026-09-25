@@ -35,6 +35,10 @@ No phase is considered release-complete until:
 - Backend account deletion endpoint is implemented and wired to the Android client; live deployment/endpoint verification remains a release gate.
 
 ## Current implementation notes
+- Quick Setup and new course saves no longer synthesize schedules, exam dates, professor names, grades, or historical transcript attempts.
+- New-student profile initialization no longer preselects a university/faculty/major.
+- Gamification no longer reports a fabricated study streak; streak remains zero until a persisted daily-streak source is implemented.
+- Release versioning defaults to `versionCode=2` / `versionName=1.0.3` and can be overridden via Gradle properties.
 
 - Academic Premium brand system is applied across the primary academic and account surfaces.
 - Offline/sync status is visible in the account data layer.
