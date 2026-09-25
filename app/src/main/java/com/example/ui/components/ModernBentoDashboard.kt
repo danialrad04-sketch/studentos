@@ -108,7 +108,7 @@ fun ModernBentoDashboard(
     grades: List<GradeEntity>,
     passedUnits: Int = 0,
     gpa: String = "۰.۰۰",
-    totalRequiredCredits: Int = 140,
+    totalRequiredCredits: Int = 0,
     academicProgressState: com.example.ui.models.AcademicProgressUiState? = null,
     academicRisks: List<com.example.domain.model.AcademicRisk> = emptyList(),
     weeklyWorkload: com.example.domain.model.WeeklyAcademicWorkload? = null,
@@ -194,7 +194,7 @@ fun ModernBentoDashboard(
         AnalyticsKpiSection(
             gpa = gpa,
             passedUnits = passedUnits,
-            totalRequiredCredits = if (totalRequiredCredits > 0) totalRequiredCredits else 140,
+            totalRequiredCredits = totalRequiredCredits.coerceAtLeast(0),
             attendanceList = attendanceList,
             tasks = tasks,
             onNavigateToGrades = { onNavigateTab(AppTab.GRADES) },
