@@ -870,7 +870,7 @@ class StudentRepository(
                 activeUnits = 0,
                 passedUnits = 0,
                 notes = "",
-                isOnboardingCompleted = true,
+                isOnboardingCompleted = false,
                 universityId = null,
                 facultyId = null,
                 majorId = null,
