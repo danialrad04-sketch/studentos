@@ -7,6 +7,7 @@ This checklist is part of the controlled production pipeline.
 - [ ] Version code is incremented exactly once for the release
 - [ ] Version name is intentional
 - [ ] Git tag maps to the release artifact
+- [ ] Verify `VERSION_CODE` is strictly greater than the latest published release and `VERSION_NAME` matches the release tag
 - [ ] No secrets, keystores or real .env files are committed
 
 ## 2. Build
