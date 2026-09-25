@@ -50,6 +50,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -241,6 +242,7 @@ fun WeeklyScheduleScreen(
                                 IconButton(
                                     onClick = { viewMode = 0 },
                                     modifier = Modifier
+                                        .minimumInteractiveComponentSize()
                                         .size(30.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(if (viewMode == 0) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
