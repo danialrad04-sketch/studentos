@@ -177,8 +177,10 @@ class RoadmapEnginesComprehensiveTest {
         val sessions = StudyPlannerEngine.generateStudyPlan(exams, tasks)
 
         assertEquals(3, sessions.size)
+        assertEquals(3, sessions.map { it.id }.distinct().size)
         assertEquals("ریاضی", sessions[0].courseName)
         assertEquals("آمادگی آزمون", sessions[0].targetType)
-        assertTrue(sessions.none { it.id.count { ch -> ch == '_' } > 4 })
+        assertEquals("فیزیک", sessions[1].courseName)
+        assertEquals("تکمیل تکلیف", sessions[2].targetType)
     }
 }
