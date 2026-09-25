@@ -33,12 +33,14 @@ No phase is considered release-complete until:
 - Latest source branch head must pass Android CI: unit tests, debug lint, debug APK build and artifact upload.
 - Release artifacts additionally require signed release APK/AAB verification.
 - Backend account deletion endpoint is implemented and wired to the Android client; live deployment/endpoint verification remains a release gate.
+- Server-authoritative backend entitlement endpoint is implemented and consumed by Android; paid-tier administration and live verification remain release gates.
+- One-step local Undo is implemented for destructive local operations; logout/account deletion invalidate pending recovery actions.
 
 ## Current implementation notes
 - Quick Setup and new course saves no longer synthesize schedules, exam dates, professor names, grades, or historical transcript attempts.
 - New-student profile initialization no longer preselects a university/faculty/major.
 - Gamification no longer reports a fabricated study streak; streak remains zero until a persisted daily-streak source is implemented.
-- Release versioning defaults to `versionCode=2` / `versionName=1.0.3` and can be overridden via Gradle properties.
+- Release versioning is injected explicitly by the release workflow; development defaults are retained only as a fallback and must not be treated as the verified production versionCode.
 
 - Academic Premium brand system is applied across the primary academic and account surfaces.
 - Offline/sync status is visible in the account data layer.
