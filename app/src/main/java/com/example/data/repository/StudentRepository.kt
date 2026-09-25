@@ -339,18 +339,25 @@ class StudentRepository(
         declaredGpa: Double = 0.0
     ) = withContext(Dispatchers.IO) {
         val current = dao.getProfileSync() ?: StudentProfileEntity()
+        val resolvedUniversity = university.ifBlank { current.university }
+        val resolvedMajor = major.ifBlank { current.major }
+        val (referenceUniversityId, referenceMajorId, referenceFacultyId) =
+            resolveReferenceIds(resolvedUniversity, resolvedMajor)
         val updated = current.copy(
             isOnboardingCompleted = completed,
             name = if (name.isNotBlank()) name else current.name,
             studentId = if (studentId.isNotBlank()) studentId else current.studentId,
-            university = if (university.isNotBlank()) university else current.university,
-            major = if (major.isNotBlank()) major else current.major,
+            university = resolvedUniversity,
+            major = resolvedMajor,
             entryYear = if (entryYear > 0) entryYear else current.entryYear,
             currentSemester = if (currentSemester > 0) currentSemester else current.currentSemester,
             passedUnits = if (passedCredits > 0) passedCredits else current.passedUnits,
             declaredPassedCredits = if (passedCredits > 0) passedCredits else current.declaredPassedCredits,
             declaredGpa = if (declaredGpa > 0.0) declaredGpa else current.declaredGpa,
-            term = if (currentSemester > 0 && major.isNotBlank()) "ترم $currentSemester $major" else current.term,
+            term = if (currentSemester > 0 && resolvedMajor.isNotBlank()) "ترم $currentSemester $resolvedMajor" else current.term,
+            universityId = referenceUniversityId ?: current.universityId,
+            facultyId = referenceFacultyId ?: current.facultyId,
+            majorId = referenceMajorId ?: current.majorId,
             updatedAt = System.currentTimeMillis()
         )
         dao.insertProfile(updated)
