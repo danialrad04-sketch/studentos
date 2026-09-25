@@ -1203,7 +1203,8 @@ class StudentViewModel @JvmOverloads constructor(
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             val snapshot = captureUndoSnapshot()
             repository.clearToFreshSlate(name, studentId, university, major, entryYear, currentSemester)
-            addNotification("شروع نو و پاکسازی", "داده‌های تحصیلی پاکسازی شدند و آماده ورود اطلاعات شما هستند.")
+            _isOnboardingCompleted.value = false
+            addNotification("شروع نو و پاکسازی", "داده‌های تحصیلی پاکسازی شدند و راه‌اندازی دوباره آماده است.")
             snapshot?.let { publishUndo("پاکسازی قابل واگردانی است.", it) }
         }
     }
