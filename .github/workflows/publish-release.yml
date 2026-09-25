@@ -11,6 +11,10 @@ on:
         description: "Release title"
         required: true
         default: "Student OS v1.0.3"
+      ref:
+        description: "Git tag or commit SHA to build; must be immutable for a reproducible release."
+        required: true
+        default: "main"
       version_code:
         description: "Monotonic Android versionCode; verify against the latest published artifact."
         required: true
@@ -32,6 +36,9 @@ jobs:
     steps:
       - name: Checkout release ref
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
