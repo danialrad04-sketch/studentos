@@ -148,7 +148,7 @@ fun CurriculumScreen(
             is CurriculumMatchUiState.Loading -> {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = StudentShapeTokens.Card,
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(
@@ -258,7 +258,7 @@ fun CurriculumScreen(
 @Composable
 private fun CurriculumStatusLegend() {
     Surface(
-        shape = RoundedCornerShape(14.dp),
+        shape = StudentShapeTokens.Compact,
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -302,7 +302,7 @@ private fun EvaluatedSemesterCard(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
+        shape = StudentShapeTokens.Card,
         colors = CardDefaults.cardColors(
             containerColor = if (isCurrentTerm) primaryColor.copy(alpha = 0.06f) else MaterialTheme.colorScheme.surface
         ),
