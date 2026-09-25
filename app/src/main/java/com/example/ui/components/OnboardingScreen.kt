@@ -495,10 +495,8 @@ fun OnboardingScreen(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             when (selectedMode) {
                                 SetupMode.QUICK_SETUP, SetupMode.CURRICULUM -> {
-                                    val activeCourses = if (selectedMode == SetupMode.CURRICULUM) {
-                                        activeSemesterCourses.filter { selectedCurriculumCourseIds.contains(it.id) }
-                                    } else {
-                                        activeSemesterCourses
+                                    val activeCourses = activeSemesterCourses.filter {
+                                        selectedCurriculumCourseIds.contains(it.id)
                                     }
                                     onCompleteQuickSetup(
                                         studentName.ifBlank { "دانشجو" },
