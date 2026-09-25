@@ -211,6 +211,23 @@ class DataPersistenceAndBackupTest {
         assertTrue((persistedProfile?.updatedAt ?: 0L) > staleTimestamp)
     }
     @Test
+    fun testSavingCourseWithoutDetailsDoesNotCreateScheduleOrZeroGrade() = runBlocking {
+        val course = CourseEntity(
+            id = "course_without_details",
+            name = "درس بدون جزئیات",
+            units = 3,
+            semesterId = "current"
+        )
+
+        repository.saveCourse(course)
+
+        assertEquals(1, db.studentDao().getAllCoursesIncludingArchivedSync().size)
+        assertEquals(0, db.studentDao().getAllSessionsSync().size)
+        assertEquals(0, db.studentDao().getAllGradesSync().size)
+        assertNotNull(db.studentDao().getAttendanceByCourseId(course.id))
+    }
+
+    @Test
     fun testQuickAcademicSetupDoesNotFabricateScheduleGradesExamsOrHistory() = runBlocking {
         val curriculumCourse = com.example.data.local.entity.CurriculumCourseEntity(
             id = "CURR_TEST_1",
