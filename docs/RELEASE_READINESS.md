@@ -33,7 +33,8 @@
 
 ## Before production release
 - [ ] Release workflow is triggered manually with an explicitly verified versionCode/versionName pair; automated push-based release is disabled.
-- [ ] Server-authoritative subscription/entitlement endpoint defined and consumed; Backend login must not grant Pro implicitly.
+- [x] Server-authoritative subscription/entitlement endpoint defined and consumed; Backend login does not grant Pro implicitly.
+- [ ] Live entitlement/paid-tier administration verified on the deployed backend.
 - [ ] Latest CI run is green on the final commit
 - [ ] Release artifact build/signing succeeds
 - [ ] Install/upgrade migration tested
@@ -43,5 +44,7 @@
 - [ ] Persian RTL + font scaling reviewed on physical devices
 - [ ] Accessibility pass: TalkBack, touch targets, content descriptions
 - [ ] Play/Bazaar release metadata and signing configuration verified
+
+- [x] One-step local Undo is implemented for destructive local operations.
 
 No production-release claim is made until the unchecked release gates above are verified. In particular, the Android client must not claim full account deletion while a backend-authenticated account has no verified server-side deletion path.
