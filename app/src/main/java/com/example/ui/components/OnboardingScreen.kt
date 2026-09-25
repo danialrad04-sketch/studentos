@@ -806,7 +806,7 @@ private fun StepOneAcademicIdentity(
                             )
                         )
                     } else {
-                        // Faculty catalog is currently maintained for Maragheh only.
+                        // Faculty catalog is shown only for universities with a bundled reference catalog.
                         // Other universities intentionally use explicit major entry rather than
                         // showing another university's faculty catalog.
                         // Faculty Tabs Row
