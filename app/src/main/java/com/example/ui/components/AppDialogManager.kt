@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.domain.model.AcademicCommand
+
 import android.app.Activity
 import android.content.Context
 import android.widget.Toast
@@ -349,6 +351,10 @@ fun AppDialogManager(
                 onNavigateToNotes = {
                     studentViewModel.selectTab(AppTab.POMODORO)
                     dismiss()
+                },
+                onExecuteCommand = { command: AcademicCommand ->
+                    studentViewModel.selectTab(command.tab)
+                    studentViewModel.setSearchQuery("")
                 }
             )
         }
