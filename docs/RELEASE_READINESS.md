@@ -18,6 +18,11 @@
 - [x] Copilot deterministic boundary
 - [x] Search / command-center surfaces
 
+## Current verification notes
+- Backend delete route is implemented at `DELETE /api/auth/account` and the Android client calls it for Backend-authenticated accounts.
+- The endpoint has not been live-verified from the production VPS in this audit.
+- Android CI is configured to run unit tests, lint, and debug build; the current PR head has not yet reported a workflow result through the connected GitHub integration.
+
 ## Engineering gates
 - [x] Unit-test gate configured
 - [x] Lint gate configured
@@ -31,7 +36,7 @@
 - [ ] Release artifact build/signing succeeds
 - [ ] Install/upgrade migration tested
 - [ ] Firebase Auth startup/logout/data purge tested
-- [ ] Backend account deletion endpoint implemented and verified for Backend-authenticated users
+- [x] Backend account deletion endpoint implemented; live deployment/endpoint verification remains
 - [ ] Offline -> online sync conflict behavior tested
 - [ ] Persian RTL + font scaling reviewed on physical devices
 - [ ] Accessibility pass: TalkBack, touch targets, content descriptions
