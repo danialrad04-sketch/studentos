@@ -44,8 +44,9 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import com.example.domain.model.StudySessionRecommendation
-import com.example.ui.theme.BrandIndigo600
-import com.example.ui.theme.Emerald600
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
+import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.Rose600
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -270,7 +271,7 @@ fun PomodoroAndNotesScreen(
                             text = if (isRunning)
                                 "الگوریتم یادگیری فعال: تمام ناتیفیکیشن‌های اضافی را نادیده بگیرید و روی مبحث فعلی متمرکز بمانید."
                             else
-                                "پیشنهاد هوش مصنوعی: ۲۵ دقیقه مطالعه پیوسته با ۵ دقیقه استراحت چشمی بالاترین بازدهی را دارد.",
+                                "پیشنهاد Focus: یک جلسه ۲۵ دقیقه‌ای مطالعه پیوسته با ۵ دقیقه استراحت.",
                             fontSize = 10.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 16.sp
@@ -302,7 +303,7 @@ fun PomodoroAndNotesScreen(
                             Icon(
                                 imageVector = Icons.Default.AutoAwesome,
                                 contentDescription = null,
-                                tint = BrandIndigo600,
+                                tint = AcademicNavy,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
