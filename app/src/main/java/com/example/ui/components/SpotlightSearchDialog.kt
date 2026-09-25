@@ -250,7 +250,7 @@ fun SpotlightSearchDialog(
                             Spacer(modifier = Modifier.width(StudentSpacing.Sm))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    "Command پیدا شد",
+                                    "فرمان سریع پیدا شد",
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
