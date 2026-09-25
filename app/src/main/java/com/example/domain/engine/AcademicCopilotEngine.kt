@@ -15,8 +15,8 @@ import com.example.domain.model.CopilotActionProposal
 import com.example.domain.model.CopilotMessage
 import com.example.domain.model.CopilotPayload
 import com.example.domain.model.CopilotSender
-import com.example.ui.components.datepicker.JalaliCalendarUtil
-import com.example.ui.models.ExamItem
+import com.example.domain.util.JalaliCalendarUtil
+import com.example.domain.model.ExamItem
 import com.example.util.CrashLogger
 import java.text.SimpleDateFormat
 import java.util.Date
