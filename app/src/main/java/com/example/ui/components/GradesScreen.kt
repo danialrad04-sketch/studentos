@@ -72,6 +72,8 @@ import com.example.ui.theme.Rose600
 import com.example.ui.theme.Sky50
 import com.example.ui.theme.Sky600
 import com.example.ui.theme.StudentOsColors
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.StudentSpacing
 import com.example.ui.theme.StudentOsGlassTokens
 import java.util.Locale
 
@@ -122,7 +124,7 @@ fun GradesScreen(
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         onOpenExport()
                     },
-                    shape = RoundedCornerShape(14.dp),
+                    shape = StudentShapeTokens.Compact,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                     modifier = Modifier.height(42.dp)
                 ) {
@@ -150,7 +152,7 @@ fun GradesScreen(
 
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
+            shape = StudentShapeTokens.Hero,
             color = MaterialTheme.colorScheme.surfaceContainerLow,
             shadowElevation = if (isDark) 0.dp else 1.5.dp,
             border = BorderStroke(
@@ -334,7 +336,7 @@ fun GradesScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 12.dp),
-                shape = RoundedCornerShape(20.dp),
+                shape = StudentShapeTokens.Card,
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
                 shadowElevation = if (isDark) 0.dp else 1.5.dp,
                 border = BorderStroke(1.dp, if (isDark) Color(0x33FFFFFF) else Color(0xFFCBD5E1))
@@ -492,7 +494,7 @@ private fun CourseGradeCard(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(StudentShapeTokens.Compact)
                         .background(MaterialTheme.colorScheme.surfaceContainer)
                         .padding(vertical = 8.dp, horizontal = 10.dp),
                     contentAlignment = Alignment.Center
@@ -788,7 +790,7 @@ fun GradeWhatIfSimulatorCard(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
+        shape = StudentShapeTokens.Card,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         border = BorderStroke(1.dp, if (isDark) Color(0x33FFFFFF) else Color(0xFFCBD5E1)),
         elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 1.5.dp)
