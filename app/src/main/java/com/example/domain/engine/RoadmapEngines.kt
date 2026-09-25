@@ -13,7 +13,7 @@ import com.example.domain.model.SemesterPlan
 import com.example.domain.model.SemesterPlanComparison
 import com.example.domain.model.StudySessionRecommendation
 import com.example.domain.model.WeeklyAcademicWorkload
-import com.example.ui.models.ExamItem
+import com.example.domain.model.ExamItem
 
 /**
  * Pure Kotlin Domain Engines for Advanced Student OS Features:
