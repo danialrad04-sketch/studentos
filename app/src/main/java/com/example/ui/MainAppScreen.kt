@@ -93,6 +93,7 @@ import com.example.ui.models.AppTab
 import com.example.ui.models.ThemeMode
 import com.example.ui.theme.BrandIndigo600
 import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.theme.rememberStudentAdaptiveMetrics
 import java.util.Locale
 
 @Composable
@@ -101,6 +102,7 @@ fun MainAppScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val adaptiveMetrics = rememberStudentAdaptiveMetrics()
     val haptic = LocalHapticFeedback.current
 
     // Persistent Theme & System Theme detection
@@ -378,9 +380,9 @@ fun MainAppScreen(
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .widthIn(max = 840.dp)
+                                .widthIn(max = adaptiveMetrics.contentMaxWidth)
                                 .verticalScroll(rememberScrollState())
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .padding(horizontal = adaptiveMetrics.horizontalPadding, vertical = 8.dp)
                         ) {
                             OfflineStatusBanner()
                             Spacer(modifier = Modifier.height(8.dp))
