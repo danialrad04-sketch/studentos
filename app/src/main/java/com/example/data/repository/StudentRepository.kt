@@ -9,6 +9,9 @@ import com.example.data.local.entity.AttendanceEntity
 import com.example.data.local.entity.CourseEntity
 import com.example.data.local.entity.CourseSessionEntity
 import com.example.data.local.entity.CurriculumCourseEntity
+import com.example.data.local.entity.CurriculumVersionEntity
+import com.example.data.local.entity.MajorEntity
+import com.example.data.local.entity.UniversityEntity
 import com.example.data.local.entity.ExamEntity
 import com.example.data.local.entity.GradeEntity
 import com.example.data.local.entity.NoteEntity
