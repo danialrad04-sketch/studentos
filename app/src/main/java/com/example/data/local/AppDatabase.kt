@@ -778,13 +778,6 @@ abstract class AppDatabase : RoomDatabase() {
                         facultyDisplayNameFa = "دانشکده مهندسی شیمی و نفت",
                         majorDisplayNameFa = "مهندسی شیمی"
                     ),
-                    MajorEntity(
-                        id = "MAJ_AUT_COMP_ENG",
-                        universityId = "UNI_AUT",
-                        facultyId = "FAC_AUT_COMP",
-                        facultyDisplayNameFa = "دانشکده مهندسی کامپیوتر",
-                        majorDisplayNameFa = "مهندسی کامپیوتر"
-                    )
                 )
                 cDao.insertMajors(majors)
 
