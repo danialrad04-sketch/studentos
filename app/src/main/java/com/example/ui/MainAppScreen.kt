@@ -229,6 +229,7 @@ fun MainAppScreen(
     val searchQuery by studentViewModel.searchQuery.collectAsStateWithLifecycle()
     val globalSearchResults by studentViewModel.globalSearchResults.collectAsStateWithLifecycle()
     val gamificationProfile by studentViewModel.gamificationProfile.collectAsStateWithLifecycle()
+    val syncUiState by studentViewModel.syncUiState.collectAsStateWithLifecycle()
     val studyRecommendations by studentViewModel.studyRecommendations.collectAsStateWithLifecycle()
 
     // Dynamic weighted GPA: calculates from entered grades, or falls back to declared GPA from setup
