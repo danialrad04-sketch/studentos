@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.ui.theme.Emerald600
+
 import com.example.ui.theme.AcademicOlive
 
 import com.example.ui.theme.AcademicNavy
