@@ -61,6 +61,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.model.UserAccount
 import com.example.ui.theme.StudentOsColors
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
 
 @Composable
 fun AuthAccountDialog(
@@ -101,7 +103,7 @@ fun AuthAccountDialog(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(StudentOsColors.ElectricBlue.copy(alpha = 0.16f)),
+                        .background(AcademicNavy.copy(alpha = 0.16f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -213,7 +215,7 @@ fun AuthAccountDialog(
                             .height(48.dp),
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Icon(Icons.Rounded.CloudDone, contentDescription = null, tint = StudentOsColors.EmeraldNeon, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Rounded.CloudDone, contentDescription = null, tint = AcademicOlive, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("ورود سریع با حساب دانشگاهی یا گوگل", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
                     }
