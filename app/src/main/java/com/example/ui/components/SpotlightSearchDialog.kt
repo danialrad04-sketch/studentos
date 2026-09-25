@@ -1,5 +1,13 @@
 package com.example.ui.components
 
+import com.example.ui.theme.AcademicOlive
+
+import com.example.ui.theme.AcademicNavy
+
+import com.example.ui.theme.StudentSpacing
+
+import com.example.ui.theme.StudentShapeTokens
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -73,7 +81,7 @@ import com.example.domain.model.EvaluatedCurriculumCourse
 import com.example.domain.model.GlobalSearchResult
 import com.example.ui.theme.Amber500
 import com.example.ui.theme.Amber600
-import com.example.ui.theme.Emerald600
+import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.Rose600
 
 /**
@@ -132,7 +140,7 @@ fun SpotlightSearchDialog(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(12.dp),
+                            shape = StudentShapeTokens.Compact,
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                             modifier = Modifier.size(36.dp)
                         ) {
@@ -210,7 +218,7 @@ fun SpotlightSearchDialog(
                         }
                     },
                     singleLine = true,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = StudentShapeTokens.Card,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
@@ -241,7 +249,7 @@ fun SpotlightSearchDialog(
                             selected = isSelected,
                             onClick = { selectedFilter = key },
                             label = { Text(label, style = MaterialTheme.typography.labelMedium.copy(fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)) },
-                            shape = RoundedCornerShape(10.dp),
+                            shape = StudentShapeTokens.Compact,
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
