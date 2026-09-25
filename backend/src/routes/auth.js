@@ -193,7 +193,7 @@ router.get('/entitlement', requireAuth, async (req, res) => {
     const tier = expired ? 'FREE' : String(row.subscription_tier || 'FREE').toUpperCase();
 
     const capabilities = {
-      maxDailyAiQuota: tier === 'FREE' ? 5 : 999,
+      maxDailyAiQuota: tier === 'FREE' ? 5 : tier === 'PRO' ? 50 : 999,
       allowsCloudSync: true,
       allowsPdfExport: tier !== 'FREE',
       gpaPredictorUnlocked: tier !== 'FREE',
