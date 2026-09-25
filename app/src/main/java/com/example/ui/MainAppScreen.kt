@@ -409,7 +409,7 @@ fun MainAppScreen(
                             val totalCurriculumUnits = when (val state = academicProgressState) {
                                 is com.example.ui.models.AcademicProgressUiState.Ready -> state.progress.totalRequiredCredits
                                 is com.example.ui.models.AcademicProgressUiState.Partial -> state.progress.totalRequiredCredits
-                                else -> 140
+                                else -> 0
                             }
 
                             // Show Header and Live Activity ONLY on Dashboard for a clean, focused view on other tabs
