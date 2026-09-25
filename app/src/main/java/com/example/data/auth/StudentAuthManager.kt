@@ -529,15 +529,28 @@ class StudentAuthManager(private val context: Context) {
             val user = safeFirebaseAuth?.currentUser
             val userId = user?.uid
             if (userId != null && !userId.startsWith("guest_")) {
-                try {
+                val cloudDeletion = try {
                     com.example.data.cloud.FirestoreSyncManager.deleteAllUserDataFromCloud(userId)
                 } catch (e: Exception) {
-                    Log.w(TAG, "Failed wiping cloud documents for user $userId: ${e.message}")
+                    Log.e(TAG, "Failed wiping cloud documents for user $userId: ${e.message}", e)
                     com.example.util.CrashLogger.recordException(e)
+                    Result.failure(e)
+                }
+                if (cloudDeletion.isFailure) {
+                    return@withContext Result.failure(
+                        cloudDeletion.exceptionOrNull()
+                            ?: IllegalStateException("حذف اطلاعات ابری حساب با موفقیت انجام نشد.")
+                    )
                 }
             }
             if (user != null) {
-                user.delete().awaitResult()
+                try {
+                    user.delete().awaitResult()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Firebase account deletion failed: ${e.message}", e)
+                    com.example.util.CrashLogger.recordException(e)
+                    return@withContext Result.failure(e)
+                }
             }
             signOutUser()
             Result.success(Unit)
