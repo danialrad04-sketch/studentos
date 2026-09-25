@@ -308,7 +308,6 @@ fun HeaderSection(
             }
         }
     }
-}
 
     if (showDemoConfirmation) {
         AlertDialog(
@@ -352,3 +351,5 @@ fun HeaderSection(
         )
     }
 
+
+}
