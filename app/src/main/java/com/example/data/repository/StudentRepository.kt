@@ -41,6 +41,32 @@ class StudentRepository(
     val curriculumDao: CurriculumDao? = null,
     val database: AppDatabase? = null
 ) {
+    private fun normalizeReferenceText(value: String): String =
+        value.trim().replace("\u200C", "").replace("ي", "ی").replace("ك", "ک")
+
+    private suspend fun resolveReferenceIds(
+        university: String,
+        major: String
+    ): Triple<String?, String?, String?> {
+        val universities = curriculumDao?.getAllUniversitiesSync().orEmpty()
+        val majors = curriculumDao?.getAllMajorsSync().orEmpty()
+
+        val normalizedUniversity = normalizeReferenceText(university)
+        val universityRow = universities.firstOrNull {
+            val display = normalizeReferenceText(it.displayNameFa)
+            val short = normalizeReferenceText(it.shortName)
+            normalizedUniversity == display ||
+                normalizedUniversity == short ||
+                (normalizedUniversity.contains("امیرکبیر") && display.contains("امیرکبیر"))
+        }
+        val majorRow = majors.firstOrNull {
+            normalizeReferenceText(it.majorDisplayNameFa) == normalizeReferenceText(major) &&
+                (universityRow == null || it.universityId == universityRow.id)
+        }
+
+        return Triple(universityRow?.id, majorRow?.id, majorRow?.facultyId)
+    }
+
     // Reactive Streams from Room
     val semesters: Flow<List<SemesterEntity>> = dao.getAllSemesters()
     val archivedSemesters: Flow<List<SemesterEntity>> = dao.getArchivedSemesters()
@@ -533,6 +559,8 @@ class StudentRepository(
             val resolvedProfileMajor = major.ifBlank { current?.major.orEmpty() }
             val resolvedUniversity = university.ifBlank { current?.university.orEmpty() }
             val resolvedEntryYear = entryYear.takeIf { it > 0 } ?: current?.entryYear ?: 0
+            val (referenceUniversityId, referenceMajorId, referenceFacultyId) =
+                resolveReferenceIds(resolvedUniversity, resolvedProfileMajor)
             val profileToSave = (current ?: StudentProfileEntity(id = 1)).copy(
                 name = if (studentName.isNotBlank()) studentName else (current?.name ?: "دانشجو"),
                 studentId = if (studentId.isNotBlank()) studentId else (current?.studentId ?: ""),
@@ -543,6 +571,9 @@ class StudentRepository(
                 currentSemester = resolvedSemNum,
                 term = if (resolvedSemNum > 0 && resolvedProfileMajor.isNotBlank()) "ترم $resolvedSemNum $resolvedProfileMajor" else (current?.term ?: ""),
                 faculty = if (resolvedProfileMajor.isNotBlank()) "دانشکده $resolvedProfileMajor · $totalUnits واحد فعال" else (current?.faculty ?: ""),
+                universityId = referenceUniversityId ?: current?.universityId,
+                facultyId = referenceFacultyId ?: current?.facultyId,
+                majorId = referenceMajorId ?: current?.majorId,
                 isOnboardingCompleted = true,
                 updatedAt = System.currentTimeMillis()
             )
@@ -570,6 +601,7 @@ class StudentRepository(
         val totalActiveUnits = selectedCourses.sumOf { it.units }
         val activeSemesterId = "sem_$currentSemester"
         val calculatedAcademicYear = entryYear + ((currentSemester - 1) / 2)
+        val (universityId, majorId, facultyId) = resolveReferenceIds(university, major)
 
         val performSetup: suspend () -> Unit = {
             // 1. Seed complete curriculum catalog for this major if needed
@@ -610,6 +642,9 @@ class StudentRepository(
                 term = "ترم $currentSemester $major",
                 faculty = "دانشکده $major · $totalActiveUnits واحد فعال ترم جاری",
                 isOnboardingCompleted = true,
+                universityId = universityId,
+                facultyId = facultyId,
+                majorId = majorId,
                 updatedAt = System.currentTimeMillis()
             )
             dao.insertProfile(updatedProfile)
