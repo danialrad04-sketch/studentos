@@ -1,7 +1,5 @@
 package com.example.ui.components
 
-import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicOlive
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
