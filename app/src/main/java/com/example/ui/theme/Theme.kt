@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 
 /**
- * Modern 'Student OS' 2026 Material 3 Color Schemes.
+ * Student OS Academic Premium Material 3 color system.
  * Dark Mode features:
  * - Deep Blue-Black Canvas: Dark Velvet (#07090E) & Navy Deep Space (#0E1322)
  * - Glassmorphic Surface: rgba(22, 28, 45, 0.70) with 1px soft highlight border
@@ -131,11 +131,11 @@ private val LightStudentSemanticColors = StudentSemanticColors(
     gpaAlpha = Color(0xFF059669),
     gpaProbation = Color(0xFFE11D48),
     brandGradient = Brush.linearGradient(listOf(Color(0xFF0F3B4D), Color(0xFF1E5367), Color(0xFF6B705C))),
-    copilotGradient = Brush.horizontalGradient(listOf(Color(0xFF8B5CF6), Color(0xFF06B6D4))),
+    copilotGradient = Brush.horizontalGradient(listOf(Color(0xFF0F3B4D), Color(0xFF6B705C))),
     heroPassportGradient = Brush.linearGradient(listOf(Color(0xFF0F3B4D), Color(0xFF285A6C), Color(0xFF6B705C))),
-    cardBorderGlow = Color(0x1A4F46E5),
-    cyanAccent = Color(0xFF06B6D4),
-    emeraldAccent = Color(0xFF10B981),
+    cardBorderGlow = Color(0x1A0F3B4D),
+    cyanAccent = Color(0xFF6FA7B8),
+    emeraldAccent = Color(0xFF7C8461),
     purpleAccent = Color(0xFF7B6D5A),
     deepSpaceCanvas = Color(0xFFF8FAFC),
     glassSurface = Color(0xFFFFFFFF),
