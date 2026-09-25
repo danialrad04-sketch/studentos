@@ -731,6 +731,8 @@ class StudentRepository(
             dao.clearGrades()
             dao.clearTasks()
             dao.clearExams()
+            dao.clearAllCourseSessions()
+            dao.clearAllNotes()
             dao.clearStudentAttempts(1)
 
             val demoSemester = SemesterEntity(
