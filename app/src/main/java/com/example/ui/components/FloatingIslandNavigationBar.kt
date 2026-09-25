@@ -75,8 +75,7 @@ fun FloatingIslandNavigationBar(
         Triple(AppTab.SCHEDULE, AppEmojiType.CALENDAR, "برنامه"),
         Triple(AppTab.TASKS, AppEmojiType.CHECK, "تسک‌ها"),
         Triple(AppTab.GRADES, AppEmojiType.CHART, "کارنامه"),
-        Triple(AppTab.COPILOT, AppEmojiType.COPILOT, "کوپایلت"),
-        Triple(AppTab.ACADEMIC_INTELLIGENCE, AppEmojiType.CHART, "هوش تحصیلی")
+        Triple(AppTab.COPILOT, AppEmojiType.COPILOT, "کوپایلت")
     )
 
     val isOtherTab = primaryTabs.none { it.first == selectedTab }
