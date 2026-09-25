@@ -6,6 +6,7 @@ import retrofit2.http.GET
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.POST
+import retrofit2.http.DELETE
 
 data class SignUpRequest(
     val email: String,
@@ -58,6 +59,9 @@ interface BackendApi {
 
     @POST("api/auth/logout-all")
     suspend fun logoutAllDevices(): Response<Unit>
+
+    @DELETE("api/auth/account")
+    suspend fun deleteAccount(): Response<Unit>
 
     @GET("api/sync/{dataType}")
     suspend fun pullDataType(@Path("dataType") dataType: String): Response<SyncPullResponse>
