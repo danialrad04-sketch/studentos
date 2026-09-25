@@ -891,34 +891,38 @@ private fun CopilotActionProposalCard(
     onApply: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    var showConfirmation by remember(proposal.id) { mutableStateOf(false) }
+    val requiresConfirmation =
+        proposal.impactType == ActionImpactType.REQUIRES_CONFIRMATION || proposal.isDestructive
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 40.dp, top = 4.dp, bottom = 4.dp),
-        shape = RoundedCornerShape(16.dp),
+        shape = StudentShapeTokens.Card,
         colors = CardDefaults.cardColors(
-            containerColor = if (isApplied) Emerald600.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface
+            containerColor = if (isApplied) AcademicOlive.copy(alpha = 0.10f) else MaterialTheme.colorScheme.surface
         ),
         border = androidx.compose.foundation.BorderStroke(
             width = 1.dp,
-            color = if (isApplied) Emerald600 else BrandIndigo600.copy(alpha = 0.4f)
+            color = if (isApplied) AcademicOlive else AcademicNavy.copy(alpha = 0.30f)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(StudentSpacing.Lg)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     Icon(
                         imageVector = if (isApplied) Icons.Default.CheckCircle else Icons.Default.Lightbulb,
                         contentDescription = null,
-                        tint = if (isApplied) Emerald600 else BrandIndigo600,
+                        tint = if (isApplied) AcademicOlive else AcademicNavy,
                         modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(StudentSpacing.Sm))
                     Text(
                         text = proposal.title,
                         fontSize = 12.sp,
@@ -927,33 +931,32 @@ private fun CopilotActionProposalCard(
                     )
                 }
 
-                // Impact Type Tag
                 val impactLabel = when (proposal.impactType) {
                     ActionImpactType.SAFE_QUERY -> "تحلیلی / ایمن"
                     ActionImpactType.REQUIRES_CONFIRMATION -> "نیازمند تأیید شما"
-                    ActionImpactType.PROTECTED_READONLY -> "قانون مصوب"
+                    ActionImpactType.PROTECTED_READONLY -> "خواندن محافظت‌شده"
                 }
                 val impactColor = when (proposal.impactType) {
-                    ActionImpactType.SAFE_QUERY -> CyanNeon
-                    ActionImpactType.REQUIRES_CONFIRMATION -> Amber600
+                    ActionImpactType.SAFE_QUERY -> AcademicNavy
+                    ActionImpactType.REQUIRES_CONFIRMATION -> AcademicOlive
                     ActionImpactType.PROTECTED_READONLY -> MaterialTheme.colorScheme.onSurfaceVariant
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = impactColor.copy(alpha = 0.15f)
+                    shape = StudentShapeTokens.Compact,
+                    color = impactColor.copy(alpha = 0.12f)
                 ) {
                     Text(
                         text = impactLabel,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                         color = impactColor,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = StudentSpacing.Sm, vertical = StudentSpacing.Xs)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(StudentSpacing.Sm))
 
             Text(
                 text = proposal.description,
@@ -961,13 +964,26 @@ private fun CopilotActionProposalCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(StudentSpacing.Md))
 
             if (isApplied) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = Emerald600, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "تغییرات با موفقیت اعمال شد", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Emerald600)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.minimumInteractiveComponentSize()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "تغییرات اعمال شد",
+                        tint = AcademicOlive,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(StudentSpacing.Xs))
+                    Text(
+                        text = "تغییرات با موفقیت اعمال شد",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AcademicOlive
+                    )
                 }
             } else {
                 Row(
@@ -976,19 +992,69 @@ private fun CopilotActionProposalCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("رد پیشنهاد", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("رد پیشنهاد", fontSize = 11.sp)
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(StudentSpacing.Sm))
                     Button(
-                        onClick = onApply,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        onClick = {
+                            if (requiresConfirmation) {
+                                showConfirmation = true
+                            } else {
+                                onApply()
+                            }
+                        },
+                        modifier = Modifier.minimumInteractiveComponentSize(),
+                        shape = StudentShapeTokens.Compact,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (requiresConfirmation) AcademicOlive else MaterialTheme.colorScheme.primary
+                        ),
+                        contentPadding = PaddingValues(
+                            horizontal = StudentSpacing.Md,
+                            vertical = StudentSpacing.Sm
+                        )
                     ) {
-                        Text(proposal.buttonLabel, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            if (requiresConfirmation) "تأیید و اعمال" else proposal.buttonLabel,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
         }
+    }
+
+    if (showConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showConfirmation = false },
+            title = { Text("تأیید اجرای تغییر") },
+            text = {
+                Text(
+                    if (proposal.isDestructive) {
+                        "این عملیات می‌تواند روی اطلاعات شما اثر دائمی داشته باشد. قبل از ادامه، جزئیات پیشنهاد را بررسی کنید."
+                    } else {
+                        "این عملیات اطلاعات Student OS را تغییر می‌دهد و قبل از اجرا به تأیید شما نیاز دارد."
+                    }
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showConfirmation = false
+                        onApply()
+                    },
+                    modifier = Modifier.minimumInteractiveComponentSize(),
+                    shape = StudentShapeTokens.Compact
+                ) {
+                    Text("تأیید و اعمال")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmation = false }) {
+                    Text("انصراف")
+                }
+            },
+            shape = StudentShapeTokens.Card
+        )
     }
 }
