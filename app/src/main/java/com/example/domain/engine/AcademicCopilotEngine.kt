@@ -37,6 +37,10 @@ object AcademicCopilotEngine {
         val curriculumTotalUnits = CurriculumSeedData.getCoursesForMajor(profile.major)
             .sumOf { it.units }
         val totalRequired = curriculumTotalUnits.takeIf { it > 0 } ?: 0
+        val majorLabel = profile.major.ifBlank { "رشته ثبت نشده" }
+        val universityLabel = profile.university.ifBlank { "دانشگاه ثبت نشده" }
+        val semesterLabel = profile.currentSemester.takeIf { it > 0 }?.let { "ترم $it" } ?: "ترم ثبت نشده"
+        val entryYearLabel = profile.entryYear.takeIf { it > 0 }?.toString() ?: "سال ورود ثبت نشده"
         val remainingUnits = if (totalRequired > 0) {
             (totalRequired - passedUnits - totalActiveUnits).coerceAtLeast(0)
         } else {
@@ -48,12 +52,12 @@ object AcademicCopilotEngine {
         val pendingTasks = tasks.count { !it.isCompleted }
 
         val greeting = buildString {
-            append("سلام ${profile.name} عزیز! من دستیار هوشمند دانشگاهی شما (Student OS Copilot) هستم.\n\n")
+            append("سلام ${profile.name.ifBlank { "دانشجو" }} عزیز! من دستیار هوشمند دانشگاهی شما (Student OS Copilot) هستم.\n\n")
             append("📊 **شناسنامه زنده و وضعیت تحصیلی:**\n")
-            append("• **رشته تحصیلی:** ${profile.major} (${profile.university})\n")
-            append("• **ترم جاری:** ترم ${profile.currentSemester} (ورودی ${profile.entryYear})\n")
+            append("• **رشته تحصیلی:** $majorLabel ($universityLabel)\n")
+            append("• **ترم جاری:** $semesterLabel ($entryYearLabel)\n")
             append("• **واحدهای فعال این ترم:** $totalActiveUnits واحد (${courses.size} درس فعال)\n")
-            append("• **واحدهای گذرانده:** $passedUnits از $totalRequired واحد ($remainingUnits واحد تا فراغت از تحصیل)\n")
+            append(if (totalRequired > 0) "• **واحدهای گذرانده:** $passedUnits از $totalRequired واحد ($remainingUnits واحد تا فراغت از تحصیل)\n" else "• **واحدهای گذرانده:** $passedUnits واحد\n")
             append("• **معدل کل:** ${String.format(Locale.US, "%.2f", gpa)}\n")
 
             if (criticalAbsences > 0) {
@@ -62,7 +66,7 @@ object AcademicCopilotEngine {
             if (pendingTasks > 0) {
                 append("• 📋 **تکالیف فعال:** $pendingTasks تکلیف باقی‌مانده\n")
             }
-            append("\nمن بر تمام چارت مصوب ${profile.major}، قوانین آموزشی وزارت علوم، رادار غیبت‌ها، تقویم امتحانات و برنامه‌ریزی مطالعه مسلط هستم. چه کمکی از من برمی‌آید؟")
+            append("\nمن بر اساس داده‌های ثبت‌شده در Student OS و قواعد تحصیلی پشتیبانی‌شده راهنمایی می‌کنم؛ اطلاعات ثبت‌نشده را حدس نمی‌زنم. چه کمکی از من برمی‌آید؟")
         }
 
         return CopilotMessage(
