@@ -174,3 +174,6 @@ Still required:
 ## Release rule
 
 The project must not claim production readiness while a Critical Gate is unchecked.
+
+
+- Server-authoritative entitlement endpoint and backend promo redemption are implemented; live deployment/paid-tier administration remain release gates.

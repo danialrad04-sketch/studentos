@@ -48,3 +48,6 @@
 - [x] One-step local Undo is implemented for destructive local operations.
 
 No production-release claim is made until the unchecked release gates above are verified. In particular, the Android client must not claim full account deletion while a backend-authenticated account has no verified server-side deletion path.
+
+
+- Android emulator instrumentation smoke and accessibility smoke gates are configured; latest green CI remains mandatory before release.

@@ -51,3 +51,6 @@ No phase is considered release-complete until:
 - Backend sync remains Last Write Wins at the data-type level.
 
 No production release is considered complete while a required gate above is unchecked.
+
+
+- Backend promo redemption is transactional and server-authoritative; client subscription privilege fallbacks are removed.
