@@ -113,6 +113,7 @@ fun SettingsAndRoadmapDialog(
     val haptic = LocalHapticFeedback.current
     var selectedSection by remember { mutableIntStateOf(0) } // 0: ظاهر و حساب, 1: اعلان و داده‌ها, 2: درباره و نقشه راه
     var showResetConfirmDialog by remember { mutableStateOf(false) }
+    var showDemoConfirmDialog by remember { mutableStateOf(false) }
     var showDeleteAccountConfirmDialog by remember { mutableStateOf(false) }
 
     StudentGlassModalSheet(
@@ -655,8 +656,7 @@ fun SettingsAndRoadmapDialog(
                                     .fillMaxWidth()
                                     .tactileClickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onLoadDemoData()
-                                        onDismiss()
+                                        showDemoConfirmDialog = true
                                     },
                                 shape = RoundedCornerShape(14.dp),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
@@ -982,6 +982,28 @@ fun SettingsAndRoadmapDialog(
     }
 
     // Confirmation dialog for Clean Slate
+    if (showDemoConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showDemoConfirmDialog = false },
+            title = { Text("بارگذاری داده‌های نمونه؟") },
+            text = {
+                Text("این عملیات داده‌های تحصیلی فعلی را با داده‌های نمونه جایگزین می‌کند. قبل از تأیید، برای بازیابی داده‌های فعلی از Backup استفاده کنید.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDemoConfirmDialog = false
+                        onLoadDemoData()
+                        onDismiss()
+                    }
+                ) { Text("بارگذاری نمونه") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDemoConfirmDialog = false }) { Text("انصراف") }
+            }
+        )
+    }
+
     if (showResetConfirmDialog) {
         Dialog(onDismissRequest = { showResetConfirmDialog = false }) {
             Card(
