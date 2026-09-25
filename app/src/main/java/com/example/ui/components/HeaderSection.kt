@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SettingsBrightness
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -82,6 +83,8 @@ fun HeaderSection(
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    var showDemoConfirmation by remember { mutableStateOf(false) }
+    var showCleanSlateConfirmation by remember { mutableStateOf(false) }
 
     val isDark = MaterialTheme.colorScheme.background.red < 0.2f
     val studentDisplayName = profile.name.ifBlank { "دانشجو" }
@@ -279,7 +282,7 @@ fun HeaderSection(
                         },
                         onClick = {
                             showMenu = false
-                            onLoadDemoData()
+                            showDemoConfirmation = true
                         },
                         leadingIcon = {
                             Icon(Icons.Default.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
@@ -295,7 +298,7 @@ fun HeaderSection(
                         },
                         onClick = {
                             showMenu = false
-                            onClearToFreshSlate()
+                            showCleanSlateConfirmation = true
                         },
                         leadingIcon = {
                             Icon(Icons.Default.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
@@ -306,4 +309,46 @@ fun HeaderSection(
         }
     }
 }
+
+    if (showDemoConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDemoConfirmation = false },
+            title = { Text("بارگذاری داده‌های نمونه؟") },
+            text = {
+                Text("این عملیات داده‌های تحصیلی فعلی را با داده‌های نمونه جایگزین می‌کند و فقط برای مشاهده محیط آزمایشی است.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDemoConfirmation = false
+                        onLoadDemoData()
+                    }
+                ) { Text("بارگذاری نمونه") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDemoConfirmation = false }) { Text("انصراف") }
+            }
+        )
+    }
+
+    if (showCleanSlateConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showCleanSlateConfirmation = false },
+            title = { Text("پاکسازی کامل داده‌ها؟") },
+            text = {
+                Text("دروس، نمرات، حضور و غیاب، تکالیف و امتحانات این دستگاه پاک می‌شوند. این عملیات را فقط وقتی انجام دهید که از حذف اطلاعات مطمئن هستید.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showCleanSlateConfirmation = false
+                        onClearToFreshSlate()
+                    }
+                ) { Text("پاکسازی") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCleanSlateConfirmation = false }) { Text("انصراف") }
+            }
+        )
+    }
 
