@@ -98,6 +98,7 @@ import com.example.ui.models.ThemeMode
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.rememberStudentAdaptiveMetrics
 import com.example.ui.theme.StudentWindowWidth
+import com.example.ui.theme.rememberStudentReduceMotion
 import java.util.Locale
 
 @Composable
@@ -107,6 +108,7 @@ fun MainAppScreen(
 ) {
     val context = LocalContext.current
     val adaptiveMetrics = rememberStudentAdaptiveMetrics()
+    val reduceMotion = rememberStudentReduceMotion()
     val haptic = LocalHapticFeedback.current
 
     // Persistent Theme & System Theme detection
@@ -531,8 +533,12 @@ fun MainAppScreen(
                         AnimatedContent(
                             targetState = selectedTab,
                             transitionSpec = {
-                                (fadeIn(animationSpec = tween(220)) + slideInVertically { height -> height / 24 }) togetherWith
-                                        (fadeOut(animationSpec = tween(160)) + slideOutVertically { height -> -height / 24 })
+                                if (reduceMotion) {
+                                    fadeIn(initialAlpha = 1f) togetherWith fadeOut(targetAlpha = 1f)
+                                } else {
+                                    (fadeIn(animationSpec = tween(220)) + slideInVertically { height -> height / 24 }) togetherWith
+                                            (fadeOut(animationSpec = tween(160)) + slideOutVertically { height -> -height / 24 })
+                                }
                             },
                             label = "MainTabTransition"
                         ) { targetTab ->
