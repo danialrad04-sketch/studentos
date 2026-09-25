@@ -1,11 +1,9 @@
 package com.example.ui.components
 
+import com.example.domain.model.AcademicCommandEngine
 import com.example.ui.theme.AcademicOlive
-
 import com.example.ui.theme.AcademicNavy
-
 import com.example.ui.theme.StudentSpacing
-
 import com.example.ui.theme.StudentShapeTokens
 
 import androidx.compose.animation.AnimatedVisibility
@@ -99,9 +97,11 @@ fun SpotlightSearchDialog(
     onNavigateToTasks: () -> Unit,
     onNavigateToExams: () -> Unit,
     onNavigateToNotes: () -> Unit,
+    onExecuteCommand: (com.example.domain.model.AcademicCommand) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedFilter by remember { mutableStateOf<String?>("ALL") }
+    val resolvedCommand = remember(searchQuery) { AcademicCommandEngine.resolve(searchQuery) }
 
     val filteredResults = remember(searchResults, selectedFilter) {
         if (selectedFilter == null || selectedFilter == "ALL") {
@@ -226,6 +226,54 @@ fun SpotlightSearchDialog(
                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
                     )
                 )
+
+                if (resolvedCommand != null) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = StudentShapeTokens.Compact,
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(StudentSpacing.Md),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.NorthEast,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(StudentSpacing.Sm))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "Command پیدا شد",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Text(
+                                    resolvedCommand.titleFa,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                            Button(
+                                onClick = {
+                                    onExecuteCommand(resolvedCommand)
+                                    onDismiss()
+                                },
+                                modifier = Modifier.heightIn(min = 48.dp),
+                                shape = StudentShapeTokens.Compact
+                            ) {
+                                Text("اجرا")
+                            }
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
