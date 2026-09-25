@@ -184,7 +184,7 @@ class StudentViewModel @JvmOverloads constructor(
                         studentId = if (target.studentId.isBlank()) legacyStudentId else target.studentId,
                         university = if (target.university.isBlank() || target.university == "دانشگاه") legacyUniversity.ifBlank { target.university } else target.university,
                         major = if (target.major.isBlank() || target.major == "مهندسی") legacyMajor.ifBlank { target.major } else target.major,
-                        entryYear = if (target.entryYear <= 0 || target.entryYear == 1403) (if (legacyEntryYear > 0) legacyEntryYear else target.entryYear) else target.entryYear,
+                        entryYear = if (target.entryYear <= 0) (if (legacyEntryYear > 0) legacyEntryYear else target.entryYear) else target.entryYear,
                         currentSemester = if (target.currentSemester <= 0 || target.currentSemester == 1) (if (legacySemester > 0) legacySemester else target.currentSemester) else target.currentSemester,
                         passedUnits = if (target.passedUnits <= 0) (if (legacyPassed > 0) legacyPassed else target.passedUnits) else target.passedUnits,
                         declaredPassedCredits = if ((target.declaredPassedCredits ?: 0) <= 0) (if (legacyPassed > 0) legacyPassed else target.declaredPassedCredits) else target.declaredPassedCredits,
