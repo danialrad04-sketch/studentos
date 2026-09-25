@@ -183,8 +183,8 @@ class StudentAuthManager(private val context: Context) {
                 dailyAiQuotaUsed = 0,
                 maxDailyAiQuota = 5,
                 isCloudSyncEnabled = !isAnonymous,
-                isUnlimitedExportEnabled = !isAnonymous,
-                isGpaPredictorUnlocked = !isAnonymous
+                isUnlimitedExportEnabled = false,
+                isGpaPredictorUnlocked = false
             ),
             createdAt = fbUser.metadata?.creationTimestamp ?: System.currentTimeMillis()
         )
