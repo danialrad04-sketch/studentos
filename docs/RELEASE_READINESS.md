@@ -32,6 +32,7 @@
 - [x] Performance budget documented
 
 ## Before production release
+- [ ] Server-authoritative subscription/entitlement endpoint defined and consumed; Backend login must not grant Pro implicitly.
 - [ ] Latest CI run is green on the final commit
 - [ ] Release artifact build/signing succeeds
 - [ ] Install/upgrade migration tested
