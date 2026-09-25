@@ -1,5 +1,8 @@
 package com.example.ui.components
 
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -87,7 +90,7 @@ fun SubscriptionUpgradeDialog(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(StudentOsColors.CyberViolet.copy(alpha = 0.16f)),
+                            .background(StudentOsColors.AcademicNavy.copy(alpha = 0.16f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -190,7 +193,7 @@ fun SubscriptionUpgradeDialog(
                             modifier = Modifier
                                 .size(20.dp)
                                 .clip(CircleShape)
-                                .background(StudentOsColors.EmeraldNeon.copy(alpha = 0.16f)),
+                                .background(StudentOsColors.AcademicOlive.copy(alpha = 0.16f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
