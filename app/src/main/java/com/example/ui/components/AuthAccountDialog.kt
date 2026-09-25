@@ -272,6 +272,7 @@ fun AuthAccountDialog(
                     onDeleteAccount = { showDeleteConfirm = true },
                     onOpenUpgrade = onOpenUpgrade
                 )
+            }
 
             if (showDeleteConfirm) {
                 Card(
