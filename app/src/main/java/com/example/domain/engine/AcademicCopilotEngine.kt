@@ -375,8 +375,8 @@ object AcademicCopilotEngine {
             // 7. Grade Analysis (نمرات من را تحلیل کن.)
             cleanQuery.contains("نمرات") && (cleanQuery.contains("تحلیل") || cleanQuery.contains("بررسی") || cleanQuery.contains("وضعیت")) || (cleanQuery.contains("تحلیل") && cleanQuery.contains("کارنامه")) -> {
                 val currentGpa = gpa
-                val passedCount = grades.count { (it.midtermGrade + it.finalGrade) / 2.0 >= 10.0 }
-                val failingCount = grades.count { (it.midtermGrade + it.finalGrade) / 2.0 < 10.0 && it.finalGrade > 0 }
+                val passedCount = grades.count { (it.midtermGrade + it.finalGrade) >= 10.0 }
+                val failingCount = grades.count { (it.midtermGrade + it.finalGrade) < 10.0 && it.finalGrade > 0 }
 
                 val text = buildString {
                     append("📊 **تحلیل آماری و آکادمیک کارنامه و نمرات:**\n\n")
@@ -387,7 +387,7 @@ object AcademicCopilotEngine {
                     if (grades.isNotEmpty()) {
                         append("📋 **وضعیت دروس ثبت‌شده:**\n")
                         grades.forEach { g ->
-                            val avg = (g.midtermGrade + g.finalGrade) / 2.0
+                            val avg = g.midtermGrade + g.finalGrade
                             val statusTag = if (avg >= 17.0) "🌟 عالی (الف)" else if (avg >= 12.0) "✅ مناسب" else if (avg >= 10.0) "⚠️ در لبه قبولی" else "❌ نیازمند تلاش"
                             append("• **${g.courseName}** (${g.units} واحد): میانگین ${String.format(Locale.US, "%.1f", avg)} — $statusTag\n")
                         }
@@ -986,7 +986,7 @@ object AcademicCopilotEngine {
 
     fun computeGpa(grades: List<GradeEntity>, declaredGpa: Double? = null): Double {
         return if (grades.isNotEmpty() && grades.sumOf { it.units } > 0) {
-            val totalWeighted = grades.sumOf { ((it.midtermGrade + it.finalGrade) / 2.0) * it.units }
+            val totalWeighted = grades.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
             val totalU = grades.sumOf { it.units }
             val computedGpa = totalWeighted / totalU
             computedGpa.coerceIn(0.0, 20.0)
