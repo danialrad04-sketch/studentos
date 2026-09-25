@@ -22,38 +22,38 @@ object StudentOsColors {
     val LightSurface2 = Color(0xFFF1F5F9)
     val LightInk = Color(0xFF0F172A)
     val LightInkSoft = Color(0xFF475569)
-    val LightInkFaint = Slate400
-    val LightBrand = AcademicNavy
+    val LightInkFaint = Color(0xFF94A3B8)
+    val LightBrand = Color(0xFF0F3B4D)
     val LightIndigoStrong = Color(0xFF0A2D3A)
     val LightIndigoSoft = Color(0xFFE8EFF2)
 
     // Semantic status colors — deliberately separate from brand colors
     val LightAmber = Color(0xFFD97706)
-    val LightMint = AcademicOlive
-    val LightCoral = LightError
-    val LightSky = Sky600
+    val LightMint = Color(0xFF6B705C)
+    val LightCoral = Color(0xFFE11D48)
+    val LightSky = Color(0xFF0284C7)
 
     // Dark academic surfaces
-    val DarkCanvas = DarkVelvetCanvas
-    val DarkNavyBlack = DeepNavyBlack
-    val DarkPaper = DeepSpacePaper
-    val DarkSurface = OledCardSurface
-    val DarkSurface2 = OledSurfaceElevated
+    val DarkCanvas = Color(0xFF07090E)
+    val DarkNavyBlack = Color(0xFF0A0E1A)
+    val DarkPaper = Color(0xFF0E1322)
+    val DarkSurface = Color(0xFF111625)
+    val DarkSurface2 = Color(0xFF182035)
     val DarkInk = Color(0xFFEEF0F6)
     val DarkInkSoft = Color(0xFF9FA8BD)
     val DarkInkFaint = Color(0xFF6D7690)
     val DarkLine = Color(0xFF28324D)
 
     // Compatibility accent names mapped to the restrained Academic Premium system
-    val CyanAccent = AcademicNavyDark
+    val CyanAccent = Color(0xFF163F4D)
     val CyanGlow = Color(0xFF6FA7B8)
-    val EmeraldAccent = AcademicOlive
-    val EmeraldGlow = AcademicOliveLight
+    val EmeraldAccent = Color(0xFF6B705C)
+    val EmeraldGlow = Color(0xFF8A9070)
     val PurpleAccent = Color(0xFF7B6D5A)
     val PurpleGlow = Color(0xFF9A8A73)
-    val ElectricBlue = AcademicNavy
-    val AmberAccent = AmberGlow
-    val CrimsonAccent = CrimsonRose
+    val ElectricBlue = Color(0xFF0F3B4D)
+    val AmberAccent = Color(0xFFF59E0B)
+    val CrimsonAccent = Color(0xFFF43F5E)
 
     // Compatibility aliases
     val CyberCyan = CyanAccent
