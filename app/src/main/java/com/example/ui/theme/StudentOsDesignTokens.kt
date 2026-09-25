@@ -22,11 +22,11 @@ object StudentOsColors {
     val LightInk = Color(0xFF0F172A)
     val LightInkSoft = Color(0xFF475569)
     val LightInkFaint = Color(0xFF94A3B8)
-    val LightBrand = Color(0xFF4F46E5)
-    val LightIndigoStrong = Color(0xFF312E81)
-    val LightIndigoSoft = Color(0xFFEEF2FF)
+    val LightBrand = Color(0xFF0F3B4D)
+    val LightIndigoStrong = Color(0xFF0A2D3A)
+    val LightIndigoSoft = Color(0xFFE8EFF2)
     val LightAmber = Color(0xFFD97706)
-    val LightMint = Color(0xFF059669)
+    val LightMint = Color(0xFF6B705C)
     val LightCoral = Color(0xFFE11D48)
     val LightSky = Color(0xFF0284C7)
 
@@ -42,13 +42,13 @@ object StudentOsColors {
     val DarkLine = Color(0xFF28324D)         // Divider Line
 
     // Signature Accents
-    val CyanAccent = Color(0xFF06B6D4)       // Cyber Cyan #06B6D4
+    val CyanAccent = Color(0xFF6FA7B8)       // Cyber Cyan #06B6D4
     val CyanGlow = Color(0xFF38BDF8)         // Sky Cyan Glow #38BDF8
-    val EmeraldAccent = Color(0xFF10B981)    // Emerald Neon #10B981
+    val EmeraldAccent = Color(0xFF7C8461)    // Emerald Neon #10B981
     val EmeraldGlow = Color(0xFF34D399)      // Mint Glow #34D399
-    val PurpleAccent = Color(0xFF8B5CF6)     // Cyber Violet / Purple #8B5CF6
+    val PurpleAccent = Color(0xFF7B6D5A)     // Cyber Violet / Purple #8B5CF6
     val PurpleGlow = Color(0xFFA78BFA)       // Light Purple Glow #A78BFA
-    val ElectricBlue = Color(0xFF1D4ED8)     // Electric Blue #1D4ED8
+    val ElectricBlue = Color(0xFF285A6C)     // Electric Blue #1D4ED8
     val AmberAccent = Color(0xFFF59E0B)      // Amber Glow #F59E0B
     val CrimsonAccent = Color(0xFFF43F5E)    // Crimson Rose #F43F5E
 
