@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import com.example.data.api.backend.BackendApiClient
+import com.example.data.api.backend.LogoutRequest
 import com.example.data.api.backend.LoginRequest
 import com.example.data.api.backend.SignUpRequest
 import com.example.data.cloud.FirestoreSyncManager
@@ -517,9 +518,18 @@ class StudentAuthManager(private val context: Context) {
             Log.e(TAG, "Error signing out: ${e.message}")
         }
         try {
-            BackendApiClient.getInstance(context).tokenStore().clearAll()
+            val backendClient = BackendApiClient.getInstance(context)
+            val refreshToken = backendClient.tokenStore().getRefreshToken()
+            if (!refreshToken.isNullOrBlank()) {
+                try {
+                    backendClient.api.logout(LogoutRequest(refreshToken))
+                } catch (e: Throwable) {
+                    Log.w(TAG, "Backend logout request failed; clearing local credentials anyway", e)
+                }
+            }
+            backendClient.tokenStore().clearAll()
         } catch (e: Throwable) {
-            Log.e(TAG, "Error clearing token store: ${e.message}")
+            Log.e(TAG, "Error clearing backend session", e)
         }
         _currentUser.value = buildUserFromFirebase(null)
     }
