@@ -98,62 +98,29 @@ object FirestoreSyncManager {
      */
     suspend fun redeemPromoCode(userId: String, rawCode: String): Result<SubscriptionTier> = withContext(Dispatchers.IO) {
         if (userId.isBlank() || userId.startsWith("guest_")) {
-            return@withContext Result.failure(IllegalStateException("برای فعال‌سازی کد هدیه یا اشتراک، ابتدا وارد حساب کاربری شوید."))
+            return@withContext Result.failure(IllegalStateException("برای فعال‌سازی کد هدیه، ابتدا وارد حساب کاربری شوید."))
         }
 
         val code = rawCode.trim().uppercase()
         if (code.isBlank()) {
-            return@withContext Result.failure(IllegalArgumentException("کد تخفیف نمی‌تواند خالی باشد."))
+            return@withContext Result.failure(IllegalArgumentException("کد هدیه نمی‌تواند خالی باشد."))
         }
 
         try {
-            val promoDoc = firestore.collection(PROMO_COLLECTION).document(code).get().awaitResult()
-            
-            val targetTierStr: String
-            if (promoDoc.exists()) {
-                val isActive = promoDoc.getBoolean("isActive") ?: true
-                if (!isActive) {
-                    return@withContext Result.failure(IllegalStateException("این کد تخفیف منقضی یا غیرفعال شده است."))
-                }
-                targetTierStr = promoDoc.getString("targetTier") ?: "PRO"
-            } else {
-                targetTierStr = when (code) {
-                    "STUDENT2026", "DANESHJOO", "AUT_PRO", "SHARIF_AI", "TEHRAN_ENG" -> "PRO"
-                    "CAMPUS_ULTRA", "ELITE2026", "FACULTY_VIP", "ULTRA" -> "ULTRA"
-                    else -> return@withContext Result.failure(IllegalArgumentException("کد وارد شده معتبر نیست یا منقضی شده است."))
-                }
+            val callable = com.google.firebase.functions.FirebaseFunctions.getInstance()
+                .getHttpsCallable("validateAndApplyPromoCode")
+            val result = callable.call(mapOf("code" to code)).awaitResult()
+            val data = result.data as? Map<*, *>
+                ?: return@withContext Result.failure(IllegalStateException("پاسخ سرور اشتراک نامعتبر است."))
+            val tierName = data["tier"]?.toString()?.uppercase()
+                ?: return@withContext Result.failure(IllegalStateException("سطح اشتراک از سرور دریافت نشد."))
+            val tier = runCatching { SubscriptionTier.valueOf(tierName) }.getOrElse {
+                return@withContext Result.failure(IllegalStateException("سطح اشتراک دریافت‌شده معتبر نیست."))
             }
-
-            val targetTier = try {
-                SubscriptionTier.valueOf(targetTierStr.uppercase())
-            } catch (_: Throwable) {
-                SubscriptionTier.PRO
-            }
-
-            val userDocRef = firestore.collection(USERS_COLLECTION).document(userId)
-            val redemptionData = hashMapOf<String, Any>(
-                "subscriptionTier" to targetTier.name,
-                "isCloudSyncEnabled" to true,
-                "lastPromoApplied" to code,
-                "promoAppliedAt" to FieldValue.serverTimestamp(),
-                "updatedAt" to FieldValue.serverTimestamp()
-            )
-
-            userDocRef.set(redemptionData, SetOptions.merge()).awaitResult()
-            
-            val logRef = userDocRef.collection("redemptions").document(code)
-            logRef.set(
-                mapOf(
-                    "code" to code,
-                    "tierGranted" to targetTier.name,
-                    "redeemedAt" to FieldValue.serverTimestamp()
-                )
-            ).awaitResult()
-
-            Log.i(TAG, "Successfully redeemed promo $code for user $userId -> Tier: $targetTier")
-            Result.success(targetTier)
+            Log.i(TAG, "Server-side promo redemption succeeded for user " + userId + " -> " + tier)
+            Result.success(tier)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to redeem promo code: ${e.message}", e)
+            Log.e(TAG, "Server-side promo redemption failed: " + e.message, e)
             Result.failure(e)
         }
     }
