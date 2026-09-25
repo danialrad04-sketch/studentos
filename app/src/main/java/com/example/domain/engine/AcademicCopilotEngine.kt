@@ -997,7 +997,7 @@ object AcademicCopilotEngine {
             val computedGpa = totalWeighted / totalU
             computedGpa.coerceIn(0.0, 20.0)
         } else {
-            (declaredGpa?.takeIf { it > 0.0 } ?: 16.5).coerceIn(0.0, 20.0)
+            (declaredGpa?.takeIf { it > 0.0 } ?: 0.0).coerceIn(0.0, 20.0)
         }
     }
 
