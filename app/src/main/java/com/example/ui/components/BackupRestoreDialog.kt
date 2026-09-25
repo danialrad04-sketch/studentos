@@ -54,6 +54,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.StudentOsColors
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
 
 @Composable
 fun BackupRestoreDialog(
@@ -103,8 +106,8 @@ fun BackupRestoreDialog(
                 Box(
                     modifier = Modifier
                         .size(38.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(StudentOsColors.CyberViolet.copy(alpha = 0.16f)),
+                        .clip(StudentShapeTokens.Compact)
+                        .background(AcademicNavy.copy(alpha = 0.16f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -133,7 +136,7 @@ fun BackupRestoreDialog(
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                modifier = Modifier.clip(RoundedCornerShape(14.dp))
+                modifier = Modifier.clip(StudentShapeTokens.Compact)
             ) {
                 Tab(
                     selected = selectedTab == 0,
@@ -157,7 +160,7 @@ fun BackupRestoreDialog(
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.Security, contentDescription = null, tint = StudentOsColors.EmeraldNeon, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Rounded.Security, contentDescription = null, tint = AcademicOlive, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("پایگاه داده کامل و امن (Zero Data Loss)", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
@@ -262,7 +265,7 @@ fun BackupRestoreDialog(
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = StudentOsColors.CyanAccent.copy(alpha = 0.12f)),
+                    colors = CardDefaults.cardColors(containerColor = AcademicNavy.copy(alpha = 0.12f)),
                     shape = RoundedCornerShape(14.dp),
                     border = androidx.compose.foundation.BorderStroke(1.dp, StudentOsColors.CyanAccent.copy(alpha = 0.35f))
                 ) {
