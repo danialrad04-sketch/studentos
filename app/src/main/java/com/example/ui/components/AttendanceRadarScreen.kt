@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.ui.theme.StudentOsColors
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -67,15 +69,14 @@ import androidx.compose.ui.unit.sp
 import com.example.data.local.entity.AttendanceEntity
 import com.example.data.local.entity.CourseEntity
 import com.example.ui.theme.Amber500
-import com.example.ui.theme.BrandIndigo600
-import com.example.ui.theme.CyanNeon
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.Emerald500
 import com.example.ui.theme.Emerald600
 import com.example.ui.theme.NumericBadgeText
 import com.example.ui.theme.NumericDisplayStat
 import com.example.ui.theme.Rose500
 import com.example.ui.theme.Rose600
-import com.example.ui.theme.StudentOsColors
 import com.example.ui.theme.StudentShapeTokens
 import com.example.ui.theme.StudentSpacing
 import com.example.ui.theme.StudentOsGlassTokens
@@ -640,7 +641,7 @@ fun AttendanceCard(
                             Spacer(modifier = Modifier.width(6.dp))
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
-                                color = BrandIndigo600.copy(alpha = 0.15f),
+                                color = AcademicNavy.copy(alpha = 0.15f),
                                 modifier = Modifier.clickable { onOpenWorkspace() }
                             ) {
                                 Text(
