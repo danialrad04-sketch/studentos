@@ -587,7 +587,7 @@ private fun StepOneAcademicIdentity(
         } else if (selectedFacultyIndex == 0) {
             AUT_FACULTIES.flatMap { it.majors }
         } else {
-            MARAGHEH_FACULTIES.getOrNull(selectedFacultyIndex - 1)?.majors ?: emptyList()
+            AUT_FACULTIES.getOrNull(selectedFacultyIndex - 1)?.majors ?: emptyList()
         }
     }
 
@@ -799,7 +799,7 @@ private fun StepOneAcademicIdentity(
                     }
                 }
 
-                // 2. FACULTY & MAJOR SELECTION (MARAGHEH SPECIALIZED)
+                // 2. FACULTY & MAJOR SELECTION (reference catalog for supported universities)
                 Column {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -877,7 +877,7 @@ private fun StepOneAcademicIdentity(
                                 )
                             )
 
-                            MARAGHEH_FACULTIES.forEachIndexed { idx, fac ->
+                            AUT_FACULTIES.forEachIndexed { idx, fac ->
                                 val isFacSelected = selectedFacultyIndex == idx + 1
                                 FilterChip(
                                     selected = isFacSelected,
