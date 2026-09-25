@@ -365,7 +365,7 @@ class StudentViewModel @JvmOverloads constructor(
         }
 
         val resolver = CurriculumResolver(universities, majors, versions)
-        when (val res = resolver.resolve(universityId, majorId, entryYear)) {
+        return when (val res = resolver.resolve(universityId, majorId, entryYear)) {
             is CurriculumResolutionResult.NotFound -> {
                 val reasonMsg = when (res.reason) {
                     ResolutionFailureReason.PROFILE_DATA_INCOMPLETE -> "اطلاعات شناسنامه یا سال ورود ناقص است"
