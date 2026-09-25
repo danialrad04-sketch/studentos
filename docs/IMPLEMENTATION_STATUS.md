@@ -16,6 +16,7 @@ Branch: `feat/academic-premium-design-system`
 - CI quality gates: unit tests + lint + debug build
 - Release workflow quality gates
 - Design-system and release documentation
+- Adaptive navigation now keeps all secondary academic destinations reachable on tablet/large-screen layouts through the shared module hub.
 
 ## Verification rule
 
