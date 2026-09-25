@@ -48,7 +48,7 @@ jobs:
 
       - name: Run release quality gates
         run: |
-          ./gradlew testDebugUnitTest lintDebug --stacktrace
+          ./gradlew testDebugUnitTest lintDebug lintRelease --stacktrace
 
       - name: Build signed APK and AAB
         env:
