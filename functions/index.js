@@ -124,40 +124,11 @@ exports.verifyPlayBillingReceipt = functions.https.onCall(async (data, context) 
     throw new functions.https.HttpsError("unauthenticated", "کاربر احراز هویت نشده است.");
   }
 
-  const { packageName, productId, purchaseToken } = data;
-  const userId = context.auth.uid;
-
-  if (!productId || !purchaseToken) {
-    throw new functions.https.HttpsError("invalid-argument", "اطلاعات رسید خرید ناقص است.");
-  }
-
-  // Determine tier from Play Billing SKU
-  let grantedTier = "PRO";
-  if (productId.includes("ultra") || productId.includes("yearly")) {
-    grantedTier = "ULTRA";
-  }
-
-  // Record verified receipt in Firestore
-  await db.collection("receiptValidation").doc(purchaseToken).set({
-    userId: userId,
-    packageName: packageName,
-    productId: productId,
-    purchaseToken: purchaseToken,
-    grantedTier: grantedTier,
-    verifiedAt: admin.firestore.FieldValue.serverTimestamp()
-  });
-
-  // Elevate user's subscriptionTier
-  await db.collection("users").doc(userId).set({
-    subscriptionTier: grantedTier,
-    isCloudSyncEnabled: true,
-    maxDailyAiQuota: grantedTier === "ULTRA" ? 999 : 50,
-    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
-
-  return {
-    success: true,
-    tier: grantedTier,
-    message: "رسید خرید Google Play با موفقیت در سرور اعتبارسنجی شد."
-  };
+  // Fail closed: this endpoint must not grant entitlements from an
+  // unverified purchase token. Wire it to the Google Play Developer API
+  // before enabling production purchases.
+  throw new functions.https.HttpsError(
+    "failed-precondition",
+    "اعتبارسنجی خرید Google Play هنوز در سرور فعال نشده است."
+  );
 });
