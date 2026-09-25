@@ -211,6 +211,37 @@ class DataPersistenceAndBackupTest {
         assertTrue((persistedProfile?.updatedAt ?: 0L) > staleTimestamp)
     }
     @Test
+    fun testQuickAcademicSetupDoesNotFabricateScheduleGradesExamsOrHistory() = runBlocking {
+        val curriculumCourse = com.example.data.local.entity.CurriculumCourseEntity(
+            id = "CURR_TEST_1",
+            majorId = "MAJ_TEST",
+            code = "TEST101",
+            name = "درس آزمایشی",
+            units = 3,
+            courseType = "تخصصی",
+            recommendedSemester = 1
+        )
+
+        repository.completeQuickAcademicSetup(
+            name = "دانشجو",
+            university = "",
+            major = "",
+            entryYear = 1404,
+            currentSemester = 1,
+            passedCredits = 0,
+            currentGpa = 0.0,
+            selectedCourses = listOf(curriculumCourse)
+        )
+
+        val courses = db.studentDao().getAllCoursesIncludingArchivedSync()
+        assertEquals(1, courses.size)
+        assertEquals(0, db.studentDao().getAllSessionsSync().size)
+        assertEquals(0, db.studentDao().getAllGradesSync().size)
+        assertEquals(0, db.studentDao().getAllExamsSync().size)
+        assertEquals(0, db.studentDao().getStudentAttemptsSync(1).size)
+    }
+
+    @Test
     fun testClearAllUserDataPurgesPersonalState() = runBlocking {
         val dao = db.studentDao()
         val semester = SemesterEntity(
