@@ -14,8 +14,14 @@ CREATE TABLE IF NOT EXISTS users (
   display_name TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  is_active BOOLEAN NOT NULL DEFAULT true
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  subscription_tier TEXT NOT NULL DEFAULT 'FREE',
+  subscription_expires_at TIMESTAMPTZ
 );
+
+-- Keep entitlement fields additive and migration-safe for existing databases.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_tier TEXT NOT NULL DEFAULT 'FREE';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ;
 
 -- Refresh tokens are stored HASHED (sha256), never in plaintext, and are
 -- individually revocable (e.g. on logout, password change, or "sign out of
