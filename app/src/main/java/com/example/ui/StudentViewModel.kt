@@ -273,8 +273,9 @@ class StudentViewModel @JvmOverloads constructor(
     val examsList: List<ExamItem>
         get() = exams.value
 
-    val curriculumCourses: StateFlow<List<com.example.data.local.entity.CurriculumCourseEntity>> = (repository.curriculumCourses ?: kotlinx.coroutines.flowOf(emptyList()))
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.example.data.seed.CurriculumSeedData.chemicalEngineeringCourses)
+    val curriculumCourses: StateFlow<List<com.example.data.local.entity.CurriculumCourseEntity>> =
+        (repository.curriculumCourses ?: kotlinx.coroutines.flow.flowOf(emptyList()))
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val attendance: StateFlow<List<AttendanceEntity>> = repository.attendance
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -316,6 +317,19 @@ class StudentViewModel @JvmOverloads constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Phase 4 Academic Foundations Engine Flows
+    val curriculumMatchUiState: StateFlow<CurriculumMatchUiState> = combine(
+        combine(profile, courses) { p, currentCoursesList -> Pair(p, currentCoursesList) },
+        combine(curriculumCourses, repository.studentAttempts) { currCoursesList, attemptsList -> Pair(currCoursesList, attemptsList) },
+        combine(repository.curriculumUniversities, repository.curriculumMajors) { universities, majors -> Pair(universities, majors) },
+        repository.curriculumVersions
+    ) { profileAndCourses, curriculumAndAttempts, referenceData, versionRows ->
+        val p = profileAndCourses.first
+        val currentCoursesList = profileAndCourses.second
+        val currCoursesList = curriculumAndAttempts.first
+        val attemptsList = curriculumAndAttempts.second
+        val universityRows = referenceData.first
+        val majorRows = referenceData.second
+
         val universityId = p.universityId.orEmpty()
         val majorId = p.majorId.orEmpty()
         val entryYear = p.entryYear
@@ -363,19 +377,33 @@ class StudentViewModel @JvmOverloads constructor(
             }
             is CurriculumResolutionResult.ExactMatch,
             is CurriculumResolutionResult.ExplicitRangeMatch -> {
-                val resolvedVersion = if (res is CurriculumResolutionResult.ExactMatch) res.version else (res as CurriculumResolutionResult.ExplicitRangeMatch).version
+                val resolvedVersion = if (res is CurriculumResolutionResult.ExactMatch) {
+                    res.version
+                } else {
+                    (res as CurriculumResolutionResult.ExplicitRangeMatch).version
+                }
 
                 val resolvableCourses = curriculumForMajor.map { cc ->
-                    val prereqList = cc.prerequisites.split("،", ",").map { it.trim() }.filter { it.isNotEmpty() }
-                    val conditions = prereqList.map { pName ->
-                        val matchingCourse = currCoursesList.find { CourseIdentityNormalizer.normalize(it.name) == CourseIdentityNormalizer.normalize(pName) }
-                        val pId = matchingCourse?.id ?: pName
-                        PrerequisiteCondition.CoursePassed(pId, pName)
+                    val prereqList = cc.prerequisites.split("،", ",")
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
+                    val conditions = prereqList.map { prerequisiteName ->
+                        val matchingCourse = curriculumForMajor.find { course ->
+                            CourseIdentityNormalizer.normalize(course.name) ==
+                                CourseIdentityNormalizer.normalize(prerequisiteName)
+                        }
+                        val prerequisiteId = matchingCourse?.id ?: prerequisiteName
+                        PrerequisiteCondition.CoursePassed(prerequisiteId, prerequisiteName)
                     }
                     val rule = if (conditions.isNotEmpty()) {
-                        CoursePrerequisiteRule(rootCondition = if (conditions.size == 1) conditions.first() else PrerequisiteCondition.AndGroup(conditions))
+                        CoursePrerequisiteRule(
+                            rootCondition = if (conditions.size == 1) conditions.first()
+                            else PrerequisiteCondition.AndGroup(conditions)
+                        )
                     } else if (cc.name.contains("کارآموزی")) {
-                        CoursePrerequisiteRule(rootCondition = PrerequisiteCondition.MinimumTotalPassedCredits(80))
+                        CoursePrerequisiteRule(
+                            rootCondition = PrerequisiteCondition.MinimumTotalPassedCredits(80)
+                        )
                     } else {
                         CoursePrerequisiteRule()
                     }
@@ -394,13 +422,13 @@ class StudentViewModel @JvmOverloads constructor(
 
                 val enrolledIds = currentCoursesList.map { it.id }.toSet()
                 val enrolledNames = currentCoursesList.map { it.name }.toSet()
-                val attempts = attemptsList.map {
+                val attempts = attemptsList.map { attempt ->
                     StudentCourseAttempt(
-                        courseId = it.courseId,
-                        courseName = it.courseName,
-                        units = it.units,
-                        status = it.status,
-                        grade = it.grade
+                        courseId = attempt.courseId,
+                        courseName = attempt.courseName,
+                        units = attempt.units,
+                        status = attempt.status,
+                        grade = attempt.grade
                     )
                 }
 
@@ -420,7 +448,6 @@ class StudentViewModel @JvmOverloads constructor(
             }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CurriculumMatchUiState.Loading)
-
     val academicProgressUiState: StateFlow<AcademicProgressUiState> = combine(
         profile,
         courses,
