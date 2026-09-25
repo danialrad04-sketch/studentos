@@ -261,6 +261,19 @@ class AuthAndCopilotEngineTest {
     }
 
     @Test
+    fun testSubscriptionRemainingQuotaUsesConfiguredTierLimit() {
+        val pro = com.example.domain.model.SubscriptionDetails(
+            tier = com.example.domain.model.SubscriptionTier.PRO,
+            maxDailyAiQuota = 50,
+            dailyAiQuotaUsed = 17
+        )
+        val exhausted = pro.copy(dailyAiQuotaUsed = 60)
+
+        assertEquals(33, pro.remainingAiQuota)
+        assertEquals(0, exhausted.remainingAiQuota)
+    }
+
+    @Test
     fun testComputeGpaWithoutGradesDoesNotInventValue() {
         assertEquals(0.0, AcademicCopilotEngine.computeGpa(emptyList(), null), 0.001)
         assertEquals(17.5, AcademicCopilotEngine.computeGpa(emptyList(), 17.5), 0.001)
