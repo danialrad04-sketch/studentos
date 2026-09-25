@@ -66,6 +66,7 @@ fun HeaderSection(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     onToggleTheme: () -> Unit,
     onOpenProfile: () -> Unit,
+    studyStreakDays: Int = 0,
     accountEmail: String? = null,
     isAccountConnected: Boolean = false,
     onOpenAccount: () -> Unit = {},
@@ -83,9 +84,9 @@ fun HeaderSection(
     var showMenu by remember { mutableStateOf(false) }
 
     val isDark = MaterialTheme.colorScheme.background.red < 0.2f
-    val studentDisplayName = if (profile.name.isNotBlank()) profile.name else "امیر"
-    val termDisplayText = if (profile.term.isNotBlank()) "${profile.term} - هفته ۶" else "ترم پاییز ۱۴۰۴ - هفته ۶"
-    val initialLetter = studentDisplayName.trim().firstOrNull()?.toString() ?: "ع"
+    val studentDisplayName = profile.name.ifBlank { "دانشجو" }
+    val termDisplayText = profile.term.ifBlank { "اطلاعات ترم ثبت نشده" }
+    val initialLetter = studentDisplayName.trim().firstOrNull()?.toString() ?: "د"
 
     // Minimalist Top Bar matching the exact design in the user screenshot
     Row(
@@ -105,7 +106,7 @@ fun HeaderSection(
             ),
             modifier = Modifier
                 .semantics {
-                    contentDescription = "زنجیره ۱۲ روز مطالعه مستمر، باز کردن پروفایل"
+                    contentDescription = if (studyStreakDays > 0) "زنجیره $studyStreakDays روز مطالعه مستمر، باز کردن پروفایل" else "استریک مطالعه هنوز ثبت نشده، باز کردن پروفایل"
                     role = Role.Button
                 }
                 .tactileClickable { onOpenProfile() }
@@ -121,7 +122,7 @@ fun HeaderSection(
                     shapeRadiusRatio = 0.28f
                 )
                 Text(
-                    text = "۱۲",
+                    text = if (studyStreakDays > 0) studyStreakDays.toString() else "—",
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Black),
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
