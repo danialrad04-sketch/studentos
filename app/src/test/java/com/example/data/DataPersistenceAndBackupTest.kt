@@ -210,4 +210,51 @@ class DataPersistenceAndBackupTest {
         )
         assertTrue((persistedProfile?.updatedAt ?: 0L) > staleTimestamp)
     }
+    @Test
+    fun testClearAllUserDataPurgesPersonalState() = runBlocking {
+        val dao = db.studentDao()
+        val semester = SemesterEntity(
+            id = "sem_user_1",
+            title = "ترم کاربر",
+            academicYear = 1404,
+            termNumber = 1,
+            isCurrent = true
+        )
+        dao.insertSemester(semester)
+        dao.insertProfile(
+            StudentProfileEntity(
+                id = 1,
+                name = "کاربر واقعی",
+                studentId = "USER-1",
+                isOnboardingCompleted = true
+            )
+        )
+        val course = CourseEntity(
+            id = "purge_course",
+            name = "درس خصوصی",
+            units = 3,
+            semesterId = semester.id
+        )
+        dao.insertCourse(course)
+        dao.insertTask(
+            TaskEntity(
+                id = 9001,
+                title = "تکلیف خصوصی",
+                courseName = course.name,
+                courseId = course.id,
+                semesterId = semester.id
+            )
+        )
+        dao.upsertSyncMetadata(
+            com.example.data.local.entity.SyncMetadataEntity("courses", 1234L)
+        )
+
+        repository.clearAllUserData()
+
+        assertEquals(0, dao.getAllCoursesIncludingArchivedSync().size)
+        assertEquals(0, dao.getAllTasksSync().size)
+        assertEquals(0, dao.getAllSemestersSync().size)
+        assertEquals(null, dao.getProfileSync())
+        assertEquals(null, dao.getSyncUpdatedAt("courses"))
+    }
 }
