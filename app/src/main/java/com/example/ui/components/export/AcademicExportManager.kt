@@ -110,36 +110,49 @@ object AcademicExportManager {
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
             val displayName = "StudentOS_Transcript_$timestamp.pdf"
 
-            val values = ContentValues().apply {
-                put(MediaStore.Downloads.DISPLAY_NAME, displayName)
-                put(MediaStore.Downloads.MIME_TYPE, "application/pdf")
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val resolver = context.contentResolver
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val values = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, displayName)
+                    put(MediaStore.Downloads.MIME_TYPE, "application/pdf")
                     put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/StudentOS")
                     put(MediaStore.Downloads.IS_PENDING, 1)
                 }
+
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                    ?: throw IOException("امکان ایجاد فایل PDF در پوشه دانلودها وجود ندارد.")
+
+                try {
+                    resolver.openOutputStream(uri)?.use { stream ->
+                        document.writeTo(stream)
+                    } ?: throw IOException("خطا در باز کردن جریان خروجی فایل PDF.")
+
+                    val completed = ContentValues().apply {
+                        put(MediaStore.Downloads.IS_PENDING, 0)
+                    }
+                    resolver.update(uri, completed, null, null)
+                    return uri
+                } catch (e: Exception) {
+                    resolver.delete(uri, null, null)
+                    throw e
+                }
             }
 
-            val resolver = context.contentResolver
-            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
-                ?: throw IOException("امکان ایجاد فایل PDF در پوشه دانلودها وجود ندارد.")
+            // Android 9 and below: use the app-specific Downloads directory.
+            // This avoids requesting legacy storage permission solely for export.
+            val legacyDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+                ?: throw IOException("پوشه دانلود اختصاصی برنامه در دسترس نیست.")
+            if (!legacyDir.exists() && !legacyDir.mkdirs()) {
+                throw IOException("امکان ایجاد پوشه دانلود برنامه وجود ندارد.")
+            }
 
+            val file = File(legacyDir, displayName)
             try {
-                val outputStream = resolver.openOutputStream(uri)
-                    ?: throw IOException("خطا در باز کردن جریان خروجی فایل PDF.")
-
-                outputStream.use { stream ->
-                    document.writeTo(stream)
-                }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    values.clear()
-                    values.put(MediaStore.Downloads.IS_PENDING, 0)
-                    resolver.update(uri, values, null, null)
-                }
-
-                return uri
+                FileOutputStream(file).use { stream -> document.writeTo(stream) }
+                return Uri.fromFile(file)
             } catch (e: Exception) {
-                resolver.delete(uri, null, null)
+                file.delete()
                 throw e
             }
         } finally {
