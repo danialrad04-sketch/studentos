@@ -60,9 +60,15 @@ jobs:
 
       - name: Verify signed outputs
         run: |
-          test -s app/build/outputs/apk/release/app-release.apk
-          test -s app/build/outputs/bundle/release/app-release.aab
-          ls -lh app/build/outputs/apk/release/app-release.apk app/build/outputs/bundle/release/app-release.aab
+          APK="app/build/outputs/apk/release/app-release.apk"
+          AAB="app/build/outputs/bundle/release/app-release.aab"
+          test -s "$APK"
+          test -s "$AAB"
+          command -v apksigner
+          apksigner verify --verbose "$APK"
+          unzip -t "$AAB"
+          unzip -l "$AAB" | grep -E 'BundleConfig.pb|base/manifest/AndroidManifest.xml'
+          ls -lh "$APK" "$AAB"
 
       - name: Publish GitHub Release
         env:
