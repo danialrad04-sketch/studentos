@@ -316,12 +316,6 @@ class StudentViewModel @JvmOverloads constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Phase 4 Academic Foundations Engine Flows
-    val curriculumMatchUiState: StateFlow<CurriculumMatchUiState> = combine(
-        profile,
-        courses,
-        curriculumCourses,
-        repository.studentAttempts
-    ) { p, currentCoursesList, currCoursesList, attemptsList ->
         val universityId = p.universityId.orEmpty()
         val majorId = p.majorId.orEmpty()
         val entryYear = p.entryYear
@@ -330,22 +324,30 @@ class StudentViewModel @JvmOverloads constructor(
             return@combine CurriculumMatchUiState.Empty
         }
 
-        val universities = listOf(
-            ResolvedUniversity("UNI_AUT", "دانشگاه صنعتی امیرکبیر", "پلی‌تکنیک تهران")
-        )
-        val majors = listOf(
-            ResolvedMajor("MAJ_AUT_CHEM_ENG", "UNI_AUT", "FAC_AUT_CHEM_OIL", "مهندسی شیمی")
-        )
-        val versions = listOf(
+        val universities = universityRows.map {
+            ResolvedUniversity(it.id, it.displayNameFa, it.shortName)
+        }
+        val majors = majorRows.map {
+            ResolvedMajor(it.id, it.universityId, it.facultyId, it.majorDisplayNameFa)
+        }
+        val versions = versionRows.map {
             ResolvedCurriculumVersion(
-                id = "CURR_AUT_CE_1401",
-                majorId = "MAJ_AUT_CHEM_ENG",
-                title = "چارت کارشناسی مهندسی شیمی ورودی‌های 1401 تا 1404",
-                entryYearMin = 1401,
-                entryYearMax = 1404,
-                totalCreditsRequired = 140
+                id = it.id,
+                majorId = it.majorId,
+                title = it.title,
+                entryYearMin = it.entryYearMin,
+                entryYearMax = it.entryYearMax,
+                totalCreditsRequired = it.totalCreditsRequired
             )
-        )
+        }
+
+        val curriculumForMajor = currCoursesList.filter { it.majorId == majorId }
+        if (curriculumForMajor.isEmpty()) {
+            return@combine CurriculumMatchUiState.NotFound(
+                ResolutionFailureReason.MAJOR_NOT_SUPPORTED,
+                "چارت دروس این رشته در پایگاه داده مرجع ثبت نشده است"
+            )
+        }
 
         val resolver = CurriculumResolver(universities, majors, versions)
         when (val res = resolver.resolve(universityId, majorId, entryYear)) {
@@ -363,7 +365,7 @@ class StudentViewModel @JvmOverloads constructor(
             is CurriculumResolutionResult.ExplicitRangeMatch -> {
                 val resolvedVersion = if (res is CurriculumResolutionResult.ExactMatch) res.version else (res as CurriculumResolutionResult.ExplicitRangeMatch).version
 
-                val resolvableCourses = currCoursesList.map { cc ->
+                val resolvableCourses = curriculumForMajor.map { cc ->
                     val prereqList = cc.prerequisites.split("،", ",").map { it.trim() }.filter { it.isNotEmpty() }
                     val conditions = prereqList.map { pName ->
                         val matchingCourse = currCoursesList.find { CourseIdentityNormalizer.normalize(it.name) == CourseIdentityNormalizer.normalize(pName) }
