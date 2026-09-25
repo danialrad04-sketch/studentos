@@ -1,6 +1,7 @@
 package com.example.ui.components
 
 import com.example.domain.model.AcademicCommand
+import com.example.ui.models.SyncUiState
 
 import android.app.Activity
 import android.content.Context
@@ -47,6 +48,7 @@ fun AppDialogManager(
     curriculumCourses: List<CurriculumCourseEntity>,
     globalSearchResults: List<GlobalSearchResult>,
     searchQuery: String,
+    syncUiState: SyncUiState = SyncUiState.Idle,
     dialogState: AppDialogState,
     onUpdateDialogState: (AppDialogState) -> Unit,
     onOpenOnboardingWizard: () -> Unit,
