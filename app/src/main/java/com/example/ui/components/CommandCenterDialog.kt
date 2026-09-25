@@ -341,7 +341,7 @@ fun CommandCenterDialog(
                                         modifier = Modifier.padding(10.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(imageVector = Icons.Default.Description, contentDescription = null, tint = CyanNeon, modifier = Modifier.size(16.dp))
+                                        Icon(imageVector = Icons.Default.Description, contentDescription = null, tint = AcademicNavy, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Column {
                                             Text(text = "یافت‌شده در یادداشت‌ها و فرمول‌ها", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
@@ -391,7 +391,7 @@ fun CommandCenterDialog(
                         icon = Icons.Default.HourglassTop,
                         title = "شروع جلسه تمرکز عمیق (پومودورو)",
                         subtitle = "فعال‌سازی تایمر ۲۵ دقیقه‌ای دیپ‌ورک",
-                        iconColor = CyanNeon,
+                        iconColor = AcademicNavy,
                         onClick = {
                             onDismiss()
                             onQuickPomodoro()
