@@ -872,8 +872,8 @@ class StudentViewModel @JvmOverloads constructor(
             passedUnits = passedUnits,
             declaredPassedCredits = passedUnits,
             activeUnits = activeUnits,
-            term = "ترم $currentSemester $major",
-            faculty = "دانشکده $major · $activeUnits واحد فعال",
+            term = if (currentSemester > 0 && major.isNotBlank()) "ترم $currentSemester $major" else "",
+            faculty = if (major.isNotBlank()) "دانشکده $major · $activeUnits واحد فعال" else "",
             isOnboardingCompleted = true
         )
         _optimisticProfile.value = updated
@@ -966,8 +966,8 @@ class StudentViewModel @JvmOverloads constructor(
         studentId: String = "",
         university: String = "",
         major: String = "",
-        entryYear: Int = 1403,
-        currentSemester: Int = 1
+        entryYear: Int = 0,
+        currentSemester: Int = 0
     ) {
         val resolvedName = studentName.ifBlank { "دانشجو" }
         val totalUnits = drafts.sumOf { it.units }
@@ -1043,8 +1043,8 @@ class StudentViewModel @JvmOverloads constructor(
             passedUnits = passedCredits,
             declaredPassedCredits = passedCredits,
             declaredGpa = declaredGpa,
-            term = "ترم $currentSemester $major",
-            faculty = "دانشکده $major",
+            term = if (currentSemester > 0 && major.isNotBlank()) "ترم $currentSemester $major" else "",
+            faculty = if (major.isNotBlank()) "دانشکده $major" else "",
             isOnboardingCompleted = completed
         )
         _optimisticProfile.value = opt
