@@ -314,7 +314,7 @@ fun OnboardingScreen(
     // Setup Option State
     var selectedMode by remember { mutableStateOf(SetupMode.QUICK_SETUP) }
 
-    // Quick Setup States (Dynamically compute passed credits for the selected semester: e.g. (3 - 1) * 18 = 36)
+    // Quick Setup starts empty; only explicitly entered summary values are stored.
     var passedCreditsInput by remember { mutableStateOf("") }
     var currentGpaInput by remember { mutableStateOf("") }
 
@@ -335,7 +335,7 @@ fun OnboardingScreen(
 
     // Auto-update estimated passed credits when user changes currentSemester
     LaunchedEffect(currentSemester) {
-        passedCreditsInput = if (currentSemester > 0) "" else ""
+        passedCreditsInput = ""
         currentGpaInput = ""
     }
 
@@ -1163,8 +1163,8 @@ private fun StepTwoSetupMode(
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             // Option 1: Quick Academic Setup
             SetupOptionCard(
-                title = "⚡ شروع فوق‌سریع ترم $currentSemester (پیشنهادی)",
-                description = "تنها با وارد کردن واحدهای پاس‌شده و معدل فعلی، چارت و برنامه ترم $currentSemester بدون نیاز به ورود ترم‌های گذشته آماده می‌شود.",
+                title = "⚡ شروع سریع",
+                description = "با وارد کردن خلاصه سوابق، اطلاعات پایه تحصیلی آماده می‌شود؛ هیچ کلاس، امتحان یا نمره‌ای بدون ثبت شما ساخته نمی‌شود.",
                 icon = Icons.Default.Speed,
                 isSelected = selectedMode == SetupMode.QUICK_SETUP,
                 onClick = { onSelectMode(SetupMode.QUICK_SETUP) }
