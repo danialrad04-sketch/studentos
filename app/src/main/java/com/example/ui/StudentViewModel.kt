@@ -232,7 +232,7 @@ class StudentViewModel @JvmOverloads constructor(
     val examsList: List<ExamItem>
         get() = exams.value
 
-    val curriculumCourses: StateFlow<List<com.example.data.local.entity.CurriculumCourseEntity>> = (repository.curriculumCourses ?: kotlinx.coroutines.flow.flowOf(com.example.data.seed.CurriculumSeedData.chemicalEngineeringCourses))
+    val curriculumCourses: StateFlow<List<com.example.data.local.entity.CurriculumCourseEntity>> = (repository.curriculumCourses ?: kotlinx.coroutines.flowOf(emptyList()))
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.example.data.seed.CurriculumSeedData.chemicalEngineeringCourses)
 
     val attendance: StateFlow<List<AttendanceEntity>> = repository.attendance
