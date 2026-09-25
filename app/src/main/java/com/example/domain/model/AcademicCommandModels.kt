@@ -35,7 +35,7 @@ object AcademicCommandEngine {
             .replace('ي', 'ی')
             .replace('ك', 'ک')
             .replace('‌', ' ')
-            .replace(Regex("\s+"), " ")
+            .replace(Regex("\\s+"), " ")
 
         if (normalized.isBlank()) return null
 
