@@ -4,29 +4,33 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag, e.g. v1.0.0"
+        description: "Release tag, e.g. v1.0.3"
         required: true
-        default: "v1.0.0"
+        default: "v1.0.3"
       title:
         description: "Release title"
         required: true
-        default: "Student OS v1.0.0"
-  push:
-    branches:
-      - "production-release/**"
+        default: "Student OS v1.0.3"
+      version_code:
+        description: "Monotonic Android versionCode; verify against the latest published artifact."
+        required: true
+      version_name:
+        description: "Android versionName; must match the release tag without the leading v."
+        required: true
+        default: "1.0.3"
 
 permissions:
   contents: write
 
 concurrency:
-  group: studentos-release-${{ github.ref }}
+  group: studentos-release
   cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout release branch
+      - name: Checkout release ref
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -46,9 +50,24 @@ jobs:
           test -n "$RELEASE_KEYSTORE_BASE64"
           echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > studentos-release.jks
 
+      - name: Validate release version inputs
+        shell: bash
+        env:
+          TAG: ${{ inputs.tag }}
+          VERSION_CODE: ${{ inputs.version_code }}
+          VERSION_NAME: ${{ inputs.version_name }}
+        run: |
+          test -n "$VERSION_CODE"
+          test -n "$VERSION_NAME"
+          test "$VERSION_NAME" = "$(printf '%s' "$TAG" | sed 's/^v//')"
+          case "$VERSION_CODE" in
+            (*[!0-9]*|'') exit 1 ;;
+          esac
+          test "$VERSION_CODE" -gt 0
+
       - name: Run release quality gates
         run: |
-          ./gradlew testDebugUnitTest lintDebug lintRelease --stacktrace
+          ./gradlew testDebugUnitTest lintDebug lintRelease             -PVERSION_CODE=${{ inputs.version_code }}             -PVERSION_NAME=${{ inputs.version_name }}             --stacktrace
 
       - name: Build signed APK and AAB
         env:
@@ -56,9 +75,11 @@ jobs:
           STORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-        run: ./gradlew assembleRelease bundleRelease --stacktrace
+        run: |
+          ./gradlew assembleRelease bundleRelease             -PVERSION_CODE=${{ inputs.version_code }}             -PVERSION_NAME=${{ inputs.version_name }}             --stacktrace
 
       - name: Verify signed outputs
+        shell: bash
         run: |
           APK="app/build/outputs/apk/release/app-release.apk"
           AAB="app/build/outputs/bundle/release/app-release.aab"
@@ -73,13 +94,7 @@ jobs:
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          TITLE: ${{ inputs.title }}
         run: |
-          TAG="${{ inputs.tag }}"
-          TITLE="${{ inputs.title }}"
-          if [ -z "$TAG" ]; then
-            TAG="${GITHUB_REF_NAME#production-release/}"
-          fi
-          if [ -z "$TITLE" ]; then
-            TITLE="Student OS $TAG"
-          fi
           gh release create "$TAG"             app/build/outputs/apk/release/app-release.apk             app/build/outputs/bundle/release/app-release.aab             --title "$TITLE"             --generate-notes
