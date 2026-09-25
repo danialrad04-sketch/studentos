@@ -1093,7 +1093,7 @@ class StudentViewModel @JvmOverloads constructor(
                         day = dayInt,
                         start = payload.startTime,
                         end = payload.endTime,
-                        location = "کلاس فنی"
+                        location = ""
                     )
                     saveCourse(course, listOf(session))
                 }
@@ -1122,12 +1122,12 @@ class StudentViewModel @JvmOverloads constructor(
     }
 
     fun clearToFreshSlate(
-        name: String = "دانشجوی جدید",
-        studentId: String = "۴۰۳۰۰۰۰۱",
-        university: String = "دانشگاه سراسری",
-        major: String = "مهندسی",
-        entryYear: Int = 1403,
-        currentSemester: Int = 1
+        name: String = "دانشجو",
+        studentId: String = "",
+        university: String = "",
+        major: String = "",
+        entryYear: Int = 0,
+        currentSemester: Int = 0
     ) {
         viewModelScope.launch {
             repository.clearToFreshSlate(name, studentId, university, major, entryYear, currentSemester)
