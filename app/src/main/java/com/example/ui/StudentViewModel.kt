@@ -911,8 +911,8 @@ class StudentViewModel @JvmOverloads constructor(
             entryYear = entryYear,
             currentSemester = currentSemester,
             activeUnits = totalUnits,
-            term = "ترم $currentSemester $major",
-            faculty = "دانشکده $major · $totalUnits واحد فعال",
+            term = if (currentSemester > 0 && major.isNotBlank()) "ترم $currentSemester $major" else "",
+            faculty = if (major.isNotBlank()) "دانشکده $major · $totalUnits واحد فعال" else "",
             isOnboardingCompleted = true
         )
         _optimisticProfile.value = opt
@@ -948,8 +948,8 @@ class StudentViewModel @JvmOverloads constructor(
         studentId: String = "",
         university: String = "",
         major: String = "",
-        entryYear: Int = 1403,
-        currentSemester: Int = 1,
+        entryYear: Int = 0,
+        currentSemester: Int = 0,
         passedCredits: Int = 0,
         declaredGpa: Double = 0.0
     ) {
