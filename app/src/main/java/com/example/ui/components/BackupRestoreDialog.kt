@@ -113,7 +113,7 @@ fun BackupRestoreDialog(
                     Icon(
                         imageVector = Icons.Rounded.Security,
                         contentDescription = null,
-                        tint = StudentOsColors.CyberViolet,
+                        tint = AcademicNavy,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -331,7 +331,7 @@ fun BackupRestoreDialog(
                         },
                         enabled = jsonInputToRestore.isNotBlank() && !isRestoring,
                         shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.EmeraldNeon),
+                        colors = ButtonDefaults.buttonColors(containerColor = AcademicOlive),
                         modifier = Modifier
                             .weight(1.3f)
                             .height(46.dp)
