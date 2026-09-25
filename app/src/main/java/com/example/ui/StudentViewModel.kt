@@ -1356,25 +1356,26 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun deleteUserAccount(onCompleted: () -> Unit) {
         viewModelScope.launch {
-            when (val result = authManager.deleteUserAccount()) {
-                is com.example.domain.model.Result.Success -> {
-                    repository.clearToFreshSlate(
-                        name = "دانشجوی جدید",
-                        studentId = "",
-                        university = "",
-                        major = "",
-                        entryYear = 1403,
-                        currentSemester = 1
-                    )
-                    preferencesRepository.setOnboardingCompleted(false)
-                    _isOnboardingCompleted.value = false
-                    _optimisticProfile.value = null
-                    addNotification("حذف حساب", "حساب کاربری حذف شد و داده‌های محلی پاکسازی شدند.", isDanger = true)
-                    onCompleted()
-                }
-                is com.example.domain.model.Result.Error -> {
-                    _userMessage.emit(result.errorMessage)
-                }
+            val result = authManager.deleteUserAccount()
+            if (result.isSuccess) {
+                repository.clearToFreshSlate(
+                    name = "دانشجوی جدید",
+                    studentId = "",
+                    university = "",
+                    major = "",
+                    entryYear = 1403,
+                    currentSemester = 1
+                )
+                preferencesRepository.setOnboardingCompleted(false)
+                _isOnboardingCompleted.value = false
+                _optimisticProfile.value = null
+                addNotification("حذف حساب", "حساب کاربری حذف شد و داده‌های محلی پاکسازی شدند.", isDanger = true)
+                onCompleted()
+            } else {
+                _userMessage.emit(
+                    result.exceptionOrNull()?.localizedMessage
+                        ?: "حذف حساب انجام نشد؛ اطلاعات شما بدون تغییر باقی ماند."
+                )
             }
         }
     }
