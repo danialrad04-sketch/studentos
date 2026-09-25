@@ -657,9 +657,11 @@ class StudentViewModel @JvmOverloads constructor(
     }
 
     fun deleteCourse(courseId: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val snapshot = captureUndoSnapshot()
             repository.deleteCourse(courseId)
             addNotification("حذف درس", "درس با موفقیت از جدول کلاسی حذف شد.", isDanger = true)
+            snapshot?.let { publishUndo("درس حذف‌شده قابل واگردانی است.", it) }
             triggerCloudSync()
         }
     }
@@ -1141,16 +1143,20 @@ class StudentViewModel @JvmOverloads constructor(
     }
 
     fun resetToDefaults() {
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val snapshot = captureUndoSnapshot()
             repository.resetDefaults()
             addNotification("بازنشانی سامانه", "کلیه اطلاعات به حالت پیش‌فرض بازگشت.")
+            snapshot?.let { publishUndo("بازنشانی قابل واگردانی است.", it) }
         }
     }
 
     fun loadDemoData() {
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val snapshot = captureUndoSnapshot()
             repository.loadRichDemoData()
-            addNotification("حالت دمو فعال شد", "داده‌های کامل و نمونه دانشگاهی بارگذاری شد 🎓")
+            addNotification("حالت دمو فعال شد", "داده‌های نمونه بارگذاری شد 🎓")
+            snapshot?.let { publishUndo("داده‌های قبلی قابل واگردانی هستند.", it) }
         }
     }
 
@@ -1162,9 +1168,11 @@ class StudentViewModel @JvmOverloads constructor(
         entryYear: Int = 0,
         currentSemester: Int = 0
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val snapshot = captureUndoSnapshot()
             repository.clearToFreshSlate(name, studentId, university, major, entryYear, currentSemester)
-            addNotification("شروع نو و پاکسازی", "سیستم‌عامل تحصیلی با یک بوم پاک و آماده ثبت دروس شما آماده شد ✨")
+            addNotification("شروع نو و پاکسازی", "داده‌های تحصیلی پاکسازی شدند و آماده ورود اطلاعات شما هستند.")
+            snapshot?.let { publishUndo("پاکسازی قابل واگردانی است.", it) }
         }
     }
 
@@ -1382,6 +1390,7 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun signOutUser() {
         viewModelScope.launch {
+            invalidateUndoHistory()
             authManager.signOutUser()
             // Clear onboarding preferences
             preferencesRepository.setOnboardingCompleted(false)
@@ -1397,6 +1406,7 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun deleteUserAccount(onCompleted: () -> Unit) {
         viewModelScope.launch {
+            invalidateUndoHistory()
             val result = authManager.deleteUserAccount()
             if (result.isSuccess) {
                 repository.clearAllUserData()
