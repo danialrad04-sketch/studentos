@@ -241,7 +241,7 @@ fun CourseWorkspaceDialog(
                 // Course Header Bento Card with dynamic gradient
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(22.dp),
+                    shape = StudentShapeTokens.Card,
                     colors = CardDefaults.cardColors(
                         containerColor = courseColor.copy(alpha = 0.08f)
                     ),
@@ -270,7 +270,7 @@ fun CourseWorkspaceDialog(
                                 )
                             }
                             Surface(
-                                shape = RoundedCornerShape(10.dp),
+                                shape = StudentShapeTokens.Compact,
                                 color = courseColor.copy(alpha = 0.2f),
                                 border = androidx.compose.foundation.BorderStroke(1.dp, courseColor.copy(alpha = 0.4f))
                             ) {
@@ -404,7 +404,7 @@ fun CourseWorkspaceDialog(
                                 selectedContainerColor = courseColor.copy(alpha = 0.18f),
                                 selectedLabelColor = courseColor
                             ),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = StudentShapeTokens.Compact
                         )
                     }
                 }
@@ -419,7 +419,7 @@ fun CourseWorkspaceDialog(
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(18.dp),
+                        shape = StudentShapeTokens.Card,
                         colors = CardDefaults.cardColors(
                             containerColor = when {
                                 isCritical -> MaterialTheme.studentColors.attendanceCritical.copy(alpha = 0.08f)
@@ -641,7 +641,7 @@ fun CourseWorkspaceDialog(
 
                             Surface(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(14.dp),
+                                shape = StudentShapeTokens.Compact,
                                 color = if (isPassing) MaterialTheme.studentColors.passedUnitBadge.copy(alpha = 0.12f) else MaterialTheme.studentColors.attendanceCritical.copy(alpha = 0.12f),
                                 border = androidx.compose.foundation.BorderStroke(
                                     1.dp,
