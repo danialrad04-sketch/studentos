@@ -81,6 +81,12 @@ Existing parsing/date systems include RegistrationTextParser and DateTimeNormali
 - Backend CI performs JavaScript syntax verification.
 - Release workflow supports signed APK/AAB publication.
 
+## Data-integrity hardening completed
+- Quick Setup no longer synthesizes historical passed-course attempts, class schedules, professor names, exam dates or grades.
+- Saving a new course no longer creates a zero-valued grade that could be mistaken for a real failing grade.
+- Saving a course without provided sessions no longer creates a default 08:00–10:00 session.
+- Backend sync course pulls no longer clear unrelated attendance/grade/exam/task data.
+
 ## Remaining gaps
 
 ### Phase 1 — Design system adoption
