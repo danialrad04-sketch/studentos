@@ -4,14 +4,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
 import androidx.compose.ui.unit.dp
 
-/**
- * Modern, student-friendly card and component shapes for Student OS.
- * Features soft, tactile rounded corners consistent with modern Bento design.
- */
+/** Material 3 shape scale for the Academic Premium visual system. */
 val AppShapes = Shapes(
-    extraSmall = RoundedCornerShape(6.dp),
-    small = RoundedCornerShape(10.dp),
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
     medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(26.dp),
-    extraLarge = RoundedCornerShape(38.dp)
+    large = RoundedCornerShape(20.dp),
+    extraLarge = RoundedCornerShape(24.dp)
 )
