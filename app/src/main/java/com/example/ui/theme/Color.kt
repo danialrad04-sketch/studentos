@@ -3,6 +3,13 @@ package com.example.ui.theme
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
+// Academic Premium Brand Colors — Source of truth for product identity
+val AcademicNavy = Color(0xFF0F3B4D)
+val AcademicNavyDark = Color(0xFF163F4D)
+val AcademicOlive = Color(0xFF6B705C)
+val AcademicOliveLight = Color(0xFF8A9070)
+val AcademicOliveContainer = Color(0xFFE9ECE0)
+
 // ======================================================================
 // 1. STUDENT OS DARK VELVET & DEEP SPACE BACKGROUND PALETTE
 // ======================================================================
