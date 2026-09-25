@@ -203,8 +203,9 @@ object AcademicGamificationEngine {
             currentXp = currentLevelProgressXp,
             nextLevelXp = nextLevelTargetXp,
             levelTitle = levelTitle,
-            studyStreakDays = 4, // 4-day continuous academic streak
-            bestStreakDays = 12,
+            // Daily streak persistence is not modeled yet; do not fabricate a streak.
+            studyStreakDays = 0,
+            bestStreakDays = 0,
             focusHoursTotal = focusHours,
             completedTasksCount = completedTasks,
             perfectAttendanceCount = zeroAbsenceCourses,
