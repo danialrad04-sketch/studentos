@@ -108,7 +108,7 @@ Implemented on 2026-09-26:
 - Google sign-in in the guest account path is fail-safe
 
 ## Phase 7 — Offline / Sync
-Status: **Implemented in code; integration gate remains**
+Status: **Implemented and CI integration-verified**
 
 Verified:
 - Room local persistence
@@ -121,12 +121,12 @@ Verified:
 - local snapshot recovery
 
 Release blockers:
-1. Real backend integration test against a disposable PostgreSQL environment.
-2. Offline -> online -> conflict -> recovery scenario on a real/emulated app.
-3. Verification that guest-local data transitions safely when a user later authenticates.
+1. Real backend integration test against a disposable PostgreSQL environment — **verified in CI**.
+2. Offline -> online -> conflict -> recovery scenario on a real/emulated app — **device scenario remains**.
+3. Verification that guest-local data transitions safely when a user later authenticates — **LWW transition path hardened; device scenario remains**.
 
 ## Phase 8 — Quality
-Status: **Partially complete**
+Status: **CI gates complete; device/store verification remains**
 
 Already present:
 - broad JVM unit-test suite
@@ -144,11 +144,11 @@ Already present:
 Remaining:
 1. Real-device accessibility verification (TalkBack, dynamic font, hardware navigation).
 2. Performance measurements against actual representative devices.
-3. Backend route integration tests for auth, sync, entitlement and deletion.
-4. Expanded critical UI regression coverage for auth/guest/onboarding flows.
+3. Backend route integration tests for auth/sync lifecycle — **verified**; entitlement/deletion routes remain production-device/environment verification items.
+4. Expanded critical UI regression coverage for auth/guest/onboarding flows — **Guest path covered; broader UI matrix remains**.
 
 ## Phase 9 — Release
-Status: **NOT RELEASED / INTENTIONALLY BLOCKED**
+Status: **NOT RELEASED / INTENTIONALLY BLOCKED — artifact validation passed**
 
 The repository contains release/signing workflows, but no production release is authorized by this audit.
 
