@@ -1,6 +1,6 @@
 # Student OS — Phase 0 Repository Audit
 
-Branch audited: `feat/academic-premium-design-system`
+Branch audited: `main`
 
 ## Current-state map
 
@@ -126,7 +126,7 @@ Existing parsing/date systems include RegistrationTextParser and DateTimeNormali
 - One-step local Undo is implemented for course deletion, Reset, Demo and Clean Slate; device UX verification remains.
 
 Still required:
-- Final CI run on the release commit
+- Final CI run on the current guest-access commit
 - Device/emulator UX regression
 - TalkBack
 - Dynamic font scaling
