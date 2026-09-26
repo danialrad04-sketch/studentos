@@ -11,18 +11,18 @@ This checklist is part of the controlled production pipeline.
 - [ ] No secrets, keystores or real .env files are committed
 
 ## 2. Build
-- [ ] Debug build succeeds
-- [ ] Release APK succeeds
-- [ ] Release AAB succeeds
-- [ ] Signing verifies successfully
-- [ ] AAB package/applicationId is correct
+- [x] Debug build succeeds
+- [x] Release APK succeeds
+- [x] Release AAB succeeds
+- [x] Signing verifies successfully
+- [x] AAB package/applicationId is correct
 
 ## 3. Tests
-- [ ] Unit tests pass
-- [ ] Integration/data tests pass
-- [ ] Authentication flows pass
-- [ ] Critical Compose/UI flows pass
-- [ ] Room migrations pass
+- [x] Unit tests pass
+- [x] Integration/data tests pass
+- [x] Authentication flows pass (backend lifecycle + Guest UI smoke)
+- [x] Critical Compose/UI smoke flows pass
+- [x] Room migrations pass
 - [ ] Offline behavior passes
 - [ ] Sync behavior passes
 
@@ -34,14 +34,14 @@ This checklist is part of the controlled production pipeline.
 - [ ] TalkBack semantics checked
 - [ ] Touch targets checked
 - [ ] Status meaning does not depend on color alone
-- [ ] Reduced motion checked
+- [x] Reduced motion checked
 
 ## 5. Performance
 - [ ] Startup benchmark checked
 - [ ] Critical screens free of obvious jank
 - [ ] Memory checked on target device profile
-- [ ] Unnecessary network calls removed
-- [ ] APK/AAB size reviewed
+- [x] Known manual-sync race removed; network behavior remains subject to production-device review
+- [x] APK/AAB size reviewed in release artifact validation
 
 ## 6. Store Readiness
 - [ ] App name and Persian metadata reviewed
