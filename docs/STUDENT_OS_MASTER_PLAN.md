@@ -1,8 +1,8 @@
 # Student OS — Master Product, UX, Architecture & Release Plan
 
-> **Status:** Planning / Awaiting implementation approval  
+> **Status:** Approved / Implementation & Audit in Progress  
 > **Code changes:** None as part of this plan  
-> **Rule:** No implementation work begins until the owner explicitly approves this plan.  
+> **Rule:** Implementation follows explicit owner approval and must preserve the Extend > Replace principle.  
 > **Scope:** Product vision, UX/UI, architecture direction, AI behavior, data, offline/sync, accessibility, performance, testing and release engineering.
 
 ---
@@ -11,7 +11,7 @@
 
 This document is the source of truth for the next Student OS evolution.
 
-Until explicit approval is given:
+Before explicit approval was given:
 
 - Do not modify production/source code.
 - Do not delete or rename existing files.
@@ -1150,4 +1150,4 @@ The audit must first report:
 - What requires migration
 - Recommended implementation order
 
-Only after that audit is reviewed should implementation begin.
+The owner has since explicitly approved implementation; Phase 0 remains the source-of-truth audit baseline.
