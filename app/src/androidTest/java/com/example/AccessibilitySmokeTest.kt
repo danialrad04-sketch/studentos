@@ -10,7 +10,7 @@ import com.example.ui.components.ActionableEmptyState
 import com.example.ui.theme.MyApplicationTheme
 import org.junit.Rule
 import org.junit.Test
-import kotlin.test.assertTrue
+import org.junit.Assert.assertTrue
 
 class AccessibilitySmokeTest {
     @get:Rule
