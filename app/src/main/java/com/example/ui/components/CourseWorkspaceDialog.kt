@@ -46,6 +46,10 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -177,6 +181,42 @@ fun CourseWorkspaceDialog(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = StudentShapeTokens.Card,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+                ) {
+                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("مرکز درس", style = MaterialTheme.typography.labelMedium, color = courseColor, fontWeight = FontWeight.Bold)
+                                Text(course.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                            }
+                            Surface(shape = CircleShape, color = courseColor.copy(alpha = 0.12f)) {
+                                Icon(Icons.Default.MenuBook, contentDescription = null, tint = courseColor, modifier = Modifier.padding(10.dp).size(22.dp))
+                            }
+                        }
+                        val openTasks = tasks.count { !it.isCompleted }
+                        val nextTask = tasks.filter { !it.isCompleted && it.dueDate.isNotBlank() }.minByOrNull { it.dueDate }
+                        val scheduleText = sessions.firstOrNull()?.let { "${WEEKDAY_NAMES.getOrNull(it.day) ?: "روز"} · ${it.start}–${it.end}" }
+                        Text(
+                            text = when {
+                                nextTask != null -> "گام بعدی: ${nextTask.title} · موعد ${nextTask.dueDate}"
+                                exam != null -> "گام بعدی: مرور برای امتحان ${exam.solarDate}"
+                                scheduleText != null -> "جلسه بعدی: $scheduleText"
+                                else -> "برای این درس هنوز گام بعدی ثبت نشده است."
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            WorkspaceActionChip(Icons.Default.Assignment, "تکالیف $openTasks", activeSection == "TASKS", courseColor) { activeSection = "TASKS" }
+                            WorkspaceActionChip(Icons.Default.Event, "جلسات ${sessions.size}", activeSection == "OVERVIEW", courseColor) { activeSection = "OVERVIEW" }
+                            WorkspaceActionChip(Icons.Default.PlayCircleOutline, "شروع تمرکز", false, courseColor, onStartFocus)
+                        }
+                    }
+                }
+
                 // Top Bar with Color Indicator, Edit, Delete, and Close
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1019,5 +1059,21 @@ fun CourseWorkspaceDialog(
             },
             shape = RoundedCornerShape(20.dp)
         )
+    }
+}
+
+@Composable
+private fun WorkspaceActionChip(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, selected: Boolean, color: Color, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.weight(1f).height(42.dp).clickable(onClick = onClick),
+        shape = RoundedCornerShape(12.dp),
+        color = if (selected) color.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, if (selected) color.copy(alpha = 0.45f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.22f))
+    ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(17.dp))
+            Spacer(Modifier.width(5.dp))
+            Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+        }
     }
 }
