@@ -43,7 +43,15 @@ android {
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
-    debug {}
+    debug {
+      // CI can opt into the fixed Firebase release certificate for Google-auth testing.
+      // Local debug builds remain unchanged unless the signing environment is provided.
+      if (!System.getenv("KEYSTORE_PATH").isNullOrBlank() &&
+          !System.getenv("STORE_PASSWORD").isNullOrBlank() &&
+          !System.getenv("KEY_PASSWORD").isNullOrBlank()) {
+        signingConfig = signingConfigs.getByName("release")
+      }
+    }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
