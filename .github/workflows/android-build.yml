@@ -31,7 +31,21 @@ jobs:
       - name: Run Android lint
         run: ./gradlew lintDebug --stacktrace
 
-      - name: Build debug APK
+      - name: Decode fixed Student OS signing key
+        shell: bash
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$RELEASE_KEYSTORE_BASE64"
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$GITHUB_WORKSPACE/studentos-release.jks"
+
+      - name: Build Firebase-compatible debug APK
+        shell: bash
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/studentos-release.jks
+          STORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload debug APK
