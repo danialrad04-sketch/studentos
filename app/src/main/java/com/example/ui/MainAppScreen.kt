@@ -3,6 +3,7 @@ package com.example.ui
 import androidx.compose.foundation.layout.fillMaxHeight
 
 import android.app.Activity
+import android.util.Log
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -314,7 +315,8 @@ fun MainAppScreen(
                             onResult(false, "امکان باز کردن ورود گوگل در این محیط وجود ندارد.")
                         } else {
                             coroutineScope.launch {
-                                com.example.ui.components.GoogleSignInManager.getIdToken(activity)
+                                try {
+                                    com.example.ui.components.GoogleSignInManager.getIdToken(activity)
                                     .fold(
                                         onSuccess = { idToken ->
                                             studentViewModel.signInWithGoogle(idToken, onResult)
@@ -340,6 +342,11 @@ fun MainAppScreen(
                                             onResult(false, friendly)
                                         }
                                     )
+                                } catch (t: Throwable) {
+                                    Log.e("MainAppScreen", "Google sign-in crashed unexpectedly", t)
+                                    isLoading = false
+                                    onResult(false, "ورود با Google با خطای غیرمنتظره مواجه شد؛ لطفاً دوباره تلاش کنید.")
+                                }
                             }
                         }
                     }
