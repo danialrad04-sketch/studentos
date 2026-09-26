@@ -196,7 +196,7 @@ router.get('/entitlement', requireAuth, async (req, res) => {
 
     const capabilities = {
       maxDailyAiQuota: tier === 'FREE' ? 5 : tier === 'PRO' ? 50 : 999,
-      allowsCloudSync: true,
+      allowsCloudSync: tier !== 'FREE',
       allowsPdfExport: tier !== 'FREE',
       gpaPredictorUnlocked: tier !== 'FREE',
     };
