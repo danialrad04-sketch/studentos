@@ -108,17 +108,7 @@ jobs:
           JWT_ACCESS_SECRET: studentos-ci-integration-secret
         run: |
           node src/migrate.js
-          nohup node src/server.js > /tmp/studentos-backend.log 2>&1 &
-          echo $! > /tmp/studentos-backend.pid
-          for i in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:31337/health; then
-              break
-            fi
-            sleep 1
-          done
-          curl --fail --silent http://127.0.0.1:31337/health
-          BACKEND_EXTERNAL=1 node --test test/integration.test.js
-          kill "$(cat /tmp/studentos-backend.pid)" || true
+          node --test test/integration.test.js
 
   instrumented-smoke:
     runs-on: ubuntu-latest
