@@ -72,9 +72,35 @@ jobs:
           esac
           test "$VERSION_CODE" -gt 0
 
-      - name: Run release quality gates
+      - name: Run Android unit and lint gates
         run: |
-          ./gradlew testDebugUnitTest lintDebug lintRelease             -PVERSION_CODE=${{ inputs.version_code }}             -PVERSION_NAME=${{ inputs.version_name }}             --stacktrace
+          ./gradlew testDebugUnitTest lintDebug lintRelease \
+            -PVERSION_CODE=${{ inputs.version_code }} \
+            -PVERSION_NAME=${{ inputs.version_name }} \
+            --stacktrace
+
+      - name: Run backend tests
+        working-directory: backend
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          npm test
+
+      - name: Run Android instrumentation smoke gate
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7_pro
+          avd-name: studentos-release-api35
+          force-avd-creation: true
+          emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
+          disable-animations: true
+          script: |
+            ./gradlew connectedDebugAndroidTest \
+              -PVERSION_CODE=${{ inputs.version_code }} \
+              -PVERSION_NAME=${{ inputs.version_name }} \
+              --stacktrace
 
       - name: Build signed APK and AAB
         env:
