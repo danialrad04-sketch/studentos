@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -1063,7 +1064,7 @@ fun CourseWorkspaceDialog(
 }
 
 @Composable
-private fun WorkspaceActionChip(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, selected: Boolean, color: Color, onClick: () -> Unit) {
+private fun RowScope.WorkspaceActionChip(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, selected: Boolean, color: Color, onClick: () -> Unit) {
     Surface(
         modifier = Modifier.weight(1f).height(42.dp).clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
