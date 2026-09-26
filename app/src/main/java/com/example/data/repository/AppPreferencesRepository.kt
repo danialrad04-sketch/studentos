@@ -58,6 +58,9 @@ class AppPreferencesRepository(context: Context) {
     private val _customGeminiApiKey = MutableStateFlow(readStoredCustomGeminiApiKey())
     val customGeminiApiKey: StateFlow<String> = _customGeminiApiKey.asStateFlow()
 
+    private val _guestModeEnabled = MutableStateFlow(readGuestModeEnabled())
+    val guestModeEnabled: StateFlow<Boolean> = _guestModeEnabled.asStateFlow()
+
     private fun readStoredThemeMode(): ThemeMode {
         val stored = prefs.getString(KEY_THEME_MODE, ThemeMode.SYSTEM.name) ?: ThemeMode.SYSTEM.name
         return try {
@@ -97,6 +100,15 @@ class AppPreferencesRepository(context: Context) {
 
     private fun readStoredCustomGeminiApiKey(): String {
         return prefs.getString(KEY_CUSTOM_GEMINI_API_KEY, "") ?: ""
+    }
+
+    private fun readGuestModeEnabled(): Boolean {
+        return prefs.getBoolean(KEY_GUEST_MODE_ENABLED, false)
+    }
+
+    fun setGuestModeEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_GUEST_MODE_ENABLED, enabled).commit()
+        _guestModeEnabled.value = enabled
     }
 
     fun setCustomGeminiApiKey(key: String) {
@@ -209,6 +221,7 @@ class AppPreferencesRepository(context: Context) {
         private const val KEY_AUTO_BACKUP_ENABLED = "key_auto_backup_enabled"
         private const val KEY_DATA_LOSS_WARNING_DISMISSED = "key_data_loss_warning_dismissed"
         private const val KEY_CUSTOM_GEMINI_API_KEY = "key_custom_gemini_api_key"
+        private const val KEY_GUEST_MODE_ENABLED = "key_guest_mode_enabled_v1"
 
         private const val KEY_IDENTITY_MIGRATED_TO_ROOM = "key_identity_migrated_to_room_v1"
         private const val KEY_LEGACY_STUDENT_NAME = "key_student_name"
