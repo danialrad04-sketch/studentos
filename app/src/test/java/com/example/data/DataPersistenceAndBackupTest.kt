@@ -241,7 +241,7 @@ class DataPersistenceAndBackupTest {
     }
 
     @Test
-    fun testFreshSlateDefaultsDoNotCreateSyntheticIdentity() = runBlocking {
+    fun testFreshSlateDefaultsDoNotCreateSyntheticIdentity() = runBlocking<Unit> {
         repository.clearToFreshSlate()
 
         val profile = db.studentDao().getProfileSync()
