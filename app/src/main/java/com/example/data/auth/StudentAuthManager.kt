@@ -17,6 +17,7 @@ import com.example.domain.model.UserAccount
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.CoroutineScope
@@ -424,7 +425,21 @@ class StudentAuthManager(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Google sign in error: ${e.message}", e)
             com.example.util.CrashLogger.recordException(e)
+            val firebaseCode = (e as? FirebaseAuthException)?.errorCode.orEmpty()
+            Log.e(TAG, "Google Firebase auth errorCode=${firebaseCode}")
             val message = when {
+                firebaseCode.contains("OPERATION_NOT_ALLOWED", ignoreCase = true) ->
+                    "ورود با Google در Firebase فعال نیست. Sign-in method > Google را در Firebase فعال کنید."
+                firebaseCode.contains("INVALID_CREDENTIAL", ignoreCase = true) ->
+                    "Google Token توسط Firebase معتبر شناخته نشد؛ SHA و Web Client ID این APK را بررسی کنید."
+                firebaseCode.contains("ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL", ignoreCase = true) ->
+                    "این ایمیل قبلاً با روش ورود دیگری ثبت شده است."
+                firebaseCode.contains("NETWORK_REQUEST_FAILED", ignoreCase = true) ->
+                    "اتصال به Firebase برقرار نشد. اینترنت و Google Play Services را بررسی کنید."
+                firebaseCode.contains("INVALID_API_KEY", ignoreCase = true) ->
+                    "Firebase API Key این نسخه معتبر نیست."
+                firebaseCode.contains("APP_NOT_AUTHORIZED", ignoreCase = true) ->
+                    "این APK برای پروژه Firebase مجاز نیست؛ applicationId و SHA را بررسی کنید."
                 e.message?.contains("invalid-credential", ignoreCase = true) == true ->
                     "اعتبار Google برای این برنامه معتبر نیست. SHA-1 و Client ID را بررسی کنید."
                 e.message?.contains("credential", ignoreCase = true) == true ->
