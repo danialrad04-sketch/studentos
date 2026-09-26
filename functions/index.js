@@ -50,18 +50,11 @@ exports.validateAndApplyPromoCode = functions.https.onCall(async (data, context)
       expiresAt = promoData.expiresAt;
     }
   } else {
-    const validCodes = {
-      STUDENT2026: "PRO",
-      DANESHJOO: "PRO",
-      AUT_PRO: "PRO",
-      SHARIF_AI: "PRO",
-      CAMPUS_ULTRA: "ULTRA",
-      ELITE2026: "ULTRA"
-    };
-    targetTier = validCodes[rawCode];
-    if (!targetTier) {
-      throw new functions.https.HttpsError("not-found", "کد تخفیف در سامانه یافت نشد.");
-    }
+    // Promo codes are data, not source code. Unknown codes fail closed.
+    throw new functions.https.HttpsError(
+      "not-found",
+      "کد تخفیف در سامانه یافت نشد."
+    );
   }
 
   if (!allowedTiers.has(targetTier)) {
