@@ -2,7 +2,6 @@ package com.example.ui.theme
 
 import android.provider.Settings
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
@@ -16,7 +15,6 @@ fun shouldReduceMotion(animatorDurationScale: Float): Boolean =
     animatorDurationScale <= 0f
 
 @Composable
-@ReadOnlyComposable
 fun rememberReducedMotion(): Boolean {
     val context = LocalContext.current
     return remember {
