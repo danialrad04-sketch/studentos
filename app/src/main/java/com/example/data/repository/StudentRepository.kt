@@ -605,6 +605,11 @@ class StudentRepository(
         currentGpa: Double,
         selectedCourses: List<CurriculumCourseEntity>
     ) = withContext(Dispatchers.IO) {
+        require(university.isNotBlank()) { "دانشگاه باید مشخص شده باشد." }
+        require(major.isNotBlank()) { "رشته باید مشخص شده باشد." }
+        require(entryYear > 0) { "سال ورود باید مشخص شده باشد." }
+        require(currentSemester > 0) { "ترم جاری باید مشخص شده باشد." }
+
         val totalActiveUnits = selectedCourses.sumOf { it.units }
         val activeSemesterId = "sem_$currentSemester"
         val calculatedAcademicYear = entryYear + ((currentSemester - 1) / 2)
@@ -659,14 +664,15 @@ class StudentRepository(
             // 4. Passed credits/GPA remain user-declared summary values until real attempts are entered.
 
             // 5. Populate active enrolled courses for current semester.
-            // 5. Populate active enrolled courses for current semester
-            if (selectedCourses.isNotEmpty()) {
-                dao.clearCourses()
-                dao.clearCourseSessions()
-                dao.clearAttendance()
-                dao.clearGrades()
-                dao.clearExams()
+            // Always replace the current local course set; an empty selection means
+            // an intentionally empty semester, not "keep whatever was there before".
+            dao.clearCourses()
+            dao.clearCourseSessions()
+            dao.clearAttendance()
+            dao.clearGrades()
+            dao.clearExams()
 
+            if (selectedCourses.isNotEmpty()) {
                 val colors = listOf("#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#8B5CF6", "#0EA5E9", "#6366F1")
                 selectedCourses.forEachIndexed { index, cc ->
                     val courseId = UUID.randomUUID().toString()
@@ -704,8 +710,8 @@ class StudentRepository(
                 performSetup()
             }
         } catch (e: Exception) {
-            android.util.Log.e("StudentRepository", "Error during completeQuickAcademicSetup withTransaction, fallback executing sequentially", e)
-            performSetup()
+            android.util.Log.e("StudentRepository", "Error during completeQuickAcademicSetup transaction", e)
+            throw e
         }
     }
 
