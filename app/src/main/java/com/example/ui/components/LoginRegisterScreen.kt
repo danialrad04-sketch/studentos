@@ -84,6 +84,7 @@ fun LoginRegisterScreen(
     onSignUpFirebase: (String, String, String, (Boolean, String) -> Unit) -> Unit = { _, _, _, _ -> },
     onForgotPassword: (String) -> Unit,
     onGoogleSignIn: ((Boolean, String) -> Unit) -> Unit,
+    onContinueAsGuest: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -543,6 +544,43 @@ fun LoginRegisterScreen(
                         Box(modifier = Modifier.weight(1f).height(1.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)))
                     }
                     
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = {
+                            if (isLoading) return@OutlinedButton
+                            errorMessage = null
+                            onContinueAsGuest()
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        border = MaterialTheme.cardBorderStroke,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("continue_as_guest_button")
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ExitToApp,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "فعلاً بدون ورود ادامه می‌دهم",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp
+                                )
+                            )
+                        }
+                    }
+
                     androidx.compose.material3.OutlinedButton(
                         onClick = {
                             if (isLoading) return@OutlinedButton
