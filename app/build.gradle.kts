@@ -19,7 +19,7 @@ android {
     targetSdk = 36
     // Release version is explicit and overridable in CI with -PVERSION_CODE/-PVERSION_NAME.
     // Default is the next monotonically increasing release after v1.0.2-production.
-    versionCode = providers.gradleProperty("VERSION_CODE").orNull?.toIntOrNull() ?: 2
+    versionCode = providers.gradleProperty("VERSION_CODE").orNull?.toIntOrNull() ?: 3
     versionName = providers.gradleProperty("VERSION_NAME").orNull ?: "1.0.3"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
