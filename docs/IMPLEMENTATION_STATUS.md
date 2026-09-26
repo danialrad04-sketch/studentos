@@ -1,6 +1,6 @@
 # Student OS — Master Plan Implementation Status
 
-Branch: `feat/academic-premium-design-system`
+Branch: `main`
 
 ## Completed in this phase
 - Phase 0 audit report is now captured in `docs/PHASE_0_AUDIT.md`
@@ -44,6 +44,8 @@ No phase is considered release-complete until:
 
 - Academic Premium brand system is applied across the primary academic and account surfaces.
 - Offline/sync status is visible in the account data layer.
+- Temporary guest access is available from the authentication gate; it bypasses login for the current app session while keeping authenticated flows intact.
+- Android reduced-motion handling is implemented for the primary animated navigation surface and covered by unit tests.
 - Logout and local account-data purge no longer inject demo/default student records.
 - State-changing Copilot actions require explicit confirmation.
 - Restore actions require explicit confirmation before replacing local data.
