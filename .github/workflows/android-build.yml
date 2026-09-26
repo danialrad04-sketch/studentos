@@ -56,6 +56,20 @@ jobs:
 
   backend-quality:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: studentos
+          POSTGRES_PASSWORD: studentos
+          POSTGRES_DB: studentos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U studentos -d studentos_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,6 +93,22 @@ jobs:
       - name: Run backend unit tests
         working-directory: backend
         run: npm test
+
+      - name: Run backend integration tests against disposable PostgreSQL
+        working-directory: backend
+        env:
+          RUN_BACKEND_INTEGRATION: "1"
+          PORT: "31337"
+          BACKEND_TEST_URL: http://127.0.0.1:31337
+          DB_HOST: 127.0.0.1
+          DB_PORT: "5432"
+          DB_USER: studentos
+          DB_PASSWORD: studentos
+          DB_NAME: studentos_test
+          JWT_ACCESS_SECRET: studentos-ci-integration-secret
+        run: |
+          node src/migrate.js
+          node --test test/integration.test.js
 
   instrumented-smoke:
     runs-on: ubuntu-latest
