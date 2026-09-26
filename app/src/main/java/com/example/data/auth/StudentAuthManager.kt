@@ -318,9 +318,11 @@ class StudentAuthManager(private val context: Context) {
                     )
                     _currentUser.value = userAccount
 
-                    // Trigger periodic sync and pull latest cloud data
+                    // Guest/local data must not be blindly overwritten on login.
+                    // Start a bidirectional LWW sync so each data type is reconciled
+                    // against the server timestamp before any snapshot is applied.
                     BackendSyncWorker.schedulePeriodicSync(context)
-                    BackendSyncWorker.triggerImmediateSync(context, pullOnly = true)
+                    BackendSyncWorker.triggerImmediateSync(context, pullOnly = false)
 
                     return@withContext AuthResult.Success(userAccount, "ورود به سرور اختصاصی دانشجو OS با موفقیت انجام شد 🌱")
                 }
