@@ -4,16 +4,19 @@ import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class GuestModePreferenceTest {
 
     @Test
     fun guest_mode_persists_across_repository_instances() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        val prefs = context.getSharedPreferences("student_os_preferences", 0)
-        prefs.edit().clear().commit()
-
         val first = AppPreferencesRepository(context)
+        first.setGuestModeEnabled(false)
         assertFalse(first.guestModeEnabled.value)
 
         first.setGuestModeEnabled(true)
