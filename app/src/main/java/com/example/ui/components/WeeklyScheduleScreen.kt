@@ -696,8 +696,58 @@ fun CourseCard(
                 }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Time slot capsule with Plus Jakarta Sans and LTR protection
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // Time slot is the primary scheduling signal.
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = accentColor.copy(alpha = 0.12f),
+                    border = androidx.compose.foundation.BorderStroke(0.8.dp, accentColor.copy(alpha = 0.35f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Schedule,
+                            contentDescription = null,
+                            tint = accentColor,
+                            modifier = Modifier.padding(end = 4.dp).size(13.dp)
+                        )
+                        Text(
+                            text = "\u200E$displayStart - $displayEnd\u200E",
+                            style = NumericDisplayStat,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Black,
+                            color = accentColor
+                        )
+                    }
+                }
+
+                if (onOpenWorkspace != null) {
+                    Surface(
+                        modifier = Modifier
+                            .height(34.dp)
+                            .clickable { onOpenWorkspace() },
+                        shape = RoundedCornerShape(10.dp),
+                        color = accentColor,
+                        contentColor = Color.White
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.OpenInFull, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(Modifier.width(5.dp))
+                            Text("کارپوشه درس", fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                // Secondary actions stay behind the overflow menu.
+                Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = accentColor.copy(alpha = 0.12f),
