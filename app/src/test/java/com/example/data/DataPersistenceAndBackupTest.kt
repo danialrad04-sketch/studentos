@@ -242,6 +242,48 @@ class DataPersistenceAndBackupTest {
     }
 
     @Test
+    fun testQuickSetupWithEmptySelectionClearsPreviousCourseData() = runBlocking {
+        val existingSemester = SemesterEntity(
+            id = "sem_existing",
+            title = "ترم قبلی",
+            year = 1404,
+            academicYear = 1404,
+            semesterNumber = 1,
+            termNumber = 1,
+            isCurrent = true,
+            isArchived = false,
+            totalUnits = 3
+        )
+        db.studentDao().insertSemester(existingSemester)
+        db.studentDao().insertCourse(
+            CourseEntity(
+                id = "legacy-course",
+                name = "درس قبلی",
+                units = 3,
+                semesterId = existingSemester.id
+            )
+        )
+
+        repository.completeQuickAcademicSetup(
+            name = "دانشجو",
+            studentId = "",
+            university = "دانشگاه صنعتی امیرکبیر",
+            major = "مهندسی شیمی",
+            entryYear = 1404,
+            currentSemester = 2,
+            passedCredits = 0,
+            currentGpa = 0.0,
+            selectedCourses = emptyList()
+        )
+
+        assertTrue(db.studentDao().getAllCoursesIncludingArchivedSync().isEmpty())
+        assertTrue(db.studentDao().getAllSessionsSync().isEmpty())
+        assertTrue(db.studentDao().getAllAttendanceSync().isEmpty())
+        assertTrue(db.studentDao().getAllGradesSync().isEmpty())
+        assertTrue(db.studentDao().getAllExamsSync().isEmpty())
+    }
+
+    @Test
     fun testFreshSlateDefaultsDoNotCreateSyntheticIdentity() = runBlocking<Unit> {
         repository.clearToFreshSlate()
 
