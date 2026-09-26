@@ -342,19 +342,21 @@ class DataPersistenceAndBackupTest {
             recommendedSemester = 1
         )
 
-        repository.completeQuickAcademicSetup(
-            name = "دانشجو",
-            university = "",
-            major = "",
-            entryYear = 1404,
-            currentSemester = 1,
-            passedCredits = 0,
-            currentGpa = 0.0,
-            selectedCourses = listOf(curriculumCourse)
-        )
+        assertFailsWith<IllegalArgumentException> {
+            repository.completeQuickAcademicSetup(
+                name = "دانشجو",
+                university = "",
+                major = "",
+                entryYear = 1404,
+                currentSemester = 1,
+                passedCredits = 0,
+                currentGpa = 0.0,
+                selectedCourses = listOf(curriculumCourse)
+            )
+        }
 
-        val courses = db.studentDao().getAllCoursesIncludingArchivedSync()
-        assertEquals(1, courses.size)
+        // Invalid setup input must fail closed and must not fabricate any academic records.
+        assertEquals(0, db.studentDao().getAllCoursesIncludingArchivedSync().size)
         assertEquals(0, db.studentDao().getAllSessionsSync().size)
         assertEquals(0, db.studentDao().getAllGradesSync().size)
         assertEquals(0, db.studentDao().getAllExamsSync().size)
