@@ -17,10 +17,11 @@ on:
         default: "main"
       version_code:
         description: "Monotonic Android versionCode; verify against the latest published artifact."
-        required: true
+        required: false
+        default: "3"
       version_name:
         description: "Android versionName; must match the release tag without the leading v."
-        required: true
+        required: false
         default: "1.0.3"
 
 permissions:
@@ -37,7 +38,7 @@ jobs:
       - name: Checkout release ref
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 0
 
       - name: Set up JDK 17
@@ -60,10 +61,17 @@ jobs:
       - name: Validate release version inputs
         shell: bash
         env:
-          TAG: ${{ inputs.tag }}
-          VERSION_CODE: ${{ inputs.version_code }}
-          VERSION_NAME: ${{ inputs.version_name }}
+          TAG_INPUT: ${{ inputs.tag }}
+          REF_NAME: ${{ github.ref_name }}
+          VERSION_CODE: ${{ inputs.version_code || '3' }}
+          VERSION_NAME: ${{ inputs.version_name || '1.0.3' }}
         run: |
+          TAG="$TAG_INPUT"
+          if [ -z "$TAG" ]; then
+            TAG="$REF_NAME"
+            TAG="${TAG#production-release/}"
+          fi
+          test -n "$TAG"
           test -n "$VERSION_CODE"
           test -n "$VERSION_NAME"
           test "$VERSION_NAME" = "$(printf '%s' "$TAG" | sed 's/^v//')"
@@ -127,7 +135,17 @@ jobs:
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.tag }}
-          TITLE: ${{ inputs.title }}
+          TAG_INPUT: ${{ inputs.tag }}
+          REF_NAME: ${{ github.ref_name }}
+          TITLE_INPUT: ${{ inputs.title }}
         run: |
+          TAG="$TAG_INPUT"
+          if [ -z "$TAG" ]; then
+            TAG="$REF_NAME"
+            TAG="${TAG#production-release/}"
+          fi
+          TITLE="$TITLE_INPUT"
+          if [ -z "$TITLE" ]; then
+            TITLE="Student OS $TAG"
+          fi
           gh release create "$TAG"             app/build/outputs/apk/release/app-release.apk             app/build/outputs/bundle/release/app-release.aab             --title "$TITLE"             --generate-notes
