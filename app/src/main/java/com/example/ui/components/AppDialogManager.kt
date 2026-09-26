@@ -113,8 +113,7 @@ fun AppDialogManager(
         }
 
         is AppDialogState.Auth -> {
-            if (!userAccount.isGuest) {
-                AuthAccountDialog(
+            AuthAccountDialog(
                     userAccount = userAccount,
                     onSignInEmail = { email, password ->
                         studentViewModel.signInWithBackend(email, password) { ok, msg ->
@@ -168,7 +167,6 @@ fun AppDialogManager(
                     onSyncNow = { studentViewModel.syncWithBackendNow { _, _ -> } },
                     onDismiss = dismiss
                 )
-            }
         }
 
         is AppDialogState.Upgrade -> {
