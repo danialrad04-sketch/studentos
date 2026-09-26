@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.ui.models.AppTab
 import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.theme.rememberReducedMotion
 
 /**
  * Compact navigation shell. Secondary destinations are delegated to the
@@ -46,6 +47,7 @@ fun FloatingIslandNavigationBar(
         Triple(AppTab.COPILOT, AppEmojiType.COPILOT, "کوپایلت")
     )
     val isOtherTab = primaryTabs.none { it.first == selectedTab }
+    val reducedMotion = rememberReducedMotion()
 
     Box(
         modifier = modifier
@@ -70,10 +72,14 @@ fun FloatingIslandNavigationBar(
                     val selected = selectedTab == tab
                     val scale by animateFloatAsState(
                         targetValue = if (selected) 1.06f else 1f,
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessLow
-                        ),
+                        animationSpec = if (reducedMotion) {
+                            androidx.compose.animation.core.snap()
+                        } else {
+                            spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        },
                         label = "tab_spring_$label"
                     )
                     Box(
