@@ -21,7 +21,7 @@
 ## Current verification notes
 - Backend delete route is implemented at `DELETE /api/auth/account` and the Android client calls it for Backend-authenticated accounts.
 - The endpoint has not been live-verified from the production VPS in this audit.
-- Android CI is configured to run unit tests, lint, and debug build; the current PR head has not yet reported a workflow result through the connected GitHub integration.
+- Android CI runs unit tests, lint, debug build, and emulator instrumentation; the latest final-commit run completed successfully.
 
 ## Engineering gates
 - [x] Unit-test gate configured
@@ -35,7 +35,7 @@
 - [ ] Release workflow is triggered manually with an explicitly verified versionCode/versionName pair; automated push-based release is disabled.
 - [x] Server-authoritative subscription/entitlement endpoint defined and consumed; Backend login does not grant Pro implicitly.
 - [ ] Live entitlement/paid-tier administration verified on the deployed backend.
-- [ ] Latest CI run is green on the final commit
+- [x] Latest CI run is green on the final commit (`36222824725` on `e7818ecd4a2e1946396e264070d98a1f81d238c1`)
 - [ ] Release artifact build/signing succeeds
 - [ ] Install/upgrade migration tested
 - [ ] Firebase Auth startup/logout/data purge tested
