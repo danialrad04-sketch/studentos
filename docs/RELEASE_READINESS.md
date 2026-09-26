@@ -55,3 +55,6 @@ No production-release claim is made until the unchecked release gates above are 
 - [x] Backend promo redemption is transactional and server-authoritative.
 
 - [ ] Play Billing purchase verification is not enabled until a real Google Play verification service is configured; the server currently fails closed for unverified purchase tokens.
+
+
+- CI gate policy: Unit tests + Lint + Debug APK + Android emulator smoke + Backend syntax/tests are all mandatory before release.
