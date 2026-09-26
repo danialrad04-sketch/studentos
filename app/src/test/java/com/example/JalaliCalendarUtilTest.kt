@@ -7,6 +7,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class JalaliCalendarUtilTest {
+
     @Test
     fun parses_persian_digits_and_formats_normalized_date() {
         val date = JalaliCalendarUtil.parse("۱۴۰۴/۰۷/۰۳")
