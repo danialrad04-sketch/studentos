@@ -529,26 +529,17 @@ class StudentAuthManager(private val context: Context) {
             return@withContext Result.failure(IllegalStateException("برای تغییر اشتراک ابتدا وارد حساب خود شوید."))
         }
 
-        // No client-side subscription fallback. The server must confirm the entitlement.
+        // A tier upgrade is a paid/server-authoritative operation. This method must
+        // never manufacture an entitlement from a local or synthetic promo code.
         if (safeFirebaseAuth?.currentUser?.uid != current.uid) {
             return@withContext Result.failure(
-                IllegalStateException("ارتقای اشتراک حساب سروری هنوز به endpoint اشتراک متصل نشده است.")
+                IllegalStateException("ارتقای اشتراک حساب سروری تا اتصال سرویس پرداخت تأییدشده در دسترس نیست.")
             )
         }
 
-        val result = FirestoreSyncManager.redeemPromoCode(current.uid, "UPGRADE_${tier.name}")
-        result.onSuccess { effectiveTier ->
-            _currentUser.value = current.copy(
-                subscription = current.subscription.copy(
-                    tier = effectiveTier,
-                    isCloudSyncEnabled = true,
-                    isUnlimitedExportEnabled = true,
-                    isGpaPredictorUnlocked = true,
-                    maxDailyAiQuota = effectiveTier.maxAiQueriesPerDay
-                )
-            )
-        }
-        result
+        Result.failure(
+            IllegalStateException("ارتقای اشتراک فقط پس از تأیید entitlement معتبر از سرور انجام می‌شود.")
+        )
     }
 
     suspend fun signOutUser() = withContext(Dispatchers.IO) {
