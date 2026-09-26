@@ -35,6 +35,7 @@ exports.validateAndApplyPromoCode = functions.https.onCall(async (data, context)
   let targetTier;
   let maxAiQueries;
   let expiresAt = null;
+  let maxRedemptions = 1;
 
   const promoDoc = await promoRef.get();
   if (promoDoc.exists) {
@@ -48,7 +49,17 @@ exports.validateAndApplyPromoCode = functions.https.onCall(async (data, context)
     targetTier = String(promoData.targetTier || "PRO").trim().toUpperCase();
     if (promoData.expiresAt) {
       expiresAt = promoData.expiresAt;
+      const expiresMillis = typeof expiresAt.toMillis === "function"
+        ? expiresAt.toMillis()
+        : new Date(expiresAt).getTime();
+      if (Number.isFinite(expiresMillis) && expiresMillis <= Date.now()) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "این کد تخفیف منقضی شده است."
+        );
+      }
     }
+    maxRedemptions = Math.max(1, Number(promoData.maxRedemptions || 1));
   } else {
     // Promo codes are data, not source code. Unknown codes fail closed.
     throw new functions.https.HttpsError(
@@ -68,6 +79,7 @@ exports.validateAndApplyPromoCode = functions.https.onCall(async (data, context)
   await db.runTransaction(async (transaction) => {
     const userDoc = await transaction.get(userRef);
     const redemptionDoc = await transaction.get(redemptionRef);
+    const promoStateDoc = await transaction.get(promoRef);
 
     if (!userDoc.exists) {
       throw new functions.https.HttpsError("not-found", "حساب کاربری یافت نشد.");
@@ -76,6 +88,16 @@ exports.validateAndApplyPromoCode = functions.https.onCall(async (data, context)
       throw new functions.https.HttpsError(
         "already-exists",
         "این کد قبلاً برای این حساب مصرف شده است."
+      );
+    }
+
+    const currentPromoData = promoStateDoc.exists ? (promoStateDoc.data() || {}) : {};
+    const redeemedCount = Number(currentPromoData.redeemedCount || 0);
+    const active = currentPromoData.isActive !== false;
+    if (!active || redeemedCount >= maxRedemptions) {
+      throw new functions.https.HttpsError(
+        "resource-exhausted",
+        "ظرفیت مصرف این کد تخفیف تکمیل شده است."
       );
     }
 
@@ -95,6 +117,15 @@ exports.validateAndApplyPromoCode = functions.https.onCall(async (data, context)
       tierGranted: targetTier,
       redeemedAt: admin.firestore.FieldValue.serverTimestamp()
     });
+    transaction.set(
+      promoRef,
+      {
+        redeemedCount: redeemedCount + 1,
+        isActive: redeemedCount + 1 < maxRedemptions,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      },
+      { merge: true }
+    );
   });
 
   return {
