@@ -103,6 +103,7 @@ class StudentViewModel @JvmOverloads constructor(
     val themeMode: StateFlow<ThemeMode> = preferencesRepository.themeMode
     val notificationsEnabled: StateFlow<Boolean> = preferencesRepository.notificationsEnabled
     val customGeminiApiKey: StateFlow<String> = preferencesRepository.customGeminiApiKey
+    val guestModeEnabled: StateFlow<Boolean> = preferencesRepository.guestModeEnabled
     val lastSavedTimestamp: StateFlow<Long> = preferencesRepository.lastSuccessfulSaveTimestamp
     val currentUser: StateFlow<com.example.domain.model.UserAccount> = authManager.currentUser
     val isAuthInitialized: StateFlow<Boolean> = authManager.isInitialized
@@ -1315,10 +1316,15 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
+    fun continueAsGuest() {
+        preferencesRepository.setGuestModeEnabled(true)
+    }
+
     fun signInWithBackend(email: String, password: String, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             when (val res = authManager.signInWithBackend(email, password)) {
                 is com.example.domain.model.AuthResult.Success -> {
+                    preferencesRepository.setGuestModeEnabled(false)
                     addNotification("ورود به سرور", "با موفقیت به حساب ${res.user.displayName} در سرور متصل شدید.")
                     _userMessage.emit(res.message)
                     onResult(true, res.message)
@@ -1335,6 +1341,7 @@ class StudentViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             when (val res = authManager.signUpWithBackend(name, email, password)) {
                 is com.example.domain.model.AuthResult.Success -> {
+                    preferencesRepository.setGuestModeEnabled(false)
                     addNotification("ثبت‌نام در سرور", "حساب کاربری جدید شما در سرور اختصاصی ایجاد شد.")
                     _userMessage.emit(res.message)
                     onResult(true, res.message)
@@ -1372,6 +1379,7 @@ class StudentViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             when (val res = authManager.signInWithGoogle(idToken)) {
                 is com.example.domain.model.AuthResult.Success -> {
+                    preferencesRepository.setGuestModeEnabled(false)
                     addNotification("ورود گوگل", "اتصال به حساب گوگل با موفقیت برقرار شد.")
                     _userMessage.emit(res.message)
                     onResult(true, res.message)
@@ -1431,6 +1439,7 @@ class StudentViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             invalidateUndoHistory()
             authManager.signOutUser()
+            preferencesRepository.setGuestModeEnabled(true)
             // Clear onboarding preferences
             preferencesRepository.setOnboardingCompleted(false)
             _isOnboardingCompleted.value = false
