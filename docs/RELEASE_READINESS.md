@@ -1,7 +1,7 @@
 # Release Readiness
 
 ## Current branch
-`feat/academic-premium-design-system`
+`main`
 
 ## Product layers
 - [x] Academic design tokens
@@ -39,6 +39,7 @@
 - [ ] Release artifact build/signing succeeds
 - [ ] Install/upgrade migration tested
 - [ ] Firebase Auth startup/logout/data purge tested
+- [x] Temporary guest access path implemented; production release remains blocked by the unchecked integration/device gates below.
 - [x] Backend account deletion endpoint implemented; live deployment/endpoint verification remains
 - [ ] Offline -> online sync conflict behavior tested
 - [ ] Persian RTL + font scaling reviewed on physical devices
