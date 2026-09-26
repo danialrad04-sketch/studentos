@@ -344,7 +344,6 @@ fun MainAppScreen(
                                     )
                                 } catch (t: Throwable) {
                                     Log.e("MainAppScreen", "Google sign-in crashed unexpectedly", t)
-                                    isLoading = false
                                     onResult(false, "ورود با Google با خطای غیرمنتظره مواجه شد؛ لطفاً دوباره تلاش کنید.")
                                 }
                             }
