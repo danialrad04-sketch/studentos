@@ -1,6 +1,5 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { spawn } = require('node:child_process');
 const { Pool } = require('pg');
 
 if (process.env.RUN_BACKEND_INTEGRATION !== '1') {
@@ -41,14 +40,8 @@ if (process.env.RUN_BACKEND_INTEGRATION !== '1') {
 
   test.before(async () => {
     await pool.query('TRUNCATE entitlement_redemptions, entitlement_codes, user_data, refresh_tokens, users CASCADE');
-    if (process.env.BACKEND_EXTERNAL !== '1') {
-      process.env.PORT = '31337';
-      server = spawn(process.execPath, ['src/server.js'], {
-        cwd: process.cwd(),
-        env: process.env,
-        stdio: 'inherit',
-      });
-    }
+    const { app } = require('../src/server');
+    server = app.listen(31337);
     await waitForHealth();
   });
 
@@ -119,6 +112,6 @@ if (process.env.RUN_BACKEND_INTEGRATION !== '1') {
       await pool.query('DELETE FROM users WHERE id = $1', [userId]);
     }
     await pool.end();
-    if (server) server.kill('SIGTERM');
+    if (server) await new Promise((resolve) => server.close(resolve));
   });
 }
