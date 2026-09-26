@@ -18,6 +18,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.fail
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -342,7 +343,7 @@ class DataPersistenceAndBackupTest {
             recommendedSemester = 1
         )
 
-        assertFailsWith<IllegalArgumentException> {
+        try {
             repository.completeQuickAcademicSetup(
                 name = "دانشجو",
                 university = "",
@@ -353,6 +354,9 @@ class DataPersistenceAndBackupTest {
                 currentGpa = 0.0,
                 selectedCourses = listOf(curriculumCourse)
             )
+            fail("Invalid setup input must throw IllegalArgumentException")
+        } catch (_: IllegalArgumentException) {
+            // Expected: invalid setup must fail closed.
         }
 
         // Invalid setup input must fail closed and must not fabricate any academic records.
