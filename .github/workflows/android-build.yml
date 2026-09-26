@@ -58,6 +58,14 @@ jobs:
           node --check src/utils/jwt.js
           node --check ../functions/index.js
 
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Run backend unit tests
+        working-directory: backend
+        run: npm test
+
   instrumented-smoke:
     runs-on: ubuntu-latest
     steps:
