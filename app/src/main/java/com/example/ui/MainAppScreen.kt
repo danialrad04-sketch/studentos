@@ -59,6 +59,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -126,6 +127,9 @@ fun MainAppScreen(
     var dialogState by remember { mutableStateOf<AppDialogState>(AppDialogState.None) }
     var showOnboardingWizard by remember { mutableStateOf(false) }
     var showAppTourGuide by remember { mutableStateOf(false) }
+    // Temporary local guest access: bypasses authentication for the current app session.
+    // Account login remains available later from the account/security surfaces.
+    var guestAccessGranted by rememberSaveable { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
@@ -296,7 +300,7 @@ fun MainAppScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-            } else if (currentUser.isGuest) {
+            } else if (currentUser.isGuest && !guestAccessGranted) {
                 LoginRegisterScreen(
                     onSignInBackend = { email, pass, onResult ->
                         studentViewModel.signInWithBackend(email, pass, onResult)
@@ -348,6 +352,9 @@ fun MainAppScreen(
                                 }
                             }
                         }
+                    },
+                    onContinueAsGuest = {
+                        guestAccessGranted = true
                     }
                 )
             } else {
