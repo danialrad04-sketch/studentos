@@ -1355,22 +1355,31 @@ class StudentViewModel @JvmOverloads constructor(
     }
 
     fun syncWithBackendNow(onResult: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             _syncUiState.value = SyncUiState.Syncing
             try {
-                com.example.data.cloud.worker.BackendSyncWorker.triggerImmediateSync(application, pullOnly = false)
+                // Do not enqueue a background push and immediately pull: that races
+                // the worker and can restore stale server state over newer local data.
+                val pushRes = com.example.data.cloud.BackendSyncManager.pushAllData(application)
+                if (pushRes.isFailure) {
+                    throw pushRes.exceptionOrNull() ?: IllegalStateException("ارسال اطلاعات به سرور ناموفق بود.")
+                }
                 val pullRes = com.example.data.cloud.BackendSyncManager.pullAllData(application)
-                if (pullRes.isSuccess) {
-                    _syncUiState.value = SyncUiState.Success("اطلاعات با سرور همگام شد.", System.currentTimeMillis())
-                    _userMessage.emit("همگام‌سازی با سرور اختصاصی با موفقیت انجام شد.")
-                    onResult(true, "اطلاعات با سرور همگام شد.")
-                } else {
-                    _syncUiState.value = SyncUiState.Error("برخی داده‌ها در همگام‌سازی دریافت نشدند.", System.currentTimeMillis())
-                    onResult(false, "برخی داده‌ها در همگام‌سازی دریافت نشدند.")
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    if (pullRes.isSuccess) {
+                        _syncUiState.value = SyncUiState.Success("اطلاعات با سرور همگام شد.", System.currentTimeMillis())
+                        _userMessage.emit("اطلاعات با سرور اختصاصی با موفقیت همگام شد.")
+                        onResult(true, "اطلاعات با سرور همگام شد.")
+                    } else {
+                        _syncUiState.value = SyncUiState.Error("برخی داده‌ها در همگام‌سازی دریافت نشدند.", System.currentTimeMillis())
+                        onResult(false, "برخی داده‌ها در همگام‌سازی دریافت نشدند.")
+                    }
                 }
             } catch (e: Exception) {
-                _syncUiState.value = SyncUiState.Error("خطا در همگام‌سازی: ${e.localizedMessage ?: "اتصال برقرار نشد."}", System.currentTimeMillis())
-                onResult(false, "خطا در همگام‌سازی: ${e.localizedMessage ?: "اتصال برقرار نشد."}")
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    _syncUiState.value = SyncUiState.Error("خطا در همگام‌سازی: " + (e.localizedMessage ?: "خطای ناشناخته"), System.currentTimeMillis())
+                    onResult(false, "خطا در همگام‌سازی: " + (e.localizedMessage ?: "خطای ناشناخته"))
+                }
             }
         }
     }
