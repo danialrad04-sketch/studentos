@@ -65,5 +65,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'INTERNAL_ERROR' });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`[server] Student OS backend listening on :${PORT}`));
+module.exports = { app };
+
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`[server] Student OS backend listening on :${PORT}`));
+}
