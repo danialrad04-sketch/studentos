@@ -35,6 +35,7 @@ data class CloudProfileData(
     val activeUnits: Int = 0,
     val declaredGpa: Double? = null,
     val term: String? = null,
+    val faculty: String = "",
     val updatedAt: Long = 0L
 )
 
@@ -369,6 +370,7 @@ object FirestoreSyncManager {
                             activeUnits = profileDoc.getLong("activeUnits")?.toInt() ?: 0,
                             declaredGpa = profileDoc.getDouble("declaredGpa"),
                             term = profileDoc.getString("term") ?: "",
+                            faculty = profileDoc.getString("faculty") ?: "",
                             updatedAt = profileDoc.getTimestamp("updatedAt")?.toDate()?.time
                                 ?: profileDoc.getLong("updatedAt")
                                 ?: userLastSyncedAt
@@ -387,6 +389,7 @@ object FirestoreSyncManager {
                     val cloudActive = cloudProfile.activeUnits
                     val cloudGpa = cloudProfile.declaredGpa
                     val cloudTerm = cloudProfile.term ?: ""
+                    val cloudFaculty = cloudProfile.faculty
                     val cloudUpdatedAt = cloudProfile.updatedAt
 
                     val localProfile = dao.getProfileSync()
