@@ -17,8 +17,10 @@ android {
     applicationId = "com.aistudio.studentos.appvzk"
     minSdk = 24
     targetSdk = 36
-    versionCode = 1
-    versionName = "1.0.0"
+    // Release version is explicit and overridable in CI with -PVERSION_CODE/-PVERSION_NAME.
+    // Default is the next monotonically increasing release after v1.0.2-production.
+    versionCode = providers.gradleProperty("VERSION_CODE").orNull?.toIntOrNull() ?: 3
+    versionName = providers.gradleProperty("VERSION_NAME").orNull ?: "1.0.3"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -41,7 +43,15 @@ android {
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
-    debug {}
+    debug {
+      // CI can opt into the fixed Firebase release certificate for Google-auth testing.
+      // Local debug builds remain unchanged unless the signing environment is provided.
+      if (!System.getenv("KEYSTORE_PATH").isNullOrBlank() &&
+          !System.getenv("STORE_PASSWORD").isNullOrBlank() &&
+          !System.getenv("KEY_PASSWORD").isNullOrBlank()) {
+        signingConfig = signingConfigs.getByName("release")
+      }
+    }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -110,6 +120,7 @@ dependencies {
   implementation(libs.firebase.appcheck.debug)
   // Uncomment to use Firestore:
   implementation(libs.firebase.firestore)
+  implementation("com.google.firebase:firebase-functions")
   // implementation(libs.firebase.crashlytics)
 
   // Uncomment ALL FOUR of the following dependencies together to use Firebase Auth and Google

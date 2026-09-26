@@ -100,6 +100,9 @@ interface CourseDao {
     @Query("DELETE FROM courses")
     suspend fun clearCourses()
 
+    @Query("DELETE FROM courses WHERE id NOT IN (:courseIds)")
+    suspend fun deleteCoursesNotInIds(courseIds: List<String>)
+
     // ==========================================
     // Course Sessions (1-to-N Weekly Slots)
     // ==========================================

@@ -1,13 +1,6 @@
 package com.example.ui.models
 
-data class ExamItem(
-    val id: String,
-    val courseName: String,
-    val solarDate: String,
-    val time: String,
-    val location: String,
-    val units: Int
-)
+typealias ExamItem = com.example.domain.model.ExamItem
 
 data class SemesterCurriculum(
     val title: String,
@@ -22,6 +15,7 @@ enum class AppTab(
 ) {
     DASHBOARD("داشبورد بنتو", "⚡"),
     COPILOT("دستیار هوشمند", "🤖"),
+    ACADEMIC_INTELLIGENCE("هوش تحصیلی", "🧠"),
     PASSPORT("شناسنامه تحصیلی", "📜"),
     SCHEDULE("برنامه کلاسی", "🗓️"),
     ATTENDANCE("رادار غیبت‌ها", "🚨"),
@@ -48,6 +42,6 @@ enum class ThemeMode(
     val descriptionFa: String
 ) {
     SYSTEM("مطابق سیستم", "تنظیم خودکار بر اساس حالت روز/شب گوشی"),
-    LIGHT("روشن", "تم بلورین و پرنور با کنتراست شفاف"),
-    DARK("تاریک", "تم مخملی عمیق مناسب محیط‌های کم‌نور")
+    LIGHT("روشن", "تم روشن Academic Premium با کنتراست متعادل"),
+    DARK("تاریک", "تم تیره Academic Premium برای محیط‌های کم‌نور")
 }

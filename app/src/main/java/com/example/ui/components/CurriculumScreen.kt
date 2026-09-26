@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.ui.theme.StudentShapeTokens
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -47,7 +49,6 @@ import androidx.compose.ui.unit.sp
 import com.example.domain.model.CourseState
 import com.example.domain.model.EvaluatedCurriculumCourse
 import com.example.ui.models.CurriculumMatchUiState
-import com.example.ui.models.SemesterCurriculum
 import com.example.ui.theme.Amber600
 import com.example.ui.theme.Emerald600
 import com.example.ui.theme.Rose600
@@ -55,12 +56,11 @@ import com.example.ui.theme.Rose600
 /**
  * Integrated Curriculum Screen (Phase 4).
  * Supports both evaluated CurriculumMatchUiState (domain-verified with course status symbols ✓, ◉, →, 🔒, ○, ?)
- * and fallback legacy static SemesterCurriculum list for backward compatibility.
+ * The screen is driven only by the verified CurriculumMatchUiState; no static student curriculum is fabricated.
  */
 @Composable
 fun CurriculumScreen(
     matchState: CurriculumMatchUiState? = null,
-    curriculumList: List<SemesterCurriculum> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -72,15 +72,14 @@ fun CurriculumScreen(
         val chartTitle = if (matchState is CurriculumMatchUiState.Ready) {
             matchState.output.version.title
         } else {
-            "چارت کارشناسی مهندسی شیمی"
+            "چارت تحصیلی"
         }
 
         val totalUnits = if (matchState is CurriculumMatchUiState.Ready) {
-            "${matchState.output.version.totalCreditsRequired} واحد مصوب"
+            "" + matchState.output.version.totalCreditsRequired + " واحد مصوب"
         } else {
-            "۱۴۰ واحد مصوب"
+            "اطلاعات چارت پس از تکمیل مشخصات تحصیلی نمایش داده می‌شود"
         }
-
         Column {
             Text(
                 text = chartTitle,
@@ -148,7 +147,7 @@ fun CurriculumScreen(
             is CurriculumMatchUiState.Loading -> {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = StudentShapeTokens.Card,
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(
@@ -244,11 +243,17 @@ fun CurriculumScreen(
                 }
             }
             else -> {
-                // Fallback to legacy static curriculumList
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    curriculumList.forEachIndexed { index, semester ->
-                        LegacySemesterCard(semester = semester, termIndex = index + 1)
-                    }
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = StudentShapeTokens.Card,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Text(
+                        text = "برای نمایش چارت مصوب، ابتدا اطلاعات دانشگاه، رشته و سال ورود را تکمیل کنید.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(20.dp)
+                    )
                 }
             }
         }
@@ -258,7 +263,7 @@ fun CurriculumScreen(
 @Composable
 private fun CurriculumStatusLegend() {
     Surface(
-        shape = RoundedCornerShape(14.dp),
+        shape = StudentShapeTokens.Compact,
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -302,7 +307,7 @@ private fun EvaluatedSemesterCard(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
+        shape = StudentShapeTokens.Card,
         colors = CardDefaults.cardColors(
             containerColor = if (isCurrentTerm) primaryColor.copy(alpha = 0.06f) else MaterialTheme.colorScheme.surface
         ),
@@ -483,111 +488,6 @@ private fun EvaluatedCourseRow(course: EvaluatedCurriculumCourse) {
                             fontSize = 10.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 14.sp
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun LegacySemesterCard(
-    semester: SemesterCurriculum,
-    termIndex: Int,
-    modifier: Modifier = Modifier
-) {
-    val isCurrent = semester.isCurrent
-    val primaryColor = MaterialTheme.colorScheme.primary
-
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isCurrent) primaryColor.copy(alpha = 0.05f) else MaterialTheme.colorScheme.surface
-        ),
-        border = if (isCurrent) {
-            CardDefaults.outlinedCardBorder().copy(width = 1.2.dp, brush = androidx.compose.ui.graphics.SolidColor(primaryColor))
-        } else {
-            CardDefaults.outlinedCardBorder().copy(width = 0.8.dp)
-        }
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .width(4.dp)
-                            .height(18.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = semester.title,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 13.5.sp,
-                        color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                    )
-                    if (isCurrent) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        ) {
-                            Text(
-                                text = "ترم جاری شما 📌",
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant
-                ) {
-                    Text(
-                        text = "${semester.units} واحد",
-                        fontSize = 10.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                semester.courses.forEach { courseName ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(RoundedCornerShape(3.dp))
-                                .background(if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = courseName,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }

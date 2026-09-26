@@ -86,6 +86,13 @@ router.put('/:dataType', async (req, res) => {
   }
   const { payload, updatedAt } = parsed.data;
 
+  // Prevent a malicious client clock from pinning a data type in the future.
+  // Offline clients can still tolerate normal device clock drift (24h).
+  const MAX_FUTURE_SKEW_MS = 24 * 60 * 60 * 1000;
+  if (updatedAt > Date.now() + MAX_FUTURE_SKEW_MS) {
+    return res.status(400).json({ error: 'UPDATED_AT_TOO_FAR_IN_FUTURE' });
+  }
+
   try {
     const existing = await pool.query(
       'SELECT updated_at FROM user_data WHERE user_id = $1 AND data_type = $2',

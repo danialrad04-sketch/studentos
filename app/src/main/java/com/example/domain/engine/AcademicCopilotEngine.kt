@@ -15,8 +15,8 @@ import com.example.domain.model.CopilotActionProposal
 import com.example.domain.model.CopilotMessage
 import com.example.domain.model.CopilotPayload
 import com.example.domain.model.CopilotSender
-import com.example.ui.components.datepicker.JalaliCalendarUtil
-import com.example.ui.models.ExamItem
+import com.example.domain.util.JalaliCalendarUtil
+import com.example.domain.model.ExamItem
 import com.example.util.CrashLogger
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -34,20 +34,30 @@ object AcademicCopilotEngine {
     ): CopilotMessage {
         val totalActiveUnits = courses.sumOf { it.units }.coerceAtLeast(profile.activeUnits)
         val passedUnits = profile.passedUnits
-        val totalRequired = 140
-        val remainingUnits = (totalRequired - passedUnits - totalActiveUnits).coerceAtLeast(0)
+        val curriculumTotalUnits = CurriculumSeedData.getCoursesForMajor(profile.major)
+            .sumOf { it.units }
+        val totalRequired = curriculumTotalUnits.takeIf { it > 0 } ?: 0
+        val majorLabel = profile.major.ifBlank { "رشته ثبت نشده" }
+        val universityLabel = profile.university.ifBlank { "دانشگاه ثبت نشده" }
+        val semesterLabel = profile.currentSemester.takeIf { it > 0 }?.let { "ترم $it" } ?: "ترم ثبت نشده"
+        val entryYearLabel = profile.entryYear.takeIf { it > 0 }?.toString() ?: "سال ورود ثبت نشده"
+        val remainingUnits = if (totalRequired > 0) {
+            (totalRequired - passedUnits - totalActiveUnits).coerceAtLeast(0)
+        } else {
+            0
+        }
         val gpa = computeGpa(grades, profile.declaredGpa)
 
         val criticalAbsences = attendanceList.count { it.absentCount >= it.maxAllowed && it.maxAllowed > 0 }
         val pendingTasks = tasks.count { !it.isCompleted }
 
         val greeting = buildString {
-            append("سلام ${profile.name} عزیز! من دستیار هوشمند دانشگاهی شما (Student OS Copilot) هستم.\n\n")
+            append("سلام ${profile.name.ifBlank { "دانشجو" }} عزیز! من دستیار هوشمند دانشگاهی شما (Student OS Copilot) هستم.\n\n")
             append("📊 **شناسنامه زنده و وضعیت تحصیلی:**\n")
-            append("• **رشته تحصیلی:** ${profile.major} (${profile.university})\n")
-            append("• **ترم جاری:** ترم ${profile.currentSemester} (ورودی ${profile.entryYear})\n")
+            append("• **رشته تحصیلی:** $majorLabel ($universityLabel)\n")
+            append("• **ترم جاری:** $semesterLabel ($entryYearLabel)\n")
             append("• **واحدهای فعال این ترم:** $totalActiveUnits واحد (${courses.size} درس فعال)\n")
-            append("• **واحدهای گذرانده:** $passedUnits از $totalRequired واحد ($remainingUnits واحد تا فراغت از تحصیل)\n")
+            append(if (totalRequired > 0) "• **واحدهای گذرانده:** $passedUnits از $totalRequired واحد ($remainingUnits واحد تا فراغت از تحصیل)\n" else "• **واحدهای گذرانده:** $passedUnits واحد\n")
             append("• **معدل کل:** ${String.format(Locale.US, "%.2f", gpa)}\n")
 
             if (criticalAbsences > 0) {
@@ -56,7 +66,7 @@ object AcademicCopilotEngine {
             if (pendingTasks > 0) {
                 append("• 📋 **تکالیف فعال:** $pendingTasks تکلیف باقی‌مانده\n")
             }
-            append("\nمن بر تمام چارت مصوب ${profile.major}، قوانین آموزشی وزارت علوم، رادار غیبت‌ها، تقویم امتحانات و برنامه‌ریزی مطالعه مسلط هستم. چه کمکی از من برمی‌آید؟")
+            append("\nمن بر اساس داده‌های ثبت‌شده در Student OS و قواعد تحصیلی پشتیبانی‌شده راهنمایی می‌کنم؛ اطلاعات ثبت‌نشده را حدس نمی‌زنم. چه کمکی از من برمی‌آید؟")
         }
 
         return CopilotMessage(
@@ -89,7 +99,7 @@ object AcademicCopilotEngine {
         val cleanQuery = query.trim().lowercase(Locale.ROOT)
         val gpa = computeGpa(grades, profile.declaredGpa)
         val totalActiveUnits = courses.sumOf { it.units }
-        val majorCurriculum = if (curriculumCourses.isNotEmpty()) curriculumCourses else CurriculumSeedData.getCoursesForMajor(profile.major)
+        val majorCurriculum = curriculumCourses.ifEmpty { CurriculumSeedData.getCoursesForMajor(profile.major) }
 
         val todayWeekdayIdx = JalaliCalendarUtil.getTodayWeekdayIndex()
         val todayWeekdayName = JalaliCalendarUtil.getWeekdayName(todayWeekdayIdx)
@@ -375,8 +385,8 @@ object AcademicCopilotEngine {
             // 7. Grade Analysis (نمرات من را تحلیل کن.)
             cleanQuery.contains("نمرات") && (cleanQuery.contains("تحلیل") || cleanQuery.contains("بررسی") || cleanQuery.contains("وضعیت")) || (cleanQuery.contains("تحلیل") && cleanQuery.contains("کارنامه")) -> {
                 val currentGpa = gpa
-                val passedCount = grades.count { (it.midtermGrade + it.finalGrade) / 2.0 >= 10.0 }
-                val failingCount = grades.count { (it.midtermGrade + it.finalGrade) / 2.0 < 10.0 && it.finalGrade > 0 }
+                val passedCount = grades.count { (it.midtermGrade + it.finalGrade) >= 10.0 }
+                val failingCount = grades.count { (it.midtermGrade + it.finalGrade) < 10.0 && it.finalGrade > 0 }
 
                 val text = buildString {
                     append("📊 **تحلیل آماری و آکادمیک کارنامه و نمرات:**\n\n")
@@ -387,7 +397,7 @@ object AcademicCopilotEngine {
                     if (grades.isNotEmpty()) {
                         append("📋 **وضعیت دروس ثبت‌شده:**\n")
                         grades.forEach { g ->
-                            val avg = (g.midtermGrade + g.finalGrade) / 2.0
+                            val avg = g.midtermGrade + g.finalGrade
                             val statusTag = if (avg >= 17.0) "🌟 عالی (الف)" else if (avg >= 12.0) "✅ مناسب" else if (avg >= 10.0) "⚠️ در لبه قبولی" else "❌ نیازمند تلاش"
                             append("• **${g.courseName}** (${g.units} واحد): میانگین ${String.format(Locale.US, "%.1f", avg)} — $statusTag\n")
                         }
@@ -986,12 +996,12 @@ object AcademicCopilotEngine {
 
     fun computeGpa(grades: List<GradeEntity>, declaredGpa: Double? = null): Double {
         return if (grades.isNotEmpty() && grades.sumOf { it.units } > 0) {
-            val totalWeighted = grades.sumOf { ((it.midtermGrade + it.finalGrade) / 2.0) * it.units }
+            val totalWeighted = grades.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
             val totalU = grades.sumOf { it.units }
             val computedGpa = totalWeighted / totalU
             computedGpa.coerceIn(0.0, 20.0)
         } else {
-            (declaredGpa?.takeIf { it > 0.0 } ?: 16.5).coerceIn(0.0, 20.0)
+            (declaredGpa?.takeIf { it > 0.0 } ?: 0.0).coerceIn(0.0, 20.0)
         }
     }
 

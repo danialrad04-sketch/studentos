@@ -24,7 +24,7 @@ data class SubscriptionDetails(
     val isGpaPredictorUnlocked: Boolean = false
 ) {
     val remainingAiQuota: Int
-        get() = if (tier != SubscriptionTier.FREE) 999 else (maxDailyAiQuota - dailyAiQuotaUsed).coerceAtLeast(0)
+        get() = (maxDailyAiQuota - dailyAiQuotaUsed).coerceAtLeast(0)
 
     val isProOrHigher: Boolean
         get() = tier == SubscriptionTier.PRO || tier == SubscriptionTier.ULTRA || tier == SubscriptionTier.CAMPUS_UNLIMITED

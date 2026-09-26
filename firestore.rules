@@ -12,11 +12,18 @@ service cloud.firestore {
       // Users can read their own profile & subscription metadata
       allow read: if isOwner(userId);
       
-      // Client can create its initial user doc, but CANNOT tamper with subscriptionTier or admin fields
-      allow create: if isOwner(userId) && (!request.resource.data.keys().hasAny(['subscriptionTier', 'isAdmin']) || request.resource.data.subscriptionTier == 'FREE');
+      // Client may create identity/profile fields only. All entitlement and admin
+      // fields are server-managed and rejected even during first document creation.
+      allow create: if isOwner(userId) && !request.resource.data.keys().hasAny([
+        'subscriptionTier', 'subscriptionExpiresAt', 'maxDailyAiQuota',
+        'allowsCloudSync', 'allowsPdfExport', 'gpaPredictorUnlocked', 'isAdmin'
+      ]);
       
-      // On update, client can update normal fields, but CANNOT modify subscriptionTier (writeable ONLY by Cloud Functions / Admin SDK)
-      allow update: if isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['subscriptionTier', 'maxDailyAiQuota', 'isAdmin']);
+      // Entitlements/admin state are writable only by trusted server code.
+      allow update: if isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+        'subscriptionTier', 'subscriptionExpiresAt', 'maxDailyAiQuota',
+        'allowsCloudSync', 'allowsPdfExport', 'gpaPredictorUnlocked', 'isAdmin'
+      ]);
       
       // Allow deletion only by the authenticated owner
       allow delete: if isOwner(userId);

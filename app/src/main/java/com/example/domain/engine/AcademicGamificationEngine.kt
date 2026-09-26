@@ -27,7 +27,7 @@ object AcademicGamificationEngine {
         val focusHours = (pomodoroSecondsTotal.toDouble() / 3600.0)
 
         val totalUnits = grades.sumOf { it.units }
-        val totalScore = grades.sumOf { ((it.midtermGrade + it.finalGrade) / 2.0) * it.units }
+        val totalScore = grades.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
         val gpa = if (totalUnits > 0) (totalScore / totalUnits.toDouble()).coerceIn(0.0, 20.0) else 0.0
 
         val badges = mutableListOf<AcademicBadge>()
@@ -203,8 +203,9 @@ object AcademicGamificationEngine {
             currentXp = currentLevelProgressXp,
             nextLevelXp = nextLevelTargetXp,
             levelTitle = levelTitle,
-            studyStreakDays = 4, // 4-day continuous academic streak
-            bestStreakDays = 12,
+            // Daily streak persistence is not modeled yet; do not fabricate a streak.
+            studyStreakDays = 0,
+            bestStreakDays = 0,
             focusHoursTotal = focusHours,
             completedTasksCount = completedTasks,
             perfectAttendanceCount = zeroAbsenceCourses,

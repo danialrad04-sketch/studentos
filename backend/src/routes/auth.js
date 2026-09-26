@@ -176,6 +176,141 @@ router.post('/logout-all', requireAuth, async (req, res) => {
   }
 });
 
+// ── Server-authoritative entitlement ─────────────────────────────────────
+router.get('/entitlement', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT subscription_tier, subscription_expires_at FROM users WHERE id = $1 AND is_active = true',
+      [req.userId]
+    );
+    const row = result.rows[0];
+    if (!row) return res.status(404).json({ error: 'USER_NOT_FOUND' });
+
+    const expiresAt = row.subscription_expires_at
+      ? new Date(row.subscription_expires_at).getTime()
+      : null;
+    const expired = expiresAt != null && expiresAt <= Date.now();
+    const rawTier = String(row.subscription_tier || 'FREE').trim().toUpperCase();
+    const allowedTiers = new Set(['FREE', 'PRO', 'ULTRA', 'CAMPUS_UNLIMITED']);
+    const tier = expired || !allowedTiers.has(rawTier) ? 'FREE' : rawTier;
+
+    const capabilities = {
+      maxDailyAiQuota: tier === 'FREE' ? 5 : tier === 'PRO' ? 50 : 999,
+      allowsCloudSync: tier !== 'FREE',
+      allowsPdfExport: tier !== 'FREE',
+      gpaPredictorUnlocked: tier !== 'FREE',
+    };
+
+    return res.json({
+      tier,
+      expiresAt: expired ? null : expiresAt,
+      ...capabilities,
+    });
+  } catch (err) {
+    console.error('[auth/entitlement]', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR' });
+  }
+});
+
+// ── Redeem server-authoritative entitlement code ──────────────────────────
+router.post('/entitlement/redeem', requireAuth, async (req, res) => {
+  const parsed = z.object({ code: z.string().trim().min(3).max(128) }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'INVALID_INPUT' });
+
+  const code = parsed.data.code.toUpperCase();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await client.query(
+      'SELECT code, subscription_tier, expires_at, max_redemptions, redeemed_count, is_active FROM entitlement_codes WHERE code = $1 FOR UPDATE',
+      [code]
+    );
+    const entitlement = result.rows[0];
+
+    if (!entitlement || !entitlement.is_active) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'INVALID_OR_INACTIVE_CODE' });
+    }
+
+    const expiresAt = entitlement.expires_at ? new Date(entitlement.expires_at).getTime() : null;
+    if (expiresAt != null && expiresAt <= Date.now()) {
+      await client.query('ROLLBACK');
+      return res.status(410).json({ error: 'CODE_EXPIRED' });
+    }
+    if (entitlement.redeemed_count >= entitlement.max_redemptions) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'CODE_REDEMPTION_LIMIT_REACHED' });
+    }
+
+    const duplicate = await client.query(
+      'SELECT 1 FROM entitlement_redemptions WHERE code = $1 AND user_id = $2',
+      [code, req.userId]
+    );
+    if (duplicate.rows.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'CODE_ALREADY_REDEEMED' });
+    }
+
+    const allowedTiers = new Set(['FREE', 'PRO', 'ULTRA', 'CAMPUS_UNLIMITED']);
+    const rawTier = String(entitlement.subscription_tier || 'FREE').trim().toUpperCase();
+    if (!allowedTiers.has(rawTier)) {
+      await client.query('ROLLBACK');
+      return res.status(500).json({ error: 'INVALID_ENTITLEMENT_CONFIGURATION' });
+    }
+
+    await client.query(
+      'INSERT INTO entitlement_redemptions (code, user_id) VALUES ($1, $2)',
+      [code, req.userId]
+    );
+
+    const userUpdate = await client.query(
+      'UPDATE users SET subscription_tier = $1, subscription_expires_at = $2, updated_at = now() WHERE id = $3 AND is_active = true RETURNING subscription_tier, subscription_expires_at',
+      [rawTier, entitlement.expires_at, req.userId]
+    );
+    if (!userUpdate.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'USER_NOT_FOUND' });
+    }
+
+    await client.query(
+      'UPDATE entitlement_codes SET redeemed_count = redeemed_count + 1, is_active = CASE WHEN redeemed_count + 1 >= max_redemptions THEN false ELSE is_active END WHERE code = $1',
+      [code]
+    );
+
+    await client.query('COMMIT');
+    return res.json({
+      tier: rawTier,
+      expiresAt: entitlement.expires_at ? new Date(entitlement.expires_at).getTime() : null
+    });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    console.error('[auth/entitlement/redeem]', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR' });
+  } finally {
+    client.release();
+  }
+});
+
+// ── Delete current account and all server-owned data ──────────────────────
+// The user id comes exclusively from the verified access token. The foreign
+// keys in the migration schema cascade deletion to refresh_tokens and user_data,
+// so the operation removes the account and its server-owned data together.
+router.delete('/account', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'DELETE FROM users WHERE id = $1 RETURNING id',
+      [req.userId]
+    );
+    if (!result.rows[0]) {
+      return res.status(404).json({ error: 'USER_NOT_FOUND' });
+    }
+    return res.status(204).send();
+  } catch (err) {
+    console.error('[auth/delete-account]', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR' });
+  }
+});
+
 // ── Current user (sanity/profile check) ──────────────────────────────────
 router.get('/me', requireAuth, async (req, res) => {
   try {

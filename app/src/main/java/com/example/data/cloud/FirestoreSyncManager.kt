@@ -29,12 +29,13 @@ data class CloudProfileData(
     val studentId: String = "",
     val major: String = "",
     val university: String = "",
-    val entryYear: Int = 1403,
-    val currentSemester: Int = 1,
+    val entryYear: Int = 0,
+    val currentSemester: Int = 0,
     val passedUnits: Int = 0,
     val activeUnits: Int = 0,
     val declaredGpa: Double? = null,
     val term: String? = null,
+    val faculty: String = "",
     val updatedAt: Long = 0L
 )
 
@@ -79,10 +80,16 @@ object FirestoreSyncManager {
 
             if (snapshot != null && snapshot.exists()) {
                 val tierStr = snapshot.getString("subscriptionTier") ?: "FREE"
-                val tier = try {
-                    SubscriptionTier.valueOf(tierStr.uppercase())
-                } catch (_: Throwable) {
+                val expiresAt = snapshot.getTimestamp("subscriptionExpiresAt")?.toDate()?.time
+                val expired = expiresAt != null && expiresAt <= System.currentTimeMillis()
+                val tier = if (expired) {
                     SubscriptionTier.FREE
+                } else {
+                    try {
+                        SubscriptionTier.valueOf(tierStr.uppercase())
+                    } catch (_: Throwable) {
+                        SubscriptionTier.FREE
+                    }
                 }
                 trySend(tier)
             } else {
@@ -98,62 +105,29 @@ object FirestoreSyncManager {
      */
     suspend fun redeemPromoCode(userId: String, rawCode: String): Result<SubscriptionTier> = withContext(Dispatchers.IO) {
         if (userId.isBlank() || userId.startsWith("guest_")) {
-            return@withContext Result.failure(IllegalStateException("برای فعال‌سازی کد هدیه یا اشتراک، ابتدا وارد حساب کاربری شوید."))
+            return@withContext Result.failure(IllegalStateException("برای فعال‌سازی کد هدیه، ابتدا وارد حساب کاربری شوید."))
         }
 
         val code = rawCode.trim().uppercase()
         if (code.isBlank()) {
-            return@withContext Result.failure(IllegalArgumentException("کد تخفیف نمی‌تواند خالی باشد."))
+            return@withContext Result.failure(IllegalArgumentException("کد هدیه نمی‌تواند خالی باشد."))
         }
 
         try {
-            val promoDoc = firestore.collection(PROMO_COLLECTION).document(code).get().awaitResult()
-            
-            val targetTierStr: String
-            if (promoDoc.exists()) {
-                val isActive = promoDoc.getBoolean("isActive") ?: true
-                if (!isActive) {
-                    return@withContext Result.failure(IllegalStateException("این کد تخفیف منقضی یا غیرفعال شده است."))
-                }
-                targetTierStr = promoDoc.getString("targetTier") ?: "PRO"
-            } else {
-                targetTierStr = when (code) {
-                    "STUDENT2026", "DANESHJOO", "AUT_PRO", "SHARIF_AI", "TEHRAN_ENG" -> "PRO"
-                    "CAMPUS_ULTRA", "ELITE2026", "FACULTY_VIP", "ULTRA" -> "ULTRA"
-                    else -> return@withContext Result.failure(IllegalArgumentException("کد وارد شده معتبر نیست یا منقضی شده است."))
-                }
+            val callable = com.google.firebase.functions.FirebaseFunctions.getInstance()
+                .getHttpsCallable("validateAndApplyPromoCode")
+            val result = callable.call(mapOf("code" to code)).awaitResult()
+            val data = result.data as? Map<*, *>
+                ?: return@withContext Result.failure(IllegalStateException("پاسخ سرور اشتراک نامعتبر است."))
+            val tierName = data["tier"]?.toString()?.uppercase()
+                ?: return@withContext Result.failure(IllegalStateException("سطح اشتراک از سرور دریافت نشد."))
+            val tier = runCatching { SubscriptionTier.valueOf(tierName) }.getOrElse {
+                return@withContext Result.failure(IllegalStateException("سطح اشتراک دریافت‌شده معتبر نیست."))
             }
-
-            val targetTier = try {
-                SubscriptionTier.valueOf(targetTierStr.uppercase())
-            } catch (_: Throwable) {
-                SubscriptionTier.PRO
-            }
-
-            val userDocRef = firestore.collection(USERS_COLLECTION).document(userId)
-            val redemptionData = hashMapOf<String, Any>(
-                "subscriptionTier" to targetTier.name,
-                "isCloudSyncEnabled" to true,
-                "lastPromoApplied" to code,
-                "promoAppliedAt" to FieldValue.serverTimestamp(),
-                "updatedAt" to FieldValue.serverTimestamp()
-            )
-
-            userDocRef.set(redemptionData, SetOptions.merge()).awaitResult()
-            
-            val logRef = userDocRef.collection("redemptions").document(code)
-            logRef.set(
-                mapOf(
-                    "code" to code,
-                    "tierGranted" to targetTier.name,
-                    "redeemedAt" to FieldValue.serverTimestamp()
-                )
-            ).awaitResult()
-
-            Log.i(TAG, "Successfully redeemed promo $code for user $userId -> Tier: $targetTier")
-            Result.success(targetTier)
+            Log.i(TAG, "Server-side promo redemption succeeded for user " + userId + " -> " + tier)
+            Result.success(tier)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to redeem promo code: ${e.message}", e)
+            Log.e(TAG, "Server-side promo redemption failed: " + e.message, e)
             Result.failure(e)
         }
     }
@@ -383,19 +357,20 @@ object FirestoreSyncManager {
                 } else if (userDoc != null) {
                     val profileDoc = userDoc.collection("profile").document("current").get().awaitResult()
                     if (profileDoc != null && profileDoc.exists()) {
-                        val cloudSemester = profileDoc.getLong("currentSemester")?.toInt() ?: 1
+                        val cloudSemester = profileDoc.getLong("currentSemester")?.toInt() ?: 0
                         val cloudMajor = profileDoc.getString("major") ?: ""
                         CloudProfileData(
                             name = profileDoc.getString("name") ?: "",
                             studentId = profileDoc.getString("studentId") ?: "",
                             major = cloudMajor,
                             university = profileDoc.getString("university") ?: "",
-                            entryYear = profileDoc.getLong("entryYear")?.toInt() ?: 1403,
+                            entryYear = profileDoc.getLong("entryYear")?.toInt() ?: 0,
                             currentSemester = cloudSemester,
                             passedUnits = profileDoc.getLong("passedUnits")?.toInt() ?: 0,
                             activeUnits = profileDoc.getLong("activeUnits")?.toInt() ?: 0,
                             declaredGpa = profileDoc.getDouble("declaredGpa"),
-                            term = profileDoc.getString("term") ?: "ترم $cloudSemester $cloudMajor",
+                            term = profileDoc.getString("term") ?: "",
+                            faculty = profileDoc.getString("faculty") ?: "",
                             updatedAt = profileDoc.getTimestamp("updatedAt")?.toDate()?.time
                                 ?: profileDoc.getLong("updatedAt")
                                 ?: userLastSyncedAt
@@ -413,7 +388,8 @@ object FirestoreSyncManager {
                     val cloudPassed = cloudProfile.passedUnits
                     val cloudActive = cloudProfile.activeUnits
                     val cloudGpa = cloudProfile.declaredGpa
-                    val cloudTerm = cloudProfile.term ?: "ترم $cloudSemester $cloudMajor"
+                    val cloudTerm = cloudProfile.term ?: ""
+                    val cloudFaculty = cloudProfile.faculty
                     val cloudUpdatedAt = cloudProfile.updatedAt
 
                     val localProfile = dao.getProfileSync()
@@ -437,17 +413,17 @@ object FirestoreSyncManager {
                                 id = 1,
                                 name = cloudName.ifBlank { localProfile?.name ?: "دانشجو" },
                                 studentId = cloudStdId.ifBlank { localProfile?.studentId ?: "" },
-                                university = cloudUni.ifBlank { localProfile?.university ?: "دانشگاه" },
-                                major = cloudMajor.ifBlank { localProfile?.major ?: "مهندسی" },
-                                entryYear = if (cloudEntryYear > 0) cloudEntryYear else (localProfile?.entryYear ?: 1403),
-                                currentSemester = if (cloudSemester > 0) cloudSemester else (localProfile?.currentSemester ?: 1),
+                                university = cloudUni.ifBlank { localProfile?.university ?: "" },
+                                major = cloudMajor.ifBlank { localProfile?.major ?: "" },
+                                entryYear = if (cloudEntryYear > 0) cloudEntryYear else (localProfile?.entryYear ?: 0),
+                                currentSemester = if (cloudSemester > 0) cloudSemester else (localProfile?.currentSemester ?: 0),
                                 passedUnits = if (cloudPassed > 0) cloudPassed else (localProfile?.passedUnits ?: 0),
                                 declaredPassedCredits = if (cloudPassed > 0) cloudPassed else (localProfile?.declaredPassedCredits ?: 0),
                                 activeUnits = if (cloudActive > 0) cloudActive else (localProfile?.activeUnits ?: 0),
                                 declaredGpa = cloudGpa ?: localProfile?.declaredGpa,
                                 term = cloudTerm,
-                                faculty = "دانشکده ${cloudMajor.ifBlank { "مهندسی" }}",
-                                isOnboardingCompleted = true,
+                                faculty = cloudFaculty.ifBlank { localProfile?.faculty ?: "" },
+                                isOnboardingCompleted = localProfile?.isOnboardingCompleted ?: hasCloudIdentity,
                                 updatedAt = cloudUpdatedAt
                             )
                             dao.insertProfile(restoredProfile)
@@ -476,9 +452,12 @@ object FirestoreSyncManager {
                                 val course = CourseEntity(
                                     id = id,
                                     name = name,
-                                    colorHex = doc.getString("colorHex") ?: (local?.colorHex ?: "#3B82F6"),
-                                    units = doc.getLong("units")?.toInt() ?: (local?.units ?: 3),
-                                    semesterId = doc.getString("semesterId") ?: (local?.semesterId ?: "current"),
+                                    colorHex = doc.getString("colorHex")?.takeIf { it.isNotBlank() }
+                                        ?: (local?.colorHex ?: ""),
+                                    units = doc.getLong("units")?.toInt()
+                                        ?: (local?.units ?: 0),
+                                    semesterId = doc.getString("semesterId")?.takeIf { it.isNotBlank() }
+                                        ?: (local?.semesterId ?: "sem_current"),
                                     courseCode = doc.getString("courseCode") ?: (local?.courseCode ?: ""),
                                     professorId = doc.getString("professorId") ?: local?.professorId,
                                     professor = doc.getString("professor") ?: (local?.professor ?: ""),
@@ -512,9 +491,9 @@ object FirestoreSyncManager {
                                 val session = com.example.data.local.entity.CourseSessionEntity(
                                     id = id,
                                     courseId = courseId,
-                                    day = doc.getLong("day")?.toInt() ?: (local?.day ?: 0),
-                                    start = doc.getString("start") ?: (local?.start ?: "08:00"),
-                                    end = doc.getString("end") ?: (local?.end ?: "10:00"),
+                                    day = doc.getLong("day")?.toInt() ?: (local?.day ?: -1),
+                                    start = doc.getString("start")?.takeIf { it.isNotBlank() } ?: (local?.start ?: ""),
+                                    end = doc.getString("end")?.takeIf { it.isNotBlank() } ?: (local?.end ?: ""),
                                     location = doc.getString("location") ?: (local?.location ?: "")
                                 )
                                 dao.insertCourseSession(session)

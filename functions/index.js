@@ -14,7 +14,6 @@ const db = admin.firestore();
  * Securely redeems promo codes on server side and updates user's subscriptionTier.
  */
 exports.validateAndApplyPromoCode = functions.https.onCall(async (data, context) => {
-  // 1. Verify caller authentication
   if (!context.auth || !context.auth.uid) {
     throw new functions.https.HttpsError(
       "unauthenticated",
@@ -24,71 +23,116 @@ exports.validateAndApplyPromoCode = functions.https.onCall(async (data, context)
 
   const userId = context.auth.uid;
   const rawCode = data.code ? data.code.trim().toUpperCase() : "";
-
   if (!rawCode) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "کد وارد شده معتبر نمی‌باشد."
-    );
+    throw new functions.https.HttpsError("invalid-argument", "کد وارد شده معتبر نمی‌باشد.");
   }
 
-  // 2. Fetch promo code from secure /promoCodes collection
-  const promoDoc = await db.collection("promoCodes").document(rawCode).get();
+  const promoRef = db.collection("promoCodes").doc(rawCode);
+  const userRef = db.collection("users").doc(userId);
+  const redemptionRef = userRef.collection("redemptions").doc(rawCode);
 
-  let targetTier = "PRO";
-  let maxAiQueries = 50;
+  const allowedTiers = new Set(["FREE", "PRO", "ULTRA", "CAMPUS_UNLIMITED"]);
+  let targetTier;
+  let maxAiQueries;
+  let expiresAt = null;
+  let maxRedemptions = 1;
 
+  const promoDoc = await promoRef.get();
   if (promoDoc.exists) {
-    const promoData = promoDoc.data();
+    const promoData = promoDoc.data() || {};
     if (!promoData.isActive) {
       throw new functions.https.HttpsError(
         "failed-precondition",
         "این کد تخفیف منقضی یا غیرفعال شده است."
       );
     }
-    targetTier = promoData.targetTier || "PRO";
-    maxAiQueries = targetTier === "ULTRA" ? 999 : 50;
-  } else {
-    // Official partner student promo codes
-    const validCodes = {
-      "STUDENT2026": "PRO",
-      "DANESHJOO": "PRO",
-      "AUT_PRO": "PRO",
-      "SHARIF_AI": "PRO",
-      "CAMPUS_ULTRA": "ULTRA",
-      "ELITE2026": "ULTRA"
-    };
-
-    if (!validCodes[rawCode]) {
-      throw new functions.https.HttpsError(
-        "not-found",
-        "کد تخفیف در سامانه یافت نشد."
-      );
+    targetTier = String(promoData.targetTier || "PRO").trim().toUpperCase();
+    if (promoData.expiresAt) {
+      expiresAt = promoData.expiresAt;
+      const expiresMillis = typeof expiresAt.toMillis === "function"
+        ? expiresAt.toMillis()
+        : new Date(expiresAt).getTime();
+      if (Number.isFinite(expiresMillis) && expiresMillis <= Date.now()) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "این کد تخفیف منقضی شده است."
+        );
+      }
     }
-    targetTier = validCodes[rawCode];
-    maxAiQueries = targetTier === "ULTRA" ? 999 : 50;
+    maxRedemptions = Math.max(1, Number(promoData.maxRedemptions || 1));
+  } else {
+    // Promo codes are data, not source code. Unknown codes fail closed.
+    throw new functions.https.HttpsError(
+      "not-found",
+      "کد تخفیف در سامانه یافت نشد."
+    );
   }
 
-  // 3. Atomically update the user's subscription record (Admin SDK bypasses client write security rules)
-  const userRef = db.collection("users").document(userId);
-  await userRef.set({
-    subscriptionTier: targetTier,
-    maxDailyAiQuota: maxAiQueries,
-    isCloudSyncEnabled: true,
-    lastPromoCode: rawCode,
-    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
+  if (!allowedTiers.has(targetTier)) {
+    throw new functions.https.HttpsError(
+      "failed-precondition",
+      "پیکربندی سطح اشتراک این کد معتبر نیست."
+    );
+  }
+  maxAiQueries = targetTier === "FREE" ? 5 : targetTier === "PRO" ? 50 : 999;
 
-  // 4. Save audit log under user's redemptions
-  await userRef.collection("redemptions").document(rawCode).set({
-    code: rawCode,
-    tierGranted: targetTier,
-    redeemedAt: admin.firestore.FieldValue.serverTimestamp()
+  await db.runTransaction(async (transaction) => {
+    const userDoc = await transaction.get(userRef);
+    const redemptionDoc = await transaction.get(redemptionRef);
+    const promoStateDoc = await transaction.get(promoRef);
+
+    if (!userDoc.exists) {
+      throw new functions.https.HttpsError("not-found", "حساب کاربری یافت نشد.");
+    }
+    if (redemptionDoc.exists) {
+      throw new functions.https.HttpsError(
+        "already-exists",
+        "این کد قبلاً برای این حساب مصرف شده است."
+      );
+    }
+
+    const currentPromoData = promoStateDoc.exists ? (promoStateDoc.data() || {}) : {};
+    const redeemedCount = Number(currentPromoData.redeemedCount || 0);
+    const active = currentPromoData.isActive !== false;
+    if (!active || redeemedCount >= maxRedemptions) {
+      throw new functions.https.HttpsError(
+        "resource-exhausted",
+        "ظرفیت مصرف این کد تخفیف تکمیل شده است."
+      );
+    }
+
+    transaction.set(userRef, {
+      subscriptionTier: targetTier,
+      maxDailyAiQuota: maxAiQueries,
+      isCloudSyncEnabled: targetTier !== "FREE",
+      allowsPdfExport: targetTier !== "FREE",
+      gpaPredictorUnlocked: targetTier !== "FREE",
+      subscriptionExpiresAt: expiresAt,
+      lastPromoCode: rawCode,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    transaction.create(redemptionRef, {
+      code: rawCode,
+      tierGranted: targetTier,
+      redeemedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    transaction.set(
+      promoRef,
+      {
+        redeemedCount: redeemedCount + 1,
+        isActive: redeemedCount + 1 < maxRedemptions,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      },
+      { merge: true }
+    );
   });
 
   return {
     success: true,
     tier: targetTier,
+    expiresAt: expiresAt || null,
+    maxDailyAiQuota: maxAiQueries,
     message: `اشتراک شما به پلن ${targetTier} با موفقیت ارتقا یافت.`
   };
 });
@@ -102,40 +146,11 @@ exports.verifyPlayBillingReceipt = functions.https.onCall(async (data, context) 
     throw new functions.https.HttpsError("unauthenticated", "کاربر احراز هویت نشده است.");
   }
 
-  const { packageName, productId, purchaseToken } = data;
-  const userId = context.auth.uid;
-
-  if (!productId || !purchaseToken) {
-    throw new functions.https.HttpsError("invalid-argument", "اطلاعات رسید خرید ناقص است.");
-  }
-
-  // Determine tier from Play Billing SKU
-  let grantedTier = "PRO";
-  if (productId.includes("ultra") || productId.includes("yearly")) {
-    grantedTier = "ULTRA";
-  }
-
-  // Record verified receipt in Firestore
-  await db.collection("receiptValidation").document(purchaseToken).set({
-    userId: userId,
-    packageName: packageName,
-    productId: productId,
-    purchaseToken: purchaseToken,
-    grantedTier: grantedTier,
-    verifiedAt: admin.firestore.FieldValue.serverTimestamp()
-  });
-
-  // Elevate user's subscriptionTier
-  await db.collection("users").document(userId).set({
-    subscriptionTier: grantedTier,
-    isCloudSyncEnabled: true,
-    maxDailyAiQuota: grantedTier === "ULTRA" ? 999 : 50,
-    updatedAt: admin.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
-
-  return {
-    success: true,
-    tier: grantedTier,
-    message: "رسید خرید Google Play با موفقیت در سرور اعتبارسنجی شد."
-  };
+  // Fail closed: this endpoint must not grant entitlements from an
+  // unverified purchase token. Wire it to the Google Play Developer API
+  // before enabling production purchases.
+  throw new functions.https.HttpsError(
+    "failed-precondition",
+    "اعتبارسنجی خرید Google Play هنوز در سرور فعال نشده است."
+  );
 });

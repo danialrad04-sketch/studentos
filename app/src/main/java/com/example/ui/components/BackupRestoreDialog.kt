@@ -1,5 +1,9 @@
 package com.example.ui.components
 
+import androidx.compose.material3.TextButton
+
+import com.example.ui.theme.StudentOsColors
+
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -25,6 +29,7 @@ import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -53,7 +58,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.StudentOsColors
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
 
 @Composable
 fun BackupRestoreDialog(
@@ -71,6 +78,8 @@ fun BackupRestoreDialog(
     var restoreStatusMessage by remember { mutableStateOf<String?>(null) }
     var isRestoring by remember { mutableStateOf(false) }
     var isCloudRestoring by remember { mutableStateOf(false) }
+    var showRestoreConfirmation by remember { mutableStateOf(false) }
+    var pendingRestoreType by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(selectedTab) {
         if (selectedTab == 0 && exportedJsonText.isBlank()) {
@@ -103,14 +112,14 @@ fun BackupRestoreDialog(
                 Box(
                     modifier = Modifier
                         .size(38.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(StudentOsColors.CyberViolet.copy(alpha = 0.16f)),
+                        .clip(StudentShapeTokens.Compact)
+                        .background(AcademicNavy.copy(alpha = 0.16f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Security,
                         contentDescription = null,
-                        tint = StudentOsColors.CyberViolet,
+                        tint = AcademicNavy,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -133,7 +142,7 @@ fun BackupRestoreDialog(
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                modifier = Modifier.clip(RoundedCornerShape(14.dp))
+                modifier = Modifier.clip(StudentShapeTokens.Compact)
             ) {
                 Tab(
                     selected = selectedTab == 0,
@@ -157,7 +166,7 @@ fun BackupRestoreDialog(
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.Security, contentDescription = null, tint = StudentOsColors.EmeraldNeon, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Rounded.Security, contentDescription = null, tint = AcademicOlive, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("پایگاه داده کامل و امن (Zero Data Loss)", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
@@ -173,7 +182,7 @@ fun BackupRestoreDialog(
 
                 if (isExporting) {
                     Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(modifier = Modifier.size(28.dp), color = StudentOsColors.CyberViolet)
+                        CircularProgressIndicator(modifier = Modifier.size(28.dp), color = AcademicNavy)
                     }
                 } else {
                     OutlinedTextField(
@@ -199,7 +208,7 @@ fun BackupRestoreDialog(
                             .fillMaxWidth()
                             .height(46.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.CyberViolet)
+                        colors = ButtonDefaults.buttonColors(containerColor = AcademicNavy)
                     ) {
                         Icon(Icons.Rounded.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
@@ -211,13 +220,13 @@ fun BackupRestoreDialog(
                 // Cloud Restore Card & Action
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = StudentOsColors.CyberViolet.copy(alpha = 0.12f)),
+                    colors = CardDefaults.cardColors(containerColor = AcademicNavy.copy(alpha = 0.12f)),
                     shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, StudentOsColors.CyberViolet.copy(alpha = 0.35f))
+                    border = androidx.compose.foundation.BorderStroke(1.dp, AcademicNavy.copy(alpha = 0.35f))
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.CloudDownload, contentDescription = null, tint = StudentOsColors.CyberViolet, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Rounded.CloudDownload, contentDescription = null, tint = AcademicNavy, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("بازیابی مستقیم از فضای ابری (Cloud Sync)", fontWeight = FontWeight.Bold, fontSize = 12.5.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
@@ -230,19 +239,12 @@ fun BackupRestoreDialog(
                         Spacer(modifier = Modifier.height(10.dp))
                         Button(
                             onClick = {
-                                isCloudRestoring = true
-                                onRestoreFromCloud { success, msg ->
-                                    isCloudRestoring = false
-                                    restoreStatusMessage = msg
-                                    if (success) {
-                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                                        onDismiss()
-                                    }
-                                }
+                                pendingRestoreType = "cloud"
+                                showRestoreConfirmation = true
                             },
                             enabled = !isCloudRestoring && !isRestoring,
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.CyberViolet),
+                            shape = StudentShapeTokens.Compact,
+                            colors = ButtonDefaults.buttonColors(containerColor = AcademicNavy),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(44.dp)
@@ -262,9 +264,9 @@ fun BackupRestoreDialog(
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = StudentOsColors.CyanAccent.copy(alpha = 0.12f)),
+                    colors = CardDefaults.cardColors(containerColor = AcademicNavy.copy(alpha = 0.12f)),
                     shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, StudentOsColors.CyanAccent.copy(alpha = 0.35f))
+                    border = androidx.compose.foundation.BorderStroke(1.dp, AcademicNavy.copy(alpha = 0.35f))
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text("بازیابی از متن پشتیبان JSON", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
@@ -315,20 +317,13 @@ fun BackupRestoreDialog(
                     Button(
                         onClick = {
                             if (jsonInputToRestore.isNotBlank()) {
-                                isRestoring = true
-                                onImportJson(jsonInputToRestore) { success, msg ->
-                                    isRestoring = false
-                                    restoreStatusMessage = msg
-                                    if (success) {
-                                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                                        onDismiss()
-                                    }
-                                }
+                                pendingRestoreType = "json"
+                                showRestoreConfirmation = true
                             }
                         },
                         enabled = jsonInputToRestore.isNotBlank() && !isRestoring,
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.EmeraldNeon),
+                        shape = StudentShapeTokens.Compact,
+                        colors = ButtonDefaults.buttonColors(containerColor = AcademicOlive),
                         modifier = Modifier
                             .weight(1.3f)
                             .height(46.dp)
@@ -351,6 +346,61 @@ fun BackupRestoreDialog(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+            }
+
+            if (showRestoreConfirmation) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showRestoreConfirmation = false
+                        pendingRestoreType = null
+                    },
+                    title = { Text("تأیید بازیابی اطلاعات") },
+                    text = {
+                        Text(
+                            "بازیابی اطلاعات می‌تواند داده‌های فعلی روی دستگاه را با نسخه انتخاب‌شده جایگزین کند. قبل از ادامه مطمئن شوید نسخه درست را انتخاب کرده‌اید."
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showRestoreConfirmation = false
+                                when (pendingRestoreType) {
+                                    "cloud" -> {
+                                        isCloudRestoring = true
+                                        onRestoreFromCloud { success, msg ->
+                                            isCloudRestoring = false
+                                            restoreStatusMessage = msg
+                                            if (success) {
+                                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                                onDismiss()
+                                            }
+                                        }
+                                    }
+                                    "json" -> {
+                                        isRestoring = true
+                                        onImportJson(jsonInputToRestore) { success, msg ->
+                                            isRestoring = false
+                                            restoreStatusMessage = msg
+                                            if (success) {
+                                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                                                onDismiss()
+                                            }
+                                        }
+                                    }
+                                }
+                                pendingRestoreType = null
+                            },
+                            shape = StudentShapeTokens.Compact
+                        ) { Text("تأیید و بازیابی") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showRestoreConfirmation = false
+                            pendingRestoreType = null
+                        }) { Text("انصراف") }
+                    },
+                    shape = StudentShapeTokens.Card
+                )
             }
 
             Spacer(modifier = Modifier.height(4.dp))

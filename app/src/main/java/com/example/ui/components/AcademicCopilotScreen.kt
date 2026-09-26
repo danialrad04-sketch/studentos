@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.domain.model.requiresExplicitConfirmation
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
@@ -39,6 +41,7 @@ import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -50,6 +53,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -76,6 +80,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.StudentOsColors
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.StudentSpacing
 import com.example.ui.theme.StudentOsGlassTokens
 import com.example.data.local.entity.AttendanceEntity
 import com.example.data.local.entity.CourseEntity
@@ -92,14 +100,14 @@ import com.example.ui.models.AppTab
 import com.example.ui.models.ExamItem
 import com.example.ui.theme.Amber500
 import com.example.ui.theme.Amber600
-import com.example.ui.theme.BrandIndigo400
-import com.example.ui.theme.BrandIndigo600
-import com.example.ui.theme.CyanNeon
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.Emerald500
 import com.example.ui.theme.Emerald600
 import com.example.ui.theme.Rose500
 import com.example.ui.theme.Rose600
-import com.example.ui.theme.VioletNeon
+import com.example.ui.theme.AcademicOlive
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -346,7 +354,7 @@ fun AcademicCopilotScreen(
                         Surface(
                             shape = RoundedCornerShape(16.dp),
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                            border = androidx.compose.foundation.BorderStroke(0.8.dp, BrandIndigo600.copy(alpha = 0.2f))
+                            border = androidx.compose.foundation.BorderStroke(0.8.dp, AcademicNavy.copy(alpha = 0.2f))
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
@@ -356,7 +364,7 @@ fun AcademicCopilotScreen(
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(16.dp),
                                     strokeWidth = 2.dp,
-                                    color = BrandIndigo600
+                                    color = AcademicNavy
                                 )
                                 Text(
                                     text = "دستیار در حال تحلیل وضعیت تحصیلی و تولید پاسخ...",
@@ -499,7 +507,7 @@ private fun CopilotContextHudHeader(
                 .fillMaxWidth()
                 .border(
                     width = 1.dp,
-                    brush = Brush.horizontalGradient(listOf(BrandIndigo600.copy(alpha = 0.4f), VioletNeon.copy(alpha = 0.2f))),
+                    brush = Brush.horizontalGradient(listOf(AcademicNavy.copy(alpha = 0.4f), AcademicOlive.copy(alpha = 0.2f))),
                     shape = RoundedCornerShape(20.dp)
                 )
                 .padding(12.dp)
@@ -518,7 +526,7 @@ private fun CopilotContextHudHeader(
                             modifier = Modifier
                                 .size(28.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(BrandIndigo600),
+                                .background(AcademicNavy),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -553,6 +561,7 @@ private fun CopilotContextHudHeader(
                         // AI Key config button
                         Surface(
                             modifier = Modifier
+                                .minimumInteractiveComponentSize()
                                 .clip(RoundedCornerShape(10.dp))
                                 .clickable { onOpenApiKeyDialog() },
                             color = MaterialTheme.colorScheme.secondaryContainer,
@@ -581,6 +590,7 @@ private fun CopilotContextHudHeader(
                         // Button to edit/adjust semester and past records
                         Surface(
                             modifier = Modifier
+                                .minimumInteractiveComponentSize()
                                 .clip(RoundedCornerShape(10.dp))
                                 .clickable { onOpenPastSemesters() },
                             color = MaterialTheme.colorScheme.primaryContainer,
@@ -616,7 +626,7 @@ private fun CopilotContextHudHeader(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     HudPill(label = "ترم فعلی", value = "ترم ${profile.currentSemester}", color = MaterialTheme.colorScheme.primary)
-                    HudPill(label = "واحدهای فعال", value = "$totalActiveUnits واحد", color = CyanNeon)
+                    HudPill(label = "واحدهای فعال", value = "$totalActiveUnits واحد", color = AcademicNavy)
                     HudPill(label = "پاس‌شده", value = "${profile.passedUnits} واحد", color = Emerald600)
                     HudPill(label = "معدل", value = String.format(Locale.US, "%.2f", currentGpa), color = Amber600)
                     if (criticalAbsences > 0) {
@@ -830,13 +840,13 @@ private fun CopilotMessageItem(
                             .clickable { onQuickReplyClicked(reply) },
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                         shape = RoundedCornerShape(8.dp),
-                        border = androidx.compose.foundation.BorderStroke(0.6.dp, BrandIndigo400.copy(alpha = 0.25f))
+                        border = androidx.compose.foundation.BorderStroke(0.6.dp, AcademicNavy.copy(alpha = 0.25f))
                     ) {
                         Text(
                             text = reply,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
-                            color = BrandIndigo600,
+                            color = AcademicNavy,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
@@ -853,34 +863,37 @@ private fun CopilotActionProposalCard(
     onApply: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    var showConfirmation by remember(proposal.id) { mutableStateOf(false) }
+    val requiresConfirmation = proposal.requiresExplicitConfirmation
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 40.dp, top = 4.dp, bottom = 4.dp),
-        shape = RoundedCornerShape(16.dp),
+        shape = StudentShapeTokens.Card,
         colors = CardDefaults.cardColors(
-            containerColor = if (isApplied) Emerald600.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface
+            containerColor = if (isApplied) AcademicOlive.copy(alpha = 0.10f) else MaterialTheme.colorScheme.surface
         ),
         border = androidx.compose.foundation.BorderStroke(
             width = 1.dp,
-            color = if (isApplied) Emerald600 else BrandIndigo600.copy(alpha = 0.4f)
+            color = if (isApplied) AcademicOlive else AcademicNavy.copy(alpha = 0.30f)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(StudentSpacing.Lg)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     Icon(
                         imageVector = if (isApplied) Icons.Default.CheckCircle else Icons.Default.Lightbulb,
                         contentDescription = null,
-                        tint = if (isApplied) Emerald600 else BrandIndigo600,
+                        tint = if (isApplied) AcademicOlive else AcademicNavy,
                         modifier = Modifier.size(18.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(StudentSpacing.Sm))
                     Text(
                         text = proposal.title,
                         fontSize = 12.sp,
@@ -889,33 +902,32 @@ private fun CopilotActionProposalCard(
                     )
                 }
 
-                // Impact Type Tag
                 val impactLabel = when (proposal.impactType) {
                     ActionImpactType.SAFE_QUERY -> "تحلیلی / ایمن"
                     ActionImpactType.REQUIRES_CONFIRMATION -> "نیازمند تأیید شما"
-                    ActionImpactType.PROTECTED_READONLY -> "قانون مصوب"
+                    ActionImpactType.PROTECTED_READONLY -> "خواندن محافظت‌شده"
                 }
                 val impactColor = when (proposal.impactType) {
-                    ActionImpactType.SAFE_QUERY -> CyanNeon
-                    ActionImpactType.REQUIRES_CONFIRMATION -> Amber600
+                    ActionImpactType.SAFE_QUERY -> AcademicNavy
+                    ActionImpactType.REQUIRES_CONFIRMATION -> AcademicOlive
                     ActionImpactType.PROTECTED_READONLY -> MaterialTheme.colorScheme.onSurfaceVariant
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = impactColor.copy(alpha = 0.15f)
+                    shape = StudentShapeTokens.Compact,
+                    color = impactColor.copy(alpha = 0.12f)
                 ) {
                     Text(
                         text = impactLabel,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                         color = impactColor,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = StudentSpacing.Sm, vertical = StudentSpacing.Xs)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(StudentSpacing.Sm))
 
             Text(
                 text = proposal.description,
@@ -923,13 +935,26 @@ private fun CopilotActionProposalCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(StudentSpacing.Md))
 
             if (isApplied) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Check, contentDescription = null, tint = Emerald600, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "تغییرات با موفقیت اعمال شد", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Emerald600)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.minimumInteractiveComponentSize()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "تغییرات اعمال شد",
+                        tint = AcademicOlive,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(StudentSpacing.Xs))
+                    Text(
+                        text = "تغییرات با موفقیت اعمال شد",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AcademicOlive
+                    )
                 }
             } else {
                 Row(
@@ -938,19 +963,69 @@ private fun CopilotActionProposalCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("رد پیشنهاد", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("رد پیشنهاد", fontSize = 11.sp)
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(StudentSpacing.Sm))
                     Button(
-                        onClick = onApply,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        onClick = {
+                            if (requiresConfirmation) {
+                                showConfirmation = true
+                            } else {
+                                onApply()
+                            }
+                        },
+                        modifier = Modifier.minimumInteractiveComponentSize(),
+                        shape = StudentShapeTokens.Compact,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (requiresConfirmation) AcademicOlive else MaterialTheme.colorScheme.primary
+                        ),
+                        contentPadding = PaddingValues(
+                            horizontal = StudentSpacing.Md,
+                            vertical = StudentSpacing.Sm
+                        )
                     ) {
-                        Text(proposal.buttonLabel, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            if (requiresConfirmation) "تأیید و اعمال" else proposal.buttonLabel,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
         }
+    }
+
+    if (showConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showConfirmation = false },
+            title = { Text("تأیید اجرای تغییر") },
+            text = {
+                Text(
+                    if (proposal.isDestructive) {
+                        "این عملیات می‌تواند روی اطلاعات شما اثر دائمی داشته باشد. قبل از ادامه، جزئیات پیشنهاد را بررسی کنید."
+                    } else {
+                        "این عملیات اطلاعات Student OS را تغییر می‌دهد و قبل از اجرا به تأیید شما نیاز دارد."
+                    }
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showConfirmation = false
+                        onApply()
+                    },
+                    modifier = Modifier.minimumInteractiveComponentSize(),
+                    shape = StudentShapeTokens.Compact
+                ) {
+                    Text("تأیید و اعمال")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmation = false }) {
+                    Text("انصراف")
+                }
+            },
+            shape = StudentShapeTokens.Card
+        )
     }
 }

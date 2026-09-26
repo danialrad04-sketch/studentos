@@ -5,6 +5,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import kotlinx.coroutines.CancellationException
 import androidx.credentials.exceptions.NoCredentialException
 import com.example.R
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -25,15 +26,24 @@ object GoogleSignInManager {
         } catch (cancelled: GetCredentialCancellationException) {
             Result.failure(cancelled)
         } catch (noCredential: NoCredentialException) {
-            requestToken(activity, preferAuthorized = false)
+            try {
+                requestToken(activity, preferAuthorized = false)
+            } catch (e: Throwable) {
+                if (e is CancellationException) throw e
+                Result.failure(e)
+            }
         } catch (firstAttemptError: Exception) {
             // A first-attempt account filter can fail on some Play Services
             // combinations; retry once with the general account picker.
             try {
                 requestToken(activity, preferAuthorized = false)
-            } catch (secondAttemptError: Exception) {
+            } catch (secondAttemptError: Throwable) {
+                if (secondAttemptError is CancellationException) throw secondAttemptError
                 Result.failure(secondAttemptError)
             }
+        } catch (fatal: Throwable) {
+            if (fatal is CancellationException) throw fatal
+            Result.failure(fatal)
         }
     }
 

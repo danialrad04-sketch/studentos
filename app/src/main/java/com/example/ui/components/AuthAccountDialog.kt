@@ -61,6 +61,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.model.UserAccount
 import com.example.ui.theme.StudentOsColors
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
 
 @Composable
 fun AuthAccountDialog(
@@ -101,13 +103,13 @@ fun AuthAccountDialog(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(StudentOsColors.ElectricBlue.copy(alpha = 0.16f)),
+                        .background(AcademicNavy.copy(alpha = 0.16f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.AccountCircle,
                         contentDescription = null,
-                        tint = StudentOsColors.ElectricBlue,
+                        tint = AcademicNavy,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -185,7 +187,7 @@ fun AuthAccountDialog(
                     ) {
                         Text(
                             text = "فراموشی رمز عبور؟",
-                            color = StudentOsColors.ElectricBlue,
+                            color = AcademicNavy,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier
@@ -200,7 +202,7 @@ fun AuthAccountDialog(
                             .fillMaxWidth()
                             .height(48.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.ElectricBlue),
+                        colors = ButtonDefaults.buttonColors(containerColor = AcademicNavy),
                         enabled = email.isNotBlank() && password.isNotBlank()
                     ) {
                         Text("ورود به حساب و همگام‌سازی داده‌ها", fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
@@ -213,7 +215,7 @@ fun AuthAccountDialog(
                             .height(48.dp),
                         shape = RoundedCornerShape(14.dp)
                     ) {
-                        Icon(Icons.Rounded.CloudDone, contentDescription = null, tint = StudentOsColors.EmeraldNeon, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Rounded.CloudDone, contentDescription = null, tint = AcademicOlive, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("ورود سریع با حساب دانشگاهی یا گوگل", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
                     }
@@ -265,117 +267,13 @@ fun AuthAccountDialog(
                     }
                 }
             } else {
-                // Logged In Account Dashboard
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)),
-                    shape = RoundedCornerShape(16.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(CircleShape)
-                                .background(StudentOsColors.ElectricBlue.copy(alpha = 0.16f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Rounded.Person,
-                                contentDescription = null,
-                                modifier = Modifier.size(32.dp),
-                                tint = StudentOsColors.ElectricBlue
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = userAccount.displayName,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        userAccount.email?.let {
-                            Text(
-                                text = it,
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(StudentOsColors.CyberViolet.copy(alpha = 0.14f))
-                                .padding(horizontal = 12.dp, vertical = 5.dp)
-                        ) {
-                            Icon(Icons.Rounded.Stars, contentDescription = null, modifier = Modifier.size(15.dp), tint = StudentOsColors.CyberViolet)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = userAccount.subscription.tier.titleFa,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = StudentOsColors.CyberViolet
-                            )
-                        }
-                    }
-                }
-
-                // Pro Upgrade Button
-                OutlinedButton(
-                    onClick = onOpenUpgrade,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Icon(Icons.Rounded.Stars, contentDescription = null, tint = StudentOsColors.EmeraldNeon, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("ارتقا به نسخه پرو و امکانات ابری", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                }
-
-                // Sync Now Button
-                Button(
-                    onClick = onSyncNow,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.ElectricBlue)
-                ) {
-                    Icon(Icons.Rounded.CloudDone, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("همگام‌سازی فوری با سرور ابری", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color.White)
-                }
-
-                // Sign Out
-                OutlinedButton(
-                    onClick = onSignOut,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Icon(Icons.Rounded.ExitToApp, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("خروج از حساب کاربری", fontSize = 12.sp)
-                }
-
-                // Delete Account
-                TextButton(
-                    onClick = { showDeleteConfirm = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Rounded.DeleteForever, contentDescription = null, tint = StudentOsColors.CrimsonRose, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("حذف دائمی حساب و پاکسازی داده‌ها", color = StudentOsColors.CrimsonRose, fontSize = 11.5.sp)
-                }
+                LayeredAccountCenter(
+                    userAccount = userAccount,
+                    onSyncNow = onSyncNow,
+                    onSignOut = onSignOut,
+                    onDeleteAccount = { showDeleteConfirm = true },
+                    onOpenUpgrade = onOpenUpgrade
+                )
             }
 
             if (showDeleteConfirm) {
@@ -383,7 +281,7 @@ fun AuthAccountDialog(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = StudentOsColors.CrimsonRose.copy(alpha = 0.12f)),
                     shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, StudentOsColors.CrimsonRose.copy(alpha = 0.4f))
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(

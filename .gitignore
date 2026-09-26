@@ -16,3 +16,11 @@
 local.properties
 .env
 debug.keystore
+# Release/signing credentials and private keys
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+service-account*.json

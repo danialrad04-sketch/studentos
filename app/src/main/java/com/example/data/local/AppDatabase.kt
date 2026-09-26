@@ -778,13 +778,6 @@ abstract class AppDatabase : RoomDatabase() {
                         facultyDisplayNameFa = "دانشکده مهندسی شیمی و نفت",
                         majorDisplayNameFa = "مهندسی شیمی"
                     ),
-                    MajorEntity(
-                        id = "MAJ_AUT_COMP_ENG",
-                        universityId = "UNI_AUT",
-                        facultyId = "FAC_AUT_COMP",
-                        facultyDisplayNameFa = "دانشکده مهندسی کامپیوتر",
-                        majorDisplayNameFa = "مهندسی کامپیوتر"
-                    )
                 )
                 cDao.insertMajors(majors)
 
@@ -824,15 +817,15 @@ abstract class AppDatabase : RoomDatabase() {
                         id = 1,
                         name = "دانشجو",
                         studentId = "",
-                        faculty = "دانشکده مهندسی",
-                        term = "ترم ۱",
+                        faculty = "",
+                        term = "",
                         activeUnits = 0,
                         passedUnits = 0,
                         notes = "",
                         isOnboardingCompleted = false,
-                        universityId = "UNI_AUT",
-                        facultyId = "FAC_AUT_CHEM_OIL",
-                        majorId = "MAJ_AUT_CHEM_ENG",
+                        universityId = null,
+                        facultyId = null,
+                        majorId = null,
                         declaredPassedCredits = 0,
                         declaredGpa = null
                     )
@@ -844,12 +837,12 @@ abstract class AppDatabase : RoomDatabase() {
             if (existingSemesters.isEmpty()) {
                 dao.insertSemester(
                     SemesterEntity(
-                        id = "sem_1",
-                        title = "ترم ۱ (پاییز ۱۴۰۳)",
-                        year = 1403,
-                        academicYear = 1403,
-                        semesterNumber = 1,
-                        termNumber = 1,
+                        id = "sem_current",
+                        title = "ترم جاری",
+                        year = 0,
+                        academicYear = 0,
+                        semesterNumber = 0,
+                        termNumber = 0,
                         isCurrent = true,
                         isArchived = false,
                         totalUnits = 0,

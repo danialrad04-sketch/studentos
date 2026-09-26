@@ -24,6 +24,36 @@ interface StudentDao : CourseDao, TaskDao, AttendanceDao, ProfileDao, ExamDao, G
     @Query("SELECT * FROM sync_metadata")
     suspend fun getAllSyncMetadata(): List<com.example.data.local.entity.SyncMetadataEntity>
 
+    @Query("DELETE FROM sync_metadata")
+    suspend fun clearSyncMetadata()
+
+    @Query("DELETE FROM student_profile")
+    suspend fun clearStudentProfile()
+
+    @Query("DELETE FROM semesters")
+    suspend fun clearSemesters()
+
+    @Query("DELETE FROM course_sessions")
+    suspend fun clearAllCourseSessions()
+
+    @Query("DELETE FROM notes")
+    suspend fun clearAllNotes()
+
+    @Transaction
+    suspend fun clearAllUserData() {
+        clearAttendance()
+        clearGrades()
+        clearTasks()
+        clearExams()
+        clearAllCourseSessions()
+        clearAllNotes()
+        clearCourses()
+        clearStudentAttempts(1)
+        clearSemesters()
+        clearStudentProfile()
+        clearSyncMetadata()
+    }
+
     // ==========================================
     // Orphan Cleanup Across Multi-Entity Relations
     // ==========================================

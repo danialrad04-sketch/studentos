@@ -19,6 +19,7 @@ import com.example.data.local.entity.TaskEntity
 import com.example.data.local.relation.CourseWithSessions
 import com.example.domain.model.AcademicRisk
 import com.example.domain.model.SemesterPlan
+import com.example.domain.model.StudySessionRecommendation
 import com.example.domain.model.StudentGamificationProfile
 import com.example.domain.model.WeeklyAcademicWorkload
 import com.example.ui.StudentViewModel
@@ -47,6 +48,7 @@ fun MainTabContent(
     academicRisks: List<AcademicRisk>,
     weeklyWorkload: WeeklyAcademicWorkload,
     candidateSemesterPlans: List<SemesterPlan>,
+    studyRecommendations: List<StudySessionRecommendation> = emptyList(),
     pomodoroSeconds: Int,
     isPomodoroRunning: Boolean,
     gamificationProfile: StudentGamificationProfile,
@@ -84,6 +86,7 @@ fun MainTabContent(
                     academicProgressState = academicProgressState,
                     academicRisks = academicRisks,
                     weeklyWorkload = weeklyWorkload,
+                    studyRecommendations = studyRecommendations,
                     pomodoroSeconds = pomodoroSeconds,
                     isPomodoroRunning = isPomodoroRunning,
                     onTogglePomodoro = {
@@ -129,6 +132,22 @@ fun MainTabContent(
                     onOpenPastSemestersDialog = onOpenPastSemestersDialog,
                     customApiKey = customApiKey,
                     onSaveCustomApiKey = { studentViewModel.setCustomGeminiApiKey(it) }
+                )
+            }
+            AppTab.ACADEMIC_INTELLIGENCE -> {
+                AcademicIntelligenceScreen(
+                    gpa = currentTermGpa,
+                    passedUnits = profile.passedUnits,
+                    totalRequiredCredits = totalCurriculumUnits,
+                    courses = courses,
+                    attendance = attendance,
+                    tasks = tasks,
+                    grades = grades,
+                    risks = academicRisks,
+                    onOpenTab = { targetTab ->
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        studentViewModel.selectTab(targetTab)
+                    }
                 )
             }
             AppTab.PASSPORT -> {
@@ -258,8 +277,7 @@ fun MainTabContent(
             }
             AppTab.CURRICULUM -> {
                 CurriculumScreen(
-                    matchState = curriculumMatchState,
-                    curriculumList = studentViewModel.curriculumList
+                    matchState = curriculumMatchState
                 )
             }
             AppTab.POMODORO -> {

@@ -4,26 +4,41 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag, e.g. v1.0.0"
+        description: "Release tag, e.g. v1.0.3"
         required: true
-        default: "v1.0.0"
+        default: "v1.0.3"
       title:
         description: "Release title"
         required: true
-        default: "Student OS v1.0.0"
-  push:
-    branches:
-      - "production-release/**"
+        default: "Student OS v1.0.3"
+      ref:
+        description: "Git tag or commit SHA to build; must be immutable for a reproducible release."
+        required: true
+        default: "main"
+      version_code:
+        description: "Monotonic Android versionCode; verify against the latest published artifact."
+        required: true
+      version_name:
+        description: "Android versionName; must match the release tag without the leading v."
+        required: true
+        default: "1.0.3"
 
 permissions:
   contents: write
+
+concurrency:
+  group: studentos-release
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout release branch
+      - name: Checkout release ref
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -42,30 +57,77 @@ jobs:
           test -n "$RELEASE_KEYSTORE_BASE64"
           echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > studentos-release.jks
 
+      - name: Validate release version inputs
+        shell: bash
+        env:
+          TAG: ${{ inputs.tag }}
+          VERSION_CODE: ${{ inputs.version_code }}
+          VERSION_NAME: ${{ inputs.version_name }}
+        run: |
+          test -n "$VERSION_CODE"
+          test -n "$VERSION_NAME"
+          test "$VERSION_NAME" = "$(printf '%s' "$TAG" | sed 's/^v//')"
+          case "$VERSION_CODE" in
+            (*[!0-9]*|'') exit 1 ;;
+          esac
+          test "$VERSION_CODE" -gt 0
+
+      - name: Run Android unit and lint gates
+        run: |
+          ./gradlew testDebugUnitTest lintDebug lintRelease \
+            -PVERSION_CODE=${{ inputs.version_code }} \
+            -PVERSION_NAME=${{ inputs.version_name }} \
+            --stacktrace
+
+      - name: Run backend tests
+        working-directory: backend
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          npm test
+
+      - name: Run Android instrumentation smoke gate
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7_pro
+          avd-name: studentos-release-api35
+          force-avd-creation: true
+          emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
+          disable-animations: true
+          script: |
+            ./gradlew connectedDebugAndroidTest \
+              -PVERSION_CODE=${{ inputs.version_code }} \
+              -PVERSION_NAME=${{ inputs.version_name }} \
+              --stacktrace
+
       - name: Build signed APK and AAB
         env:
           KEYSTORE_PATH: studentos-release.jks
           STORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-        run: ./gradlew assembleRelease bundleRelease --stacktrace
+        run: |
+          ./gradlew assembleRelease bundleRelease             -PVERSION_CODE=${{ inputs.version_code }}             -PVERSION_NAME=${{ inputs.version_name }}             --stacktrace
 
       - name: Verify signed outputs
+        shell: bash
         run: |
-          test -s app/build/outputs/apk/release/app-release.apk
-          test -s app/build/outputs/bundle/release/app-release.aab
-          ls -lh app/build/outputs/apk/release/app-release.apk app/build/outputs/bundle/release/app-release.aab
+          APK="app/build/outputs/apk/release/app-release.apk"
+          AAB="app/build/outputs/bundle/release/app-release.aab"
+          test -s "$APK"
+          test -s "$AAB"
+          command -v apksigner
+          apksigner verify --verbose "$APK"
+          unzip -t "$AAB"
+          unzip -l "$AAB" | grep -E 'BundleConfig.pb|base/manifest/AndroidManifest.xml'
+          ls -lh "$APK" "$AAB"
 
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          TITLE: ${{ inputs.title }}
         run: |
-          TAG="${{ inputs.tag }}"
-          TITLE="${{ inputs.title }}"
-          if [ -z "$TAG" ]; then
-            TAG="${GITHUB_REF_NAME#production-release/}"
-          fi
-          if [ -z "$TITLE" ]; then
-            TITLE="Student OS $TAG"
-          fi
           gh release create "$TAG"             app/build/outputs/apk/release/app-release.apk             app/build/outputs/bundle/release/app-release.aab             --title "$TITLE"             --generate-notes

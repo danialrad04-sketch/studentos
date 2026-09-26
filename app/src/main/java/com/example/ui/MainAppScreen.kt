@@ -1,6 +1,9 @@
 package com.example.ui
 
+import androidx.compose.foundation.layout.fillMaxHeight
+
 import android.app.Activity
+import android.util.Log
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -51,6 +54,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -85,13 +89,17 @@ import com.example.ui.components.FloatingIslandNavigationBar
 import com.example.ui.components.HeaderSection
 import com.example.ui.components.MainTabContent
 import com.example.ui.components.OnboardingScreen
+import com.example.ui.components.OfflineStatusBanner
+import com.example.ui.components.StudentAdaptiveNavigationRail
 import com.example.ui.components.SubScreenHeaderSection
 import com.example.ui.components.export.ExportSourcePayload
 import com.example.ui.models.AppDialogState
 import com.example.ui.models.AppTab
 import com.example.ui.models.ThemeMode
-import com.example.ui.theme.BrandIndigo600
 import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.theme.rememberStudentAdaptiveMetrics
+import com.example.ui.theme.StudentWindowWidth
+import com.example.ui.theme.rememberStudentReduceMotion
 import java.util.Locale
 
 @Composable
@@ -100,6 +108,8 @@ fun MainAppScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val adaptiveMetrics = rememberStudentAdaptiveMetrics()
+    val reduceMotion = rememberStudentReduceMotion()
     val haptic = LocalHapticFeedback.current
 
     // Persistent Theme & System Theme detection
@@ -123,6 +133,25 @@ fun MainAppScreen(
     var showNotificationRationaleDialog by remember { mutableStateOf(false) }
     var postPermissionAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
+    LaunchedEffect(studentViewModel) {
+        studentViewModel.undoActions.collect { action ->
+            val result = snackbarHostState.showSnackbar(
+                message = action.message,
+                actionLabel = "واگردانی",
+                duration = SnackbarDuration.Long
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                val restoreResult = studentViewModel.undo(action)
+                if (restoreResult.isFailure) {
+                    snackbarHostState.showSnackbar(
+                        message = restoreResult.exceptionOrNull()?.localizedMessage
+                            ?: "واگردانی انجام نشد؛ داده‌های شما بدون تغییر باقی ماند.",
+                        duration = SnackbarDuration.Short
+                    )
+                }
+            }
+        }
+    }
     // Notification Permission Launcher (Android 13+ / Samsung One UI)
     val notifPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -223,6 +252,8 @@ fun MainAppScreen(
     val searchQuery by studentViewModel.searchQuery.collectAsStateWithLifecycle()
     val globalSearchResults by studentViewModel.globalSearchResults.collectAsStateWithLifecycle()
     val gamificationProfile by studentViewModel.gamificationProfile.collectAsStateWithLifecycle()
+    val syncUiState by studentViewModel.syncUiState.collectAsStateWithLifecycle()
+    val studyRecommendations by studentViewModel.studyRecommendations.collectAsStateWithLifecycle()
 
     // Dynamic weighted GPA: calculates from entered grades, or falls back to declared GPA from setup
     val totalUnits = grades.sumOf { it.units }
@@ -284,15 +315,37 @@ fun MainAppScreen(
                             onResult(false, "امکان باز کردن ورود گوگل در این محیط وجود ندارد.")
                         } else {
                             coroutineScope.launch {
-                                com.example.ui.components.GoogleSignInManager.getIdToken(activity)
+                                try {
+                                    com.example.ui.components.GoogleSignInManager.getIdToken(activity)
                                     .fold(
                                         onSuccess = { idToken ->
                                             studentViewModel.signInWithGoogle(idToken, onResult)
                                         },
-                                        onFailure = {
-                                            onResult(false, "ورود با گوگل ناموفق بود.")
+                                        onFailure = { error ->
+                                            val raw = error.message.orEmpty()
+                                            val friendly = when {
+                                                raw.contains("403", ignoreCase = true) ||
+                                                    raw.contains("forbidden", ignoreCase = true) ->
+                                                    "دسترسی ورود Google رد شد؛ تنظیمات OAuth و Web Client ID را بررسی کنید."
+                                                raw.contains("network", ignoreCase = true) ||
+                                                    raw.contains("timeout", ignoreCase = true) ->
+                                                    "اتصال اینترنت برای ورود با Google در دسترس نیست."
+                                                raw.contains("cancel", ignoreCase = true) ->
+                                                    "ورود با Google لغو شد."
+                                                raw.contains("Json", ignoreCase = true) ||
+                                                    raw.contains("DOCTYPE", ignoreCase = true) ||
+                                                    raw.contains("<html", ignoreCase = true) ->
+                                                    "پاسخ نامعتبر از سرویس ورود Google دریافت شد؛ لطفاً دوباره تلاش کنید."
+                                                else ->
+                                                    "ورود با Google ناموفق بود؛ لطفاً دوباره تلاش کنید."
+                                            }
+                                            onResult(false, friendly)
                                         }
                                     )
+                                } catch (t: Throwable) {
+                                    Log.e("MainAppScreen", "Google sign-in crashed unexpectedly", t)
+                                    onResult(false, "ورود با Google با خطای غیرمنتظره مواجه شد؛ لطفاً دوباره تلاش کنید.")
+                                }
                             }
                         }
                     }
@@ -309,7 +362,7 @@ fun MainAppScreen(
                         initialStudentId = profile.studentId,
                         initialUniversity = effectiveInitialUni,
                         initialMajor = effectiveInitialMaj,
-                        initialEntryYear = if (profile.entryYear > 0) profile.entryYear else 1403,
+                        initialEntryYear = profile.entryYear,
                         initialSemester = if (profile.currentSemester > 0) profile.currentSemester else 1,
                         onOpenPrivacyPolicy = { dialogState = AppDialogState.PrivacyPolicy },
                         onCompleteQuickSetup = { name, stdId, uni, maj, yr, sem, passed, gpa, selCourses ->
@@ -357,33 +410,51 @@ fun MainAppScreen(
                     containerColor = MaterialTheme.colorScheme.background,
                     snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
                     bottomBar = {
-                        FloatingIslandNavigationBar(
-                            selectedTab = selectedTab,
-                            onTabSelected = {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                studentViewModel.selectTab(it)
-                            }
-                        )
+                        if (adaptiveMetrics.width == StudentWindowWidth.Compact) {
+                            FloatingIslandNavigationBar(
+                                selectedTab = selectedTab,
+                                onTabSelected = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    studentViewModel.selectTab(it)
+                                }
+                            )
+                        }
                     }
                 ) { innerPadding ->
-                    Box(
+                    Row(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.background)
-                            .padding(innerPadding),
-                        contentAlignment = Alignment.TopCenter
+                            .padding(innerPadding)
                     ) {
+                        if (adaptiveMetrics.width != StudentWindowWidth.Compact) {
+                            StudentAdaptiveNavigationRail(
+                                selectedTab = selectedTab,
+                                onTabSelected = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    studentViewModel.selectTab(it)
+                                }
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            contentAlignment = Alignment.TopCenter
+                        ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .widthIn(max = 840.dp)
+                                .widthIn(max = adaptiveMetrics.contentMaxWidth)
                                 .verticalScroll(rememberScrollState())
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .padding(horizontal = adaptiveMetrics.horizontalPadding, vertical = 8.dp)
                         ) {
+                            OfflineStatusBanner()
+                            Spacer(modifier = Modifier.height(8.dp))
                             val totalCurriculumUnits = when (val state = academicProgressState) {
                                 is com.example.ui.models.AcademicProgressUiState.Ready -> state.progress.totalRequiredCredits
                                 is com.example.ui.models.AcademicProgressUiState.Partial -> state.progress.totalRequiredCredits
-                                else -> 140
+                                else -> 0
                             }
 
                             // Show Header and Live Activity ONLY on Dashboard for a clean, focused view on other tabs
@@ -416,6 +487,7 @@ fun MainAppScreen(
                                         studentViewModel.toggleThemeQuickly()
                                     },
                                     onOpenProfile = { dialogState = AppDialogState.Profile },
+                                    studyStreakDays = gamificationProfile.studyStreakDays,
                                     accountEmail = currentUser.email,
                                     isAccountConnected = !currentUser.isGuest,
                                     onOpenAccount = { dialogState = AppDialogState.Auth },
@@ -467,8 +539,12 @@ fun MainAppScreen(
                         AnimatedContent(
                             targetState = selectedTab,
                             transitionSpec = {
-                                (fadeIn(animationSpec = tween(220)) + slideInVertically { height -> height / 24 }) togetherWith
-                                        (fadeOut(animationSpec = tween(160)) + slideOutVertically { height -> -height / 24 })
+                                if (reduceMotion) {
+                                    fadeIn(initialAlpha = 1f) togetherWith fadeOut(targetAlpha = 1f)
+                                } else {
+                                    (fadeIn(animationSpec = tween(220)) + slideInVertically { height -> height / 24 }) togetherWith
+                                            (fadeOut(animationSpec = tween(160)) + slideOutVertically { height -> -height / 24 })
+                                }
                             },
                             label = "MainTabTransition"
                         ) { targetTab ->
@@ -490,6 +566,7 @@ fun MainAppScreen(
                                 academicRisks = academicRisks,
                                 weeklyWorkload = weeklyWorkload,
                                 candidateSemesterPlans = candidateSemesterPlans,
+                                studyRecommendations = studyRecommendations,
                                 pomodoroSeconds = pomodoroSeconds,
                                 isPomodoroRunning = isPomodoroRunning,
                                 gamificationProfile = gamificationProfile,
@@ -625,4 +702,5 @@ fun MainAppScreen(
             )
         }
     }
+}
 }

@@ -9,6 +9,9 @@ import com.example.data.local.entity.AttendanceEntity
 import com.example.data.local.entity.CourseEntity
 import com.example.data.local.entity.CourseSessionEntity
 import com.example.data.local.entity.CurriculumCourseEntity
+import com.example.data.local.entity.CurriculumVersionEntity
+import com.example.data.local.entity.MajorEntity
+import com.example.data.local.entity.UniversityEntity
 import com.example.data.local.entity.ExamEntity
 import com.example.data.local.entity.GradeEntity
 import com.example.data.local.entity.NoteEntity
@@ -25,6 +28,7 @@ import com.example.domain.usecase.SemesterTransitionResult
 import com.example.domain.usecase.SemesterTransitionUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
@@ -37,6 +41,32 @@ class StudentRepository(
     val curriculumDao: CurriculumDao? = null,
     val database: AppDatabase? = null
 ) {
+    private fun normalizeReferenceText(value: String): String =
+        value.trim().replace("\u200C", "").replace("ي", "ی").replace("ك", "ک")
+
+    private suspend fun resolveReferenceIds(
+        university: String,
+        major: String
+    ): Triple<String?, String?, String?> {
+        val universities = curriculumDao?.getAllUniversitiesSync().orEmpty()
+        val majors = curriculumDao?.getAllMajorsSync().orEmpty()
+
+        val normalizedUniversity = normalizeReferenceText(university)
+        val universityRow = universities.firstOrNull {
+            val display = normalizeReferenceText(it.displayNameFa)
+            val short = normalizeReferenceText(it.shortName)
+            normalizedUniversity == display ||
+                normalizedUniversity == short ||
+                (normalizedUniversity.contains("امیرکبیر") && display.contains("امیرکبیر"))
+        }
+        val majorRow = majors.firstOrNull {
+            normalizeReferenceText(it.majorDisplayNameFa) == normalizeReferenceText(major) &&
+                (universityRow == null || it.universityId == universityRow.id)
+        }
+
+        return Triple(universityRow?.id, majorRow?.id, majorRow?.facultyId)
+    }
+
     // Reactive Streams from Room
     val semesters: Flow<List<SemesterEntity>> = dao.getAllSemesters()
     val archivedSemesters: Flow<List<SemesterEntity>> = dao.getArchivedSemesters()
@@ -55,6 +85,9 @@ class StudentRepository(
     val notes: Flow<List<NoteEntity>> = dao.getAllNotes()
     val profile: Flow<StudentProfileEntity?> = dao.getProfile()
     val curriculumCourses: Flow<List<CurriculumCourseEntity>>? = curriculumDao?.getAllCurriculumCourses()
+    val curriculumUniversities: Flow<List<UniversityEntity>> = curriculumDao?.getAllUniversities() ?: flowOf(emptyList())
+    val curriculumMajors: Flow<List<MajorEntity>> = curriculumDao?.getAllMajors() ?: flowOf(emptyList())
+    val curriculumVersions: Flow<List<CurriculumVersionEntity>> = curriculumDao?.getAllCurriculumVersions() ?: flowOf(emptyList())
     val studentAttempts: Flow<List<StudentCourseAttemptEntity>> = dao.getStudentAttempts(1)
 
     // ==========================================
@@ -163,18 +196,6 @@ class StudentRepository(
                 )
             }
             dao.insertCourseSessions(sessionsToInsert)
-        } else {
-            // Default 1 session slot if none provided
-            dao.insertCourseSession(
-                CourseSessionEntity(
-                    id = "sess_${courseId.take(8)}_0",
-                    courseId = courseId,
-                    day = 0,
-                    start = "08:00",
-                    end = "10:00",
-                    location = ""
-                )
-            )
         }
 
         // Ensure Attendance record with courseId as primary key
@@ -192,20 +213,13 @@ class StudentRepository(
             dao.updateAttendance(existingAtt.copy(courseName = entity.name))
         }
 
-        // Ensure Grade record with courseId relation
-        val existingGrade = dao.getGradeByCourseId(courseId)
-        if (existingGrade == null) {
-            dao.insertGrade(
-                GradeEntity(
-                    courseId = courseId,
-                    courseName = entity.name,
-                    units = entity.units,
-                    midtermGrade = 0.0,
-                    finalGrade = 0.0
-                )
-            )
-        } else if (existingGrade.courseName != entity.name || existingGrade.units != entity.units) {
-            dao.updateGrade(existingGrade.copy(courseName = entity.name, units = entity.units))
+        // Existing grades are updated when present; a new course does not receive
+        // a fabricated zero grade. A grade record is created only when the user
+        // actually records a score.
+        dao.getGradeByCourseId(courseId)?.let { existingGrade ->
+            if (existingGrade.courseName != entity.name || existingGrade.units != entity.units) {
+                dao.updateGrade(existingGrade.copy(courseName = entity.name, units = entity.units))
+            }
         }
 
         // Sync Exam record if exam details are provided
@@ -319,24 +333,31 @@ class StudentRepository(
         studentId: String = "",
         university: String = "",
         major: String = "",
-        entryYear: Int = 1403,
-        currentSemester: Int = 1,
+        entryYear: Int = 0,
+        currentSemester: Int = 0,
         passedCredits: Int = 0,
         declaredGpa: Double = 0.0
     ) = withContext(Dispatchers.IO) {
         val current = dao.getProfileSync() ?: StudentProfileEntity()
+        val resolvedUniversity = university.ifBlank { current.university }
+        val resolvedMajor = major.ifBlank { current.major }
+        val (referenceUniversityId, referenceMajorId, referenceFacultyId) =
+            resolveReferenceIds(resolvedUniversity, resolvedMajor)
         val updated = current.copy(
             isOnboardingCompleted = completed,
             name = if (name.isNotBlank()) name else current.name,
             studentId = if (studentId.isNotBlank()) studentId else current.studentId,
-            university = if (university.isNotBlank()) university else current.university,
-            major = if (major.isNotBlank()) major else current.major,
+            university = resolvedUniversity,
+            major = resolvedMajor,
             entryYear = if (entryYear > 0) entryYear else current.entryYear,
             currentSemester = if (currentSemester > 0) currentSemester else current.currentSemester,
             passedUnits = if (passedCredits > 0) passedCredits else current.passedUnits,
             declaredPassedCredits = if (passedCredits > 0) passedCredits else current.declaredPassedCredits,
             declaredGpa = if (declaredGpa > 0.0) declaredGpa else current.declaredGpa,
-            term = if (currentSemester > 0 && major.isNotBlank()) "ترم $currentSemester $major" else current.term,
+            term = if (currentSemester > 0 && resolvedMajor.isNotBlank()) "ترم $currentSemester $resolvedMajor" else current.term,
+            universityId = referenceUniversityId ?: current.universityId,
+            facultyId = referenceFacultyId ?: current.facultyId,
+            majorId = referenceMajorId ?: current.majorId,
             updatedAt = System.currentTimeMillis()
         )
         dao.insertProfile(updated)
@@ -378,14 +399,28 @@ class StudentRepository(
         studentId: String = "",
         university: String = "",
         major: String = "",
-        entryYear: Int = 1403,
-        currentSemester: Int = 1
+        entryYear: Int = 0,
+        currentSemester: Int = 0
     ) {
         val performImport = suspend {
-            val resolvedSemNum = if (currentSemester > 0) currentSemester else 1
-            val resolvedMajor = major.ifBlank { "دانشگاهی" }
-            val activeSemId = if (semesterId.isNotBlank() && semesterId != "current") semesterId else "sem_$resolvedSemNum"
-            val calculatedAcademicYear = entryYear + ((resolvedSemNum - 1) / 2)
+            val currentProfile = dao.getProfileSync()
+            val resolvedSemNum = currentSemester.takeIf { it > 0 }
+                ?: currentProfile?.currentSemester?.takeIf { it > 0 }
+                ?: 0
+            val resolvedMajor = major.ifBlank { currentProfile?.major.orEmpty() }
+            val activeSemId = if (semesterId.isNotBlank() && semesterId != "current") {
+                semesterId
+            } else {
+                "sem_current"
+            }
+            val baseEntryYear = entryYear.takeIf { it > 0 }
+                ?: currentProfile?.entryYear?.takeIf { it > 0 }
+                ?: 0
+            val calculatedAcademicYear = if (baseEntryYear > 0 && resolvedSemNum > 0) {
+                baseEntryYear + ((resolvedSemNum - 1) / 2)
+            } else {
+                0
+            }
 
             // Ensure active current semester exists in database
             dao.clearCurrentSemesterFlag()
@@ -526,19 +561,26 @@ class StudentRepository(
                 }
             }
 
-            val current = dao.getProfileSync()
+            val current = currentProfile
             val totalUnits = insertedCourses.sumOf { it.units }
-            val resolvedProfileMajor = if (major.isNotBlank()) major else (current?.major ?: "مهندسی شیمی")
+            val resolvedProfileMajor = major.ifBlank { current?.major.orEmpty() }
+            val resolvedUniversity = university.ifBlank { current?.university.orEmpty() }
+            val resolvedEntryYear = entryYear.takeIf { it > 0 } ?: current?.entryYear ?: 0
+            val (referenceUniversityId, referenceMajorId, referenceFacultyId) =
+                resolveReferenceIds(resolvedUniversity, resolvedProfileMajor)
             val profileToSave = (current ?: StudentProfileEntity(id = 1)).copy(
                 name = if (studentName.isNotBlank()) studentName else (current?.name ?: "دانشجو"),
                 studentId = if (studentId.isNotBlank()) studentId else (current?.studentId ?: ""),
-                university = if (university.isNotBlank()) university else (current?.university ?: "دانشگاه"),
+                university = resolvedUniversity,
                 major = resolvedProfileMajor,
-                entryYear = if (entryYear > 0) entryYear else (current?.entryYear ?: 1403),
+                entryYear = resolvedEntryYear,
                 activeUnits = totalUnits,
                 currentSemester = resolvedSemNum,
-                term = "ترم $resolvedSemNum $resolvedProfileMajor",
-                faculty = "دانشکده $resolvedProfileMajor · $totalUnits واحد فعال",
+                term = if (resolvedSemNum > 0 && resolvedProfileMajor.isNotBlank()) "ترم $resolvedSemNum $resolvedProfileMajor" else (current?.term ?: ""),
+                faculty = if (resolvedProfileMajor.isNotBlank()) "دانشکده $resolvedProfileMajor · $totalUnits واحد فعال" else (current?.faculty ?: ""),
+                universityId = referenceUniversityId ?: current?.universityId,
+                facultyId = referenceFacultyId ?: current?.facultyId,
+                majorId = referenceMajorId ?: current?.majorId,
                 isOnboardingCompleted = true,
                 updatedAt = System.currentTimeMillis()
             )
@@ -563,9 +605,15 @@ class StudentRepository(
         currentGpa: Double,
         selectedCourses: List<CurriculumCourseEntity>
     ) = withContext(Dispatchers.IO) {
+        require(university.isNotBlank()) { "دانشگاه باید مشخص شده باشد." }
+        require(major.isNotBlank()) { "رشته باید مشخص شده باشد." }
+        require(entryYear > 0) { "سال ورود باید مشخص شده باشد." }
+        require(currentSemester > 0) { "ترم جاری باید مشخص شده باشد." }
+
         val totalActiveUnits = selectedCourses.sumOf { it.units }
         val activeSemesterId = "sem_$currentSemester"
         val calculatedAcademicYear = entryYear + ((currentSemester - 1) / 2)
+        val (universityId, majorId, facultyId) = resolveReferenceIds(university, major)
 
         val performSetup: suspend () -> Unit = {
             // 1. Seed complete curriculum catalog for this major if needed
@@ -606,45 +654,28 @@ class StudentRepository(
                 term = "ترم $currentSemester $major",
                 faculty = "دانشکده $major · $totalActiveUnits واحد فعال ترم جاری",
                 isOnboardingCompleted = true,
+                universityId = universityId,
+                facultyId = facultyId,
+                majorId = majorId,
                 updatedAt = System.currentTimeMillis()
             )
             dao.insertProfile(updatedProfile)
 
-            // 4. Seed passed course attempts for prior semesters (1 until currentSemester - 1)
-            dao.clearStudentAttempts(1)
-            val pastCourses = fullCurriculum.filter { it.recommendedSemester < currentSemester }
-            pastCourses.forEach { pastCourse ->
-                dao.insertStudentAttempt(
-                    StudentCourseAttemptEntity(
-                        id = UUID.randomUUID().toString(),
-                        profileId = 1,
-                        courseId = pastCourse.id,
-                        courseName = pastCourse.name,
-                        units = pastCourse.units,
-                        attemptNumber = 1,
-                        semesterIndex = pastCourse.recommendedSemester,
-                        status = "PASSED",
-                        grade = currentGpa,
-                        source = "QUICK_SETUP"
-                    )
-                )
-            }
+            // 4. Passed credits/GPA remain user-declared summary values until real attempts are entered.
 
-            // 5. Populate active enrolled courses for current semester
+            // 5. Populate active enrolled courses for current semester.
+            // Always replace the current local course set; an empty selection means
+            // an intentionally empty semester, not "keep whatever was there before".
+            dao.clearCourses()
+            dao.clearCourseSessions()
+            dao.clearAttendance()
+            dao.clearGrades()
+            dao.clearExams()
+
             if (selectedCourses.isNotEmpty()) {
-                dao.clearCourses()
-                dao.clearCourseSessions()
-                dao.clearAttendance()
-                dao.clearGrades()
-                dao.clearExams()
-
                 val colors = listOf("#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#8B5CF6", "#0EA5E9", "#6366F1")
                 selectedCourses.forEachIndexed { index, cc ->
-                    val day = index % 5
-                    val start = if (index % 2 == 0) "08:00" else "10:00"
-                    val end = if (index % 2 == 0) "10:00" else "12:00"
                     val courseId = UUID.randomUUID().toString()
-                    val loc = "کلاس 10${index + 1} دانشکده"
 
                     val course = CourseEntity(
                         id = courseId,
@@ -652,25 +683,11 @@ class StudentRepository(
                         colorHex = colors[index % colors.size],
                         units = cc.units,
                         semesterId = activeSemesterId,
-                        courseCode = cc.code,
-                        professor = "استاد دانشکده",
-                        examDate = "1403/10/${15 + index}",
-                        examTime = "09:00",
-                        examLocation = "سالن امتحانات دانشکده"
+                        courseCode = cc.code
                     )
                     dao.insertCourse(course)
 
-                    dao.insertCourseSession(
-                        CourseSessionEntity(
-                            id = "sess_${courseId.take(8)}_0",
-                            courseId = courseId,
-                            day = day,
-                            start = start,
-                            end = end,
-                            location = loc
-                        )
-                    )
-
+                    // Attendance starts at zero absences; no schedule, professor, exam or grade is inferred.
                     val maxAllowed = if (cc.courseType == "آزمایشگاهی") 2 else 3
                     dao.insertAttendance(
                         AttendanceEntity(
@@ -681,28 +698,7 @@ class StudentRepository(
                         )
                     )
 
-                    val midtermEst = (currentGpa * 0.35).coerceIn(4.0, 7.0)
-                    val finalEst = (currentGpa * 0.65).coerceIn(8.0, 13.0)
-                    dao.insertGrade(
-                        GradeEntity(
-                            courseId = courseId,
-                            courseName = cc.name,
-                            units = cc.units,
-                            midtermGrade = midtermEst,
-                            finalGrade = finalEst
-                        )
-                    )
-
-                    dao.insertExam(
-                        ExamEntity(
-                            id = "exam_$courseId",
-                            courseId = courseId,
-                            courseName = cc.name,
-                            date = course.examDate,
-                            time = course.examTime,
-                            location = course.examLocation
-                        )
-                    )
+                    // No grades or exams are synthesized during quick setup.
                 }
             }
         }
@@ -714,19 +710,24 @@ class StudentRepository(
                 performSetup()
             }
         } catch (e: Exception) {
-            android.util.Log.e("StudentRepository", "Error during completeQuickAcademicSetup withTransaction, fallback executing sequentially", e)
-            performSetup()
+            android.util.Log.e("StudentRepository", "Error during completeQuickAcademicSetup transaction", e)
+            throw e
         }
     }
 
     suspend fun resetDefaults() {
-        dao.clearCourses()
-        dao.clearAttendance()
-        dao.clearGrades()
-        dao.clearTasks()
-        dao.clearExams()
-        dao.clearStudentAttempts(1)
-        AppDatabase.populateInitialData(dao, curriculumDao)
+        val reset = suspend {
+            // Reset is a full local-data operation, not a partial field cleanup.
+            // Reference curriculum data is preserved; personal academic records are recreated blank.
+            dao.clearAllUserData()
+            AppDatabase.populateInitialData(dao, curriculumDao)
+        }
+
+        if (database != null) {
+            database.withTransaction { reset() }
+        } else {
+            reset()
+        }
     }
 
     suspend fun loadRichDemoData() {
@@ -736,6 +737,8 @@ class StudentRepository(
             dao.clearGrades()
             dao.clearTasks()
             dao.clearExams()
+            dao.clearAllCourseSessions()
+            dao.clearAllNotes()
             dao.clearStudentAttempts(1)
 
             val demoSemester = SemesterEntity(
@@ -823,13 +826,21 @@ class StudentRepository(
         }
     }
 
+    suspend fun clearAllUserData() {
+        if (database != null) {
+            database.withTransaction { dao.clearAllUserData() }
+        } else {
+            dao.clearAllUserData()
+        }
+    }
+
     suspend fun clearToFreshSlate(
         name: String = "دانشجو",
         studentId: String = "",
-        university: String = "دانشگاه",
-        major: String = "مهندسی",
-        entryYear: Int = 1403,
-        currentSemester: Int = 1
+        university: String = "",
+        major: String = "",
+        entryYear: Int = 0,
+        currentSemester: Int = 0
     ) {
         val performClear = suspend {
             dao.clearCourses()
@@ -839,13 +850,15 @@ class StudentRepository(
             dao.clearExams()
             dao.clearStudentAttempts(1)
 
+            val normalizedSemester = currentSemester.takeIf { it > 0 } ?: 0
+            val normalizedYear = entryYear.takeIf { it > 0 } ?: 0
             val freshSem = SemesterEntity(
-                id = "sem_1",
-                title = "ترم $currentSemester",
-                year = entryYear,
-                academicYear = entryYear,
-                semesterNumber = currentSemester,
-                termNumber = currentSemester,
+                id = "sem_current",
+                title = if (normalizedSemester > 0) "ترم $normalizedSemester" else "ترم جاری",
+                year = normalizedYear,
+                academicYear = normalizedYear,
+                semesterNumber = normalizedSemester,
+                termNumber = normalizedSemester,
                 isCurrent = true,
                 isArchived = false,
                 totalUnits = 0
@@ -860,12 +873,12 @@ class StudentRepository(
                 major = major,
                 entryYear = entryYear,
                 currentSemester = currentSemester,
-                faculty = "دانشکده $major · ۰ واحد فعال",
-                term = "ترم $currentSemester $major",
+                faculty = if (major.isNotBlank()) "دانشکده $major · ۰ واحد فعال" else "",
+                term = if (currentSemester > 0 && major.isNotBlank()) "ترم $currentSemester $major" else "",
                 activeUnits = 0,
                 passedUnits = 0,
                 notes = "",
-                isOnboardingCompleted = true,
+                isOnboardingCompleted = false,
                 universityId = null,
                 facultyId = null,
                 majorId = null,

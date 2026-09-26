@@ -1,5 +1,8 @@
 package com.example.ui.components
 
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -68,7 +71,7 @@ import com.example.domain.model.GpaState
 import com.example.ui.models.AcademicProgressUiState
 import com.example.ui.models.CurriculumMatchUiState
 import com.example.ui.theme.Amber600
-import com.example.ui.theme.BrandIndigo600
+import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.Emerald600
 import com.example.ui.theme.Rose600
 
@@ -202,7 +205,7 @@ private fun PassportHeaderCard(
                     color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
                 ) {
                     Text(
-                        text = profile.term.ifEmpty { "ترم ۳ مهندسی شیمی" },
+                        text = profile.term.ifEmpty { "اطلاعات ترم ثبت نشده" },
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,

@@ -3,6 +3,13 @@ package com.example.ui.theme
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
+// Academic Premium Brand Colors — Source of truth for product identity
+val AcademicNavy = Color(0xFF0F3B4D)
+val AcademicNavyDark = Color(0xFF163F4D)
+val AcademicOlive = Color(0xFF6B705C)
+val AcademicOliveLight = Color(0xFF8A9070)
+val AcademicOliveContainer = Color(0xFFE9ECE0)
+
 // ======================================================================
 // 1. STUDENT OS DARK VELVET & DEEP SPACE BACKGROUND PALETTE
 // ======================================================================
@@ -23,9 +30,9 @@ val LightInk = Color(0xFF0F172A)
 val LightInkSoft = Color(0xFF475569)
 val LightOutline = Color(0xFFE2E8F0)
 
-val LightPrimary = Color(0xFF2563EB)
-val LightSecondary = Color(0xFF059669)
-val LightTertiary = Color(0xFF7C3AED)
+val LightPrimary = Color(0xFF0F3B4D) // Academic Premium — Petrol Navy
+val LightSecondary = Color(0xFF6B705C) // Academic Premium — Olive
+val LightTertiary = Color(0xFF7B6D5A) // Warm neutral accent
 val LightAmber = Color(0xFFD97706)
 val LightError = Color(0xFFE11D48)
 
@@ -215,13 +222,13 @@ val BentoDarkSkySoft = Color(0xFF182A46)
 // Modern Student-Friendly Palette (Academic OS 2026)
 // =========================================================
 // Light Palette Tokens
-val StudentPrimaryLight = Color(0xFF4F46E5)              // Vibrant Academic Indigo
+val StudentPrimaryLight = Color(0xFF0F3B4D)              // Academic Premium Petrol Navy
 val StudentPrimaryContainerLight = Color(0xFFEEF2FF)     // Soft Indigo Tint
 val StudentOnPrimaryContainerLight = Color(0xFF312E81)   // Deep Indigo Ink
-val StudentSecondaryLight = Color(0xFF059669)            // Fresh Campus Mint/Emerald
+val StudentSecondaryLight = Color(0xFF6B705C)            // Academic Premium Olive
 val StudentSecondaryContainerLight = Color(0xFFD1FAE5)   // Mint Wash
 val StudentOnSecondaryContainerLight = Color(0xFF064E3B) // Dark Forest Green
-val StudentTertiaryLight = Color(0xFFD97706)             // Solar Amber (Deadlines & Milestones)
+val StudentTertiaryLight = Color(0xFF8C7358)             // Warm academic neutral accent
 val StudentTertiaryContainerLight = Color(0xFFFEF3C7)    // Soft Amber Warmth
 val StudentOnTertiaryContainerLight = Color(0xFF78350F)  // Deep Amber Ink
 val StudentErrorLight = Color(0xFFE11D48)                // Punchy Rose
@@ -237,11 +244,11 @@ val StudentOutlineLight = Color(0xFFE2E8F0)              // Crisp Card Border
 val StudentOutlineVariantLight = Color(0xFFCBD5E1)       // Muted Divider
 
 // Dark Palette Tokens (Deep Slate #0F172A, Navy Gray #1E293B, Deep Teal #0D9488, Copper Accent #D97757)
-val StudentPrimaryDark = Color(0xFF0D9488)               // Deep Teal #0D9488 (Primary Accent)
-val StudentPrimaryContainerDark = Color(0xFF134E4A)      // Deep Teal Container
+val StudentPrimaryDark = Color(0xFF6FA7B8)               // Petrol Navy lightened for dark surfaces
+val StudentPrimaryContainerDark = Color(0xFF163F4D)      // Petrol Navy Container
 val StudentOnPrimaryContainerDark = Color(0xFFCCFBF1)    // Luminous Teal Text
-val StudentSecondaryDark = Color(0xFF10B981)             // Radiant Emerald Neon #10B981
-val StudentSecondaryContainerDark = Color(0xFF064E3B)    // Deep Forest Container
+val StudentSecondaryDark = Color(0xFFA7AD78)             // Olive Accent for Dark Theme
+val StudentSecondaryContainerDark = Color(0xFF39402D)    // Olive Container
 val StudentOnSecondaryContainerDark = Color(0xFFA7F3D0)  // Radiant Emerald Text
 val StudentTertiaryDark = Color(0xFFD97757)              // Copper Accent #D97757 (Special Highlights)
 val StudentTertiaryContainerDark = Color(0xFF4A241B)     // Deep Copper Well

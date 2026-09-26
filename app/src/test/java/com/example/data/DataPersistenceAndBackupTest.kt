@@ -17,6 +17,8 @@ import com.example.data.repository.StudentRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.fail
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -209,5 +211,208 @@ class DataPersistenceAndBackupTest {
             (persistedProfile?.updatedAt ?: 0L) >= beforeImportTime
         )
         assertTrue((persistedProfile?.updatedAt ?: 0L) > staleTimestamp)
+    }
+    @Test
+    fun testUndoActionCarriesRecoverySnapshotAndGeneration() {
+        val action = com.example.ui.StudentViewModel.UndoAction(
+            message = "واگردانی قابل واگردانی است.",
+            snapshot = """{"profile":{"name":"Student"}}""",
+            generation = 7L
+        )
+
+        assertEquals("واگردانی قابل واگردانی است.", action.message)
+        assertTrue(action.snapshot.contains("Student"))
+        assertEquals(7L, action.generation)
+    }
+    @Test
+    fun testOnboardingPersistsReferenceIdsForKnownUniversityAndMajor() = runBlocking {
+        AppDatabase.populateInitialData(db.studentDao(), db.curriculumDao())
+        repository.setOnboardingCompleted(
+            completed = true,
+            name = "دانشجو",
+            university = "دانشگاه صنعتی امیرکبیر",
+            major = "مهندسی شیمی",
+            entryYear = 1404,
+            currentSemester = 1
+        )
+
+        val profile = db.studentDao().getProfileSync()
+        assertEquals("UNI_AUT", profile?.universityId)
+        assertEquals("MAJ_AUT_CHEM_ENG", profile?.majorId)
+        assertEquals("FAC_AUT_CHEM_OIL", profile?.facultyId)
+    }
+
+    @Test
+    fun testQuickSetupWithEmptySelectionClearsPreviousCourseData() = runBlocking {
+        val existingSemester = SemesterEntity(
+            id = "sem_existing",
+            title = "ترم قبلی",
+            year = 1404,
+            academicYear = 1404,
+            semesterNumber = 1,
+            termNumber = 1,
+            isCurrent = true,
+            isArchived = false,
+            totalUnits = 3
+        )
+        db.studentDao().insertSemester(existingSemester)
+        db.studentDao().insertCourse(
+            CourseEntity(
+                id = "legacy-course",
+                name = "درس قبلی",
+                units = 3,
+                semesterId = existingSemester.id
+            )
+        )
+
+        repository.completeQuickAcademicSetup(
+            name = "دانشجو",
+            studentId = "",
+            university = "دانشگاه صنعتی امیرکبیر",
+            major = "مهندسی شیمی",
+            entryYear = 1404,
+            currentSemester = 2,
+            passedCredits = 0,
+            currentGpa = 0.0,
+            selectedCourses = emptyList()
+        )
+
+        assertTrue(db.studentDao().getAllCoursesIncludingArchivedSync().isEmpty())
+        assertTrue(db.studentDao().getAllSessionsSync().isEmpty())
+        assertTrue(db.studentDao().getAllAttendanceSync().isEmpty())
+        assertTrue(db.studentDao().getAllGradesSync().isEmpty())
+        assertTrue(db.studentDao().getAllExamsSync().isEmpty())
+    }
+
+    @Test
+    fun testFreshSlateDefaultsDoNotCreateSyntheticIdentity() = runBlocking<Unit> {
+        repository.clearToFreshSlate()
+
+        val profile = db.studentDao().getProfileSync()
+        assertNotNull(profile)
+        assertEquals("دانشجو", profile?.name)
+        assertEquals("", profile?.studentId)
+        assertEquals("", profile?.university)
+        assertEquals("", profile?.major)
+        assertEquals("", profile?.faculty)
+        assertEquals("", profile?.term)
+        assertEquals(0, profile?.entryYear)
+        assertEquals(0, profile?.currentSemester)
+        assertFalse(profile?.isOnboardingCompleted ?: true)
+    }
+
+    @Test
+    fun testNewProfileDefaultsContainNoPersonalAcademicIdentity() {
+        val profile = com.example.data.local.entity.StudentProfileEntity()
+        assertEquals("دانشجو", profile.name)
+        assertEquals("", profile.studentId)
+        assertEquals("", profile.university)
+        assertEquals("", profile.major)
+        assertEquals("", profile.faculty)
+        assertEquals("", profile.term)
+        assertEquals(0, profile.entryYear)
+        assertEquals(0, profile.currentSemester)
+    }
+
+    @Test
+    fun testSavingCourseWithoutDetailsDoesNotCreateScheduleOrZeroGrade() = runBlocking {
+        val course = CourseEntity(
+            id = "course_without_details",
+            name = "درس بدون جزئیات",
+            units = 3,
+            semesterId = "current"
+        )
+
+        repository.saveCourse(course)
+
+        assertEquals(1, db.studentDao().getAllCoursesIncludingArchivedSync().size)
+        assertEquals(0, db.studentDao().getAllSessionsSync().size)
+        assertEquals(0, db.studentDao().getAllGradesSync().size)
+        assertNotNull(db.studentDao().getAttendanceByCourseId(course.id))
+    }
+
+    @Test
+    fun testQuickAcademicSetupDoesNotFabricateScheduleGradesExamsOrHistory() = runBlocking {
+        val curriculumCourse = com.example.data.local.entity.CurriculumCourseEntity(
+            id = "CURR_TEST_1",
+            majorId = "MAJ_TEST",
+            code = "TEST101",
+            name = "درس آزمایشی",
+            units = 3,
+            courseType = "تخصصی",
+            recommendedSemester = 1
+        )
+
+        try {
+            repository.completeQuickAcademicSetup(
+                name = "دانشجو",
+                university = "",
+                major = "",
+                entryYear = 1404,
+                currentSemester = 1,
+                passedCredits = 0,
+                currentGpa = 0.0,
+                selectedCourses = listOf(curriculumCourse)
+            )
+            fail("Invalid setup input must throw IllegalArgumentException")
+        } catch (_: IllegalArgumentException) {
+            // Expected: invalid setup must fail closed.
+        }
+
+        // Invalid setup input must fail closed and must not fabricate any academic records.
+        assertEquals(0, db.studentDao().getAllCoursesIncludingArchivedSync().size)
+        assertEquals(0, db.studentDao().getAllSessionsSync().size)
+        assertEquals(0, db.studentDao().getAllGradesSync().size)
+        assertEquals(0, db.studentDao().getAllExamsSync().size)
+        assertEquals(0, db.studentDao().getStudentAttemptsSync(1).size)
+    }
+
+    @Test
+    fun testClearAllUserDataPurgesPersonalState() = runBlocking {
+        val dao = db.studentDao()
+        val semester = SemesterEntity(
+            id = "sem_user_1",
+            title = "ترم کاربر",
+            academicYear = 1404,
+            termNumber = 1,
+            isCurrent = true
+        )
+        dao.insertSemester(semester)
+        dao.insertProfile(
+            StudentProfileEntity(
+                id = 1,
+                name = "کاربر واقعی",
+                studentId = "USER-1",
+                isOnboardingCompleted = true
+            )
+        )
+        val course = CourseEntity(
+            id = "purge_course",
+            name = "درس خصوصی",
+            units = 3,
+            semesterId = semester.id
+        )
+        dao.insertCourse(course)
+        dao.insertTask(
+            TaskEntity(
+                id = 9001,
+                title = "تکلیف خصوصی",
+                courseName = course.name,
+                courseId = course.id,
+                dueDate = "2026-10-01T12:00:00",
+                semesterId = semester.id
+            )
+        )
+        dao.upsertSyncMetadata(
+            com.example.data.local.entity.SyncMetadataEntity("courses", 1234L)
+        )
+
+        repository.clearAllUserData()
+
+        assertEquals(0, dao.getAllCoursesIncludingArchivedSync().size)
+        assertEquals(0, dao.getAllTasksSync().size)
+        assertEquals(0, dao.getAllSemestersSync().size)
+        assertEquals(null, dao.getProfileSync())
+        assertEquals(null, dao.getSyncUpdatedAt("courses"))
     }
 }

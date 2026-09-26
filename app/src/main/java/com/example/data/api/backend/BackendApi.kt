@@ -6,6 +6,7 @@ import retrofit2.http.GET
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.POST
+import retrofit2.http.DELETE
 
 data class SignUpRequest(
     val email: String,
@@ -21,6 +22,7 @@ data class LoginRequest(
 )
 
 data class RefreshRequest(val refreshToken: String)
+data class RedeemEntitlementRequest(val code: String)
 data class LogoutRequest(val refreshToken: String)
 
 data class BackendUser(val id: String, val email: String, val displayName: String)
@@ -32,6 +34,15 @@ data class AuthResponse(
 )
 
 data class TokenPairResponse(val accessToken: String, val refreshToken: String)
+
+data class BackendEntitlement(
+    val tier: String = "FREE",
+    val expiresAt: Long? = null,
+    val maxDailyAiQuota: Int = 5,
+    val allowsCloudSync: Boolean = true,
+    val allowsPdfExport: Boolean = false,
+    val gpaPredictorUnlocked: Boolean = false
+)
 
 data class SyncPushRequest(val payload: Any, val updatedAt: Long)
 data class SyncPullResponse(val payload: Any?, val updatedAt: Long)
@@ -58,6 +69,15 @@ interface BackendApi {
 
     @POST("api/auth/logout-all")
     suspend fun logoutAllDevices(): Response<Unit>
+
+    @retrofit2.http.GET("api/auth/entitlement")
+    suspend fun getEntitlement(): Response<BackendEntitlement>
+
+    @POST("api/auth/entitlement/redeem")
+    suspend fun redeemEntitlement(@Body body: RedeemEntitlementRequest): Response<BackendEntitlement>
+
+    @DELETE("api/auth/account")
+    suspend fun deleteAccount(): Response<Unit>
 
     @GET("api/sync/{dataType}")
     suspend fun pullDataType(@Path("dataType") dataType: String): Response<SyncPullResponse>

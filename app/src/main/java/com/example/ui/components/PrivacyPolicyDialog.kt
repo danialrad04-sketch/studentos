@@ -39,6 +39,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.StudentOsColors
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
 
 /**
  * In-App Persian Privacy Policy screen complying with Google Play Developer Program policies.
@@ -104,22 +107,22 @@ fun PrivacyPolicyDialog(
             PrivacySectionCard(
                 icon = Icons.Rounded.CloudDone,
                 title = "۲. ذخیره‌سازی ابری و احراز هویت (Firebase)",
-                description = "در حالت عادی تمام اطلاعات در دیتابیس محلی (Room) روی حافظه دستگاه ذخیره می‌شود. در صورت ثبت‌نام یا ورود به حساب، احراز هویت از طریق Firebase Authentication انجام شده و یک نسخه پشتیبان رمزگذاری‌شده در سرورهای ابری Google Firestore ذخیره می‌گردد تا با تغییر دستگاه اطلاعات حفظ شود."
+                description = "در حالت عادی تمام اطلاعات در دیتابیس محلی (Room) روی حافظه دستگاه ذخیره می‌شود. در صورت ثبت‌نام یا ورود، هویت حساب در Firebase Authentication مدیریت می‌شود و داده‌های همگام‌شده می‌توانند در Cloud Firestore و سرور اختصاصی Student OS نگهداری شوند تا با تغییر دستگاه اطلاعات حفظ شود."
             )
 
             // Section 3: Third Party Sharing
             PrivacySectionCard(
                 icon = Icons.Rounded.Lock,
                 title = "۳. عدم اشتراک‌گذاری با اشخاص ثالث",
-                description = "داده‌های شما کاملاً محرمانه هستند و به هیچ عنوان برای اهداف تبلیغاتی، بازاریابی یا در اختیار اشخاص و سرویس‌های ثالث قرار نخواهند گرفت."
+                description = "داده‌های شما برای تبلیغات یا بازاریابی فروخته یا استفاده نمی‌شوند. سرویس‌های موردنیاز برنامه مانند Firebase Authentication، Cloud Firestore و در حالت اتصال حساب، سرور اختصاصی Student OS برای احراز هویت و همگام‌سازی استفاده می‌شوند و نوع استفاده از داده در بخش‌های بعدی توضیح داده شده است."
             )
 
             // Section 4: Account Deletion (Google Play Mandate)
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = StudentShapeTokens.Card,
                 colors = CardDefaults.cardColors(
-                    containerColor = StudentOsColors.CrimsonRose.copy(alpha = 0.08f)
+                    containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.08f)
                 ),
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp,
@@ -148,7 +151,7 @@ fun PrivacyPolicyDialog(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "مطابق با خط‌مشی‌های گوگل پلی، شما در هر زمان می‌توانید با رفتن به بخش تنظیمات و انتخاب گزینه «حذف حساب کاربری و تمامی داده‌ها»، کلیه اسناد ابری Firestore، حساب کاربری Firebase Auth و دیتابیس محلی دستگاه را به صورت آنی و دائمی پاکسازی کنید.",
+                            text = "شما می‌توانید از داخل حساب کاربری درخواست حذف کنید. در این فرایند، حذف داده‌های ابری تا زمانی موفق تلقی نمی‌شود که سرویس مربوطه نتیجه موفقیت‌آمیز برگرداند؛ سپس داده‌های محلی حساب نیز پاکسازی می‌شوند.",
                             fontSize = 11.5.sp,
                             lineHeight = 18.sp,
                             color = MaterialTheme.colorScheme.onSurface
@@ -164,7 +167,7 @@ fun PrivacyPolicyDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("privacy_policy_dismiss_button"),
-                shape = RoundedCornerShape(14.dp)
+                shape = StudentShapeTokens.Compact
             ) {
                 Icon(Icons.Rounded.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))

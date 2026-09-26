@@ -233,31 +233,50 @@ class AuthAndCopilotEngineTest {
     }
 
     @Test
-    fun testComputeGpaAveragesMidtermAndFinalCorrectly() {
+    fun testComputeGpaSumsMidtermAndFinalCorrectly() {
         // Test single course with midterm 18.0 and final 16.0, 3 units.
-        // Summing them produced 34.0 (wrong). Averaging should produce (18.0 + 16.0) / 2 = 17.0.
+        // Student OS stores a 6-point midterm plus a 14-point final; the sum is the final score out of 20.
         val grades = listOf(
-            GradeEntity(id = 1, courseName = "محاسبات عددی", units = 3, midtermGrade = 18.0, finalGrade = 16.0, courseId = "c_math")
+            GradeEntity(id = 1, courseName = "محاسبات عددی", units = 3, midtermGrade = 6.0, finalGrade = 14.0, courseId = "c_math")
         )
 
         val gpa = AcademicCopilotEngine.computeGpa(grades)
-        assertEquals(17.0, gpa, 0.001)
+        assertEquals(20.0, gpa, 0.001)
         assertTrue("GPA must not exceed 20", gpa <= 20.0)
     }
 
     @Test
     fun testComputeGpaUnitsWeightedAverageWithMultipleCourses() {
-        // Course 1: units = 2, midterm = 14.0, final = 16.0 -> avg = 15.0 -> weighted = 30.0
-        // Course 2: units = 4, midterm = 18.0, final = 18.0 -> avg = 18.0 -> weighted = 72.0
+        // Course 1: units = 2, midterm = 5.0, final = 10.0 -> total = 15.0 -> weighted = 30.0
+        // Course 2: units = 4, midterm = 5.0, final = 13.0 -> total = 18.0 -> weighted = 72.0
         // Total units = 6, total weighted = 102.0 -> GPA = 102.0 / 6 = 17.0
         val grades = listOf(
-            GradeEntity(id = 1, courseName = "آزمایشگاه شیمی", units = 2, midtermGrade = 14.0, finalGrade = 16.0, courseId = "c1"),
-            GradeEntity(id = 2, courseName = "ترمودینامیک پیشرفته", units = 4, midtermGrade = 18.0, finalGrade = 18.0, courseId = "c2")
+            GradeEntity(id = 1, courseName = "آزمایشگاه شیمی", units = 2, midtermGrade = 5.0, finalGrade = 10.0, courseId = "c1"),
+            GradeEntity(id = 2, courseName = "ترمودینامیک پیشرفته", units = 4, midtermGrade = 5.0, finalGrade = 13.0, courseId = "c2")
         )
 
         val gpa = AcademicCopilotEngine.computeGpa(grades)
         assertEquals(17.0, gpa, 0.001)
         assertTrue("GPA must be clamped between 0 and 20", gpa in 0.0..20.0)
+    }
+
+    @Test
+    fun testSubscriptionRemainingQuotaUsesConfiguredTierLimit() {
+        val pro = com.example.domain.model.SubscriptionDetails(
+            tier = com.example.domain.model.SubscriptionTier.PRO,
+            maxDailyAiQuota = 50,
+            dailyAiQuotaUsed = 17
+        )
+        val exhausted = pro.copy(dailyAiQuotaUsed = 60)
+
+        assertEquals(33, pro.remainingAiQuota)
+        assertEquals(0, exhausted.remainingAiQuota)
+    }
+
+    @Test
+    fun testComputeGpaWithoutGradesDoesNotInventValue() {
+        assertEquals(0.0, AcademicCopilotEngine.computeGpa(emptyList(), null), 0.001)
+        assertEquals(17.5, AcademicCopilotEngine.computeGpa(emptyList(), 17.5), 0.001)
     }
 
     @Test

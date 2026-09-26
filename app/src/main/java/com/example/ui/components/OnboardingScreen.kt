@@ -155,104 +155,25 @@ private fun rememberOnboardingColors(): OnboardingColors {
 
 // Extended Universities List
 private val COMPREHENSIVE_UNIVERSITIES = listOf(
-    "دانشگاه مراغه",
-    "دانشگاه تبریز",
-    "دانشگاه صنعتی سهند",
+    "دانشگاه صنعتی امیرکبیر",
     "دانشگاه تهران",
     "دانشگاه صنعتی شریف",
-    "دانشگاه صنعتی امیرکبیر (پلی‌تکنیک)",
-    "دانشگاه علم و صنعت ایران",
-    "دانشگاه شهید بهشتی",
-    "دانشگاه فردوسی مشهد",
-    "دانشگاه شیراز",
-    "دانشگاه صنعتی اصفهان",
-    "دانشگاه اصفهان",
-    "دانشگاه خواجه نصیرالدین طوسی",
-    "دانشگاه ارومیه",
-    "دانشگاه زنجان",
-    "دانشگاه بناب",
-    "دانشگاه بوعلی سینا همدان",
-    "دانشگاه رازی کرمانشاه",
-    "دانشگاه گیلان",
-    "دانشگاه مازندران",
-    "دانشگاه یزد",
-    "دانشگاه کاشان",
-    "دانشگاه فرهنگیان",
-    "دانشگاه پیام نور",
-    "دانشگاه آزاد اسلامی",
-    "دانشگاه فنی و حرفه‌ای",
     "سایر دانشگاه‌ها"
 )
 
-// Maragheh University Faculties & Extensive Majors
+// Reference faculty/major catalog currently bundled with this release.
 data class FacultyInfo(
     val name: String,
     val iconEmoji: String,
     val majors: List<String>
 )
 
-private val MARAGHEH_FACULTIES = listOf(
+private val AUT_FACULTIES = listOf(
     FacultyInfo(
-        name = "فنی و مهندسی",
-        iconEmoji = "⚙️",
-        majors = listOf(
-            "مهندسی شیمی",
-            "مهندسی عمران",
-            "مهندسی مکانیک",
-            "مهندسی کامپیوتر",
-            "مهندسی مواد و متالورژی",
-            "مهندسی برق",
-            "مهندسی پلیمر",
-            "مهندسی معدن",
-            "مهندسی صنایع"
-        )
-    ),
-    FacultyInfo(
-        name = "علوم پایه",
+        name = "دانشکده مهندسی شیمی و نفت",
         iconEmoji = "🧪",
-        majors = listOf(
-            "شیمی کاربردی",
-            "شیمی محض",
-            "ریاضیات و کاربردها",
-            "علوم کامپیوتر",
-            "فیزیک",
-            "زیست‌شناسی سلولی و مولکولی",
-            "زیست‌شناسی گیاهی",
-            "زیست‌شناسی جانوری",
-            "زیست‌فناوری (بیوتکنولوژی)",
-            "آمار و کاربردها"
-        )
+        majors = listOf("مهندسی شیمی")
     ),
-    FacultyInfo(
-        name = "کشاورزی",
-        iconEmoji = "🌾",
-        majors = listOf(
-            "مهندسی تولید و ژنتیک گیاهی",
-            "علوم و مهندسی باغبانی",
-            "علوم دامی",
-            "مهندسی آب",
-            "گیاه‌پزشکی",
-            "علوم و مهندسی خاک",
-            "صنایع غذایی",
-            "اقتصاد کشاورزی و ترویج"
-        )
-    ),
-    FacultyInfo(
-        name = "علوم انسانی",
-        iconEmoji = "📚",
-        majors = listOf(
-            "حقوق",
-            "زبان و ادبیات فارسی",
-            "زبان و ادبیات انگلیسی",
-            "آموزش زبان انگلیسی",
-            "روانشناسی",
-            "علوم تربیتی",
-            "معارف اسلامی و علوم قرآن",
-            "مدیریت بازرگانی",
-            "مدیریت دولتی",
-            "حسابداری"
-        )
-    )
 )
 
 private val ALL_ENTRY_YEARS = listOf(1405, 1404, 1403, 1402, 1401, 1400, 1399, 1398, 1397)
@@ -276,8 +197,8 @@ fun OnboardingScreen(
     initialStudentId: String = "",
     initialUniversity: String = "",
     initialMajor: String = "",
-    initialEntryYear: Int = 1402,
-    initialSemester: Int = 3,
+    initialEntryYear: Int = 0,
+    initialSemester: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val (
@@ -306,17 +227,17 @@ fun OnboardingScreen(
     // Identity & Academic Info State (initialized from existing state if available)
     var studentName by remember { mutableStateOf(initialName) }
     var studentId by remember { mutableStateOf(initialStudentId) }
-    var university by remember { mutableStateOf(initialUniversity.ifBlank { "دانشگاه مراغه" }) }
-    var major by remember { mutableStateOf(initialMajor.ifBlank { "مهندسی شیمی" }) }
-    var entryYear by remember { mutableIntStateOf(if (initialEntryYear > 0) initialEntryYear else 1402) }
-    var currentSemester by remember { mutableIntStateOf(if (initialSemester > 0) initialSemester else 3) }
+    var university by remember { mutableStateOf(initialUniversity) }
+    var major by remember { mutableStateOf(initialMajor) }
+    var entryYear by remember { mutableIntStateOf(initialEntryYear) }
+    var currentSemester by remember { mutableIntStateOf(initialSemester) }
 
     // Setup Option State
     var selectedMode by remember { mutableStateOf(SetupMode.QUICK_SETUP) }
 
-    // Quick Setup States (Dynamically compute passed credits for the selected semester: e.g. (3 - 1) * 18 = 36)
-    var passedCreditsInput by remember { mutableStateOf("36") }
-    var currentGpaInput by remember { mutableStateOf("17.40") }
+    // Quick Setup starts empty; only explicitly entered summary values are stored.
+    var passedCreditsInput by remember { mutableStateOf("") }
+    var currentGpaInput by remember { mutableStateOf("") }
 
     // Text Paste States
     var rawRegistrationText by remember { mutableStateOf("") }
@@ -327,8 +248,7 @@ fun OnboardingScreen(
         CurriculumSeedData.getCoursesForMajor(major)
     }
     val activeSemesterCourses = remember(major, currentSemester, activeMajorCourses) {
-        val filtered = activeMajorCourses.filter { it.recommendedSemester == currentSemester }
-        if (filtered.isNotEmpty()) filtered else activeMajorCourses.take(6)
+        activeMajorCourses.filter { it.recommendedSemester == currentSemester }
     }
     var selectedCurriculumCourseIds by remember(activeSemesterCourses) {
         mutableStateOf(activeSemesterCourses.map { it.id }.toSet())
@@ -336,8 +256,8 @@ fun OnboardingScreen(
 
     // Auto-update estimated passed credits when user changes currentSemester
     LaunchedEffect(currentSemester) {
-        val estimatedPassed = ((currentSemester - 1).coerceAtLeast(0) * 18).toString()
-        passedCreditsInput = estimatedPassed
+        passedCreditsInput = ""
+        currentGpaInput = ""
     }
 
     Box(
@@ -442,8 +362,10 @@ fun OnboardingScreen(
                         currentSemester = currentSemester,
                         onSemesterChange = { currentSemester = it },
                         onNext = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            currentStep = 2
+                            if (entryYear > 0 && currentSemester > 0) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                currentStep = 2
+                            }
                         }
                     )
                     2 -> StepTwoSetupMode(
@@ -486,18 +408,16 @@ fun OnboardingScreen(
                         entryYear = entryYear,
                         semester = currentSemester,
                         mode = selectedMode,
-                        passedCredits = passedCreditsInput.toIntOrNull() ?: ((currentSemester - 1).coerceAtLeast(0) * 18),
-                        currentGpa = currentGpaInput.toDoubleOrNull() ?: 17.40,
+                        passedCredits = passedCreditsInput.toIntOrNull() ?: 0,
+                        currentGpa = currentGpaInput.toDoubleOrNull() ?: 0.0,
                         parsedDrafts = parsedDrafts,
                         selectedCourses = activeSemesterCourses.filter { selectedCurriculumCourseIds.contains(it.id) },
                         onConfirm = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             when (selectedMode) {
                                 SetupMode.QUICK_SETUP, SetupMode.CURRICULUM -> {
-                                    val activeCourses = if (selectedMode == SetupMode.CURRICULUM) {
-                                        activeSemesterCourses.filter { selectedCurriculumCourseIds.contains(it.id) }
-                                    } else {
-                                        activeSemesterCourses
+                                    val activeCourses = activeSemesterCourses.filter {
+                                        selectedCurriculumCourseIds.contains(it.id)
                                     }
                                     onCompleteQuickSetup(
                                         studentName.ifBlank { "دانشجو" },
@@ -506,8 +426,8 @@ fun OnboardingScreen(
                                         major,
                                         entryYear,
                                         currentSemester,
-                                        passedCreditsInput.toIntOrNull() ?: ((currentSemester - 1).coerceAtLeast(0) * 18),
-                                        currentGpaInput.toDoubleOrNull() ?: 17.40,
+                                        passedCreditsInput.toIntOrNull() ?: 0,
+                                        currentGpaInput.toDoubleOrNull() ?: 0.0,
                                         activeCourses
                                     )
                                 }
@@ -624,11 +544,14 @@ private fun StepOneAcademicIdentity(
         }
     }
 
-    val activeFacultyMajors = remember(selectedFacultyIndex) {
-        if (selectedFacultyIndex == 0) {
-            MARAGHEH_FACULTIES.flatMap { it.majors }
+    val supportsReferenceMajorCatalog = university == "دانشگاه صنعتی امیرکبیر"
+    val activeFacultyMajors = remember(selectedFacultyIndex, supportsReferenceMajorCatalog) {
+        if (!supportsReferenceMajorCatalog) {
+            emptyList()
+        } else if (selectedFacultyIndex == 0) {
+            AUT_FACULTIES.flatMap { it.majors }
         } else {
-            MARAGHEH_FACULTIES.getOrNull(selectedFacultyIndex - 1)?.majors ?: emptyList()
+            AUT_FACULTIES.getOrNull(selectedFacultyIndex - 1)?.majors ?: emptyList()
         }
     }
 
@@ -787,7 +710,7 @@ private fun StepOneAcademicIdentity(
                         OutlinedTextField(
                             value = university,
                             onValueChange = onUniversityChange,
-                            placeholder = { Text("مثال: دانشگاه مراغه", color = TextPlaceholder, fontSize = 11.sp) },
+                            placeholder = { Text("مثال: دانشگاه صنعتی امیرکبیر", color = TextPlaceholder, fontSize = 11.sp) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -840,7 +763,7 @@ private fun StepOneAcademicIdentity(
                     }
                 }
 
-                // 2. FACULTY & MAJOR SELECTION (MARAGHEH SPECIALIZED)
+                // 2. FACULTY & MAJOR SELECTION (reference catalog for supported universities)
                 Column {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -855,7 +778,7 @@ private fun StepOneAcademicIdentity(
                         )
                         TextButton(onClick = { isCustomMajorInput = !isCustomMajorInput }) {
                             Text(
-                                text = if (isCustomMajorInput) "انتخاب از دانشکده‌ها 🏛️" else "تایپ رشته دلخواه ✍️",
+                                text = if (isCustomMajorInput || !supportsReferenceMajorCatalog) "انتخاب از فهرست رشته‌ها" else "تایپ رشته دلخواه ✍️",
                                 fontSize = 10.5.sp,
                                 color = AccentSecondary
                             )
@@ -864,7 +787,7 @@ private fun StepOneAcademicIdentity(
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    if (isCustomMajorInput) {
+                    if (isCustomMajorInput || !supportsReferenceMajorCatalog) {
                         OutlinedTextField(
                             value = major,
                             onValueChange = onMajorChange,
@@ -883,6 +806,9 @@ private fun StepOneAcademicIdentity(
                             )
                         )
                     } else {
+                        // Faculty catalog is shown only for universities with a bundled reference catalog.
+                        // Other universities intentionally use explicit major entry rather than
+                        // showing another university's faculty catalog.
                         // Faculty Tabs Row
                         Row(
                             modifier = Modifier
@@ -915,7 +841,7 @@ private fun StepOneAcademicIdentity(
                                 )
                             )
 
-                            MARAGHEH_FACULTIES.forEachIndexed { idx, fac ->
+                            AUT_FACULTIES.forEachIndexed { idx, fac ->
                                 val isFacSelected = selectedFacultyIndex == idx + 1
                                 FilterChip(
                                     selected = isFacSelected,
@@ -1080,6 +1006,7 @@ private fun StepOneAcademicIdentity(
 
         Button(
             onClick = onNext,
+            enabled = entryYear > 0 && currentSemester > 0,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
@@ -1164,8 +1091,8 @@ private fun StepTwoSetupMode(
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             // Option 1: Quick Academic Setup
             SetupOptionCard(
-                title = "⚡ شروع فوق‌سریع ترم $currentSemester (پیشنهادی)",
-                description = "تنها با وارد کردن واحدهای پاس‌شده و معدل فعلی، چارت و برنامه ترم $currentSemester بدون نیاز به ورود ترم‌های گذشته آماده می‌شود.",
+                title = "⚡ شروع سریع",
+                description = "با وارد کردن خلاصه سوابق، اطلاعات پایه تحصیلی آماده می‌شود؛ هیچ کلاس، امتحان یا نمره‌ای بدون ثبت شما ساخته نمی‌شود.",
                 icon = Icons.Default.Speed,
                 isSelected = selectedMode == SetupMode.QUICK_SETUP,
                 onClick = { onSelectMode(SetupMode.QUICK_SETUP) }

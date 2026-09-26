@@ -44,6 +44,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -68,10 +69,15 @@ import com.example.data.local.entity.GradeEntity
 import com.example.data.local.entity.TaskEntity
 import com.example.data.local.relation.CourseWithSessions
 import com.example.ui.models.AppTab
+import com.example.domain.model.StudySessionRecommendation
 import com.example.ui.theme.NumericBadgeText
 import com.example.ui.theme.NumericDisplayStat
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.StudentOsColors
 import com.example.ui.theme.StudentOsGlassTokens
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.StudentSpacing
 import com.example.ui.theme.studentColors
 import java.util.Calendar
 import java.util.Locale
@@ -102,10 +108,11 @@ fun ModernBentoDashboard(
     grades: List<GradeEntity>,
     passedUnits: Int = 0,
     gpa: String = "۰.۰۰",
-    totalRequiredCredits: Int = 140,
+    totalRequiredCredits: Int = 0,
     academicProgressState: com.example.ui.models.AcademicProgressUiState? = null,
     academicRisks: List<com.example.domain.model.AcademicRisk> = emptyList(),
     weeklyWorkload: com.example.domain.model.WeeklyAcademicWorkload? = null,
+    studyRecommendations: List<StudySessionRecommendation> = emptyList(),
     pomodoroSeconds: Int,
     isPomodoroRunning: Boolean,
     onTogglePomodoro: () -> Unit,
@@ -187,7 +194,7 @@ fun ModernBentoDashboard(
         AnalyticsKpiSection(
             gpa = gpa,
             passedUnits = passedUnits,
-            totalRequiredCredits = if (totalRequiredCredits > 0) totalRequiredCredits else 140,
+            totalRequiredCredits = totalRequiredCredits.coerceAtLeast(0),
             attendanceList = attendanceList,
             tasks = tasks,
             onNavigateToGrades = { onNavigateTab(AppTab.GRADES) },
@@ -242,6 +249,13 @@ fun ModernBentoDashboard(
             }
         )
 
+        if (studyRecommendations.isNotEmpty()) {
+            StudyRecommendationsSection(
+                recommendations = studyRecommendations,
+                onOpenFocus = { onNavigateTab(AppTab.POMODORO) }
+            )
+        }
+
         // 6. GAMIFICATION / STREAK BANNER
         if (gamificationProfile != null) {
             BentoGamificationBanner(
@@ -254,7 +268,7 @@ fun ModernBentoDashboard(
         val chartUnitsText = when (academicProgressState) {
             is com.example.ui.models.AcademicProgressUiState.Ready -> "${academicProgressState.progress.totalRequiredCredits} واحد مصوب"
             is com.example.ui.models.AcademicProgressUiState.Partial -> "${academicProgressState.progress.totalRequiredCredits} واحد مصوب"
-            else -> "۱۴۰ واحد مصوب"
+            else -> "اطلاعات چارت ثبت نشده"
         }
 
         CurriculumAndExamActionBanner(
@@ -265,6 +279,37 @@ fun ModernBentoDashboard(
     }
 }
 
+@Composable
+private fun StudyRecommendationsSection(
+    recommendations: List<StudySessionRecommendation>,
+    onOpenFocus: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    AcademicCard(modifier = modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(StudentSpacing.Xxl)) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("پیشنهادهای مطالعه", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text("اولویت‌بندی قطعی بر اساس امتحان‌ها و تکالیف باز", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                TextButton(onClick = onOpenFocus) { Text("شروع تمرکز") }
+            }
+            Spacer(Modifier.height(StudentSpacing.Md))
+            recommendations.take(3).forEach { item ->
+                Row(modifier = Modifier.fillMaxWidth().padding(vertical = StudentSpacing.Xs), verticalAlignment = Alignment.CenterVertically) {
+                    Surface(shape = StudentShapeTokens.Compact, color = AcademicNavy.copy(alpha = 0.10f)) {
+                        Text("${item.recommendedDurationMinutes} دقیقه", style = NumericBadgeText, color = AcademicNavy, modifier = Modifier.padding(horizontal = StudentSpacing.Sm, vertical = StudentSpacing.Xs))
+                    }
+                    Spacer(Modifier.width(StudentSpacing.Md))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(item.courseName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        Text(item.priorityReason, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+    }
+}
 // -------------------------------------------------------------
 // 1. 2x2 BENTO STAT TILES SECTION
 // -------------------------------------------------------------
@@ -281,13 +326,13 @@ private fun AnalyticsKpiSection(
     onNavigateToTasks: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val displayGpa = if (gpa.isNotBlank() && gpa != "۰.۰۰") gpa else "۱۷.۸۲"
-    val displayPassed = if (passedUnits > 0) "$passedUnits" else "۶۴"
+    val displayGpa = gpa.takeIf { it.isNotBlank() } ?: "۰.۰۰"
+    val displayPassed = passedUnits.toString()
     val pendingTasksCount = tasks.count { !it.isCompleted }
-    val displayTasks = if (pendingTasksCount > 0) "$pendingTasksCount" else "۳"
+    val displayTasks = pendingTasksCount.toString()
 
     val dangerCourses = attendanceList.count { it.absentCount >= it.maxAllowed && it.maxAllowed > 0 }
-    val displayAttendance = if (attendanceList.isEmpty()) "۹۲٪" else {
+    val displayAttendance = if (attendanceList.isEmpty()) "—" else {
         val safeRatio = ((attendanceList.size - dangerCourses).toFloat() / attendanceList.size.toFloat() * 100).toInt()
         "$safeRatio٪"
     }
@@ -306,7 +351,7 @@ private fun AnalyticsKpiSection(
                 value = displayGpa,
                 subtitle = "هدف: ۱۸.۵۰ 🎯",
                 emojiType = AppEmojiType.CHART,
-                accentColor = StudentOsColors.CyanAccent,
+                accentColor = AcademicNavy,
                 onClick = onNavigateToGrades,
                 modifier = Modifier.weight(1f)
             )
@@ -316,7 +361,7 @@ private fun AnalyticsKpiSection(
                 value = "$displayPassed / $totalRequiredCredits",
                 subtitle = "${((passedUnits.toFloat() / totalRequiredCredits.coerceAtLeast(1)) * 100).toInt()}% چارت 📈",
                 emojiType = AppEmojiType.CHECK,
-                accentColor = StudentOsColors.EmeraldNeon,
+                accentColor = AcademicOlive,
                 onClick = onNavigateToPassport,
                 modifier = Modifier.weight(1f)
             )
@@ -330,9 +375,9 @@ private fun AnalyticsKpiSection(
             BentoKpiTile(
                 title = "حضور و غیاب",
                 value = displayAttendance,
-                subtitle = if (dangerCourses > 0) "$dangerCourses هشدار غیبت!" else "وضعیت ۱۰۰٪ امن 🛡️",
+                subtitle = if (dangerCourses > 0) "$dangerCourses هشدار غیبت!" else if (attendanceList.isEmpty()) "هنوز داده‌ای ثبت نشده" else "وضعیت پایدار 🛡️",
                 emojiType = AppEmojiType.CALENDAR,
-                accentColor = if (dangerCourses > 0) StudentOsColors.CrimsonRose else StudentOsColors.EmeraldNeon,
+                accentColor = if (dangerCourses > 0) StudentOsColors.CrimsonRose else AcademicOlive,
                 onClick = onNavigateToAttendance,
                 modifier = Modifier.weight(1f)
             )
@@ -1333,7 +1378,7 @@ private fun TasksSprintBentoTile(
 // -------------------------------------------------------------
 @Composable
 private fun CurriculumAndExamActionBanner(
-    chartUnitsText: String = "۱۴۰ واحد مصوب",
+    chartUnitsText: String = "اطلاعات چارت ثبت نشده",
     onOpenCurriculum: () -> Unit,
     onOpenExams: () -> Unit,
     modifier: Modifier = Modifier

@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.data.local.entity.CourseSessionEntity
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,7 +23,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.data.local.util.DateTimeNormalizer
-import com.example.ui.theme.CyanNeon
 import com.example.ui.theme.NumericBadgeText
 import com.example.ui.theme.NumericDisplayStat
 import com.example.ui.theme.StudentOsColors
@@ -49,6 +50,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -70,13 +72,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.entity.CourseEntity
-import com.example.data.local.entity.CourseSessionEntity
 import com.example.data.local.relation.CourseWithSessions
 import com.example.domain.engine.ConflictDetectionEngine
 import com.example.domain.engine.CourseConflict
 import com.example.ui.theme.studentColors
 
-private val WEEKDAY_NAMES = listOf("شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه")
+private val WEEKDAY_NAMES = listOf("شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه", "جمعه")
 
 data class ScheduleItem(
     val course: CourseEntity,
@@ -100,26 +101,12 @@ fun WeeklyScheduleScreen(
 
     val totalUnits = remember(courses) { courses.distinctBy { it.id }.sumOf { it.units } }
     val effectiveCoursesWithSessions = remember(courses, coursesWithSessions) {
-        val courseMap = courses.associateBy { it.id }
         val sessionMap = coursesWithSessions.associate { it.course.id to it.sessions }
-
-        courses.mapIndexed { idx, course ->
-            val existingSessions = sessionMap[course.id] ?: emptyList()
-            val sessionsToUse = if (existingSessions.isNotEmpty()) {
-                existingSessions
-            } else {
-                listOf(
-                    CourseSessionEntity(
-                        id = "sess_${course.id.take(8)}_default",
-                        courseId = course.id,
-                        day = (idx % 5),
-                        start = if (idx % 2 == 0) "08:00" else "10:00",
-                        end = if (idx % 2 == 0) "10:00" else "12:00",
-                        location = "دانشکده"
-                    )
-                )
-            }
-            CourseWithSessions(course, sessionsToUse)
+        courses.map { course ->
+            CourseWithSessions(
+                course = course,
+                sessions = sessionMap[course.id].orEmpty()
+            )
         }
     }
     val conflicts = remember(effectiveCoursesWithSessions) {
@@ -255,6 +242,7 @@ fun WeeklyScheduleScreen(
                                 IconButton(
                                     onClick = { viewMode = 0 },
                                     modifier = Modifier
+                                        .minimumInteractiveComponentSize()
                                         .size(30.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(if (viewMode == 0) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)

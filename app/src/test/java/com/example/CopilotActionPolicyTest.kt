@@ -3,6 +3,7 @@ package com.example
 import com.example.domain.model.ActionImpactType
 import com.example.domain.model.CopilotActionProposal
 import com.example.domain.model.CopilotPayload
+import com.example.domain.model.requiresExplicitConfirmation
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

@@ -92,10 +92,9 @@ class SemesterSystemAndDataIntegrityTest {
         assertEquals("course_math_1", att?.courseId)
         assertEquals(0, att?.absentCount)
 
-        // Verify Grade auto-created with stable courseId
+        // A new course must not receive a fabricated zero grade.
         val grade = dao.getGradeByCourseId("course_math_1")
-        assertNotNull(grade)
-        assertEquals("course_math_1", grade?.courseId)
+        assertNull(grade)
 
         // Verify Exam auto-created with stable courseId
         val exam = dao.getExamByCourseId("course_math_1")
@@ -328,8 +327,8 @@ class SemesterSystemAndDataIntegrityTest {
 
         val currentSem = dao.getCurrentSemesterSync()
         assertNotNull(currentSem)
-        assertEquals("sem_1", currentSem?.id)
-        assertEquals(1, currentSem?.semesterNumber)
+        assertEquals("sem_current", currentSem?.id)
+        assertEquals(0, currentSem?.semesterNumber)
         assertTrue(currentSem?.isCurrent == true)
         assertEquals(0, currentSem?.totalUnits)
     }

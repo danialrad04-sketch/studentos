@@ -44,8 +44,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import com.example.domain.model.StudySessionRecommendation
-import com.example.ui.theme.BrandIndigo600
-import com.example.ui.theme.Emerald600
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.Rose600
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -139,7 +139,7 @@ fun PomodoroAndNotesScreen(
                                 modifier = Modifier.size(15.dp)
                             )
                             Text(
-                                text = if (isRunning) "دستیار هوشمند تمرکز عمیق فعال است" else "دستیار هوشمند مطالعه (۲۵ دقیقه)",
+                                text = if (isRunning) "دستیار هوشمند تمرکز عمیق فعال است" else "حالت تمرکز مطالعه · ۲۵ دقیقه",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -153,7 +153,7 @@ fun PomodoroAndNotesScreen(
                         color = MaterialTheme.colorScheme.secondaryContainer
                     ) {
                         Text(
-                            text = "سشن ۱ از ۴",
+                            text = "جلسه تمرکز",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -268,9 +268,9 @@ fun PomodoroAndNotesScreen(
                         )
                         Text(
                             text = if (isRunning)
-                                "الگوریتم یادگیری فعال: تمام ناتیفیکیشن‌های اضافی را نادیده بگیرید و روی مبحث فعلی متمرکز بمانید."
+                                "حالت تمرکز فعال است؛ اعلان‌های غیرضروری را کنار بگذارید و روی مبحث فعلی تمرکز کنید."
                             else
-                                "پیشنهاد هوش مصنوعی: ۲۵ دقیقه مطالعه پیوسته با ۵ دقیقه استراحت چشمی بالاترین بازدهی را دارد.",
+                                "پیشنهاد Focus: یک جلسه ۲۵ دقیقه‌ای مطالعه پیوسته با ۵ دقیقه استراحت.",
                             fontSize = 10.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 16.sp
@@ -302,7 +302,7 @@ fun PomodoroAndNotesScreen(
                             Icon(
                                 imageVector = Icons.Default.AutoAwesome,
                                 contentDescription = null,
-                                tint = BrandIndigo600,
+                                tint = AcademicNavy,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -316,13 +316,13 @@ fun PomodoroAndNotesScreen(
 
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = BrandIndigo600.copy(alpha = 0.12f)
+                            color = AcademicNavy.copy(alpha = 0.12f)
                         ) {
                             Text(
                                 text = "${studyRecommendations.size} اولویت",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = BrandIndigo600,
+                                color = AcademicNavy,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
@@ -332,7 +332,7 @@ fun PomodoroAndNotesScreen(
 
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         studyRecommendations.forEach { rec ->
-                            val badgeColor = if (rec.targetType.contains("آزمون")) Rose600 else Emerald600
+                            val badgeColor = if (rec.targetType.contains("آزمون")) Rose600 else AcademicOlive
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
@@ -385,13 +385,13 @@ fun PomodoroAndNotesScreen(
 
                                     Surface(
                                         shape = RoundedCornerShape(8.dp),
-                                        color = BrandIndigo600.copy(alpha = 0.1f)
+                                        color = AcademicNavy.copy(alpha = 0.1f)
                                     ) {
                                         Text(
                                             text = "${rec.recommendedDurationMinutes} دقیقه",
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = BrandIndigo600,
+                                            color = AcademicNavy,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                         )
                                     }

@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import com.example.data.local.entity.CourseEntity
 import com.example.data.local.entity.TaskEntity
 import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.StudentSpacing
 
 @Composable
 fun TasksScreen(
@@ -93,7 +95,7 @@ fun TasksScreen(
 
             Button(
                 onClick = onAddTask,
-                shape = MaterialTheme.shapes.medium,
+                shape = StudentShapeTokens.Card,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -114,15 +116,15 @@ fun TasksScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(StudentSpacing.Md))
 
         // Filter chips
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(StudentSpacing.Sm)) {
             FilterChip(
                 selected = selectedFilter == "all",
                 onClick = { selectedFilter = "all" },
                 label = { Text("همه (${tasks.size})", style = MaterialTheme.typography.labelMedium) },
-                shape = MaterialTheme.shapes.small,
+                shape = StudentShapeTokens.Compact,
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -172,7 +174,7 @@ fun TasksScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
+                        .padding(StudentSpacing.Xxl),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -228,7 +230,7 @@ fun TaskCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = StudentSpacing.Md, vertical = StudentSpacing.Sm),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -245,7 +247,7 @@ fun TaskCard(
                     )
                 )
 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(StudentSpacing.Sm))
 
                 Column {
                     Text(

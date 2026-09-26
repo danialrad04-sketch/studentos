@@ -60,8 +60,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.entity.GradeEntity
 import com.example.ui.theme.Amber500
-import com.example.ui.theme.BrandIndigo600
-import com.example.ui.theme.CyanNeon
+import com.example.ui.theme.AcademicNavy
+import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.Emerald50
 import com.example.ui.theme.Emerald600
 import com.example.ui.theme.NumericBadgeText
@@ -71,7 +71,8 @@ import com.example.ui.theme.Rose50
 import com.example.ui.theme.Rose600
 import com.example.ui.theme.Sky50
 import com.example.ui.theme.Sky600
-import com.example.ui.theme.StudentOsColors
+import com.example.ui.theme.StudentShapeTokens
+import com.example.ui.theme.StudentSpacing
 import com.example.ui.theme.StudentOsGlassTokens
 import java.util.Locale
 
@@ -122,7 +123,7 @@ fun GradesScreen(
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         onOpenExport()
                     },
-                    shape = RoundedCornerShape(14.dp),
+                    shape = StudentShapeTokens.Compact,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                     modifier = Modifier.height(42.dp)
                 ) {
@@ -150,7 +151,7 @@ fun GradesScreen(
 
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
+            shape = StudentShapeTokens.Hero,
             color = MaterialTheme.colorScheme.surfaceContainerLow,
             shadowElevation = if (isDark) 0.dp else 1.5.dp,
             border = BorderStroke(
@@ -334,7 +335,7 @@ fun GradesScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 12.dp),
-                shape = RoundedCornerShape(20.dp),
+                shape = StudentShapeTokens.Card,
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
                 shadowElevation = if (isDark) 0.dp else 1.5.dp,
                 border = BorderStroke(1.dp, if (isDark) Color(0x33FFFFFF) else Color(0xFFCBD5E1))
@@ -492,7 +493,7 @@ private fun CourseGradeCard(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(StudentShapeTokens.Compact)
                         .background(MaterialTheme.colorScheme.surfaceContainer)
                         .padding(vertical = 8.dp, horizontal = 10.dp),
                     contentAlignment = Alignment.Center
@@ -781,14 +782,14 @@ fun GradeWhatIfSimulatorCard(
     val neededFinalPoints = targetTotalPoints - earnedMidtermPoints
     val requiredFinalAverage = if (totalUnits > 0) neededFinalPoints / totalUnits else 0.0
 
-    val isFeasible = requiredFinalAverage <= 20.0
+    val isFeasible = requiredFinalAverage <= 14.0
     val isAlreadyPassed = requiredFinalAverage <= 0.0
 
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
+        shape = StudentShapeTokens.Card,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         border = BorderStroke(1.dp, if (isDark) Color(0x33FFFFFF) else Color(0xFFCBD5E1)),
         elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 1.5.dp)
@@ -871,8 +872,8 @@ fun GradeWhatIfSimulatorCard(
                 color = when {
                     isAlreadyPassed -> Emerald600.copy(alpha = 0.12f)
                     requiredFinalAverage in 0.0..14.0 -> Emerald600.copy(alpha = 0.12f)
-                    requiredFinalAverage in 14.0..17.5 -> Sky600.copy(alpha = 0.12f)
-                    requiredFinalAverage in 17.5..20.0 -> Amber500.copy(alpha = 0.12f)
+                    requiredFinalAverage in 10.0..12.5 -> Sky600.copy(alpha = 0.12f)
+                    requiredFinalAverage in 12.5..14.0 -> Amber500.copy(alpha = 0.12f)
                     else -> Rose600.copy(alpha = 0.12f)
                 }
             ) {
@@ -893,7 +894,7 @@ fun GradeWhatIfSimulatorCard(
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = when {
-                                isAlreadyPassed || requiredFinalAverage in 0.0..14.0 -> Emerald600
+                                isAlreadyPassed || requiredFinalAverage in 0.0..10.0 -> Emerald600
                                 requiredFinalAverage in 14.0..17.5 -> Sky600
                                 requiredFinalAverage in 17.5..20.0 -> Amber500
                                 else -> Rose600
@@ -921,7 +922,7 @@ fun GradeWhatIfSimulatorCard(
 
                     Text(
                         text = if (isFeasible) {
-                            "اگر میانگین نمرات پایان‌ترم شما به ${String.format(Locale.US, "%.1f", requiredFinalAverage.coerceAtLeast(0.0))} از ۱۲ نمره باقی‌مانده برسد، معدل کل ترم شما دقیقاً ${String.format(Locale.US, "%.1f", targetGpa)} خواهد شد."
+                            "اگر میانگین نمرات پایان‌ترم شما به ${String.format(Locale.US, "%.1f", requiredFinalAverage.coerceAtLeast(0.0))} از ۱۴ نمره باقی‌مانده برسد، معدل کل ترم شما دقیقاً ${String.format(Locale.US, "%.1f", targetGpa)} خواهد شد."
                         } else {
                             "مجموع نمرات میان‌ترم کسب‌شده برای این ترم به گونه‌ای است که حتی با نمره ۲۰ در تمامی امتحانات پایان‌ترم، دستیابی به این معدل امکان‌پذیر نیست."
                         },
@@ -937,7 +938,7 @@ fun GradeWhatIfSimulatorCard(
                 Button(
                     onClick = {
                         val simulated = grades.map { g ->
-                            val simulatedFinal = (requiredFinalAverage).coerceIn(0.0, 14.0)
+                            val simulatedFinal = requiredFinalAverage.coerceIn(0.0, 14.0)
                             Triple(g, g.midtermGrade, simulatedFinal)
                         }
                         onApplySimulation(simulated)

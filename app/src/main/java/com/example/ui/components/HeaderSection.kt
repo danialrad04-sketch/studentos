@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SettingsBrightness
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -35,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,12 +62,13 @@ fun HeaderSection(
     courseCount: Int,
     gpa: String,
     passedUnits: Int,
-    totalRequiredCredits: Int = 140,
+    totalRequiredCredits: Int = 0,
     notifCount: Int,
     isDarkTheme: Boolean,
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     onToggleTheme: () -> Unit,
     onOpenProfile: () -> Unit,
+    studyStreakDays: Int = 0,
     accountEmail: String? = null,
     isAccountConnected: Boolean = false,
     onOpenAccount: () -> Unit = {},
@@ -81,11 +84,13 @@ fun HeaderSection(
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    var showDemoConfirmation by remember { mutableStateOf(false) }
+    var showCleanSlateConfirmation by remember { mutableStateOf(false) }
 
     val isDark = MaterialTheme.colorScheme.background.red < 0.2f
-    val studentDisplayName = if (profile.name.isNotBlank()) profile.name else "امیر"
-    val termDisplayText = if (profile.term.isNotBlank()) "${profile.term} - هفته ۶" else "ترم پاییز ۱۴۰۴ - هفته ۶"
-    val initialLetter = studentDisplayName.trim().firstOrNull()?.toString() ?: "ع"
+    val studentDisplayName = profile.name.ifBlank { "دانشجو" }
+    val termDisplayText = profile.term.ifBlank { "اطلاعات ترم ثبت نشده" }
+    val initialLetter = studentDisplayName.trim().firstOrNull()?.toString() ?: "د"
 
     // Minimalist Top Bar matching the exact design in the user screenshot
     Row(
@@ -105,7 +110,7 @@ fun HeaderSection(
             ),
             modifier = Modifier
                 .semantics {
-                    contentDescription = "زنجیره ۱۲ روز مطالعه مستمر، باز کردن پروفایل"
+                    contentDescription = if (studyStreakDays > 0) "زنجیره $studyStreakDays روز مطالعه مستمر، باز کردن پروفایل" else "استریک مطالعه هنوز ثبت نشده، باز کردن پروفایل"
                     role = Role.Button
                 }
                 .tactileClickable { onOpenProfile() }
@@ -121,7 +126,7 @@ fun HeaderSection(
                     shapeRadiusRatio = 0.28f
                 )
                 Text(
-                    text = "۱۲",
+                    text = if (studyStreakDays > 0) studyStreakDays.toString() else "—",
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Black),
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
@@ -278,7 +283,7 @@ fun HeaderSection(
                         },
                         onClick = {
                             showMenu = false
-                            onLoadDemoData()
+                            showDemoConfirmation = true
                         },
                         leadingIcon = {
                             Icon(Icons.Default.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
@@ -294,7 +299,7 @@ fun HeaderSection(
                         },
                         onClick = {
                             showMenu = false
-                            onClearToFreshSlate()
+                            showCleanSlateConfirmation = true
                         },
                         leadingIcon = {
                             Icon(Icons.Default.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
@@ -304,5 +309,48 @@ fun HeaderSection(
             }
         }
     }
-}
 
+    if (showDemoConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDemoConfirmation = false },
+            title = { Text("بارگذاری داده‌های نمونه؟") },
+            text = {
+                Text("این عملیات داده‌های تحصیلی فعلی را با داده‌های نمونه جایگزین می‌کند و فقط برای مشاهده محیط آزمایشی است.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDemoConfirmation = false
+                        onLoadDemoData()
+                    }
+                ) { Text("بارگذاری نمونه") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDemoConfirmation = false }) { Text("انصراف") }
+            }
+        )
+    }
+
+    if (showCleanSlateConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showCleanSlateConfirmation = false },
+            title = { Text("پاکسازی کامل داده‌ها؟") },
+            text = {
+                Text("دروس، نمرات، حضور و غیاب، تکالیف و امتحانات این دستگاه پاک می‌شوند. این عملیات را فقط وقتی انجام دهید که از حذف اطلاعات مطمئن هستید.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showCleanSlateConfirmation = false
+                        onClearToFreshSlate()
+                    }
+                ) { Text("پاکسازی") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCleanSlateConfirmation = false }) { Text("انصراف") }
+            }
+        )
+    }
+
+
+}

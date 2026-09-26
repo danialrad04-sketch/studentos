@@ -87,59 +87,139 @@ object BackendSyncManager {
         if (failed) Result.failure(Exception("Some data types failed to push")) else Result.success(Unit)
     }
 
-    private suspend fun applyListSnapshot(context: Context, dataType: String, payload: Any?, remoteUpdatedAt: Long) =
-        BackendSyncScheduler.withSuppressedSync {
-            val dao = AppDatabase.getDatabase(context).studentDao()
-            when (dataType) {
-                "semesters" -> {
-                    val t = Types.newParameterizedType(List::class.java, SemesterEntity::class.java)
-                    dao.getAllSemestersSync().forEach { dao.deleteSemester(it.id) }; decode<List<SemesterEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertSemesters(it) }
-                }
-                "courses" -> {
-                    val t = Types.newParameterizedType(List::class.java, CourseEntity::class.java)
-                    val items = decode<List<CourseEntity>>(payload, t) ?: emptyList()
-                    dao.clearCourseSessions(); dao.clearAttendance(); dao.clearGrades(); dao.clearExams(); dao.clearTasks(); dao.clearCourses()
-                    if (items.isNotEmpty()) dao.insertCourses(items)
-                }
-                "sessions" -> {
-                    val t = Types.newParameterizedType(List::class.java, CourseSessionEntity::class.java)
-                    dao.clearCourseSessions(); decode<List<CourseSessionEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertCourseSessions(it) }
-                }
-                "attendance" -> {
-                    val t = Types.newParameterizedType(List::class.java, AttendanceEntity::class.java)
-                    dao.clearAttendance(); decode<List<AttendanceEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertAllAttendance(it) }
-                }
-                "grades" -> {
-                    val t = Types.newParameterizedType(List::class.java, GradeEntity::class.java)
-                    dao.clearGrades(); decode<List<GradeEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertAllGrades(it) }
-                }
-                "exams" -> {
-                    val t = Types.newParameterizedType(List::class.java, ExamEntity::class.java)
-                    dao.clearExams(); decode<List<ExamEntity>>(payload, t)?.forEach { dao.insertExam(it) }
-                }
-                "tasks" -> {
-                    val t = Types.newParameterizedType(List::class.java, TaskEntity::class.java)
-                    dao.clearTasks(); decode<List<TaskEntity>>(payload, t)?.let { if (it.isNotEmpty()) dao.insertAllTasks(it) }
-                }
-                "notes" -> {
-                    val t = Types.newParameterizedType(List::class.java, NoteEntity::class.java)
-                    dao.getAllNotesSync().forEach { dao.deleteNote(it.id) }; decode<List<NoteEntity>>(payload, t)?.forEach { dao.insertNote(it) }
+    private suspend fun applyListSnapshot(
+        context: Context,
+        dataType: String,
+        payload: Any?,
+        remoteUpdatedAt: Long,
+        reconcileCourseDeletes: Boolean = false
+    ) = BackendSyncScheduler.withSuppressedSync {
+        val dao = AppDatabase.getDatabase(context).studentDao()
+        when (dataType) {
+            "semesters" -> {
+                val t = Types.newParameterizedType(List::class.java, SemesterEntity::class.java)
+                val items = decode<List<SemesterEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid semesters payload; local data preserved")
+                dao.getAllSemestersSync().forEach { dao.deleteSemester(it.id) }
+                if (items.isNotEmpty()) dao.insertSemesters(items)
+            }
+            "courses" -> {
+                val t = Types.newParameterizedType(List::class.java, CourseEntity::class.java)
+                val items = decode<List<CourseEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid courses payload; local data preserved")
+                // Single-type course pulls only upsert. Clearing a course can cascade
+                // into sessions/exams/attendance/grades because of Room foreign keys.
+                if (items.isNotEmpty()) dao.insertCourses(items)
+                if (reconcileCourseDeletes) {
+                    if (items.isEmpty()) dao.clearCourses()
+                    else dao.deleteCoursesNotInIds(items.map { it.id })
                 }
             }
-            dao.upsertSyncMetadata(SyncMetadataEntity(dataType, remoteUpdatedAt))
+            "sessions" -> {
+                val t = Types.newParameterizedType(List::class.java, CourseSessionEntity::class.java)
+                val items = decode<List<CourseSessionEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid sessions payload; local data preserved")
+                dao.clearCourseSessions()
+                if (items.isNotEmpty()) dao.insertCourseSessions(items)
+            }
+            "attendance" -> {
+                val t = Types.newParameterizedType(List::class.java, AttendanceEntity::class.java)
+                val items = decode<List<AttendanceEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid attendance payload; local data preserved")
+                dao.clearAttendance()
+                if (items.isNotEmpty()) dao.insertAllAttendance(items)
+            }
+            "grades" -> {
+                val t = Types.newParameterizedType(List::class.java, GradeEntity::class.java)
+                val items = decode<List<GradeEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid grades payload; local data preserved")
+                dao.clearGrades()
+                if (items.isNotEmpty()) dao.insertAllGrades(items)
+            }
+            "exams" -> {
+                val t = Types.newParameterizedType(List::class.java, ExamEntity::class.java)
+                val items = decode<List<ExamEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid exams payload; local data preserved")
+                dao.clearExams()
+                items.forEach { dao.insertExam(it) }
+            }
+            "tasks" -> {
+                val t = Types.newParameterizedType(List::class.java, TaskEntity::class.java)
+                val items = decode<List<TaskEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid tasks payload; local data preserved")
+                dao.clearTasks()
+                if (items.isNotEmpty()) dao.insertAllTasks(items)
+            }
+            "notes" -> {
+                val t = Types.newParameterizedType(List::class.java, NoteEntity::class.java)
+                val items = decode<List<NoteEntity>>(payload, t)
+                    ?: throw IllegalStateException("Invalid notes payload; local data preserved")
+                dao.getAllNotesSync().forEach { dao.deleteNote(it.id) }
+                items.forEach { dao.insertNote(it) }
+            }
+        }
+        dao.upsertSyncMetadata(SyncMetadataEntity(dataType, remoteUpdatedAt))
+    }
+
+    suspend fun pullDataType(context: Context, dataType: String): Result<Unit> =
+        pullDataTypeInternal(context, dataType, reconcileCourseDeletes = false)
+
+    suspend fun pullAllData(context: Context): Result<Unit> = withContext(Dispatchers.IO) {
+        var failed = false
+
+        // Parent data must exist before child rows are restored because Room
+        // enforces foreign keys for sessions/exams/attendance/grades.
+        val restoreOrder = listOf(
+            "profile",
+            "semesters",
+            "courses",
+            "sessions",
+            "attendance",
+            "grades",
+            "exams",
+            "tasks",
+            "notes"
+        )
+
+        // First upsert courses without deletion so newly restored child rows
+        // always have their parent course available.
+        restoreOrder.forEach { type ->
+            if (type == "courses") {
+                if (pullDataType(context, "courses").isFailure) failed = true
+            } else {
+                if (pullDataType(context, type).isFailure) failed = true
+            }
         }
 
-    suspend fun pullDataType(context: Context, dataType: String): Result<Unit> = withContext(Dispatchers.IO) {
-        if (dataType !in DATA_TYPES) return@withContext Result.failure(IllegalArgumentException("Unknown dataType: $dataType"))
+        // Re-fetch the canonical course snapshot and reconcile remote deletions last.
+        // Deleting a course may cascade to its dependent rows, which are now already
+        // restored from their authoritative child snapshots.
+        if (pullDataTypeInternal(context, "courses", reconcileCourseDeletes = true).isFailure) {
+            failed = true
+        }
+
+        if (failed) Result.failure(Exception("Some data types failed to pull")) else Result.success(Unit)
+    }
+
+    private suspend fun pullDataTypeInternal(
+        context: Context,
+        dataType: String,
+        reconcileCourseDeletes: Boolean
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        if (dataType !in DATA_TYPES) {
+            return@withContext Result.failure(IllegalArgumentException("Unknown dataType: " + dataType))
+        }
         val client = BackendApiClient.getInstance(context)
         if (client.tokenStore().getAccessToken() == null) return@withContext Result.success(Unit)
         try {
             val response = client.api.pullDataType(dataType)
-            if (!response.isSuccessful) return@withContext Result.failure(Exception("HTTP ${response.code()}"))
+            if (!response.isSuccessful) return@withContext Result.failure(Exception("HTTP " + response.code()))
             val body = response.body() ?: return@withContext Result.success(Unit)
             val dao = AppDatabase.getDatabase(context).studentDao()
-            val localUpdatedAt = localUpdatedAt(dao, dataType)
-            if (body.updatedAt <= localUpdatedAt) return@withContext Result.success(Unit)
+            val localUpdated = localUpdatedAt(dao, dataType)
+            if (body.updatedAt <= localUpdated && !(dataType == "courses" && reconcileCourseDeletes)) {
+                return@withContext Result.success(Unit)
+            }
 
             if (dataType == "profile") {
                 val profile = decode<StudentProfileEntity>(body.payload, StudentProfileEntity::class.java)
@@ -149,18 +229,18 @@ object BackendSyncManager {
                     dao.upsertSyncMetadata(SyncMetadataEntity("profile", body.updatedAt))
                 }
             } else {
-                applyListSnapshot(context, dataType, body.payload, body.updatedAt)
+                applyListSnapshot(
+                    context = context,
+                    dataType = dataType,
+                    payload = body.payload,
+                    remoteUpdatedAt = body.updatedAt,
+                    reconcileCourseDeletes = reconcileCourseDeletes
+                )
             }
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e(TAG, "Pull $dataType failed", e)
+            Log.e(TAG, "Pull " + dataType + " failed", e)
             Result.failure(e)
         }
-    }
-
-    suspend fun pullAllData(context: Context): Result<Unit> = withContext(Dispatchers.IO) {
-        var failed = false
-        DATA_TYPES.forEach { if (pullDataType(context, it).isFailure) failed = true }
-        if (failed) Result.failure(Exception("Some data types failed to pull")) else Result.success(Unit)
     }
 }
