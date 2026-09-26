@@ -419,7 +419,7 @@ object FirestoreSyncManager {
                                 activeUnits = if (cloudActive > 0) cloudActive else (localProfile?.activeUnits ?: 0),
                                 declaredGpa = cloudGpa ?: localProfile?.declaredGpa,
                                 term = cloudTerm,
-                                faculty = if (cloudMajor.isNotBlank()) "دانشکده $cloudMajor" else (localProfile?.faculty ?: ""),
+                                faculty = cloudFaculty.ifBlank { localProfile?.faculty ?: "" },
                                 isOnboardingCompleted = localProfile?.isOnboardingCompleted ?: hasCloudIdentity,
                                 updatedAt = cloudUpdatedAt
                             )
@@ -449,9 +449,12 @@ object FirestoreSyncManager {
                                 val course = CourseEntity(
                                     id = id,
                                     name = name,
-                                    colorHex = doc.getString("colorHex") ?: (local?.colorHex ?: "#3B82F6"),
-                                    units = doc.getLong("units")?.toInt() ?: (local?.units ?: 3),
-                                    semesterId = doc.getString("semesterId") ?: (local?.semesterId ?: "current"),
+                                    colorHex = doc.getString("colorHex")?.takeIf { it.isNotBlank() }
+                                        ?: (local?.colorHex ?: ""),
+                                    units = doc.getLong("units")?.toInt()
+                                        ?: (local?.units ?: 0),
+                                    semesterId = doc.getString("semesterId")?.takeIf { it.isNotBlank() }
+                                        ?: (local?.semesterId ?: "sem_current"),
                                     courseCode = doc.getString("courseCode") ?: (local?.courseCode ?: ""),
                                     professorId = doc.getString("professorId") ?: local?.professorId,
                                     professor = doc.getString("professor") ?: (local?.professor ?: ""),
@@ -485,9 +488,9 @@ object FirestoreSyncManager {
                                 val session = com.example.data.local.entity.CourseSessionEntity(
                                     id = id,
                                     courseId = courseId,
-                                    day = doc.getLong("day")?.toInt() ?: (local?.day ?: 0),
-                                    start = doc.getString("start") ?: (local?.start ?: "08:00"),
-                                    end = doc.getString("end") ?: (local?.end ?: "10:00"),
+                                    day = doc.getLong("day")?.toInt() ?: (local?.day ?: -1),
+                                    start = doc.getString("start")?.takeIf { it.isNotBlank() } ?: (local?.start ?: ""),
+                                    end = doc.getString("end")?.takeIf { it.isNotBlank() } ?: (local?.end ?: ""),
                                     location = doc.getString("location") ?: (local?.location ?: "")
                                 )
                                 dao.insertCourseSession(session)
