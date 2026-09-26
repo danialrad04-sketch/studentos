@@ -46,7 +46,7 @@ jobs:
       - name: Build Google-compatible signed APK
         shell: bash
         env:
-          KEYSTORE_PATH: studentos-release.jks
+          KEYSTORE_PATH: ${{ github.workspace }}/studentos-release.jks
           STORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
