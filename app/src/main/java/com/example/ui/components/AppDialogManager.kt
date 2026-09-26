@@ -133,18 +133,36 @@ fun AppDialogManager(
                             Toast.makeText(context, "امکان باز کردن ورود گوگل در این محیط وجود ندارد.", Toast.LENGTH_LONG).show()
                         } else {
                             coroutineScope.launch {
-                                GoogleSignInManager.getIdToken(activity)
-                                    .fold(
-                                        onSuccess = { idToken ->
-                                            studentViewModel.signInWithGoogle(idToken) { ok, msg ->
-                                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                                                if (ok) dismiss()
+                                try {
+                                    GoogleSignInManager.getIdToken(activity)
+                                        .fold(
+                                            onSuccess = { idToken ->
+                                                studentViewModel.signInWithGoogle(idToken) { ok, msg ->
+                                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                                    if (ok) dismiss()
+                                                }
+                                            },
+                                            onFailure = { error ->
+                                                val raw = error.message.orEmpty()
+                                                val message = when {
+                                                    raw.contains("403", ignoreCase = true) ||
+                                                        raw.contains("forbidden", ignoreCase = true) ->
+                                                        "دسترسی ورود Google رد شد؛ تنظیمات OAuth و Web Client ID را بررسی کنید."
+                                                    raw.contains("network", ignoreCase = true) ||
+                                                        raw.contains("timeout", ignoreCase = true) ->
+                                                        "اتصال اینترنت برای ورود با Google در دسترس نیست."
+                                                    raw.contains("cancel", ignoreCase = true) ->
+                                                        "ورود با Google لغو شد."
+                                                    else ->
+                                                        "ورود با Google ناموفق بود؛ لطفاً دوباره تلاش کنید."
+                                                }
+                                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                                             }
-                                        },
-                                        onFailure = {
-                                            Toast.makeText(context, "ورود با گوگل ناموفق بود.", Toast.LENGTH_LONG).show()
-                                        }
-                                    )
+                                        )
+                                } catch (error: Throwable) {
+                                    android.util.Log.e("AppDialogManager", "Guest Google sign-in failed unexpectedly", error)
+                                    Toast.makeText(context, "ورود با Google با خطای غیرمنتظره مواجه شد؛ لطفاً دوباره تلاش کنید.", Toast.LENGTH_LONG).show()
+                                }
                             }
                         }
                     },
