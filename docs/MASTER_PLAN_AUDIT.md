@@ -46,12 +46,12 @@ Verified:
 - window-size based density
 
 ## Phase 3 — Core Academic UX
-Status: **Implemented**
+Status: **Implemented; Course Workspace / Weekly UX redesign in progress**
 
 Verified modules/data paths for:
 - Dashboard
 - Weekly Schedule
-- Courses / Course Workspace
+- Courses / Course Workspace — core logic exists; workspace UX was too dialog-centric and is being redesigned
 - Exams
 - Tasks
 - Grades
@@ -59,7 +59,7 @@ Verified modules/data paths for:
 - Curriculum
 
 ## Phase 4 — Productivity
-Status: **Implemented**
+Status: **Implemented; contextual UX refinement in progress**
 
 Verified:
 - manual semester planning
@@ -70,7 +70,7 @@ Verified:
 - undo snapshots for destructive operations
 
 ## Phase 5 — Intelligence
-Status: **Implemented**
+Status: **Implemented; completeness audit in progress**
 
 Verified:
 - deterministic Academic Risk engine
@@ -126,7 +126,7 @@ Release blockers:
 3. Verification that guest-local data transitions safely when a user later authenticates — **LWW transition path hardened; device scenario remains**.
 
 ## Phase 8 — Quality
-Status: **CI gates complete; device/store verification remains**
+Status: **CI gates complete; real-device/performance verification remains**
 
 Already present:
 - broad JVM unit-test suite
@@ -165,4 +165,4 @@ Required before release:
 
 **Do not publish a release yet.**
 
-The implementation is substantially complete, but the remaining items above are verification/integration gates rather than reasons to blindly ship.
+The implementation is substantially complete at the architecture/CI level, but the remaining product UX and real-device verification gates must be closed before calling the Master Plan fully complete.
