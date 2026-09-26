@@ -40,17 +40,15 @@ if (process.env.RUN_BACKEND_INTEGRATION !== '1') {
   }
 
   test.before(async () => {
-    process.env.PORT = '31337';
     await pool.query('TRUNCATE entitlement_redemptions, entitlement_codes, user_data, refresh_tokens, users CASCADE');
-    await new Promise((resolve, reject) => {
+    if (process.env.BACKEND_EXTERNAL !== '1') {
+      process.env.PORT = '31337';
       server = spawn(process.execPath, ['src/server.js'], {
         cwd: process.cwd(),
         env: process.env,
-        stdio: ['ignore', 'pipe', 'pipe'],
+        stdio: 'inherit',
       });
-      server.once('error', reject);
-      setTimeout(resolve, 100);
-    });
+    }
     await waitForHealth();
   });
 
