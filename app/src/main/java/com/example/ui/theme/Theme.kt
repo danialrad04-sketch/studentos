@@ -90,7 +90,7 @@ private val LightColorScheme = lightColorScheme(
     surfaceTint = StudentPrimaryLight,
     inverseSurface = Color(0xFF0F172A),
     inverseOnSurface = Color(0xFFF8FAFC),
-    inversePrimary = Color(0xFF818CF8),
+    inversePrimary = Color(0xFF7D8A5C),
     scrim = Color(0x99000000)
 )
 
