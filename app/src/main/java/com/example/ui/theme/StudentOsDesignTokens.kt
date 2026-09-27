@@ -16,16 +16,16 @@ import androidx.compose.ui.unit.dp
  */
 object StudentOsColors {
     // Core Academic Premium surfaces
-    val LightCanvas = Color(0xFFF8F9F2)
-    val LightPaper = Color(0xFFF0F2E8)
+    val LightCanvas = Color(0xFFF7F6F1)
+    val LightPaper = Color(0xFFF0EFE9)
     val LightSurface = Color(0xFFFFFFFF)
     val LightSurface2 = Color(0xFFF0F2E8)
-    val LightInk = Color(0xFF0F172A)
-    val LightInkSoft = Color(0xFF475569)
+    val LightInk = Color(0xFF20231F)
+    val LightInkSoft = Color(0xFF62665E)
     val LightInkFaint = Color(0xFF94A3B8)
-    val LightBrand = Color(0xFF66734A)
-    val LightIndigoStrong = Color(0xFF394126)
-    val LightIndigoSoft = Color(0xFFE7EBD9)
+    val LightBrand = Color(0xFF667052)
+    val LightIndigoStrong = Color(0xFF3E4335)
+    val LightIndigoSoft = Color(0xFFE7E8DE)
 
     // Semantic status colors — deliberately separate from brand colors
     val LightAmber = Color(0xFFD97706)
@@ -34,23 +34,23 @@ object StudentOsColors {
     val LightSky = Color(0xFF0284C7)
 
     // Dark academic surfaces
-    val DarkCanvas = Color(0xFF07090E)
-    val DarkNavyBlack = Color(0xFF0A0E1A)
-    val DarkPaper = Color(0xFF0E1322)
-    val DarkSurface = Color(0xFF111625)
-    val DarkSurface2 = Color(0xFF182035)
+    val DarkCanvas = Color(0xFF08151B)
+    val DarkNavyBlack = Color(0xFF0A1B22)
+    val DarkPaper = Color(0xFF0D2027)
+    val DarkSurface = Color(0xFF10242C)
+    val DarkSurface2 = Color(0xFF16313A)
     val DarkInk = Color(0xFFEEF0F6)
     val DarkInkSoft = Color(0xFF9FA8BD)
     val DarkInkFaint = Color(0xFF6D7690)
-    val DarkLine = Color(0xFF28324D)
+    val DarkLine = Color(0xFF29434C)
 
     // Compatibility accent names mapped to the restrained Academic Premium system
     val CyanAccent = Color(0xFF163F4D)
     val CyanGlow = Color(0xFF6FA7B8)
     val EmeraldAccent = Color(0xFF6B705C)
     val EmeraldGlow = Color(0xFF8A9070)
-    val PurpleAccent = Color(0xFF7B6D5A)
-    val PurpleGlow = Color(0xFF9A8A73)
+    val PurpleAccent = AcademicOlive
+    val PurpleGlow = AcademicOliveLight
     val ElectricBlue = Color(0xFF0F3B4D)
     val AmberAccent = Color(0xFFF59E0B)
     val CrimsonAccent = Color(0xFFF43F5E)
@@ -71,7 +71,7 @@ object StudentOsColors {
     val DarkAmber = Color(0xFFF0B054)
     val DarkMint = AcademicOliveLight
     val DarkCoral = Color(0xFFF0897A)
-    val DarkSky = Color(0xFF79A8F2)
+    val DarkSky = Color(0xFF7BAEBB)
 }
 
 /**
