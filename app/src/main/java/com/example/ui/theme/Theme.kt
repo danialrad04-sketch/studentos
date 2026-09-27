@@ -134,13 +134,13 @@ private val LightStudentSemanticColors = StudentSemanticColors(
     copilotGradient = Brush.horizontalGradient(listOf(Color(0xFF0F3B4D), Color(0xFF6B705C))),
     heroPassportGradient = Brush.linearGradient(listOf(Color(0xFF0F3B4D), Color(0xFF285A6C), Color(0xFF6B705C))),
     cardBorderGlow = Color(0x1A0F3B4D),
-    cyanAccent = Color(0xFF6FA7B8),
-    emeraldAccent = Color(0xFF7C8461),
-    purpleAccent = Color(0xFF7B6D5A),
+    cyanAccent = AcademicNavy,
+    emeraldAccent = AcademicOliveLight,
+    purpleAccent = AcademicOlive,
     deepSpaceCanvas = Color(0xFFF8FAFC),
     glassSurface = Color(0xFFFFFFFF),
-    glassSurfaceElevated = Color(0xFFF1F5F9),
-    glassBorder = Color(0xFFE2E8F0),
+    glassSurfaceElevated = StudentSurfaceVariantLight,
+    glassBorder = StudentOutlineLight,
     glassBorderGradient = Brush.linearGradient(listOf(Color(0xFFE2E8F0), Color(0xFFCBD5E1)))
 )
 
