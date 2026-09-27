@@ -48,6 +48,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.data.local.entity.CourseEntity
 import com.example.data.local.entity.TaskEntity
+import com.example.ui.models.ExamItem
+import com.example.domain.util.JalaliCalendarUtil
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.StudentShapeTokens
 import com.example.ui.theme.StudentSpacing
@@ -56,6 +58,7 @@ import com.example.ui.theme.StudentSpacing
 fun TasksScreen(
     tasks: List<TaskEntity>,
     courses: List<CourseEntity> = emptyList(),
+    exams: List<ExamItem> = emptyList(),
     onAddTask: () -> Unit,
     onToggleTask: (TaskEntity) -> Unit,
     onDeleteTask: (TaskEntity) -> Unit,
@@ -64,8 +67,31 @@ fun TasksScreen(
 ) {
     var selectedFilter by remember { mutableStateOf("all") }
 
-    val filteredTasks = remember(tasks, selectedFilter) {
+    val today = JalaliCalendarUtil.today().format("/")
+    fun normalizeDate(value: String): String = value
+        .trim()
+        .replace('۰','0').replace('۱','1').replace('۲','2').replace('۳','3')
+        .replace('۴','4').replace('۵','5').replace('۶','6').replace('۷','7')
+        .replace('۸','8').replace('۹','9')
+
+    val examCourseIds = remember(exams, courses) {
+        exams.mapNotNull { exam -> courses.find { it.name == exam.courseName }?.id }.toSet()
+    }
+
+    val filteredTasks = remember(tasks, selectedFilter, today, examCourseIds) {
+        val normalizedToday = normalizeDate(today)
         when (selectedFilter) {
+            "today" -> tasks.filter { !it.isCompleted && normalizeDate(it.dueDate) == normalizedToday }
+            "priority" -> tasks.filter {
+                !it.isCompleted && it.dueDate.isNotBlank() &&
+                    normalizeDate(it.dueDate) <= normalizedToday
+            }
+            "deadline" -> tasks.filter { !it.isCompleted && it.dueDate.isNotBlank() }
+            "overdue" -> tasks.filter {
+                !it.isCompleted && it.dueDate.isNotBlank() &&
+                    normalizeDate(it.dueDate) < normalizedToday
+            }
+            "exam" -> tasks.filter { !it.isCompleted && examCourseIds.contains(it.courseId) }
             "pending" -> tasks.filter { !it.isCompleted }
             "completed" -> tasks.filter { it.isCompleted }
             else -> tasks
@@ -143,6 +169,30 @@ fun TasksScreen(
                 modifier = Modifier.minimumInteractiveComponentSize()
             )
             FilterChip(
+                selected = selectedFilter == "today",
+                onClick = { selectedFilter = "today" },
+                label = { Text("امروز", style = MaterialTheme.typography.labelMedium) },
+                shape = StudentShapeTokens.Compact
+            )
+            FilterChip(
+                selected = selectedFilter == "priority",
+                onClick = { selectedFilter = "priority" },
+                label = { Text("اولویت", style = MaterialTheme.typography.labelMedium) },
+                shape = StudentShapeTokens.Compact
+            )
+            FilterChip(
+                selected = selectedFilter == "overdue",
+                onClick = { selectedFilter = "overdue" },
+                label = { Text("عقب‌افتاده", style = MaterialTheme.typography.labelMedium) },
+                shape = StudentShapeTokens.Compact
+            )
+            FilterChip(
+                selected = selectedFilter == "exam",
+                onClick = { selectedFilter = "exam" },
+                label = { Text("مرتبط با امتحان", style = MaterialTheme.typography.labelMedium) },
+                shape = StudentShapeTokens.Compact
+            )
+                        FilterChip(
                 selected = selectedFilter == "completed",
                 onClick = { selectedFilter = "completed" },
                 label = { Text("انجام شده (${tasks.count { it.isCompleted }})", style = MaterialTheme.typography.labelMedium) },
