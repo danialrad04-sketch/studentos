@@ -16,16 +16,16 @@ import androidx.compose.ui.unit.dp
  */
 object StudentOsColors {
     // Core Academic Premium surfaces
-    val LightCanvas = Color(0xFFF8FAFC)
-    val LightPaper = Color(0xFFF1F5F9)
+    val LightCanvas = Color(0xFFF8F9F2)
+    val LightPaper = Color(0xFFF0F2E8)
     val LightSurface = Color(0xFFFFFFFF)
-    val LightSurface2 = Color(0xFFF1F5F9)
+    val LightSurface2 = Color(0xFFF0F2E8)
     val LightInk = Color(0xFF0F172A)
     val LightInkSoft = Color(0xFF475569)
     val LightInkFaint = Color(0xFF94A3B8)
-    val LightBrand = Color(0xFF0F3B4D)
-    val LightIndigoStrong = Color(0xFF0A2D3A)
-    val LightIndigoSoft = Color(0xFFE8EFF2)
+    val LightBrand = Color(0xFF66734A)
+    val LightIndigoStrong = Color(0xFF394126)
+    val LightIndigoSoft = Color(0xFFE7EBD9)
 
     // Semantic status colors — deliberately separate from brand colors
     val LightAmber = Color(0xFFD97706)
