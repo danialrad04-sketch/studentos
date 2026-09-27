@@ -82,6 +82,7 @@ fun MainTabContent(
                     grades = grades,
                     passedUnits = profile.passedUnits,
                     gpa = gpaFormatted,
+                    targetGpa = profile.declaredGpa,
                     totalRequiredCredits = totalCurriculumUnits,
                     academicProgressState = academicProgressState,
                     academicRisks = academicRisks,
