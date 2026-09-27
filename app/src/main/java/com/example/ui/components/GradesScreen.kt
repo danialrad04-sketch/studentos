@@ -158,7 +158,7 @@ fun GradesScreen(
                 1.dp,
                 when {
                     isHonors -> Emerald600.copy(alpha = 0.6f)
-                    isNormal -> if (isDark) Color(0x33FFFFFF) else Color(0xFFCBD5E1)
+                    isNormal -> if (isDark) MaterialTheme.colorScheme.outline.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outline
                     else -> MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
                 }
             )
