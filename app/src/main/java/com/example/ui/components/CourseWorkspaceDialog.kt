@@ -1069,6 +1069,8 @@ fun CourseWorkspaceDialog(
     }
 }
 
+}
+
 @Composable
 private fun RowScope.WorkspaceActionChip(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, selected: Boolean, color: Color, onClick: () -> Unit) {
     Surface(
