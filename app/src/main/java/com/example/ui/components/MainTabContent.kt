@@ -227,6 +227,7 @@ fun MainTabContent(
                 TasksScreen(
                     tasks = tasks,
                     courses = courses,
+                    exams = exams,
                     onAddTask = onOpenAddTask,
                     onToggleTask = {
                         studentViewModel.toggleTask(it)
