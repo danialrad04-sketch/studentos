@@ -58,7 +58,7 @@ private val DarkColorScheme = darkColorScheme(
     surfaceTint = StudentPrimaryDark,
     inverseSurface = Color(0xFFE2E8F0),
     inverseOnSurface = Color(0xFF0F172A),
-    inversePrimary = Color(0xFF2563EB),
+    inversePrimary = Color(0xFF7BAEBB),
     scrim = Color(0xCC000000)
 )
 
@@ -153,16 +153,16 @@ private val DarkStudentSemanticColors = StudentSemanticColors(
     attendanceCritical = Color(0xFFF43F5E),
     gpaAlpha = Color(0xFF0D9488),
     gpaProbation = Color(0xFFF43F5E),
-    brandGradient = Brush.linearGradient(listOf(Color(0xFF163F4D), Color(0xFF3C7180), Color(0xFFA7AD78))),
-    copilotGradient = Brush.horizontalGradient(listOf(Color(0xFF3C7180), Color(0xFFA7AD78))),
-    heroPassportGradient = Brush.linearGradient(listOf(Color(0xFF0F2731), Color(0xFF163F4D), Color(0xFF6B705C))),
+    brandGradient = Brush.linearGradient(listOf(Color(0xFF102D37), Color(0xFF3C7180), Color(0xFF7F8B5E))),
+    copilotGradient = Brush.horizontalGradient(listOf(Color(0xFF285968), Color(0xFF7F8B5E))),
+    heroPassportGradient = Brush.linearGradient(listOf(Color(0xFF0B222A), Color(0xFF163F4D), Color(0xFF6B705C))),
     cardBorderGlow = Color(0x330D9488),
     cyanAccent = Color(0xFF6FA7B8),
     emeraldAccent = Color(0xFF10B981),
     purpleAccent = Color(0xFFA7AD78),
-    deepSpaceCanvas = Color(0xFF0F172A),
-    glassSurface = Color(0xFF1E293B),
-    glassSurfaceElevated = Color(0xFF334155),
+    deepSpaceCanvas = Color(0xFF08151B),
+    glassSurface = Color(0xFF10242C),
+    glassSurfaceElevated = Color(0xFF16313A),
     glassBorder = Color(0x33FFFFFF),
     glassBorderGradient = Brush.linearGradient(listOf(Color.White.copy(alpha = 0.20f), Color.White.copy(alpha = 0.05f)))
 )
