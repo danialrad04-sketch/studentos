@@ -36,8 +36,8 @@ fun AcademicCard(
             modifier = modifier,
             shape = shape,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.82f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             content = content
         )
     } else {
