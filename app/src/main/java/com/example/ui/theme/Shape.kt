@@ -5,8 +5,8 @@ import androidx.compose.ui.unit.dp
 
 /** Restrained Academic Premium shape tokens. */
 object StudentShapeTokens {
-    val Compact = RoundedCornerShape(10.dp)
-    val Card = RoundedCornerShape(16.dp)
-    val Hero = RoundedCornerShape(20.dp)
-    val BottomSheet = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    val Compact = RoundedCornerShape(12.dp)
+    val Card = RoundedCornerShape(18.dp)
+    val Hero = RoundedCornerShape(22.dp)
+    val BottomSheet = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)
 }
