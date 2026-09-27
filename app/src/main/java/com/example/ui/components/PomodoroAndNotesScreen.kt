@@ -452,40 +452,17 @@ fun PomodoroAndNotesScreen(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Formula Quick Snippets
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    val formulaSnippets = listOf(
-                        "ΔU = Q - W" to "قانون ۱ ترمو",
-                        "P + 0.5ρv² + ρgh = C" to "معادله برنولی",
-                        "P_i = x_i * P_i^sat" to "قانون رائولت",
-                        "Re = (ρ * v * D) / μ" to "عدد رینولدز",
-                        "q = -k * A * (dT/dx)" to "قانون فوریه"
-                    )
-
-                    formulaSnippets.forEach { (formula, label) ->
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            modifier = Modifier.tactileClickable {
-                                val separator = if (localNotes.isBlank()) "" else "\n"
-                                val updated = "$localNotes$separator• $label: $formula"
-                                localNotes = updated
-                                onSaveNotes(updated)
-                            }
-                        ) {
-                            Text(
-                                text = "+ $label",
-                                fontSize = 10.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
-                            )
-                        }
+                if (localNotes.isBlank()) {
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                    ) {
+                        Text(
+                            text = "هنوز فرمول یا یادداشت ذخیره‌شده‌ای وجود ندارد.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp)
+                        )
                     }
                 }
 
