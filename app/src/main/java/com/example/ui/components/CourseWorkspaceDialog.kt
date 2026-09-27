@@ -95,6 +95,7 @@ import com.example.data.local.entity.GradeEntity
 import com.example.data.local.entity.TaskEntity
 import com.example.ui.models.ExamItem
 import com.example.ui.theme.studentColors
+import com.example.ui.theme.AcademicOlive
 
 private val WEEKDAY_NAMES = listOf("شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه")
 
