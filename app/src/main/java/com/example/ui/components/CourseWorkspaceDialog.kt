@@ -125,15 +125,12 @@ fun CourseWorkspaceDialog(
     var activeSection by remember { mutableStateOf("OVERVIEW") }
     var showNewTaskInput by remember { mutableStateOf(false) }
     var newTaskTitle by remember { mutableStateOf("") }
-    var newTaskDate by remember { mutableStateOf("1405/10/25") }
+    var newTaskDate by remember { mutableStateOf("") }
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     // Knowledge & Formula memo notes
     var notesMemo by remember(course.id, course.notes) {
-        mutableStateOf(
-            course.notes?.ifBlank { null }
-                ?: "📌 فرمول‌های کلیدی و سرفصل‌ها:\n- فصل ۱: مفاهیم پایه و تعاریف اصلی\n- فصل ۲ و ۳: حل مسائل تحلیلی و نمونه سوالات امتحانی سال‌های قبل\n- پروژه درسی: موعد تحویل تا جلسه چهاردهم"
-        )
+        mutableStateOf(course.notes?.ifBlank { "" } ?: "")
     }
     var isEditingNotes by remember { mutableStateOf(false) }
 
@@ -146,7 +143,7 @@ fun CourseWorkspaceDialog(
         try {
             Color(android.graphics.Color.parseColor(course.colorHex))
         } catch (_: Exception) {
-            Color(0xFF6366F1)
+            AcademicOlive
         }
     }
 
