@@ -563,7 +563,7 @@ fun CourseWorkspaceDialog(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkWorkspace) Color(0x33FFFFFF) else Color(0xFFCBD5E1))
+                        border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkWorkspace) MaterialTheme.colorScheme.outline.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outline)
                     ) {
                         Row(
                             modifier = Modifier
