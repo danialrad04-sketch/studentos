@@ -175,17 +175,17 @@ val EmeraldProgressGradient = Brush.horizontalGradient(
 // Bento 2026 Student OS Canonical Design Tokens
 // ==========================================
 // Light Mode Tokens
-val BentoLightCanvas = Color(0xFFF8FAFC)
-val BentoLightPaper = Color(0xFFF1F5F9)
+val BentoLightCanvas = Color(0xFFF8F9F2)
+val BentoLightPaper = Color(0xFFF0F2E8)
 val BentoLightSurface = Color(0xFFFFFFFF)
-val BentoLightSurface2 = Color(0xFFF1F5F9)
+val BentoLightSurface2 = Color(0xFFF0F2E8)
 val BentoLightInk = Color(0xFF0F172A)
 val BentoLightInkSoft = Color(0xFF475569)
 val BentoLightInkFaint = Color(0xFF94A3B8)
 val BentoLightLine = Color(0xFFE2E8F0)
-val BentoLightIndigo = Color(0xFF4F46E5)
-val BentoLightIndigoStrong = Color(0xFF312E81)
-val BentoLightIndigoSoft = Color(0xFFEEF2FF)
+val BentoLightIndigo = Color(0xFF66734A)
+val BentoLightIndigoStrong = Color(0xFF394126)
+val BentoLightIndigoSoft = Color(0xFFE7EBD9)
 val BentoLightAmber = Color(0xFFD97706)
 val BentoLightAmberInk = Color(0xFF78350F)
 val BentoLightAmberSoft = Color(0xFFFEF3C7)
@@ -194,7 +194,7 @@ val BentoLightMintSoft = Color(0xFFD1FAE5)
 val BentoLightCoral = Color(0xFFE11D48)
 val BentoLightCoralSoft = Color(0xFFFFE4E6)
 val BentoLightSky = Color(0xFF0284C7)
-val BentoLightSkySoft = Color(0xFFE0F2FE)
+val BentoLightSkySoft = Color(0xFFE6ECE5)
 
 // Dark Mode Tokens
 val BentoDarkCanvas = Color(0xFF07090E)
