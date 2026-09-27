@@ -108,6 +108,7 @@ fun ModernBentoDashboard(
     grades: List<GradeEntity>,
     passedUnits: Int = 0,
     gpa: String = "۰.۰۰",
+    targetGpa: Double? = null,
     totalRequiredCredits: Int = 0,
     academicProgressState: com.example.ui.models.AcademicProgressUiState? = null,
     academicRisks: List<com.example.domain.model.AcademicRisk> = emptyList(),
@@ -349,7 +350,7 @@ private fun AnalyticsKpiSection(
             BentoKpiTile(
                 title = "معدل کل",
                 value = displayGpa,
-                subtitle = "هدف: ۱۸.۵۰ 🎯",
+                subtitle = targetGpa?.let { "هدف ثبت‌شده: ${String.format(Locale.US, "%.2f", it)} 🎯" } ?: "هدف معدل ثبت نشده",
                 emojiType = AppEmojiType.CHART,
                 accentColor = AcademicNavy,
                 onClick = onNavigateToGrades,
