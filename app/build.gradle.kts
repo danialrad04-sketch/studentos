@@ -31,12 +31,6 @@ android {
       keyAlias = System.getenv("KEY_ALIAS") ?: ""
       keyPassword = System.getenv("KEY_PASSWORD") ?: ""
     }
-    create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
-    }
   }
 
   buildTypes {
@@ -47,7 +41,17 @@ android {
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
-    debug { signingConfig = signingConfigs.getByName("debugConfig") }
+    debug {
+      // Use the registered release certificate for Firebase/Google smoke builds
+      // when CI provides it; otherwise let Android Gradle Plugin create/use its
+      // standard debug keystore instead of requiring a committed local file.
+      if (!System.getenv("KEYSTORE_PATH").isNullOrBlank() &&
+          !System.getenv("STORE_PASSWORD").isNullOrBlank() &&
+          !System.getenv("KEY_PASSWORD").isNullOrBlank() &&
+          !System.getenv("KEY_ALIAS").isNullOrBlank()) {
+        signingConfig = signingConfigs.getByName("release")
+      }
+    }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
