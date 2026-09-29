@@ -122,8 +122,14 @@ jobs:
           AAB="app/build/outputs/bundle/release/app-release.aab"
           test -s "$APK"
           test -s "$AAB"
-          command -v apksigner
-          apksigner verify --verbose "$APK"
+          SDK_APKSIGNER="$(find "$ANDROID_HOME/build-tools" -maxdepth 2 -type f -name apksigner | sort -V | tail -n 1)"
+          test -x "$SDK_APKSIGNER"
+          echo "Using apksigner: $SDK_APKSIGNER"
+          "$SDK_APKSIGNER" verify --verbose --print-certs "$APK" || {
+            echo "::error::APK signature verification failed"
+            "$SDK_APKSIGNER" verify --verbose --print-certs "$APK" 2>&1 || true
+            exit 1
+          }
           unzip -t "$AAB"
           unzip -l "$AAB" | grep -E 'BundleConfig.pb|base/manifest/AndroidManifest.xml'
           ls -lh "$APK" "$AAB"
