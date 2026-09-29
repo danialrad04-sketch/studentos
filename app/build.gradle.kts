@@ -16,8 +16,8 @@ android {
   defaultConfig {
     applicationId = "com.aistudio.studentos.appvzk"
     minSdk = 24
-    targetSdk = 35
-    versionCode = 2
+    targetSdk = 36
+    versionCode = 3
     versionName = "1.2"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -27,9 +27,9 @@ android {
     create("release") {
       val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
       storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD") ?: "studentos2026"
-      keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD") ?: "studentos2026"
+      storePassword = System.getenv("STORE_PASSWORD") ?: error("STORE_PASSWORD is required for release builds")
+      keyAlias = System.getenv("KEY_ALIAS") ?: "upload"
+      keyPassword = System.getenv("KEY_PASSWORD") ?: error("KEY_PASSWORD is required for release builds")
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
