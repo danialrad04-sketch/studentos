@@ -1,5 +1,6 @@
 package com.example.ui
 
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -56,17 +57,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import com.example.util.CrashLogger
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.LayoutDirection
@@ -254,6 +258,21 @@ fun MainAppScreen(
     }
 
     MyApplicationTheme(darkTheme = isDarkTheme) {
+        // Keep Android system navigation/status icons synchronized with the runtime theme.
+        // This is required because the app theme can change without recreating the Activity.
+        val currentView = LocalView.current
+        SideEffect {
+            val activity = currentView.context as? Activity
+            if (activity != null && !currentView.isInEditMode) {
+                WindowCompat.getInsetsController(activity.window, currentView).apply {
+                    isAppearanceLightNavigationBars = !isDarkTheme
+                    isAppearanceLightStatusBars = !isDarkTheme
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    activity.window.isNavigationBarContrastEnforced = false
+                }
+            }
+        }
         // Enforce Persian RTL
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             if (!isAuthInitialized) {
@@ -366,7 +385,9 @@ fun MainAppScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.background)
-                            .padding(innerPadding),
+                            // Keep content edge-to-edge behind the bottom navigation.
+                            // Only the top system inset is reserved here.
+                            .padding(top = innerPadding.calculateTopPadding()),
                         contentAlignment = Alignment.TopCenter
                     ) {
                         Column(
@@ -507,7 +528,7 @@ fun MainAppScreen(
                         }
 
                         // Generous bottom clearance padding to guarantee zero tile-overlap with floating dock
-                        Spacer(modifier = Modifier.height(84.dp))
+                        Spacer(modifier = Modifier.height(112.dp))
                     }
                 }
             }
