@@ -84,7 +84,7 @@ jobs:
         run: |
           ./gradlew testDebugUnitTest lintDebug lintRelease \
             -PVERSION_CODE=${{ inputs.version_code || '3' }} \
-            -PVERSION_NAME=${{ inputs.version_name || '1.0.3' }} \
+            -PVERSION_NAME=${{ inputs.version_name || '1.2' }} \
             --stacktrace
 
       - name: Run backend tests
@@ -107,7 +107,7 @@ jobs:
           script: |
             ./gradlew connectedDebugAndroidTest \
               -PVERSION_CODE=${{ inputs.version_code || '3' }} \
-              -PVERSION_NAME=${{ inputs.version_name || '1.0.3' }} \
+              -PVERSION_NAME=${{ inputs.version_name || '1.2' }} \
               --stacktrace
 
       - name: Build signed APK and AAB
@@ -117,7 +117,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
-          ./gradlew assembleRelease bundleRelease             -PVERSION_CODE=${{ inputs.version_code || '3' }}             -PVERSION_NAME=${{ inputs.version_name || '1.0.3' }}             --stacktrace
+          ./gradlew assembleRelease bundleRelease             -PVERSION_CODE=${{ inputs.version_code || '3' }}             -PVERSION_NAME=${{ inputs.version_name || '1.2' }}             --stacktrace
 
       - name: Verify signed outputs
         shell: bash
@@ -152,4 +152,8 @@ jobs:
             echo "Release $TAG already exists; refusing to overwrite it."
             exit 1
           } || true
-          gh release create "$TAG"             app/build/outputs/apk/release/app-release.apk             app/build/outputs/bundle/release/app-release.aab             --title "$TITLE"             --generate-notes
+          gh release create "$TAG" \
+            app/build/outputs/apk/release/app-release.apk \
+            app/build/outputs/bundle/release/app-release.aab \
+            --title "$TITLE" \
+            --generate-notes
