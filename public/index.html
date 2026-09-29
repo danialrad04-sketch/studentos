@@ -1,0 +1,1951 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Student OS — همراه هوشمند دانشجو</title>
+  
+  <!-- Google Fonts: Vazirmatn -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Vazirmatn', 'sans-serif'],
+          },
+          borderRadius: {
+            '2xl': '20px',
+            '3xl': '24px',
+            '4xl': '28px',
+          },
+          boxShadow: {
+            'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+            'soft-md': '0 8px 30px -4px rgba(0, 0, 0, 0.08)',
+            'floating': '0 12px 35px -6px rgba(0, 0, 0, 0.12)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      font-family: 'Vazirmatn', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input, textarea {
+      user-select: text;
+    }
+    /* Hide scrollbars for chips and lists */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    /* Animation classes */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-screen {
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .animate-slide-up {
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-stone-200 antialiased selection:bg-stone-300 min-h-screen flex items-center justify-center p-0 md:p-6">
+
+  <div id="root" class="w-full"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // Persian Digits Helper
+    const toFa = (num) => {
+      if (num === null || num === undefined) return '';
+      const farsiDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+      return num.toString().replace(/\d/g, (x) => farsiDigits[x]);
+    };
+
+    // Theme Definitions
+    const THEMES = {
+      olive_light: {
+        id: 'olive_light',
+        name: 'سبز زیتونی (روشن)',
+        isDark: false,
+        dotColor: '#667052',
+        bg: '#F7F6F1',
+        surface: '#FFFFFF',
+        surfaceSoft: '#F0EFE9',
+        surfaceHover: '#E9E8E1',
+        textPrimary: '#20231F',
+        textSecondary: '#62665E',
+        textMuted: '#8D9289',
+        border: '#DCDDD6',
+        borderLight: '#E8E9E3',
+        oliveAccent: '#667052',
+        oliveLight: '#EEF1E8',
+        oliveDark: '#4F573F',
+        petrol: '#244953',
+        success: '#2E7D32',
+        warning: '#F59E0B',
+        error: '#EF4444',
+        cardBg: '#FFFFFF',
+        navBg: 'rgba(255, 255, 255, 0.95)',
+        statusColor: '#20231F',
+      },
+      petrol_dark: {
+        id: 'petrol_dark',
+        name: 'آبی نفتی (تاریک)',
+        isDark: true,
+        dotColor: '#244953',
+        bg: '#0F2A33',
+        surface: '#163944',
+        surfaceSoft: '#1A4350',
+        surfaceHover: '#204F5E',
+        textPrimary: '#EDF5F7',
+        textSecondary: '#A0B9C0',
+        textMuted: '#6D8E97',
+        border: '#224F5D',
+        borderLight: '#2C5C6B',
+        oliveAccent: '#7E936A',
+        oliveLight: '#1C3E38',
+        oliveDark: '#9AB283',
+        petrol: '#336675',
+        success: '#4ADE80',
+        warning: '#FBBF24',
+        error: '#F87171',
+        cardBg: '#163944',
+        navBg: 'rgba(22, 57, 68, 0.95)',
+        statusColor: '#EDF5F7',
+      },
+      olive_dark: {
+        id: 'olive_dark',
+        name: 'سبز زیتونی (تاریک)',
+        isDark: true,
+        dotColor: '#36402D',
+        bg: '#141A13',
+        surface: '#1E261C',
+        surfaceSoft: '#273224',
+        surfaceHover: '#313E2E',
+        textPrimary: '#EDF1EB',
+        textSecondary: '#9EAA9A',
+        textMuted: '#6E7A6B',
+        border: '#2B3728',
+        borderLight: '#354332',
+        oliveAccent: '#7E936A',
+        oliveLight: '#273423',
+        oliveDark: '#9AB283',
+        petrol: '#2C4941',
+        success: '#4ADE80',
+        warning: '#FBBF24',
+        error: '#F87171',
+        cardBg: '#1E261C',
+        navBg: 'rgba(30, 38, 28, 0.95)',
+        statusColor: '#EDF1EB',
+      },
+      ruby_dark: {
+        id: 'ruby_dark',
+        name: 'یاقوتی (تاریک)',
+        isDark: true,
+        dotColor: '#173038',
+        bg: '#0D1E22',
+        surface: '#152C32',
+        surfaceSoft: '#1B373E',
+        surfaceHover: '#22444D',
+        textPrimary: '#ECF5F6',
+        textSecondary: '#9CB7BC',
+        textMuted: '#6B8D93',
+        border: '#21424A',
+        borderLight: '#2A515B',
+        oliveAccent: '#5C9088',
+        oliveLight: '#1B3C39',
+        oliveDark: '#75ABA3',
+        petrol: '#1B3F48',
+        success: '#34D399',
+        warning: '#FBBF24',
+        error: '#F87171',
+        cardBg: '#152C32',
+        navBg: 'rgba(21, 44, 50, 0.95)',
+        statusColor: '#ECF5F6',
+      }
+    };
+
+    // Lucide Icon SVG Components
+    const Icons = {
+      Home: ({ size = 22, filled = false, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      ),
+      Calendar: ({ size = 22, filled = false, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+          <line x1="16" x2="16" y1="2" y2="6"/>
+          <line x1="8" x2="8" y1="2" y2="6"/>
+          <line x1="3" x2="21" y1="10" y2="10"/>
+        </svg>
+      ),
+      CheckSquare: ({ size = 22, filled = false, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 11 12 14 22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      ),
+      MoreHorizontal: ({ size = 22, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="1"/>
+          <circle cx="19" cy="12" r="1"/>
+          <circle cx="5" cy="12" r="1"/>
+        </svg>
+      ),
+      MoreVertical: ({ size = 20, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="1"/>
+          <circle cx="12" cy="5" r="1"/>
+          <circle cx="12" cy="19" r="1"/>
+        </svg>
+      ),
+      Plus: ({ size = 24, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      ),
+      Bell: ({ size = 20, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+        </svg>
+      ),
+      Leaf: ({ size = 20, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+          <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+        </svg>
+      ),
+      GraduationCap: ({ size = 22, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/>
+          <path d="M22 10v6"/>
+          <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>
+        </svg>
+      ),
+      BookOpen: ({ size = 20, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+      ),
+      FileText: ({ size = 22, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" x2="8" y1="13" y2="13"/>
+          <line x1="16" x2="8" y1="17" y2="17"/>
+          <line x1="10" x2="8" y1="9" y2="9"/>
+        </svg>
+      ),
+      Clock: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      ),
+      Search: ({ size = 20, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" x2="16.65" y1="21" y2="16.65"/>
+        </svg>
+      ),
+      Filter: ({ size = 18, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+      ),
+      Flag: ({ size = 15, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+          <line x1="4" x2="4" y1="22" y2="15"/>
+        </svg>
+      ),
+      Award: ({ size = 22, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="8" r="6"/>
+          <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>
+        </svg>
+      ),
+      ChevronRight: ({ size = 18, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      ),
+      ChevronLeft: ({ size = 18, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      ),
+      Code: ({ size = 20, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="16 18 22 12 16 6"/>
+          <polyline points="8 6 2 12 8 18"/>
+        </svg>
+      ),
+      Atom: ({ size = 20, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="2"/>
+          <path d="M20.2 20.2c2.4-2.4 2.4-6.3 0-8.7L11.5 2.8c-2.4-2.4-6.3-2.4-8.7 0s-2.4 6.3 0 8.7l8.7 8.7c2.4 2.4 6.3 2.4 8.7 0Z"/>
+          <path d="M3.8 20.2c-2.4-2.4-2.4-6.3 0-8.7l8.7-8.7c2.4-2.4 6.3-2.4 8.7 0s2.4 6.3 0 8.7l-8.7 8.7c-2.4 2.4-6.3 2.4-8.7 0Z"/>
+        </svg>
+      ),
+      BarChart: ({ size = 20, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="12" x2="12" y1="20" y2="10"/>
+          <line x1="18" x2="18" y1="20" y2="4"/>
+          <line x1="6" x2="6" y1="20" y2="16"/>
+        </svg>
+      ),
+      User: ({ size = 18, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      ),
+      Layers: ({ size = 18, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      ),
+      List: ({ size = 18, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="8" x2="21" y1="6" y2="6"/>
+          <line x1="8" x2="21" y1="12" y2="12"/>
+          <line x1="8" x2="21" y1="18" y2="18"/>
+          <line x1="3" x2="3.01" y1="6" y2="6"/>
+          <line x1="3" x2="3.01" y1="12" y2="12"/>
+          <line x1="3" x2="3.01" y1="18" y2="18"/>
+        </svg>
+      ),
+      Info: ({ size = 18, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4"/>
+          <path d="M12 8h.01"/>
+        </svg>
+      ),
+      Sliders: ({ size = 18, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="4" x2="4" y1="21" y2="14"/>
+          <line x1="4" x2="4" y1="10" y2="3"/>
+          <line x1="12" x2="12" y1="21" y2="12"/>
+          <line x1="12" x2="12" y1="8" y2="3"/>
+          <line x1="20" x2="20" y1="21" y2="16"/>
+          <line x1="20" x2="20" y1="12" y2="3"/>
+          <line x1="1" x2="7" y1="14" y2="14"/>
+          <line x1="9" x2="15" y1="8" y2="8"/>
+          <line x1="17" x2="23" y1="16" y2="16"/>
+        </svg>
+      ),
+      Check: ({ size = 16, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      ),
+      X: ({ size = 20, color = "currentColor" }) => (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      )
+    };
+
+    // Circular Progress Ring Component
+    const CircularProgress = ({ percentage, size = 52, strokeWidth = 5, color, trackColor, textColor }) => {
+      const radius = (size - strokeWidth) / 2;
+      const circumference = radius * 2 * Math.PI;
+      const offset = circumference - (percentage / 100) * circumference;
+
+      return (
+        <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+          <svg width={size} height={size} className="transform -rotate-90">
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke={trackColor}
+              strokeWidth={strokeWidth}
+              fill="transparent"
+            />
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke={color}
+              strokeWidth={strokeWidth}
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+              strokeLinecap="round"
+              fill="transparent"
+              style={{ transition: 'stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}
+            />
+          </svg>
+          <span 
+            className="absolute font-bold text-center" 
+            style={{ 
+              color: textColor || color, 
+              fontSize: size > 70 ? '19px' : '13px' 
+            }}
+          >
+            {toFa(percentage)}٪
+          </span>
+        </div>
+      );
+    };
+
+    // Mock Data Store
+    const INITIAL_COURSES = [
+      {
+        id: 'math',
+        name: 'ریاضی عمومی',
+        code: 'MATH101',
+        progress: 75,
+        type: 'تخصصی',
+        credits: 3,
+        professor: 'دکتر احمدی',
+        location: 'کلاس ۲ - ساختمان ریاضی',
+        time: '۱۰:۱۵ - ۱۲:۱۵',
+        nextSession: 'امروز ۱۰:۰۰ - ۱۲:۰۰',
+        icon: 'BarChart',
+        iconBg: '#EFEFE5',
+        iconColor: '#667052',
+        topicsCount: 25,
+        description: 'مبانی پایه و کاربردهای ریاضی در علوم مهندسی',
+        sessions: [
+          { title: 'مقدمه‌ای بر انتگرال‌های چندگانه', date: 'شنبه ۲۵ مرداد', status: 'برگزار شده' },
+          { title: 'قضیه گرین و استوکس', date: 'دوشنبه ۲۷ مرداد', status: 'برگزار شده' },
+          { title: 'سری‌های فوریه و کاربردها', date: 'چهارشنبه ۲۹ مرداد', status: 'جلسه بعد' },
+        ],
+        tasks: [
+          { title: 'حل تمرین فصل ۲ (انتگرال سه‌گانه)', deadline: 'امروز ۱۸:۰۰', done: false },
+          { title: 'آماده‌سازی برای کوئیز کلاسی', deadline: 'چهارشنبه', done: false }
+        ],
+        exams: [
+          { title: 'آزمون میان‌ترم ریاضی', date: '۱۵ شهریور ۱۴۰۴', time: '۰۹:۰۰', location: 'سالن امتحانات' }
+        ]
+      },
+      {
+        id: 'phys',
+        name: 'فیزیک',
+        code: 'PHYS101',
+        progress: 60,
+        type: 'پایه',
+        credits: 3,
+        professor: 'دکتر حسینی',
+        location: 'کلاس ۳ - ساختمان علوم',
+        time: '۰۸:۰۰ - ۱۰:۰۰',
+        nextSession: 'فردا ۰۸:۰۰ - ۱۰:۰۰',
+        icon: 'Atom',
+        iconBg: '#E9EFEB',
+        iconColor: '#53755C',
+        topicsCount: 20,
+        description: 'مکانیک کلاسیک، دینامیک، کار و انرژی و قوانین نیوتون',
+        sessions: [
+          { title: 'قوانین دوم و سوم نیوتون', date: 'یکشنبه ۲۶ مرداد', status: 'برگزار شده' },
+          { title: 'نیروهای اصطکاک و گرانش', date: 'سه‌شنبه ۲۸ مرداد', status: 'جلسه بعد' }
+        ],
+        tasks: [
+          { title: 'گزارش آزمایشگاه سقوط آزاد', deadline: 'تا فردا ۱۲:۰۰', done: false }
+        ],
+        exams: [
+          { title: 'میان‌ترم مکانیک', date: '۲۲ شهریور ۱۴۰۴', time: '۱۰:۳۰', location: 'تالار ۲' }
+        ]
+      },
+      {
+        id: 'cs',
+        name: 'برنامه‌نویسی',
+        code: 'CS101',
+        progress: 40,
+        type: 'تخصصی',
+        credits: 3,
+        professor: 'مهندس رضایی',
+        location: 'آزمایشگاه ۱ - ساختمان کامپیوتر',
+        time: '۱۳:۰۰ - ۱۵:۰۰',
+        nextSession: 'شنبه ۱۴:۰۰ - ۱۶:۰۰',
+        icon: 'Code',
+        iconBg: '#EDEAF3',
+        iconColor: '#6B578E',
+        topicsCount: 30,
+        description: 'اصول ساختار داده‌ها، الگوریتم‌ها و پایتون پیشرفته',
+        sessions: [
+          { title: 'شی‌گرایی و کلاس‌ها در پایتون', date: 'شنبه ۲۵ مرداد', status: 'برگزار شده' }
+        ],
+        tasks: [
+          { title: 'پیاده‌سازی درخت دودویی جستجو', deadline: 'شنبه آینده', done: false }
+        ],
+        exams: [
+          { title: 'پروژه عملی میان‌ترم', date: '۳۰ شهریور ۱۴۰۴', time: '۲۳:۵۹', location: 'سامانه آموزش' }
+        ]
+      },
+      {
+        id: 'eng',
+        name: 'زبان انگلیسی',
+        code: 'ENG101',
+        progress: 80,
+        type: 'عمومی',
+        credits: 2,
+        professor: 'استاد کاظمی',
+        location: 'کلاس ۵ - ساختمان ادبیات',
+        time: '۱۵:۳۰ - ۱۷:۳۰',
+        nextSession: 'دوشنبه ۱۰:۰۰ - ۱۲:۰۰',
+        icon: 'BookOpen',
+        iconBg: '#F3EAEA',
+        iconColor: '#965C5C',
+        topicsCount: 16,
+        description: 'اصطلاحات تخصصی، ریدینگ آکادمیک و گرامر کاربردی',
+        sessions: [
+          { title: 'Academic Reading Skills', date: 'دوشنبه ۲۷ مرداد', status: 'برگزار شده' }
+        ],
+        tasks: [
+          { title: 'آماده‌سازی اسلایدهای ارائه', deadline: 'پنج‌شنبه', done: true }
+        ],
+        exams: [
+          { title: 'کوئیز واژگان Unit 4', date: '۱۰ شهریور ۱۴۰۴', time: '۱۶:۰۰', location: 'کلاس ۵' }
+        ]
+      }
+    ];
+
+    const INITIAL_TASKS = [
+      {
+        id: 1,
+        title: 'حل تمرین فصل ۲',
+        course: 'ریاضی عمومی',
+        time: '۱۰:۰۰',
+        dueStatus: 'امروز',
+        dueColor: '#EF4444',
+        dueBg: '#FEE2E2',
+        completed: false,
+        priority: 'high'
+      },
+      {
+        id: 2,
+        title: 'گزارش آزمایشگاه',
+        course: 'فیزیک',
+        time: '۱۴:۰۰',
+        dueStatus: 'تا فردا',
+        dueColor: '#D97706',
+        dueBg: '#FEF3C7',
+        completed: false,
+        priority: 'high'
+      },
+      {
+        id: 3,
+        title: 'مطالعه فصل ۵',
+        course: 'برنامه‌نویسی',
+        time: '۱۷:۰۰',
+        dueStatus: 'تکمیل نشده',
+        dueColor: '#2563EB',
+        dueBg: '#DBEAFE',
+        completed: false,
+        priority: 'normal'
+      },
+      {
+        id: 4,
+        title: 'آماده‌سازی ارائه',
+        course: 'زبان انگلیسی',
+        time: 'شنبه ۱۰:۰۰',
+        dueStatus: 'در انتظار',
+        dueColor: '#059669',
+        dueBg: '#D1FAE5',
+        completed: false,
+        priority: 'low'
+      },
+      {
+        id: 5,
+        title: 'ارسال خلاصه مقاله',
+        course: 'برنامه‌نویسی',
+        time: 'دیروز ۱۶:۰۰',
+        dueStatus: 'عقب‌افتاده',
+        dueColor: '#DC2626',
+        dueBg: '#FEE2E2',
+        completed: false,
+        priority: 'high'
+      }
+    ];
+
+    const GRADES_DATA = [
+      { course: 'ریاضی عمومی', code: 'MATH101', score: '۱۸.۵۰', max: 20, numScore: 18.5, credits: 3, term: 'current' },
+      { course: 'فیزیک', code: 'PHYS101', score: '۱۷.۲۰', max: 20, numScore: 17.2, credits: 3, term: 'current' },
+      { course: 'برنامه‌نویسی', code: 'CS101', score: '۱۹.۰۰', max: 20, numScore: 19.0, credits: 3, term: 'current' },
+      { course: 'زبان انگلیسی', code: 'ENG101', score: '۱۶.۵۰', max: 20, numScore: 16.5, credits: 2, term: 'current' },
+      { course: 'معادلات دیفرانسیل', code: 'MATH201', score: '۱۸.۰۰', max: 20, numScore: 18.0, credits: 3, term: 'prev' },
+      { course: 'مدارهای منطقی', code: 'EE102', score: '۱۷.۷۵', max: 20, numScore: 17.75, credits: 3, term: 'prev' }
+    ];
+
+    // DAYS OF WEEK FOR SCHEDULE
+    const DAYS_OF_WEEK = [
+      { name: 'شنبه', dayNumber: '۲۵', full: 'شنبه ۲۵ مرداد' },
+      { name: 'یکشنبه', dayNumber: '۲۶', full: 'یکشنبه ۲۶ مرداد' },
+      { name: 'دوشنبه', dayNumber: '۲۷', full: 'دوشنبه ۲۷ مرداد' },
+      { name: 'سه‌شنبه', dayNumber: '۲۸', full: 'سه‌شنبه ۲۸ مرداد' },
+      { name: 'چهارشنبه', dayNumber: '۲۹', full: 'چهارشنبه ۲۹ مرداد' },
+      { name: 'پنج‌شنبه', dayNumber: '۳۰', full: 'پنج‌شنبه ۳۰ مرداد' },
+      { name: 'جمعه', dayNumber: '۳۱', full: 'جمعه ۳۱ مرداد' },
+    ];
+
+    // MAIN APPLICATION COMPONENT
+    function StudentOSApp() {
+      const [currentThemeKey, setCurrentThemeKey] = useState(() => {
+        return localStorage.getItem('student_os_theme') || 'olive_light';
+      });
+      const theme = THEMES[currentThemeKey] || THEMES.olive_light;
+
+      // Screens: 'home', 'schedule', 'portfolio', 'tasks', 'grades'
+      const [currentScreen, setCurrentScreen] = useState('home');
+      const [previousScreen, setPreviousScreen] = useState('home');
+      const [selectedCourse, setSelectedCourse] = useState(INITIAL_COURSES[0]);
+
+      // Modals & Bottom Sheets
+      const [showThemePicker, setShowThemePicker] = useState(false);
+      const [showAddTask, setShowAddTask] = useState(false);
+      const [showNotificationToast, setShowNotificationToast] = useState(false);
+
+      // State for Tasks
+      const [tasks, setTasks] = useState(INITIAL_TASKS);
+      const [taskFilter, setTaskFilter] = useState('all'); // 'all', 'today', 'priority', 'overdue'
+
+      // State for Weekly Schedule
+      const [selectedDayIndex, setSelectedDayIndex] = useState(0); // 0 = شنبه
+
+      // State for Portfolio Tabs
+      const [portfolioTab, setPortfolioTab] = useState('info'); // 'info', 'sessions', 'tasks', 'exams'
+
+      // State for Grades Filter
+      const [gradeFilter, setGradeFilter] = useState('current'); // 'all', 'current', 'prev'
+
+      // Change Theme Helper
+      const handleThemeChange = (key) => {
+        setCurrentThemeKey(key);
+        localStorage.setItem('student_os_theme', key);
+        setShowThemePicker(false);
+      };
+
+      // Navigate to Portfolio
+      const openCoursePortfolio = (course) => {
+        setPreviousScreen(currentScreen);
+        setSelectedCourse(course);
+        setPortfolioTab('info');
+        setCurrentScreen('portfolio');
+      };
+
+      // Toggle Task Done
+      const toggleTask = (taskId) => {
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t));
+      };
+
+      // Add New Task
+      const handleAddNewTask = (title, courseId, dueStatus) => {
+        const c = INITIAL_COURSES.find(x => x.id === courseId) || INITIAL_COURSES[0];
+        const newTask = {
+          id: Date.now(),
+          title: title.trim() || 'تکلیف جدید',
+          course: c.name,
+          time: 'فردا ۱۰:۰۰',
+          dueStatus: dueStatus || 'تا فردا',
+          dueColor: '#D97706',
+          dueBg: '#FEF3C7',
+          completed: false,
+          priority: 'normal'
+        };
+        setTasks(prev => [newTask, ...prev]);
+        setShowAddTask(false);
+      };
+
+      // Filtered Tasks
+      const filteredTasks = useMemo(() => {
+        if (taskFilter === 'today') {
+          return tasks.filter(t => t.dueStatus === 'امروز');
+        }
+        if (taskFilter === 'priority') {
+          return tasks.filter(t => t.priority === 'high');
+        }
+        if (taskFilter === 'overdue') {
+          return tasks.filter(t => t.dueStatus === 'عقب‌افتاده');
+        }
+        return tasks;
+      }, [tasks, taskFilter]);
+
+      // Filtered Grades
+      const filteredGrades = useMemo(() => {
+        if (gradeFilter === 'current') return GRADES_DATA.filter(g => g.term === 'current');
+        if (gradeFilter === 'prev') return GRADES_DATA.filter(g => g.term === 'prev');
+        return GRADES_DATA;
+      }, [gradeFilter]);
+
+      return (
+        <div 
+          className="mx-auto w-full max-w-[430px] min-h-[880px] h-[92vh] max-h-[920px] rounded-[36px] overflow-hidden flex flex-col relative shadow-2xl transition-colors duration-300 border"
+          style={{ 
+            backgroundColor: theme.bg,
+            borderColor: theme.border,
+            color: theme.textPrimary
+          }}
+        >
+          {/* ================= STATUS BAR MOCK ================= */}
+          <div className="pt-3 px-7 pb-1 flex items-center justify-between z-30 select-none" style={{ color: theme.statusColor }}>
+            <span className="text-[13px] font-bold tracking-tight">۹:۴۱</span>
+            <div className="flex items-center gap-1.5 opacity-90">
+              {/* Cellular Signal Bars */}
+              <svg width="15" height="11" viewBox="0 0 17 11" fill="currentColor">
+                <rect x="0" y="8" width="3" height="3" rx="0.6"/>
+                <rect x="4.5" y="5.5" width="3" height="5.5" rx="0.6"/>
+                <rect x="9" y="3" width="3" height="8" rx="0.6"/>
+                <rect x="13.5" y="0" width="3" height="11" rx="0.6"/>
+              </svg>
+              {/* WiFi */}
+              <svg width="14" height="11" viewBox="0 0 16 12" fill="currentColor">
+                <path d="M8 10a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-4.24-2.83a6 6 0 0 1 8.48 0l-1.06 1.06a4.5 4.5 0 0 0-6.36 0L3.76 7.17zm-2.83-2.83a10 10 0 0 1 14.14 0l-1.06 1.06a8.5 8.5 0 0 0-12.02 0L.93 4.34z"/>
+              </svg>
+              {/* Battery */}
+              <div className="w-5 h-2.5 border border-current rounded-[3px] p-[1px] flex items-center">
+                <div className="h-full bg-current rounded-[1px] w-full"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* ================= SCREEN CONTENT (SCROLLABLE) ================= */}
+          <div className="flex-1 overflow-y-auto no-scrollbar pb-24 px-5 pt-2">
+            
+            {/* 1. HOME SCREEN */}
+            {currentScreen === 'home' && (
+              <div className="animate-screen space-y-4">
+                {/* Header Row */}
+                <div className="flex items-center justify-between pt-1 pb-2">
+                  {/* Left Action Buttons */}
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setShowNotificationToast(true)}
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center transition active:scale-95 border"
+                      style={{ 
+                        backgroundColor: theme.surface, 
+                        borderColor: theme.border,
+                        color: theme.textSecondary 
+                      }}
+                      title="اعلان‌ها"
+                    >
+                      <Icons.Bell size={19} color={theme.textSecondary} />
+                    </button>
+                    <button 
+                      onClick={() => setShowThemePicker(true)}
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center transition active:scale-95 border"
+                      style={{ 
+                        backgroundColor: theme.surface, 
+                        borderColor: theme.border,
+                        color: theme.oliveAccent 
+                      }}
+                      title="تم‌های پیشنهادی"
+                    >
+                      <Icons.Leaf size={19} color={theme.oliveAccent} />
+                    </button>
+                  </div>
+
+                  {/* Right: Avatar + App Title */}
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <h1 className="text-[17px] font-bold leading-tight" style={{ color: theme.textPrimary }}>
+                        Student OS
+                      </h1>
+                      <p className="text-[11px] font-medium" style={{ color: theme.textMuted }}>
+                        همراه هوشمند دانشجو
+                      </p>
+                    </div>
+                    {/* User Avatar */}
+                    <div 
+                      className="w-11 h-11 rounded-full overflow-hidden border-2 flex items-center justify-center shadow-sm"
+                      style={{ borderColor: theme.oliveAccent, backgroundColor: theme.surfaceSoft }}
+                    >
+                      <img 
+                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" 
+                        alt="دانیال" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Greeting Banner with Plant Motifs */}
+                <div 
+                  className="rounded-3xl p-5 relative overflow-hidden transition shadow-sm border"
+                  style={{ 
+                    backgroundColor: theme.isDark ? theme.surfaceSoft : '#E9ECE2',
+                    borderColor: theme.border,
+                    color: theme.textPrimary
+                  }}
+                >
+                  {/* Decorative Leaves Illustration Background */}
+                  <div className="absolute right-0 top-0 bottom-0 opacity-20 pointer-events-none flex items-center pr-2">
+                    <svg width="120" height="100" viewBox="0 0 100 100" fill="none">
+                      <path d="M20 90C40 70 70 80 85 40C85 65 70 90 20 90Z" fill={theme.oliveAccent}/>
+                      <path d="M40 90C60 60 70 40 95 10C80 35 60 75 40 90Z" fill={theme.oliveAccent}/>
+                    </svg>
+                  </div>
+                  <div className="absolute left-2 top-2 opacity-15 pointer-events-none">
+                    <Icons.Leaf size={70} color={theme.oliveAccent} />
+                  </div>
+
+                  <div className="relative z-10 text-right pr-1">
+                    <h2 className="text-[18px] font-extrabold mb-1" style={{ color: theme.textPrimary }}>
+                      سلام، دانیال
+                    </h2>
+                    <p className="text-[12px] leading-relaxed max-w-[280px]" style={{ color: theme.textSecondary }}>
+                      هر قدم کوچک، تو را به هدفت نزدیک‌تر می‌کند...
+                    </p>
+                  </div>
+                </div>
+
+                {/* 4 Quick Actions Row */}
+                <div className="grid grid-cols-4 gap-2.5 pt-1">
+                  {[
+                    { label: 'برنامه هفتگی', icon: 'Calendar', screen: 'schedule' },
+                    { label: 'امتحانات', icon: 'GraduationCap', screen: 'portfolio' },
+                    { label: 'تکالیف', icon: 'FileText', screen: 'tasks' },
+                    { label: 'کلاس‌ها', icon: 'CheckSquare', screen: 'schedule' },
+                  ].map((item, idx) => {
+                    const IconComponent = Icons[item.icon];
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentScreen(item.screen)}
+                        className="flex flex-col items-center justify-center p-3 rounded-2xl transition active:scale-95 border shadow-soft"
+                        style={{ 
+                          backgroundColor: theme.surface, 
+                          borderColor: theme.border 
+                        }}
+                      >
+                        <div 
+                          className="w-10 h-10 rounded-xl flex items-center justify-center mb-1.5"
+                          style={{ backgroundColor: theme.surfaceSoft }}
+                        >
+                          <IconComponent size={20} color={theme.oliveAccent} />
+                        </div>
+                        <span className="text-[11px] font-semibold tracking-tight" style={{ color: theme.textSecondary }}>
+                          {item.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Section Header: دوره‌های من / درس‌های امروز */}
+                <div className="flex items-center justify-between pt-2 px-1">
+                  <button 
+                    onClick={() => setCurrentScreen('schedule')}
+                    className="flex items-center gap-1 text-[12px] font-bold transition hover:opacity-80"
+                    style={{ color: theme.oliveAccent }}
+                  >
+                    <span>همه</span>
+                    <Icons.ChevronLeft size={14} color={theme.oliveAccent} />
+                  </button>
+                  <h3 className="text-[16px] font-bold" style={{ color: theme.textPrimary }}>
+                    دوره‌های من
+                  </h3>
+                </div>
+
+                {/* Courses List */}
+                <div className="space-y-3 pb-2">
+                  {INITIAL_COURSES.map((course) => {
+                    const IconComponent = Icons[course.icon] || Icons.BookOpen;
+                    return (
+                      <div
+                        key={course.id}
+                        onClick={() => openCoursePortfolio(course)}
+                        className="rounded-3xl p-4 flex items-center justify-between transition cursor-pointer active:scale-[0.99] border shadow-soft"
+                        style={{ 
+                          backgroundColor: theme.surface, 
+                          borderColor: theme.border 
+                        }}
+                      >
+                        {/* Left Side: Circular Progress Ring */}
+                        <div className="flex-shrink-0">
+                          <CircularProgress 
+                            percentage={course.progress}
+                            size={56}
+                            strokeWidth={5}
+                            color={theme.oliveAccent}
+                            trackColor={theme.isDark ? '#233830' : '#E8ECE2'}
+                            textColor={theme.textPrimary}
+                          />
+                        </div>
+
+                        {/* Center / Right: Course Info */}
+                        <div className="flex-1 pr-4 text-right">
+                          <div className="flex items-center justify-end gap-2 mb-0.5">
+                            <span className="text-[11px] font-mono font-medium px-1.5 py-0.5 rounded-md" style={{ backgroundColor: theme.surfaceSoft, color: theme.textMuted }}>
+                              {course.code}
+                            </span>
+                            <h4 className="text-[15px] font-bold" style={{ color: theme.textPrimary }}>
+                              {course.name}
+                            </h4>
+                          </div>
+                          
+                          <div className="flex items-center justify-end gap-1.5 text-[11px] mt-1" style={{ color: theme.textSecondary }}>
+                            <span>جلسه بعد: {course.nextSession}</span>
+                            <Icons.Calendar size={13} color={theme.textMuted} />
+                          </div>
+                        </div>
+
+                        {/* Subject Icon Box */}
+                        <div 
+                          className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 mr-2"
+                          style={{ 
+                            backgroundColor: theme.isDark ? theme.surfaceSoft : course.iconBg,
+                            color: theme.isDark ? theme.oliveAccent : course.iconColor
+                          }}
+                        >
+                          <IconComponent size={21} color="currentColor" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 2. WEEKLY SCHEDULE SCREEN */}
+            {currentScreen === 'schedule' && (
+              <div className="animate-screen space-y-4">
+                {/* Header */}
+                <div className="flex items-center justify-between pt-1 pb-1">
+                  <button 
+                    onClick={() => setCurrentScreen('home')}
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center transition border"
+                    style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                  >
+                    <Icons.ChevronRight size={20} color={theme.textPrimary} />
+                  </button>
+                  <h2 className="text-[18px] font-bold text-center flex-1" style={{ color: theme.textPrimary }}>
+                    برنامه هفتگی
+                  </h2>
+                  <div 
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center border"
+                    style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                  >
+                    <Icons.Calendar size={20} color={theme.oliveAccent} />
+                  </div>
+                </div>
+
+                {/* Week Range Selector Card */}
+                <div 
+                  className="rounded-3xl p-4 flex items-center justify-between border shadow-soft"
+                  style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                >
+                  <button className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-70" style={{ backgroundColor: theme.surfaceSoft }}>
+                    <Icons.ChevronRight size={16} color={theme.textSecondary} />
+                  </button>
+                  <div className="text-center">
+                    <span className="text-[12px] font-semibold block" style={{ color: theme.textSecondary }}>
+                      هفته جاری
+                    </span>
+                    <span className="text-[14px] font-bold block mt-0.5" style={{ color: theme.textPrimary }}>
+                      {toFa(۲۵)} تا {toFa(۳۱)} مرداد ۱۴۰۴
+                    </span>
+                  </div>
+                  <button className="w-8 h-8 rounded-full flex items-center justify-center hover:opacity-70" style={{ backgroundColor: theme.surfaceSoft }}>
+                    <Icons.ChevronLeft size={16} color={theme.textSecondary} />
+                  </button>
+                </div>
+
+                {/* Horizontal Day Chips */}
+                <div className="flex items-center justify-between gap-1 overflow-x-auto no-scrollbar py-1">
+                  {DAYS_OF_WEEK.map((day, idx) => {
+                    const isSelected = selectedDayIndex === idx;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => setSelectedDayIndex(idx)}
+                        className="flex-1 min-w-[50px] py-3 rounded-2xl flex flex-col items-center justify-center transition active:scale-95 border"
+                        style={{
+                          backgroundColor: isSelected ? theme.oliveAccent : theme.surface,
+                          borderColor: isSelected ? theme.oliveAccent : theme.border,
+                          color: isSelected ? '#FFFFFF' : theme.textPrimary
+                        }}
+                      >
+                        <span className="text-[11px] font-medium opacity-90">{day.name}</span>
+                        <span className="text-[15px] font-extrabold mt-0.5">{toFa(day.dayNumber)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Class Cards for Selected Day */}
+                <div className="space-y-3 pt-1">
+                  {INITIAL_COURSES.map((course, idx) => {
+                    const IconComponent = Icons[course.icon] || Icons.BookOpen;
+                    return (
+                      <div 
+                        key={course.id}
+                        className="rounded-3xl p-4 transition border shadow-soft relative overflow-hidden"
+                        style={{ 
+                          backgroundColor: theme.surface, 
+                          borderColor: theme.border 
+                        }}
+                      >
+                        {/* Olive Left/Right Accent Bar */}
+                        <div 
+                          className="absolute right-0 top-3 bottom-3 w-1.5 rounded-l-full"
+                          style={{ backgroundColor: theme.oliveAccent }}
+                        />
+
+                        {/* Top Row: 3-dot Menu + Time + Icon */}
+                        <div className="flex items-center justify-between mb-2">
+                          <button className="text-stone-400 hover:text-stone-600 p-1">
+                            <Icons.MoreVertical size={18} color={theme.textMuted} />
+                          </button>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="text-[12px] font-bold font-mono px-2 py-0.5 rounded-full" style={{ backgroundColor: theme.surfaceSoft, color: theme.textSecondary }}>
+                              {toFa(course.time)}
+                            </span>
+                            <div 
+                              className="w-8 h-8 rounded-xl flex items-center justify-center"
+                              style={{ backgroundColor: theme.isDark ? theme.surfaceSoft : course.iconBg }}
+                            >
+                              <IconComponent size={17} color={theme.oliveAccent} />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Center Row: Course Title & Code */}
+                        <div className="text-right pr-2">
+                          <h4 className="text-[16px] font-bold" style={{ color: theme.textPrimary }}>
+                            {course.name}
+                          </h4>
+                          <span className="text-[11px] font-mono" style={{ color: theme.textMuted }}>
+                            {course.code}
+                          </span>
+                        </div>
+
+                        {/* Location Details */}
+                        <div className="flex items-center justify-end gap-1.5 text-[12px] my-2 pr-2" style={{ color: theme.textSecondary }}>
+                          <span>{course.location}</span>
+                          <Icons.Calendar size={14} color={theme.textMuted} />
+                        </div>
+
+                        {/* Bottom Action: "کاریوشه درس" Chip */}
+                        <div className="flex justify-start pt-1">
+                          <button 
+                            onClick={() => openCoursePortfolio(course)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition active:scale-95 border"
+                            style={{ 
+                              backgroundColor: theme.surfaceSoft, 
+                              borderColor: theme.border,
+                              color: theme.oliveAccent 
+                            }}
+                          >
+                            <Icons.ChevronLeft size={13} color={theme.oliveAccent} />
+                            <span>کاریوشه درس</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 3. COURSE PORTFOLIO (کاریوشه درس) SCREEN */}
+            {currentScreen === 'portfolio' && (
+              <div className="animate-screen space-y-4">
+                {/* Header */}
+                <div className="flex items-center justify-between pt-1 pb-1">
+                  <button 
+                    onClick={() => setCurrentScreen(previousScreen || 'home')}
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center transition border"
+                    style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                  >
+                    <Icons.ChevronRight size={20} color={theme.textPrimary} />
+                  </button>
+                  <h2 className="text-[18px] font-bold text-center flex-1" style={{ color: theme.textPrimary }}>
+                    کاریوشه درس
+                  </h2>
+                  <button 
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center border"
+                    style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                  >
+                    <Icons.MoreVertical size={20} color={theme.textMuted} />
+                  </button>
+                </div>
+
+                {/* Dark-Green Hero Card */}
+                <div 
+                  className="rounded-3xl p-5 text-white shadow-soft relative overflow-hidden flex items-center justify-between"
+                  style={{ 
+                    background: theme.isDark 
+                      ? 'linear-gradient(135deg, #1C3E38 0%, #112A27 100%)' 
+                      : 'linear-gradient(135deg, #244953 0%, #1B363E 100%)'
+                  }}
+                >
+                  {/* Left: Big Progress Ring */}
+                  <div className="flex-shrink-0">
+                    <CircularProgress 
+                      percentage={selectedCourse.progress}
+                      size={68}
+                      strokeWidth={6}
+                      color="#7E936A"
+                      trackColor="rgba(255,255,255,0.15)"
+                      textColor="#FFFFFF"
+                    />
+                  </div>
+
+                  {/* Right: Title & Code */}
+                  <div className="text-right flex-1 pr-4">
+                    <div className="flex items-center justify-end gap-1.5 mb-1">
+                      <Icons.ChevronLeft size={16} color="rgba(255,255,255,0.7)" />
+                      <h3 className="text-[19px] font-extrabold">{selectedCourse.name}</h3>
+                    </div>
+                    <span className="text-[12px] font-mono tracking-wider opacity-80 block">
+                      {selectedCourse.code}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Tab Pills: اطلاعات، جلسات، تکالیف، امتحانات */}
+                <div 
+                  className="p-1 rounded-2xl flex items-center justify-between gap-1 border"
+                  style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                >
+                  {[
+                    { key: 'info', label: 'اطلاعات' },
+                    { key: 'sessions', label: 'جلسات' },
+                    { key: 'tasks', label: 'تکالیف' },
+                    { key: 'exams', label: 'امتحانات' }
+                  ].map(tab => {
+                    const isActive = portfolioTab === tab.key;
+                    return (
+                      <button
+                        key={tab.key}
+                        onClick={() => setPortfolioTab(tab.key)}
+                        className="flex-1 py-2 rounded-xl text-[12px] font-bold transition active:scale-95"
+                        style={{ 
+                          backgroundColor: isActive ? (theme.isDark ? theme.oliveAccent : '#20231F') : 'transparent',
+                          color: isActive ? '#FFFFFF' : theme.textSecondary 
+                        }}
+                      >
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* «گام بعدی» Card */}
+                <div 
+                  className="rounded-3xl p-4 border shadow-soft"
+                  style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <Icons.Sliders size={17} color={theme.textMuted} />
+                    <span className="text-[12px] font-bold" style={{ color: theme.textSecondary }}>
+                      گام بعدی
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 text-[13px] font-semibold text-right" style={{ color: theme.textPrimary }}>
+                    <span>جلسه بعدی: چهارشنبه ۲۹ مرداد ساعت ۱۰:۰۰</span>
+                    <Icons.Calendar size={16} color={theme.oliveAccent} />
+                  </div>
+                </div>
+
+                {/* 4 Action Tiles: جلسات، تکالیف، امتحانات، نمره */}
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { label: 'جلسات', icon: 'Calendar', tab: 'sessions' },
+                    { label: 'تکالیف', icon: 'FileText', tab: 'tasks' },
+                    { label: 'امتحانات', icon: 'GraduationCap', tab: 'exams' },
+                    { label: 'نمره', icon: 'Award', action: () => setCurrentScreen('grades') }
+                  ].map((tile, i) => {
+                    const IconComp = Icons[tile.icon];
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => tile.tab ? setPortfolioTab(tile.tab) : tile.action()}
+                        className="p-3 rounded-2xl flex flex-col items-center justify-center border transition active:scale-95 shadow-soft"
+                        style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                      >
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-1.5" style={{ backgroundColor: theme.surfaceSoft }}>
+                          <IconComp size={20} color={theme.oliveAccent} />
+                        </div>
+                        <span className="text-[11px] font-bold" style={{ color: theme.textSecondary }}>
+                          {tile.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Tab Dynamic Content */}
+                {portfolioTab === 'info' && (
+                  <div 
+                    className="rounded-3xl p-5 border shadow-soft space-y-3.5"
+                    style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                  >
+                    <h4 className="text-[15px] font-bold text-right pb-1 border-b" style={{ borderColor: theme.borderLight, color: theme.textPrimary }}>
+                      اطلاعات درس
+                    </h4>
+                    
+                    <div className="flex items-center justify-between text-[13px]">
+                      <span className="font-semibold" style={{ color: theme.textPrimary }}>{selectedCourse.professor}</span>
+                      <div className="flex items-center gap-2 font-medium" style={{ color: theme.textSecondary }}>
+                        <span>استاد</span>
+                        <Icons.User size={16} color={theme.oliveAccent} />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[13px]">
+                      <span className="font-semibold" style={{ color: theme.textPrimary }}>{toFa(selectedCourse.credits)} واحد</span>
+                      <div className="flex items-center gap-2 font-medium" style={{ color: theme.textSecondary }}>
+                        <span>واحد</span>
+                        <Icons.Layers size={16} color={theme.oliveAccent} />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[13px]">
+                      <span className="font-semibold" style={{ color: theme.textPrimary }}>{toFa(selectedCourse.topicsCount)} مورد</span>
+                      <div className="flex items-center gap-2 font-medium" style={{ color: theme.textSecondary }}>
+                        <span>سرفصل‌ها</span>
+                        <Icons.List size={16} color={theme.oliveAccent} />
+                      </div>
+                    </div>
+
+                    <div className="pt-1 text-right">
+                      <div className="flex items-center justify-end gap-2 font-medium text-[13px] mb-1" style={{ color: theme.textSecondary }}>
+                        <span>توضیحات</span>
+                        <Icons.Info size={16} color={theme.oliveAccent} />
+                      </div>
+                      <p className="text-[12px] leading-relaxed" style={{ color: theme.textMuted }}>
+                        {selectedCourse.description}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {portfolioTab === 'sessions' && (
+                  <div className="rounded-3xl p-4 border shadow-soft space-y-2.5" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
+                    <h4 className="text-[14px] font-bold text-right mb-2" style={{ color: theme.textPrimary }}>جلسات هفتگی</h4>
+                    {selectedCourse.sessions.map((sess, i) => (
+                      <div key={i} className="p-3 rounded-2xl flex items-center justify-between" style={{ backgroundColor: theme.surfaceSoft }}>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: theme.oliveLight, color: theme.oliveAccent }}>
+                          {sess.status}
+                        </span>
+                        <div className="text-right">
+                          <p className="text-[13px] font-bold" style={{ color: theme.textPrimary }}>{sess.title}</p>
+                          <span className="text-[11px]" style={{ color: theme.textMuted }}>{sess.date}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {portfolioTab === 'tasks' && (
+                  <div className="rounded-3xl p-4 border shadow-soft space-y-2.5" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
+                    <h4 className="text-[14px] font-bold text-right mb-2" style={{ color: theme.textPrimary }}>تکالیف دوره</h4>
+                    {selectedCourse.tasks.map((task, i) => (
+                      <div key={i} className="p-3 rounded-2xl flex items-center justify-between" style={{ backgroundColor: theme.surfaceSoft }}>
+                        <span className="text-[11px] font-mono text-red-500 font-bold">{task.deadline}</span>
+                        <p className="text-[13px] font-semibold text-right" style={{ color: theme.textPrimary }}>{task.title}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {portfolioTab === 'exams' && (
+                  <div className="rounded-3xl p-4 border shadow-soft space-y-2.5" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
+                    <h4 className="text-[14px] font-bold text-right mb-2" style={{ color: theme.textPrimary }}>امتحانات پیش‌رو</h4>
+                    {selectedCourse.exams.map((ex, i) => (
+                      <div key={i} className="p-3.5 rounded-2xl text-right" style={{ backgroundColor: theme.surfaceSoft }}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[12px] font-mono font-bold" style={{ color: theme.oliveAccent }}>{toFa(ex.time)}</span>
+                          <span className="text-[14px] font-bold" style={{ color: theme.textPrimary }}>{ex.title}</span>
+                        </div>
+                        <p className="text-[11px]" style={{ color: theme.textMuted }}>{ex.date} | {ex.location}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 4. TASKS (کارها) SCREEN */}
+            {currentScreen === 'tasks' && (
+              <div className="animate-screen space-y-4">
+                {/* Header */}
+                <div className="flex items-center justify-between pt-1 pb-1">
+                  <div className="flex items-center gap-2">
+                    <button 
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center border"
+                      style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                    >
+                      <Icons.Search size={19} color={theme.textSecondary} />
+                    </button>
+                    <button 
+                      onClick={() => setCurrentScreen('schedule')}
+                      className="w-10 h-10 rounded-2xl flex items-center justify-center border"
+                      style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                    >
+                      <Icons.Calendar size={19} color={theme.textSecondary} />
+                    </button>
+                  </div>
+                  <h2 className="text-[18px] font-bold text-center flex-1 pr-6" style={{ color: theme.textPrimary }}>
+                    کارها
+                  </h2>
+                  <div className="w-4"></div>
+                </div>
+
+                {/* Filter Chips Row */}
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                  <button 
+                    className="p-2 rounded-2xl border flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                  >
+                    <Icons.Filter size={16} color={theme.textSecondary} />
+                  </button>
+
+                  {[
+                    { id: 'all', label: 'همه' },
+                    { id: 'today', label: 'امروز' },
+                    { id: 'priority', label: 'اولویت' },
+                    { id: 'overdue', label: 'عقب‌افتاده' }
+                  ].map(f => {
+                    const isSelected = taskFilter === f.id;
+                    return (
+                      <button
+                        key={f.id}
+                        onClick={() => setTaskFilter(f.id)}
+                        className="px-4 py-2 rounded-2xl text-[12px] font-bold transition whitespace-nowrap active:scale-95 border"
+                        style={{ 
+                          backgroundColor: isSelected ? theme.oliveAccent : theme.surface,
+                          borderColor: isSelected ? theme.oliveAccent : theme.border,
+                          color: isSelected ? '#FFFFFF' : theme.textSecondary 
+                        }}
+                      >
+                        {f.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Task Cards List */}
+                <div className="space-y-3 pt-1">
+                  {filteredTasks.map((task) => (
+                    <div 
+                      key={task.id}
+                      className="rounded-3xl p-4 flex items-center justify-between border shadow-soft transition"
+                      style={{ 
+                        backgroundColor: theme.surface, 
+                        borderColor: theme.border,
+                        opacity: task.completed ? 0.6 : 1
+                      }}
+                    >
+                      {/* Left: Checkbox */}
+                      <button
+                        onClick={() => toggleTask(task.id)}
+                        className="w-7 h-7 rounded-xl border flex items-center justify-center transition active:scale-90"
+                        style={{
+                          borderColor: task.completed ? theme.oliveAccent : theme.border,
+                          backgroundColor: task.completed ? theme.oliveAccent : 'transparent'
+                        }}
+                      >
+                        {task.completed && <Icons.Check size={16} color="#FFFFFF" />}
+                      </button>
+
+                      {/* Center: Title & Course */}
+                      <div className="flex-1 px-3 text-right">
+                        <h4 
+                          className={`text-[14px] font-bold ${task.completed ? 'line-through text-stone-400' : ''}`}
+                          style={{ color: task.completed ? undefined : theme.textPrimary }}
+                        >
+                          {task.title}
+                        </h4>
+                        <div className="flex items-center justify-end gap-2 mt-1">
+                          <span className="text-[11px]" style={{ color: theme.textMuted }}>
+                            {task.course}
+                          </span>
+                          <span 
+                            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                            style={{ 
+                              backgroundColor: theme.isDark ? '#2D3728' : task.dueBg, 
+                              color: task.dueColor 
+                            }}
+                          >
+                            {task.dueStatus}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right: Time & Flag */}
+                      <div className="flex flex-col items-end gap-1.5">
+                        <span className="text-[11px] font-mono" style={{ color: theme.textMuted }}>
+                          {toFa(task.time)}
+                        </span>
+                        <Icons.Flag size={14} color={task.priority === 'high' ? '#EF4444' : theme.textMuted} />
+                      </div>
+                    </div>
+                  ))}
+
+                  {filteredTasks.length === 0 && (
+                    <div className="text-center py-10" style={{ color: theme.textMuted }}>
+                      <p className="text-[14px]">موردی برای نمایش وجود ندارد.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 5. GRADES (نمرات) SCREEN */}
+            {currentScreen === 'grades' && (
+              <div className="animate-screen space-y-4">
+                {/* Header */}
+                <div className="flex items-center justify-between pt-1 pb-1">
+                  <button 
+                    onClick={() => setCurrentScreen('home')}
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center border"
+                    style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                  >
+                    <Icons.ChevronRight size={20} color={theme.textPrimary} />
+                  </button>
+                  <h2 className="text-[18px] font-bold text-center flex-1" style={{ color: theme.textPrimary }}>
+                    نمرات
+                  </h2>
+                  <button 
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center border"
+                    style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                  >
+                    <Icons.Sliders size={18} color={theme.textSecondary} />
+                  </button>
+                </div>
+
+                {/* Filter Pills */}
+                <div 
+                  className="p-1 rounded-2xl flex items-center justify-between gap-1 border"
+                  style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                >
+                  {[
+                    { id: 'all', label: 'همه' },
+                    { id: 'current', label: 'ترم جاری' },
+                    { id: 'prev', label: 'سال قبل' }
+                  ].map(f => {
+                    const isSelected = gradeFilter === f.id;
+                    return (
+                      <button
+                        key={f.id}
+                        onClick={() => setGradeFilter(f.id)}
+                        className="flex-1 py-2 rounded-xl text-[12px] font-bold transition active:scale-95"
+                        style={{ 
+                          backgroundColor: isSelected ? (theme.isDark ? theme.oliveAccent : '#20231F') : 'transparent',
+                          color: isSelected ? '#FFFFFF' : theme.textSecondary 
+                        }}
+                      >
+                        {f.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Big GPA Circular Ring Card */}
+                <div 
+                  className="rounded-3xl p-5 flex items-center justify-between border shadow-soft"
+                  style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                >
+                  {/* Left: GPA Circular Ring */}
+                  <div className="relative inline-flex items-center justify-center flex-shrink-0">
+                    <CircularProgress 
+                      percentage={89} // 17.80 out of 20 = 89%
+                      size={92}
+                      strokeWidth={8}
+                      color={theme.oliveAccent}
+                      trackColor={theme.isDark ? '#233830' : '#E8ECE2'}
+                      textColor="transparent"
+                    />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                      <span className="text-[19px] font-extrabold" style={{ color: theme.textPrimary }}>
+                        {toFa('۱۷.۸۰')}
+                      </span>
+                      <span className="text-[10px] font-medium" style={{ color: theme.textMuted }}>
+                        معدل کل
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Right: Stats List */}
+                  <div className="flex-1 pr-6 text-right space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[16px] font-extrabold" style={{ color: theme.textPrimary }}>{toFa(۱۶)}</span>
+                      <span className="text-[12px] font-medium" style={{ color: theme.textSecondary }}>تعداد واحد گذرانده</span>
+                    </div>
+                    <div className="w-full h-px" style={{ backgroundColor: theme.borderLight }}></div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[16px] font-extrabold" style={{ color: theme.textPrimary }}>{toFa(۴)}</span>
+                      <span className="text-[12px] font-medium" style={{ color: theme.textSecondary }}>تعداد واحد باقیمانده</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section Header: نمرات دروس */}
+                <div className="pt-2 px-1 text-right">
+                  <h3 className="text-[16px] font-bold" style={{ color: theme.textPrimary }}>
+                    نمرات دروس
+                  </h3>
+                </div>
+
+                {/* Course Grades List */}
+                <div className="space-y-3 pb-2">
+                  {filteredGrades.map((g, i) => {
+                    const percent = (g.numScore / g.max) * 100;
+                    return (
+                      <div 
+                        key={i}
+                        className="rounded-3xl p-4 border shadow-soft transition"
+                        style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <Icons.ChevronLeft size={16} color={theme.textMuted} />
+                          <div className="flex items-center gap-3">
+                            <span className="text-[15px] font-extrabold font-mono" style={{ color: theme.textPrimary }}>
+                              {g.score}
+                            </span>
+                            <span className="text-[14px] font-bold" style={{ color: theme.textPrimary }}>
+                              {g.course}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Thin Score Progress Bar */}
+                        <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: theme.surfaceSoft }}>
+                          <div 
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{ 
+                              width: `${percent}%`,
+                              backgroundColor: g.numScore >= 18 ? theme.oliveAccent : (g.numScore >= 14 ? theme.petrol : '#EF4444')
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ================= 3D GLASS FLOATING NAVIGATION DOCK ================= */}
+          <div className="absolute bottom-5 inset-x-4 z-20 flex justify-center pointer-events-none">
+            <div className="w-full max-w-[420px] relative pointer-events-auto">
+              
+              {/* 3D Ambient Underglow Blur */}
+              <div 
+                className="absolute inset-x-4 -bottom-1 h-12 rounded-full blur-md opacity-40 pointer-events-none transition-all duration-500"
+                style={{ backgroundColor: theme.oliveAccent }}
+              />
+
+              {/* 3D Glass Shell */}
+              <div 
+                className="rounded-[32px] px-3 py-2 flex items-center justify-between shadow-2xl backdrop-blur-xl border relative transition-all duration-300"
+                style={{ 
+                  backgroundColor: theme.navBg, 
+                  borderColor: theme.isDark ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.85)',
+                  boxShadow: '0 16px 36px -4px rgba(0, 0, 0, 0.16), inset 0 1px 1px 0 rgba(255, 255, 255, 0.45)'
+                }}
+              >
+                {/* 1. Home */}
+                <button
+                  onClick={() => setCurrentScreen('home')}
+                  className="flex flex-col items-center justify-center flex-1 py-1 transition-all active:scale-90 group"
+                >
+                  <div 
+                    className="px-3.5 py-1.5 rounded-2xl flex items-center justify-center transition-all duration-300 border"
+                    style={{
+                      backgroundColor: currentScreen === 'home' ? (theme.isDark ? 'rgba(255,255,255,0.08)' : '#EEF1E8') : 'transparent',
+                      borderColor: currentScreen === 'home' ? (theme.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(102,112,82,0.25)') : 'transparent',
+                      transform: currentScreen === 'home' ? 'scale(1.05)' : 'scale(1)'
+                    }}
+                  >
+                    <Icons.Home 
+                      size={20} 
+                      filled={currentScreen === 'home'} 
+                      color={currentScreen === 'home' ? theme.oliveAccent : theme.textMuted} 
+                    />
+                  </div>
+                  <span 
+                    className="text-[10px] font-bold mt-1 transition-colors" 
+                    style={{ color: currentScreen === 'home' ? theme.oliveAccent : theme.textMuted }}
+                  >
+                    خانه
+                  </span>
+                  {/* Neon Micro Indicator Dot */}
+                  <div 
+                    className="h-1 rounded-full mt-0.5 transition-all duration-300"
+                    style={{ 
+                      width: currentScreen === 'home' ? '12px' : '0px',
+                      backgroundColor: theme.oliveAccent,
+                      boxShadow: currentScreen === 'home' ? `0 0 8px ${theme.oliveAccent}` : 'none'
+                    }}
+                  />
+                </button>
+
+                {/* 2. Schedule */}
+                <button
+                  onClick={() => setCurrentScreen('schedule')}
+                  className="flex flex-col items-center justify-center flex-1 py-1 transition-all active:scale-90 group"
+                >
+                  <div 
+                    className="px-3.5 py-1.5 rounded-2xl flex items-center justify-center transition-all duration-300 border"
+                    style={{
+                      backgroundColor: currentScreen === 'schedule' ? (theme.isDark ? 'rgba(255,255,255,0.08)' : '#EEF1E8') : 'transparent',
+                      borderColor: currentScreen === 'schedule' ? (theme.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(102,112,82,0.25)') : 'transparent',
+                      transform: currentScreen === 'schedule' ? 'scale(1.05)' : 'scale(1)'
+                    }}
+                  >
+                    <Icons.Calendar 
+                      size={20} 
+                      filled={currentScreen === 'schedule'} 
+                      color={currentScreen === 'schedule' ? theme.oliveAccent : theme.textMuted} 
+                    />
+                  </div>
+                  <span 
+                    className="text-[10px] font-bold mt-1 transition-colors" 
+                    style={{ color: currentScreen === 'schedule' ? theme.oliveAccent : theme.textMuted }}
+                  >
+                    برنامه
+                  </span>
+                  {/* Neon Micro Indicator Dot */}
+                  <div 
+                    className="h-1 rounded-full mt-0.5 transition-all duration-300"
+                    style={{ 
+                      width: currentScreen === 'schedule' ? '12px' : '0px',
+                      backgroundColor: theme.oliveAccent,
+                      boxShadow: currentScreen === 'schedule' ? `0 0 8px ${theme.oliveAccent}` : 'none'
+                    }}
+                  />
+                </button>
+
+                {/* 3. 3D ELEVATED VOLUMETRIC CENTER FAB "+" */}
+                <div className="relative -top-6 flex-shrink-0 px-1">
+                  <div className="relative flex items-center justify-center">
+                    {/* Pulsing Aura */}
+                    <div 
+                      className="absolute w-16 h-16 rounded-full blur-md opacity-50 animate-pulse pointer-events-none"
+                      style={{ backgroundColor: theme.oliveAccent }}
+                    />
+                    
+                    {/* 3D Sphere Button */}
+                    <button
+                      onClick={() => setShowAddTask(true)}
+                      className="w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 transform active:scale-85 hover:scale-108 text-white relative overflow-hidden border-2"
+                      style={{ 
+                        background: `linear-gradient(145deg, ${theme.oliveDark || '#8DA366'} 0%, ${theme.oliveAccent} 55%, ${theme.petrol || '#1E363E'} 100%)`,
+                        borderColor: 'rgba(255, 255, 255, 0.65)',
+                        boxShadow: '0 12px 28px -2px rgba(0, 0, 0, 0.35), inset 0 2px 4px 0 rgba(255, 255, 255, 0.55)'
+                      }}
+                      title="افزودن امکانات و تکالیف"
+                    >
+                      {/* Top Specular Sheen */}
+                      <div 
+                        className="absolute inset-x-0 top-0 h-1/2 rounded-t-full opacity-40 pointer-events-none"
+                        style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.7), transparent)' }}
+                      />
+                      <Icons.Plus size={28} color="#FFFFFF" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. Tasks */}
+                <button
+                  onClick={() => setCurrentScreen('tasks')}
+                  className="flex flex-col items-center justify-center flex-1 py-1 transition-all active:scale-90 group"
+                >
+                  <div 
+                    className="px-3.5 py-1.5 rounded-2xl flex items-center justify-center transition-all duration-300 border"
+                    style={{
+                      backgroundColor: currentScreen === 'tasks' ? (theme.isDark ? 'rgba(255,255,255,0.08)' : '#EEF1E8') : 'transparent',
+                      borderColor: currentScreen === 'tasks' ? (theme.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(102,112,82,0.25)') : 'transparent',
+                      transform: currentScreen === 'tasks' ? 'scale(1.05)' : 'scale(1)'
+                    }}
+                  >
+                    <Icons.CheckSquare 
+                      size={20} 
+                      filled={currentScreen === 'tasks'} 
+                      color={currentScreen === 'tasks' ? theme.oliveAccent : theme.textMuted} 
+                    />
+                  </div>
+                  <span 
+                    className="text-[10px] font-bold mt-1 transition-colors" 
+                    style={{ color: currentScreen === 'tasks' ? theme.oliveAccent : theme.textMuted }}
+                  >
+                    کارها
+                  </span>
+                  {/* Neon Micro Indicator Dot */}
+                  <div 
+                    className="h-1 rounded-full mt-0.5 transition-all duration-300"
+                    style={{ 
+                      width: currentScreen === 'tasks' ? '12px' : '0px',
+                      backgroundColor: theme.oliveAccent,
+                      boxShadow: currentScreen === 'tasks' ? `0 0 8px ${theme.oliveAccent}` : 'none'
+                    }}
+                  />
+                </button>
+
+                {/* 5. More / Grades */}
+                <button
+                  onClick={() => setCurrentScreen('grades')}
+                  className="flex flex-col items-center justify-center flex-1 py-1 transition-all active:scale-90 group"
+                >
+                  <div 
+                    className="px-3.5 py-1.5 rounded-2xl flex items-center justify-center transition-all duration-300 border"
+                    style={{
+                      backgroundColor: currentScreen === 'grades' ? (theme.isDark ? 'rgba(255,255,255,0.08)' : '#EEF1E8') : 'transparent',
+                      borderColor: currentScreen === 'grades' ? (theme.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(102,112,82,0.25)') : 'transparent',
+                      transform: currentScreen === 'grades' ? 'scale(1.05)' : 'scale(1)'
+                    }}
+                  >
+                    <Icons.MoreHorizontal 
+                      size={20} 
+                      color={currentScreen === 'grades' ? theme.oliveAccent : theme.textMuted} 
+                    />
+                  </div>
+                  <span 
+                    className="text-[10px] font-bold mt-1 transition-colors" 
+                    style={{ color: currentScreen === 'grades' ? theme.oliveAccent : theme.textMuted }}
+                  >
+                    بیشتر
+                  </span>
+                  {/* Neon Micro Indicator Dot */}
+                  <div 
+                    className="h-1 rounded-full mt-0.5 transition-all duration-300"
+                    style={{ 
+                      width: currentScreen === 'grades' ? '12px' : '0px',
+                      backgroundColor: theme.oliveAccent,
+                      boxShadow: currentScreen === 'grades' ? `0 0 8px ${theme.oliveAccent}` : 'none'
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* ================= THEME PICKER MODAL / SHEET ================= */}
+          {showThemePicker && (
+            <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm animate-fade">
+              <div 
+                className="w-full rounded-t-[32px] p-6 animate-slide-up border-t space-y-4 shadow-2xl"
+                style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+              >
+                <div className="w-12 h-1.5 rounded-full mx-auto mb-2 opacity-30" style={{ backgroundColor: theme.textSecondary }}></div>
+                
+                <div className="flex items-center justify-between pb-1">
+                  <button 
+                    onClick={() => setShowThemePicker(false)}
+                    className="p-1 rounded-full hover:opacity-70"
+                    style={{ color: theme.textMuted }}
+                  >
+                    <Icons.X size={20} color={theme.textMuted} />
+                  </button>
+                  <div className="text-right">
+                    <h3 className="text-[18px] font-bold" style={{ color: theme.textPrimary }}>
+                      تم‌های پیشنهادی
+                    </h3>
+                    <p className="text-[12px]" style={{ color: theme.textMuted }}>
+                      شما می‌توانید از بین این تم‌ها یکی را انتخاب کنید.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 4 Theme Option Pill Rows */}
+                <div className="space-y-2.5 pt-2">
+                  {Object.values(THEMES).map((t) => {
+                    const isSelected = currentThemeKey === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => handleThemeChange(t.id)}
+                        className="w-full p-4 rounded-2xl flex items-center justify-between transition border active:scale-[0.98]"
+                        style={{ 
+                          backgroundColor: isSelected ? theme.surfaceSoft : 'transparent',
+                          borderColor: isSelected ? theme.oliveAccent : theme.borderLight,
+                          color: theme.textPrimary
+                        }}
+                      >
+                        {/* Selected Indicator */}
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center">
+                          {isSelected && <Icons.Check size={16} color={theme.oliveAccent} />}
+                        </div>
+
+                        {/* Theme Name and Color Dot */}
+                        <div className="flex items-center gap-3">
+                          <span className="text-[14px] font-bold">{t.name}</span>
+                          <span 
+                            className="w-5 h-5 rounded-full shadow-sm border"
+                            style={{ backgroundColor: t.dotColor, borderColor: 'rgba(0,0,0,0.1)' }}
+                          ></span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================= ADD TASK BOTTOM SHEET ================= */}
+          {showAddTask && (
+            <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
+              <div 
+                className="w-full rounded-t-[32px] p-6 animate-slide-up border-t space-y-4 shadow-2xl"
+                style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+              >
+                <div className="w-12 h-1.5 rounded-full mx-auto mb-1 opacity-30" style={{ backgroundColor: theme.textSecondary }}></div>
+
+                <div className="flex items-center justify-between">
+                  <button 
+                    onClick={() => setShowAddTask(false)}
+                    className="p-1 rounded-full hover:opacity-70"
+                  >
+                    <Icons.X size={20} color={theme.textMuted} />
+                  </button>
+                  <h3 className="text-[17px] font-bold" style={{ color: theme.textPrimary }}>
+                    افزودن تکلیف جدید
+                  </h3>
+                </div>
+
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = e.target;
+                  const title = form.taskTitle.value;
+                  const courseId = form.courseSelect.value;
+                  const due = form.dueStatus.value;
+                  handleAddNewTask(title, courseId, due);
+                }} className="space-y-3.5 text-right">
+                  <div>
+                    <label className="text-[12px] font-bold block mb-1" style={{ color: theme.textSecondary }}>
+                      عنوان تکلیف
+                    </label>
+                    <input 
+                      type="text" 
+                      name="taskTitle"
+                      required
+                      placeholder="مثلاً: حل تمرین‌های صفحه ۴۲"
+                      className="w-full px-4 py-2.5 rounded-xl border text-[13px] outline-none"
+                      style={{ 
+                        backgroundColor: theme.surfaceSoft, 
+                        borderColor: theme.border,
+                        color: theme.textPrimary 
+                      }}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="text-[12px] font-bold block mb-1" style={{ color: theme.textSecondary }}>
+                        درس مربوطه
+                      </label>
+                      <select 
+                        name="courseSelect"
+                        className="w-full px-3 py-2.5 rounded-xl border text-[13px] outline-none"
+                        style={{ 
+                          backgroundColor: theme.surfaceSoft, 
+                          borderColor: theme.border,
+                          color: theme.textPrimary 
+                        }}
+                      >
+                        {INITIAL_COURSES.map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[12px] font-bold block mb-1" style={{ color: theme.textSecondary }}>
+                        موعد تحویل
+                      </label>
+                      <select 
+                        name="dueStatus"
+                        className="w-full px-3 py-2.5 rounded-xl border text-[13px] outline-none"
+                        style={{ 
+                          backgroundColor: theme.surfaceSoft, 
+                          borderColor: theme.border,
+                          color: theme.textPrimary 
+                        }}
+                      >
+                        <option value="امروز">امروز</option>
+                        <option value="تا فردا">تا فردا</option>
+                        <option value="در انتظار">در انتظار</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit"
+                    className="w-full py-3 rounded-2xl text-[14px] font-bold text-white transition active:scale-95 shadow-md mt-2"
+                    style={{ backgroundColor: theme.oliveAccent }}
+                  >
+                    ثبت تکلیف
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* ================= NOTIFICATION TOAST ================= */}
+          {showNotificationToast && (
+            <div 
+              className="absolute top-12 inset-x-6 z-50 p-4 rounded-2xl border shadow-xl flex items-center justify-between animate-slide-up"
+              style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+            >
+              <button onClick={() => setShowNotificationToast(false)}>
+                <Icons.X size={16} color={theme.textMuted} />
+              </button>
+              <div className="text-right">
+                <span className="text-[13px] font-bold block" style={{ color: theme.textPrimary }}>
+                  یادآور کلاس بعدی
+                </span>
+                <span className="text-[11px]" style={{ color: theme.textMuted }}>
+                  کلاس ریاضی عمومی ۱۰:۱۵ در ساختمان علوم شروع می‌شود.
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<StudentOSApp />);
+  </script>
+</body>
+</html>

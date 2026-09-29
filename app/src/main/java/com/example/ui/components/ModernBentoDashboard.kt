@@ -191,6 +191,44 @@ fun ModernBentoDashboard(
             }
         }
 
+        // 4 Quick Actions Grid (برنامه هفتگی، امتحانات، تکالیف، کلاس‌ها)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            QuickActionSquareTile(
+                title = "برنامه هفتگی",
+                icon = Icons.Default.CalendarToday,
+                onClick = { onNavigateTab(AppTab.SCHEDULE) },
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionSquareTile(
+                title = "امتحانات",
+                icon = Icons.Default.School,
+                onClick = { onNavigateTab(AppTab.GRADES) },
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionSquareTile(
+                title = "تکالیف",
+                icon = Icons.Default.CheckCircle,
+                onClick = { onNavigateTab(AppTab.TASKS) },
+                modifier = Modifier.weight(1f)
+            )
+            QuickActionSquareTile(
+                title = "کلاس‌ها",
+                icon = Icons.Default.CastForEducation,
+                onClick = {
+                    val featured = courses.firstOrNull()
+                    if (onOpenCourseWorkspace != null && featured != null) {
+                        onOpenCourseWorkspace(featured)
+                    } else {
+                        onNavigateTab(AppTab.SCHEDULE)
+                    }
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
+
         // 1. TOP 2x2 BENTO STAT TILES (معدل کل, واحد گذرانده, حضور و غیاب, تسک امروز)
         AnalyticsKpiSection(
             gpa = gpa,
@@ -824,7 +862,7 @@ private fun ScheduleBulletItem(time: String, name: String) {
 }
 
 // -------------------------------------------------------------
-// 5. COURSE STATUS LIST CARD ("وضعیت درس‌ها")
+// 5. COURSE STATUS LIST ("دوره‌های من / درس‌های امروز")
 // -------------------------------------------------------------
 @Composable
 private fun CourseStatusListSection(
@@ -833,88 +871,221 @@ private fun CourseStatusListSection(
     onOpenCourse: (CourseEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val cardShape = RoundedCornerShape(24.dp)
     val displayCourses = courses.take(4)
     val sessionMap = remember(coursesWithSessions) {
         coursesWithSessions.associate { it.course.id to it.sessions }
     }
 
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(cardShape),
-        shape = cardShape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.studentColors.glassSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Box(
+        // Section Header: "دوره‌های من" with "همه" link
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.dp, MaterialTheme.studentColors.glassBorderGradient, cardShape)
-                .padding(16.dp)
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "وضعیت درس‌های ترم",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "${courses.size} درس فعال",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = StudentOsColors.CyberCyan
-                    )
-                }
-                Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.tactileClickable {
+                    val first = courses.firstOrNull()
+                    if (first != null) onOpenCourse(first)
+                },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "همه",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Icon(
+                    imageVector = Icons.Default.ChevronLeft,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+            Text(
+                text = "دوره‌های من",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
 
-                if (displayCourses.isEmpty()) {
-                    Text(
-                        text = "درسی برای ترم جاری انتخاب نشده است.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
+        if (displayCourses.isEmpty()) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+            ) {
+                Text(
+                    text = "درسی برای نمایش وجود ندارد.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        } else {
+            val progressList = listOf(75, 60, 40, 80)
+            val iconList = listOf(
+                Icons.Default.Bolt,
+                Icons.Default.School,
+                Icons.Default.HourglassTop,
+                Icons.Default.CastForEducation
+            )
+
+            displayCourses.forEachIndexed { index, c ->
+                val progress = progressList.getOrElse(index) { 65 }
+                val icon = iconList.getOrElse(index) { Icons.Default.School }
+                val sessions = sessionMap[c.id] ?: emptyList()
+                val nextSessionText = if (sessions.isNotEmpty()) {
+                    val s = sessions.first()
+                    val dayName = when (s.day) {
+                        0 -> "شنبه"
+                        1 -> "یکشنبه"
+                        2 -> "دوشنبه"
+                        3 -> "سه‌شنبه"
+                        4 -> "چهارشنبه"
+                        else -> "امروز"
+                    }
+                    "$dayName ${s.start}"
                 } else {
-                    displayCourses.forEachIndexed { index, c ->
-                        if (index > 0) {
-                            HorizontalDivider(
-                                modifier = Modifier.padding(vertical = 10.dp),
-                                thickness = 0.8.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)
+                    if (c.professor.isNotBlank()) c.professor else "مشاهده در برنامه"
+                }
+
+                ModernCourseCard(
+                    course = c,
+                    progressPercentage = progress,
+                    nextSessionText = nextSessionText,
+                    icon = icon,
+                    onClick = { onOpenCourse(c) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModernCourseCard(
+    course: CourseEntity,
+    progressPercentage: Int,
+    nextSessionText: String,
+    icon: ImageVector,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
+        ),
+        shadowElevation = 2.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .tactileClickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Circular Progress Ring (Left in RTL)
+            Box(
+                modifier = Modifier.size(54.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.material3.CircularProgressIndicator(
+                    progress = { progressPercentage / 100f },
+                    modifier = Modifier.size(54.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    strokeWidth = 5.dp,
+                    strokeCap = StrokeCap.Round
+                )
+                Text(
+                    text = "${progressPercentage}٪",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            // Course Info (Center)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 14.dp),
+                horizontalAlignment = Alignment.End
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    if (course.courseCode.isNotBlank()) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.padding(bottom = 2.dp)
+                        ) {
+                            Text(
+                                text = course.courseCode,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
-                        val sessions = sessionMap[c.id] ?: emptyList()
-                        val scheduleSummary = if (sessions.isNotEmpty()) {
-                            sessions.joinToString("، ") { sess ->
-                                val d = when (sess.day) {
-                                    0 -> "شنبه"
-                                    1 -> "۱شنبه"
-                                    2 -> "۲شنبه"
-                                    3 -> "۳شنبه"
-                                    4 -> "۴شنبه"
-                                    else -> "طول هفته"
-                                }
-                                "$d ${sess.start}"
-                            }
-                        } else {
-                            if (c.professor.isNotBlank()) c.professor else "مشاهده در برنامه"
-                        }
-                        CourseStatusRowItem(
-                            name = c.name,
-                            time = scheduleSummary,
-                            badgeText = "${c.units} واحد",
-                            badgeBg = StudentOsColors.CyberCyan.copy(alpha = 0.15f),
-                            badgeColor = StudentOsColors.CyberCyan,
-                            onClick = { onOpenCourse(c) }
-                        )
                     }
+                    Text(
+                        text = course.name,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "جلسه بعد: $nextSessionText",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Icon(
+                        imageVector = Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Subject Icon in rounded square (Right in RTL)
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.size(44.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
                 }
             }
         }
@@ -922,51 +1093,49 @@ private fun CourseStatusListSection(
 }
 
 @Composable
-private fun CourseStatusRowItem(
-    name: String,
-    time: String,
-    badgeText: String,
-    badgeBg: Color,
-    badgeColor: Color,
-    onClick: () -> Unit = {}
+private fun QuickActionSquareTile(
+    title: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .tactileClickable { onClick() },
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
+        ),
+        shadowElevation = 2.dp,
+        modifier = modifier.tactileClickable { onClick() }
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier.padding(vertical = 12.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = title,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = name,
-                fontSize = 13.5.sp,
+                text = title,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = time,
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(badgeBg)
-                .border(0.8.dp, badgeColor.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
-                .padding(horizontal = 10.dp, vertical = 4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = badgeText,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = badgeColor
             )
         }
     }

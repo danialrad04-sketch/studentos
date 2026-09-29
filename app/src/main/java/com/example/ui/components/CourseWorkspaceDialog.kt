@@ -29,6 +29,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Rule
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -193,7 +195,7 @@ fun CourseWorkspaceDialog(
                                 Text(course.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
                             }
                             Surface(shape = CircleShape, color = courseColor.copy(alpha = 0.12f)) {
-                                Icon(Icons.Default.MenuBook, contentDescription = null, tint = courseColor, modifier = Modifier.padding(10.dp).size(22.dp))
+                                Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = courseColor, modifier = Modifier.padding(10.dp).size(22.dp))
                             }
                         }
                         val openTasks = tasks.count { !it.isCompleted }
@@ -212,7 +214,7 @@ fun CourseWorkspaceDialog(
                             overflow = TextOverflow.Ellipsis
                         )
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            WorkspaceActionChip(Icons.Default.Assignment, "تکالیف $openTasks", activeSection == "TASKS", courseColor) { activeSection = "TASKS" }
+                            WorkspaceActionChip(Icons.AutoMirrored.Filled.Assignment, "تکالیف $openTasks", activeSection == "TASKS", courseColor) { activeSection = "TASKS" }
                             WorkspaceActionChip(Icons.Default.Event, "جلسات ${sessions.size}", activeSection == "OVERVIEW", courseColor) { activeSection = "OVERVIEW" }
                             WorkspaceActionChip(Icons.Default.PlayCircleOutline, "شروع تمرکز", false, courseColor, onStartFocus)
                         }

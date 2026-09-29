@@ -53,6 +53,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.data.local.entity.StudentProfileEntity
 import com.example.ui.models.ThemeMode
 
@@ -92,91 +93,87 @@ fun HeaderSection(
     val termDisplayText = profile.term.ifBlank { "اطلاعات ترم ثبت نشده" }
     val initialLetter = studentDisplayName.trim().firstOrNull()?.toString() ?: "د"
 
-    // Minimalist Top Bar matching the exact design in the user screenshot
+    // Top Bar matching exact Student OS reference design
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 2.dp),
+            .padding(horizontal = 4.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Streak Badge (Flame Pill on left in RTL)
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.tertiaryContainer,
-            border = androidx.compose.foundation.BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.35f)
-            ),
-            modifier = Modifier
-                .semantics {
-                    contentDescription = if (studyStreakDays > 0) "زنجیره $studyStreakDays روز مطالعه مستمر، باز کردن پروفایل" else "استریک مطالعه هنوز ثبت نشده، باز کردن پروفایل"
-                    role = Role.Button
-                }
-                .tactileClickable { onOpenProfile() }
+        // Left Actions: Bell + Leaf (Theme) buttons
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                shadowElevation = 2.dp,
+                modifier = Modifier
+                    .size(42.dp)
+                    .tactileClickable { onOpenNotifications() }
             ) {
-                AppEmoji(
-                    type = AppEmojiType.FIRE,
-                    size = 20.dp,
-                    shapeRadiusRatio = 0.28f
-                )
-                Text(
-                    text = if (studyStreakDays > 0) studyStreakDays.toString() else "—",
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Black),
-                    color = MaterialTheme.colorScheme.onTertiaryContainer
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "اعلان‌ها",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    if (notifCount > 0) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.error)
+                                .align(Alignment.TopEnd)
+                        )
+                    }
+                }
+            }
+
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
+                shadowElevation = 2.dp,
+                modifier = Modifier
+                    .size(42.dp)
+                    .tactileClickable { onToggleTheme() }
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = "تغییر تم",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
 
-        // Student Profile & Greeting (Right in RTL)
+        // Student Profile & Brand (Right in RTL)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Column(horizontalAlignment = Alignment.End) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "سلام، $studentDisplayName",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text(
-                        text = "✍️",
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                }
-                Spacer(modifier = Modifier.height(1.dp))
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f))
-                        .tactileClickable { onOpenAccount() }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AccountCircle,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = if (isAccountConnected) "حساب متصل • همگام‌سازی فعال" else "حساب مهمان • فقط روی دستگاه",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Spacer(modifier = Modifier.height(1.dp))
                 Text(
-                    text = termDisplayText,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                    text = "Student OS",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 17.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = "همراه هوشمند دانشجو",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 11.sp
+                    ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -184,18 +181,10 @@ fun HeaderSection(
             // Avatar Circle
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(44.dp)
                     .clip(CircleShape)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.secondary,
-                                MaterialTheme.colorScheme.tertiary
-                            )
-                        )
-                    )
-                    .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
                     .semantics {
                         contentDescription = "پروفایل کاربری $studentDisplayName، باز کردن منوی تنظیمات"
                         role = Role.Button
@@ -205,8 +194,8 @@ fun HeaderSection(
             ) {
                 Text(
                     text = initialLetter,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
-                    color = MaterialTheme.colorScheme.onPrimary
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                    color = MaterialTheme.colorScheme.primary
                 )
 
                 DropdownMenu(
@@ -247,23 +236,8 @@ fun HeaderSection(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                text = "⚙️ تنظیمات و وضعیت تم",
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        },
-                        onClick = {
-                            showMenu = false
-                            onOpenSettingsAndRoadmap()
-                        },
-                        leadingIcon = {
-                            Icon(Icons.Default.Settings, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = "🌗 تغییر سریع تم",
-                                style = MaterialTheme.typography.labelLarge
+                                text = "🎨 انتخاب تم و ظاهر برنامه",
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                             )
                         },
                         onClick = {
@@ -274,38 +248,51 @@ fun HeaderSection(
                             Icon(Icons.Default.SettingsBrightness, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                         }
                     )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = "🎓 بارگذاری نمونه دمو (Rich Demo)",
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        },
-                        onClick = {
-                            showMenu = false
-                            showDemoConfirmation = true
-                        },
-                        leadingIcon = {
-                            Icon(Icons.Default.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = "🧹 پاکسازی کامل داده‌ها (Clean Slate)",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        },
-                        onClick = {
-                            showMenu = false
-                            showCleanSlateConfirmation = true
-                        },
-                        leadingIcon = {
-                            Icon(Icons.Default.Refresh, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
-                        }
-                    )
                 }
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(10.dp))
+
+    // Nature & Calm Greeting Banner Card
+    Surface(
+        shape = RoundedCornerShape(26.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
+        ),
+        shadowElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 18.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = "سلام، $studentDisplayName",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Black,
+                        fontSize = 18.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = "هر قدم کوچک، تو را به هدفت نزدیک‌تر می‌کند...",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.sp,
+                        lineHeight = 18.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

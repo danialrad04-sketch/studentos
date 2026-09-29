@@ -45,8 +45,17 @@
 -keep class com.google.firebase.** { *; }
 -keepclassmembers class com.google.firebase.** { *; }
 -keepattributes *Annotation*,Signature
-# Optional classes referenced by Tink/Ktor integrations that are not bundled by this app.
-# These paths are not required for Student OS runtime, but R8 otherwise treats them as errors.
+
+# Credential Manager & Google Sign In
+-keep class androidx.credentials.** { *; }
+-keep class com.google.android.libraries.identity.googleid.** { *; }
+-keep class com.google.android.gms.auth.api.** { *; }
+-keep class com.google.android.gms.common.** { *; }
+-dontwarn androidx.credentials.**
+-dontwarn com.google.android.libraries.identity.googleid.**
+-dontwarn com.google.android.gms.**
+
+# Suppress R8 warnings for optional dependencies in Tink, Ktor, and Google API Client
 -dontwarn com.google.api.client.http.**
--dontwarn org.joda.time.**
 -dontwarn java.lang.management.**
+-dontwarn org.joda.time.**

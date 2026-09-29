@@ -11,16 +11,14 @@ plugins {
 
 android {
   namespace = "com.example"
-  compileSdk = 36
+  compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
     applicationId = "com.aistudio.studentos.appvzk"
     minSdk = 24
-    targetSdk = 36
-    // Release version is explicit and overridable in CI with -PVERSION_CODE/-PVERSION_NAME.
-    // Default is the next monotonically increasing release after v1.0.2-production.
-    versionCode = providers.gradleProperty("VERSION_CODE").orNull?.toIntOrNull() ?: 3
-    versionName = providers.gradleProperty("VERSION_NAME").orNull ?: "1.0.3"
+    targetSdk = 35
+    versionCode = 2
+    versionName = "1.2"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -29,29 +27,27 @@ android {
     create("release") {
       val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
       storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = System.getenv("KEY_ALIAS") ?: "studentos"
-      keyPassword = System.getenv("KEY_PASSWORD")
+      storePassword = System.getenv("STORE_PASSWORD") ?: "studentos2026"
+      keyAlias = "upload"
+      keyPassword = System.getenv("KEY_PASSWORD") ?: "studentos2026"
+    }
+    create("debugConfig") {
+      storeFile = file("${rootDir}/debug.keystore")
+      storePassword = "android"
+      keyAlias = "androiddebugkey"
+      keyPassword = "android"
     }
   }
 
   buildTypes {
     release {
       isCrunchPngs = true
-      isMinifyEnabled = false
-      isShrinkResources = false
+      isMinifyEnabled = true
+      isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
-    debug {
-      // CI can opt into the fixed Firebase release certificate for Google-auth testing.
-      // Local debug builds remain unchanged unless the signing environment is provided.
-      if (!System.getenv("KEYSTORE_PATH").isNullOrBlank() &&
-          !System.getenv("STORE_PASSWORD").isNullOrBlank() &&
-          !System.getenv("KEY_PASSWORD").isNullOrBlank()) {
-        signingConfig = signingConfigs.getByName("release")
-      }
-    }
+    debug { signingConfig = signingConfigs.getByName("debugConfig") }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -118,9 +114,9 @@ dependencies {
   implementation(libs.firebase.config)
   implementation(libs.firebase.appcheck.playintegrity)
   implementation(libs.firebase.appcheck.debug)
+  implementation(libs.firebase.functions)
   // Uncomment to use Firestore:
   implementation(libs.firebase.firestore)
-  implementation("com.google.firebase:firebase-functions")
   // implementation(libs.firebase.crashlytics)
 
   // Uncomment ALL FOUR of the following dependencies together to use Firebase Auth and Google

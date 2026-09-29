@@ -40,23 +40,33 @@ class StudentApplication : Application() {
             CrashLogger.recordException(e)
         }
 
-        // Initialize Firebase & Firebase App Check (Play Integrity for Release, Debug for Debug)
+        // Initialize Firebase & Firebase App Check safely for production and debug
         try {
-            FirebaseApp.initializeApp(this)
-            val appCheck = FirebaseAppCheck.getInstance()
-            if (BuildConfig.DEBUG) {
-                appCheck.installAppCheckProviderFactory(
-                    DebugAppCheckProviderFactory.getInstance()
-                )
-                Log.d("StudentApplication", "Firebase App Check initialized with Debug provider")
-            } else {
-                appCheck.installAppCheckProviderFactory(
-                    PlayIntegrityAppCheckProviderFactory.getInstance()
-                )
-                Log.d("StudentApplication", "Firebase App Check initialized with Play Integrity provider")
+            if (FirebaseApp.getApps(this).isEmpty()) {
+                FirebaseApp.initializeApp(this)
+            }
+            try {
+                val appCheck = FirebaseAppCheck.getInstance()
+                if (BuildConfig.DEBUG) {
+                    appCheck.installAppCheckProviderFactory(
+                        DebugAppCheckProviderFactory.getInstance()
+                    )
+                    Log.d("StudentApplication", "Firebase App Check initialized with Debug provider")
+                } else {
+                    try {
+                        appCheck.installAppCheckProviderFactory(
+                            PlayIntegrityAppCheckProviderFactory.getInstance()
+                        )
+                        Log.d("StudentApplication", "Firebase App Check initialized with Play Integrity provider")
+                    } catch (e: Throwable) {
+                        Log.w("StudentApplication", "PlayIntegrity provider registration skipped: ${e.message}")
+                    }
+                }
+            } catch (e: Throwable) {
+                Log.w("StudentApplication", "Firebase App Check initialization skipped: ${e.message}")
             }
         } catch (e: Throwable) {
-            Log.w("StudentApplication", "Firebase App Check initialization skipped/failed: ${e.message}")
+            Log.w("StudentApplication", "Firebase initialization skipped/failed: ${e.message}")
         }
 
         // Initialize Remote Config for dynamic model configuration

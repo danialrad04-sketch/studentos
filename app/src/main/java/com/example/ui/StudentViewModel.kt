@@ -21,7 +21,6 @@ import com.example.ui.models.ExamItem
 import com.example.ui.models.SemesterCurriculum
 import com.example.ui.models.SystemNotification
 import com.example.ui.models.ThemeMode
-import com.example.ui.models.SyncUiState
 import com.example.ui.util.NotificationHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -65,7 +64,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -103,10 +101,14 @@ class StudentViewModel @JvmOverloads constructor(
     val themeMode: StateFlow<ThemeMode> = preferencesRepository.themeMode
     val notificationsEnabled: StateFlow<Boolean> = preferencesRepository.notificationsEnabled
     val customGeminiApiKey: StateFlow<String> = preferencesRepository.customGeminiApiKey
-    val guestModeEnabled: StateFlow<Boolean> = preferencesRepository.guestModeEnabled
     val lastSavedTimestamp: StateFlow<Long> = preferencesRepository.lastSuccessfulSaveTimestamp
     val currentUser: StateFlow<com.example.domain.model.UserAccount> = authManager.currentUser
     val isAuthInitialized: StateFlow<Boolean> = authManager.isInitialized
+    val guestModeEnabled: StateFlow<Boolean> = preferencesRepository.guestModeEnabled
+
+    fun continueAsGuest() {
+        preferencesRepository.setGuestModeEnabled(true)
+    }
 
     private val _databaseRecoveryWarning = MutableStateFlow(false)
     val databaseRecoveryWarning: StateFlow<Boolean> = _databaseRecoveryWarning.asStateFlow()
@@ -114,46 +116,6 @@ class StudentViewModel @JvmOverloads constructor(
     private val _userMessage = MutableSharedFlow<String>(extraBufferCapacity = 5)
     val userMessage: SharedFlow<String> = _userMessage.asSharedFlow()
 
-    /** One-step recovery action backed by a complete local Room snapshot. */
-    data class UndoAction(
-        val message: String,
-        val snapshot: String,
-        val generation: Long
-    )
-
-    private val _undoActions = MutableSharedFlow<UndoAction>(extraBufferCapacity = 2)
-    val undoActions: SharedFlow<UndoAction> = _undoActions.asSharedFlow()
-    private var undoGeneration: Long = 0L
-
-    private suspend fun captureUndoSnapshot(): String? = try {
-        repository.exportFullBackupJson()
-    } catch (error: Throwable) {
-        android.util.Log.w("StudentViewModel", "Undo snapshot failed: " + error.message)
-        null
-    }
-
-    private fun publishUndo(message: String, snapshot: String) {
-        _undoActions.tryEmit(UndoAction(message, snapshot, undoGeneration))
-    }
-
-    private suspend fun restoreUndoSnapshot(action: UndoAction): Result<Int> {
-        if (action.generation != undoGeneration) {
-            return Result.failure(IllegalStateException("این عملیات دیگر قابل واگردانی نیست."))
-        }
-        return repository.restoreFullBackupJson(action.snapshot)
-    }
-
-    private fun invalidateUndoHistory() {
-        undoGeneration++
-    }
-
-    suspend fun undo(action: UndoAction): Result<Int> {
-        val result = restoreUndoSnapshot(action)
-        if (result.isSuccess) {
-            addNotification("واگردانی انجام شد", "آخرین تغییر مخرب با موفقیت برگردانده شد.")
-        }
-        return result
-    }
     init {
         try {
             NotificationHelper.initNotificationChannel(application)
@@ -183,10 +145,10 @@ class StudentViewModel @JvmOverloads constructor(
                     val merged = target.copy(
                         name = if (target.name.isBlank() || target.name == "دانشجو") legacyName.ifBlank { target.name } else target.name,
                         studentId = if (target.studentId.isBlank()) legacyStudentId else target.studentId,
-                        university = if (target.university.isBlank()) legacyUniversity.ifBlank { target.university } else target.university,
-                        major = if (target.major.isBlank()) legacyMajor.ifBlank { target.major } else target.major,
-                        entryYear = if (target.entryYear <= 0) (if (legacyEntryYear > 0) legacyEntryYear else target.entryYear) else target.entryYear,
-                        currentSemester = if (target.currentSemester <= 0) (if (legacySemester > 0) legacySemester else target.currentSemester) else target.currentSemester,
+                        university = if (target.university.isBlank() || target.university == "دانشگاه") legacyUniversity.ifBlank { target.university } else target.university,
+                        major = if (target.major.isBlank() || target.major == "مهندسی") legacyMajor.ifBlank { target.major } else target.major,
+                        entryYear = if (target.entryYear <= 0 || target.entryYear == 1403) (if (legacyEntryYear > 0) legacyEntryYear else target.entryYear) else target.entryYear,
+                        currentSemester = if (target.currentSemester <= 0 || target.currentSemester == 1) (if (legacySemester > 0) legacySemester else target.currentSemester) else target.currentSemester,
                         passedUnits = if (target.passedUnits <= 0) (if (legacyPassed > 0) legacyPassed else target.passedUnits) else target.passedUnits,
                         declaredPassedCredits = if ((target.declaredPassedCredits ?: 0) <= 0) (if (legacyPassed > 0) legacyPassed else target.declaredPassedCredits) else target.declaredPassedCredits,
                         declaredGpa = if (target.declaredGpa == null || target.declaredGpa == 0.0) (if (legacyGpa > 0.0) legacyGpa else target.declaredGpa) else target.declaredGpa,
@@ -274,9 +236,8 @@ class StudentViewModel @JvmOverloads constructor(
     val examsList: List<ExamItem>
         get() = exams.value
 
-    val curriculumCourses: StateFlow<List<com.example.data.local.entity.CurriculumCourseEntity>> =
-        (repository.curriculumCourses ?: kotlinx.coroutines.flow.flowOf(emptyList()))
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val curriculumCourses: StateFlow<List<com.example.data.local.entity.CurriculumCourseEntity>> = (repository.curriculumCourses ?: kotlinx.coroutines.flow.flowOf(com.example.data.seed.CurriculumSeedData.chemicalEngineeringCourses))
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.example.data.seed.CurriculumSeedData.chemicalEngineeringCourses)
 
     val attendance: StateFlow<List<AttendanceEntity>> = repository.attendance
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -319,54 +280,34 @@ class StudentViewModel @JvmOverloads constructor(
 
     // Phase 4 Academic Foundations Engine Flows
     val curriculumMatchUiState: StateFlow<CurriculumMatchUiState> = combine(
-        combine(profile, courses) { p, currentCoursesList -> Pair(p, currentCoursesList) },
-        combine(curriculumCourses, repository.studentAttempts) { currCoursesList, attemptsList -> Pair(currCoursesList, attemptsList) },
-        combine(repository.curriculumUniversities, repository.curriculumMajors) { universities, majors -> Pair(universities, majors) },
-        repository.curriculumVersions
-    ) { profileAndCourses, curriculumAndAttempts, referenceData, versionRows ->
-        fun buildMatchState(): CurriculumMatchUiState {
-        val p = profileAndCourses.first
-        val currentCoursesList = profileAndCourses.second
-        val currCoursesList = curriculumAndAttempts.first
-        val attemptsList = curriculumAndAttempts.second
-        val universityRows = referenceData.first
-        val majorRows = referenceData.second
+        profile,
+        courses,
+        curriculumCourses,
+        repository.studentAttempts
+    ) { p, currentCoursesList, currCoursesList, attemptsList ->
+        val universityId = p.universityId ?: "UNI_AUT"
+        val majorId = p.majorId ?: "MAJ_AUT_CHEM_ENG"
+        val entryYear = 1401
 
-        val universityId = p.universityId.orEmpty()
-        val majorId = p.majorId.orEmpty()
-        val entryYear = p.entryYear
-
-        if (universityId.isBlank() || majorId.isBlank() || entryYear <= 0) {
-            return CurriculumMatchUiState.Empty
-        }
-
-        val universities = universityRows.map {
-            ResolvedUniversity(it.id, it.displayNameFa, it.shortName)
-        }
-        val majors = majorRows.map {
-            ResolvedMajor(it.id, it.universityId, it.facultyId, it.majorDisplayNameFa)
-        }
-        val versions = versionRows.map {
+        val universities = listOf(
+            ResolvedUniversity("UNI_AUT", "دانشگاه صنعتی امیرکبیر", "پلی‌تکنیک تهران")
+        )
+        val majors = listOf(
+            ResolvedMajor("MAJ_AUT_CHEM_ENG", "UNI_AUT", "FAC_AUT_CHEM_OIL", "مهندسی شیمی")
+        )
+        val versions = listOf(
             ResolvedCurriculumVersion(
-                id = it.id,
-                majorId = it.majorId,
-                title = it.title,
-                entryYearMin = it.entryYearMin,
-                entryYearMax = it.entryYearMax,
-                totalCreditsRequired = it.totalCreditsRequired
+                id = "CURR_AUT_CE_1401",
+                majorId = "MAJ_AUT_CHEM_ENG",
+                title = "چارت کارشناسی مهندسی شیمی ورودی‌های 1401 تا 1404",
+                entryYearMin = 1401,
+                entryYearMax = 1404,
+                totalCreditsRequired = 140
             )
-        }
-
-        val curriculumForMajor = currCoursesList.filter { it.majorId == majorId }
-        if (curriculumForMajor.isEmpty()) {
-            return CurriculumMatchUiState.NotFound(
-                ResolutionFailureReason.MAJOR_NOT_SUPPORTED,
-                "چارت دروس این رشته در پایگاه داده مرجع ثبت نشده است"
-            )
-        }
+        )
 
         val resolver = CurriculumResolver(universities, majors, versions)
-        return when (val res = resolver.resolve(universityId, majorId, entryYear)) {
+        when (val res = resolver.resolve(universityId, majorId, entryYear)) {
             is CurriculumResolutionResult.NotFound -> {
                 val reasonMsg = when (res.reason) {
                     ResolutionFailureReason.PROFILE_DATA_INCOMPLETE -> "اطلاعات شناسنامه یا سال ورود ناقص است"
@@ -379,33 +320,19 @@ class StudentViewModel @JvmOverloads constructor(
             }
             is CurriculumResolutionResult.ExactMatch,
             is CurriculumResolutionResult.ExplicitRangeMatch -> {
-                val resolvedVersion = if (res is CurriculumResolutionResult.ExactMatch) {
-                    res.version
-                } else {
-                    (res as CurriculumResolutionResult.ExplicitRangeMatch).version
-                }
+                val resolvedVersion = if (res is CurriculumResolutionResult.ExactMatch) res.version else (res as CurriculumResolutionResult.ExplicitRangeMatch).version
 
-                val resolvableCourses = curriculumForMajor.map { cc ->
-                    val prereqList = cc.prerequisites.split("،", ",")
-                        .map { it.trim() }
-                        .filter { it.isNotEmpty() }
-                    val conditions = prereqList.map { prerequisiteName ->
-                        val matchingCourse = curriculumForMajor.find { course ->
-                            CourseIdentityNormalizer.normalize(course.name) ==
-                                CourseIdentityNormalizer.normalize(prerequisiteName)
-                        }
-                        val prerequisiteId = matchingCourse?.id ?: prerequisiteName
-                        PrerequisiteCondition.CoursePassed(prerequisiteId, prerequisiteName)
+                val resolvableCourses = currCoursesList.map { cc ->
+                    val prereqList = cc.prerequisites.split("،", ",").map { it.trim() }.filter { it.isNotEmpty() }
+                    val conditions = prereqList.map { pName ->
+                        val matchingCourse = currCoursesList.find { CourseIdentityNormalizer.normalize(it.name) == CourseIdentityNormalizer.normalize(pName) }
+                        val pId = matchingCourse?.id ?: pName
+                        PrerequisiteCondition.CoursePassed(pId, pName)
                     }
                     val rule = if (conditions.isNotEmpty()) {
-                        CoursePrerequisiteRule(
-                            rootCondition = if (conditions.size == 1) conditions.first()
-                            else PrerequisiteCondition.AndGroup(conditions)
-                        )
+                        CoursePrerequisiteRule(rootCondition = if (conditions.size == 1) conditions.first() else PrerequisiteCondition.AndGroup(conditions))
                     } else if (cc.name.contains("کارآموزی")) {
-                        CoursePrerequisiteRule(
-                            rootCondition = PrerequisiteCondition.MinimumTotalPassedCredits(80)
-                        )
+                        CoursePrerequisiteRule(rootCondition = PrerequisiteCondition.MinimumTotalPassedCredits(80))
                     } else {
                         CoursePrerequisiteRule()
                     }
@@ -424,13 +351,13 @@ class StudentViewModel @JvmOverloads constructor(
 
                 val enrolledIds = currentCoursesList.map { it.id }.toSet()
                 val enrolledNames = currentCoursesList.map { it.name }.toSet()
-                val attempts = attemptsList.map { attempt ->
+                val attempts = attemptsList.map {
                     StudentCourseAttempt(
-                        courseId = attempt.courseId,
-                        courseName = attempt.courseName,
-                        units = attempt.units,
-                        status = attempt.status,
-                        grade = attempt.grade
+                        courseId = it.courseId,
+                        courseName = it.courseName,
+                        units = it.units,
+                        status = it.status,
+                        grade = it.grade
                     )
                 }
 
@@ -449,9 +376,8 @@ class StudentViewModel @JvmOverloads constructor(
                 )
             }
         }
-        }
-        buildMatchState()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CurriculumMatchUiState.Loading)
+
     val academicProgressUiState: StateFlow<AcademicProgressUiState> = combine(
         profile,
         courses,
@@ -554,9 +480,6 @@ class StudentViewModel @JvmOverloads constructor(
         AcademicGamificationEngine.calculateGamificationProfile(emptyList(), emptyList(), emptyList(), 0)
     )
 
-    private val _syncUiState = MutableStateFlow<SyncUiState>(SyncUiState.Idle)
-    val syncUiState: StateFlow<SyncUiState> = _syncUiState.asStateFlow()
-
     // Global Search Query and Results (Phase 24)
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -637,10 +560,10 @@ class StudentViewModel @JvmOverloads constructor(
 
     private fun triggerCloudSync(dataType: String? = null) {
         try {
-            // Node.js/PostgreSQL is the single data-sync backend.
+            com.example.data.cloud.worker.FirestoreSyncWorker.triggerImmediateSync(application)
             com.example.data.cloud.worker.BackendSyncWorker.triggerImmediateSync(application, dataType)
         } catch (e: Throwable) {
-            android.util.Log.w("StudentViewModel", "Failed to trigger backend sync: ${e.message}")
+            android.util.Log.w("StudentViewModel", "Failed to trigger cloud sync: ${e.message}")
         }
     }
 
@@ -680,6 +603,18 @@ class StudentViewModel @JvmOverloads constructor(
         _pomodoroSeconds.value = 25 * 60
     }
 
+    // 8 Semester Curriculum Map for Chemical Engineering
+    val curriculumList = listOf(
+        SemesterCurriculum("ترم 1 (پاییز)", 17, listOf("ریاضی عمومی 1", "فیزیک عمومی 1", "شیمی عمومی و آزمایشگاه", "زبان عمومی")),
+        SemesterCurriculum("ترم 2 (بهار)", 18, listOf("ریاضی عمومی 2", "معادلات دیفرانسیل", "فیزیک عمومی 2", "شیمی آلی 1")),
+        SemesterCurriculum("ترم 3 (ترم جاری)", 19, listOf("ترمودینامیک مهندسی شیمی 1", "مکانیک سیالات 1", "ریاضی مهندسی", "محاسبات عددی"), isCurrent = true),
+        SemesterCurriculum("ترم 4 (پیش‌رو)", 20, listOf("ترمودینامیک مهندسی شیمی 2", "انتقال حرارت 1", "موازنه انرژی و مواد", "کنترل فرآیندها")),
+        SemesterCurriculum("ترم 5", 18, listOf("انتقال جرم", "عملیات واحد 1", "سینتیک و طراحی رآکتور", "شیمی تجزیه")),
+        SemesterCurriculum("ترم 6", 17, listOf("عملیات واحد 2", "انتقال حرارت 2", "کاربرد کامپیوتر در مهندسی شیمی", "ایمنی در صنایع نفت")),
+        SemesterCurriculum("ترم 7", 16, listOf("طراحی فرآیند به کمک نرم‌افزار", "شبیه‌سازی فرآیندها", "آزمایشگاه عملیات واحد", "پروژه کارشناسی 1")),
+        SemesterCurriculum("ترم 8 (فارغ‌التحصیلی)", 15, listOf("پروژه کارشناسی 2", "کارآموزی صنعت نفت و پتروشیمی", "اقتصاد مهندسی", "دروس عمومی اختیاری"))
+    )
+
     // Actions
     fun saveCourse(course: CourseEntity, sessions: List<com.example.data.local.entity.CourseSessionEntity> = emptyList()) {
         viewModelScope.launch {
@@ -690,11 +625,9 @@ class StudentViewModel @JvmOverloads constructor(
     }
 
     fun deleteCourse(courseId: String) {
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            val snapshot = captureUndoSnapshot()
+        viewModelScope.launch {
             repository.deleteCourse(courseId)
             addNotification("حذف درس", "درس با موفقیت از جدول کلاسی حذف شد.", isDanger = true)
-            snapshot?.let { publishUndo("درس حذف‌شده قابل واگردانی است.", it) }
             triggerCloudSync()
         }
     }
@@ -873,8 +806,8 @@ class StudentViewModel @JvmOverloads constructor(
             passedUnits = passedUnits,
             declaredPassedCredits = passedUnits,
             activeUnits = activeUnits,
-            term = if (currentSemester > 0 && major.isNotBlank()) "ترم $currentSemester $major" else "",
-            faculty = if (major.isNotBlank()) "دانشکده $major · $activeUnits واحد فعال" else "",
+            term = "ترم $currentSemester $major",
+            faculty = "دانشکده $major · $activeUnits واحد فعال",
             isOnboardingCompleted = true
         )
         _optimisticProfile.value = updated
@@ -967,8 +900,8 @@ class StudentViewModel @JvmOverloads constructor(
         studentId: String = "",
         university: String = "",
         major: String = "",
-        entryYear: Int = 0,
-        currentSemester: Int = 0
+        entryYear: Int = 1403,
+        currentSemester: Int = 1
     ) {
         val resolvedName = studentName.ifBlank { "دانشجو" }
         val totalUnits = drafts.sumOf { it.units }
@@ -986,8 +919,8 @@ class StudentViewModel @JvmOverloads constructor(
             entryYear = entryYear,
             currentSemester = currentSemester,
             activeUnits = totalUnits,
-            term = if (currentSemester > 0 && major.isNotBlank()) "ترم $currentSemester $major" else "",
-            faculty = if (major.isNotBlank()) "دانشکده $major · $totalUnits واحد فعال" else "",
+            term = "ترم $currentSemester $major",
+            faculty = "دانشکده $major · $totalUnits واحد فعال",
             isOnboardingCompleted = true
         )
         _optimisticProfile.value = opt
@@ -1023,8 +956,8 @@ class StudentViewModel @JvmOverloads constructor(
         studentId: String = "",
         university: String = "",
         major: String = "",
-        entryYear: Int = 0,
-        currentSemester: Int = 0,
+        entryYear: Int = 1403,
+        currentSemester: Int = 1,
         passedCredits: Int = 0,
         declaredGpa: Double = 0.0
     ) {
@@ -1044,8 +977,8 @@ class StudentViewModel @JvmOverloads constructor(
             passedUnits = passedCredits,
             declaredPassedCredits = passedCredits,
             declaredGpa = declaredGpa,
-            term = if (currentSemester > 0 && major.isNotBlank()) "ترم $currentSemester $major" else "",
-            faculty = if (major.isNotBlank()) "دانشکده $major" else "",
+            term = "ترم $currentSemester $major",
+            faculty = "دانشکده $major",
             isOnboardingCompleted = completed
         )
         _optimisticProfile.value = opt
@@ -1161,7 +1094,7 @@ class StudentViewModel @JvmOverloads constructor(
                         day = dayInt,
                         start = payload.startTime,
                         end = payload.endTime,
-                        location = ""
+                        location = "کلاس فنی"
                     )
                     saveCourse(course, listOf(session))
                 }
@@ -1176,37 +1109,30 @@ class StudentViewModel @JvmOverloads constructor(
     }
 
     fun resetToDefaults() {
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            val snapshot = captureUndoSnapshot()
+        viewModelScope.launch {
             repository.resetDefaults()
             addNotification("بازنشانی سامانه", "کلیه اطلاعات به حالت پیش‌فرض بازگشت.")
-            snapshot?.let { publishUndo("بازنشانی قابل واگردانی است.", it) }
         }
     }
 
     fun loadDemoData() {
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            val snapshot = captureUndoSnapshot()
+        viewModelScope.launch {
             repository.loadRichDemoData()
-            addNotification("حالت دمو فعال شد", "داده‌های نمونه بارگذاری شد 🎓")
-            snapshot?.let { publishUndo("داده‌های قبلی قابل واگردانی هستند.", it) }
+            addNotification("حالت دمو فعال شد", "داده‌های کامل و نمونه دانشگاهی بارگذاری شد 🎓")
         }
     }
 
     fun clearToFreshSlate(
-        name: String = "دانشجو",
-        studentId: String = "",
-        university: String = "",
-        major: String = "",
-        entryYear: Int = 0,
-        currentSemester: Int = 0
+        name: String = "دانشجوی جدید",
+        studentId: String = "۴۰۳۰۰۰۰۱",
+        university: String = "دانشگاه سراسری",
+        major: String = "مهندسی",
+        entryYear: Int = 1403,
+        currentSemester: Int = 1
     ) {
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            val snapshot = captureUndoSnapshot()
+        viewModelScope.launch {
             repository.clearToFreshSlate(name, studentId, university, major, entryYear, currentSemester)
-            _isOnboardingCompleted.value = false
-            addNotification("شروع نو و پاکسازی", "داده‌های تحصیلی پاکسازی شدند و راه‌اندازی دوباره آماده است.")
-            snapshot?.let { publishUndo("پاکسازی قابل واگردانی است.", it) }
+            addNotification("شروع نو و پاکسازی", "سیستم‌عامل تحصیلی با یک بوم پاک و آماده ثبت دروس شما آماده شد ✨")
         }
     }
 
@@ -1268,7 +1194,11 @@ class StudentViewModel @JvmOverloads constructor(
 
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             val db = repository.database ?: AppDatabase.getDatabase(application, viewModelScope)
-            val result = com.example.data.cloud.BackendSyncManager.pullAllData(application)
+            val result = com.example.data.cloud.FirestoreSyncManager.restoreAllDataFromCloud(
+                userId = user.uid,
+                dao = db.studentDao(),
+                curriculumDao = db.curriculumDao()
+            )
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                 if (result.isSuccess) {
                     val count = result.getOrNull() ?: 0
@@ -1316,15 +1246,10 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    fun continueAsGuest() {
-        preferencesRepository.setGuestModeEnabled(true)
-    }
-
     fun signInWithBackend(email: String, password: String, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             when (val res = authManager.signInWithBackend(email, password)) {
                 is com.example.domain.model.AuthResult.Success -> {
-                    preferencesRepository.setGuestModeEnabled(false)
                     addNotification("ورود به سرور", "با موفقیت به حساب ${res.user.displayName} در سرور متصل شدید.")
                     _userMessage.emit(res.message)
                     onResult(true, res.message)
@@ -1341,7 +1266,6 @@ class StudentViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             when (val res = authManager.signUpWithBackend(name, email, password)) {
                 is com.example.domain.model.AuthResult.Success -> {
-                    preferencesRepository.setGuestModeEnabled(false)
                     addNotification("ثبت‌نام در سرور", "حساب کاربری جدید شما در سرور اختصاصی ایجاد شد.")
                     _userMessage.emit(res.message)
                     onResult(true, res.message)
@@ -1355,40 +1279,26 @@ class StudentViewModel @JvmOverloads constructor(
     }
 
     fun syncWithBackendNow(onResult: (Boolean, String) -> Unit) {
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            _syncUiState.value = SyncUiState.Syncing
+        viewModelScope.launch {
             try {
-                // Do not enqueue a background push and immediately pull: that races
-                // the worker and can restore stale server state over newer local data.
-                val pushRes = com.example.data.cloud.BackendSyncManager.pushAllData(application)
-                if (pushRes.isFailure) {
-                    throw pushRes.exceptionOrNull() ?: IllegalStateException("ارسال اطلاعات به سرور ناموفق بود.")
-                }
+                com.example.data.cloud.worker.BackendSyncWorker.triggerImmediateSync(application, pullOnly = false)
                 val pullRes = com.example.data.cloud.BackendSyncManager.pullAllData(application)
-                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                    if (pullRes.isSuccess) {
-                        _syncUiState.value = SyncUiState.Success("اطلاعات با سرور همگام شد.", System.currentTimeMillis())
-                        _userMessage.emit("اطلاعات با سرور اختصاصی با موفقیت همگام شد.")
-                        onResult(true, "اطلاعات با سرور همگام شد.")
-                    } else {
-                        _syncUiState.value = SyncUiState.Error("برخی داده‌ها در همگام‌سازی دریافت نشدند.", System.currentTimeMillis())
-                        onResult(false, "برخی داده‌ها در همگام‌سازی دریافت نشدند.")
-                    }
+                if (pullRes.isSuccess) {
+                    _userMessage.emit("همگام‌سازی با سرور اختصاصی با موفقیت انجام شد.")
+                    onResult(true, "اطلاعات با سرور همگام شد.")
+                } else {
+                    onResult(false, "برخی داده‌ها در همگام‌سازی دریافت نشدند.")
                 }
             } catch (e: Exception) {
-                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                    _syncUiState.value = SyncUiState.Error("خطا در همگام‌سازی: " + (e.localizedMessage ?: "خطای ناشناخته"), System.currentTimeMillis())
-                    onResult(false, "خطا در همگام‌سازی: " + (e.localizedMessage ?: "خطای ناشناخته"))
-                }
+                onResult(false, "خطا در همگام‌سازی: ${e.message}")
             }
         }
     }
 
-    fun signInWithGoogle(idToken: String, onResult: (Boolean, String) -> Unit) {
+    fun signInWithGoogle(activityContext: android.content.Context? = null, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            when (val res = authManager.signInWithGoogle(idToken)) {
+            when (val res = authManager.signInWithGoogle(activityContext = activityContext)) {
                 is com.example.domain.model.AuthResult.Success -> {
-                    preferencesRepository.setGuestModeEnabled(false)
                     addNotification("ورود گوگل", "اتصال به حساب گوگل با موفقیت برقرار شد.")
                     _userMessage.emit(res.message)
                     onResult(true, res.message)
@@ -1431,53 +1341,35 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun upgradeSubscriptionTier(tier: com.example.domain.model.SubscriptionTier, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            val result = authManager.upgradeSubscriptionTier(tier)
-            if (result.isSuccess) {
-                val effectiveTier = result.getOrNull() ?: tier
-                addNotification("ارتقای حساب", "طرح " + effectiveTier.titleFa + " فعال گردید.")
-                _userMessage.emit("اشتراک شما ارتقا یافت.")
-                onResult(true, "طرح " + effectiveTier.titleFa + " فعال شد.")
-            } else {
-                val message = result.exceptionOrNull()?.localizedMessage ?: "ارتقای اشتراک انجام نشد."
-                onResult(false, message)
-            }
+            authManager.upgradeSubscriptionTier(tier)
+            addNotification("ارتقای حساب", "طرح ${tier.titleFa} فعال گردید.")
+            _userMessage.emit("اشتراک شما ارتقا یافت.")
+            onResult(true, "طرح ${tier.titleFa} فعال شد.")
         }
     }
 
     fun signOutUser() {
         viewModelScope.launch {
-            invalidateUndoHistory()
+            preferencesRepository.setGuestModeEnabled(false)
             authManager.signOutUser()
-            preferencesRepository.setGuestModeEnabled(true)
             // Clear onboarding preferences
             preferencesRepository.setOnboardingCompleted(false)
             _isOnboardingCompleted.value = false
             _optimisticProfile.value = null
             
-            // Remove the previous account's local academic data without inserting demo/default identity.
-            repository.clearAllUserData()
-
-            addNotification("خروج از حساب", "از حساب کاربری خارج شدید؛ اطلاعات حساب قبلی از این دستگاه پاک شد.")
+            // Clear the local cache to prevent previous user data residue
+            repository.clearToFreshSlate("دانشجو", "۴۰۳۰۰۰۰۱", "دانشگاه سراسری", "مهندسی", 1403, 1)
+            
+            addNotification("خروج از حساب", "از حساب کاربری خارج شدید و به حالت مهمان تغییر کردید.")
         }
     }
 
     fun deleteUserAccount(onCompleted: () -> Unit) {
         viewModelScope.launch {
-            invalidateUndoHistory()
-            val result = authManager.deleteUserAccount()
-            if (result.isSuccess) {
-                repository.clearAllUserData()
-                preferencesRepository.setOnboardingCompleted(false)
-                _isOnboardingCompleted.value = false
-                _optimisticProfile.value = null
-                addNotification("حذف حساب", "حساب کاربری حذف شد و داده‌های محلی پاکسازی شدند.", isDanger = true)
-                onCompleted()
-            } else {
-                _userMessage.emit(
-                    result.exceptionOrNull()?.localizedMessage
-                        ?: "حذف حساب انجام نشد؛ اطلاعات شما بدون تغییر باقی ماند."
-                )
-            }
+            authManager.deleteUserAccount()
+            repository.clearToFreshSlate("دانشجوی جدید", "۴۰۳۰۰۰۰۱", "دانشگاه سراسری", "مهندسی", 1403, 1)
+            addNotification("حذف حساب", "حساب کاربری و اطلاعات به طور کامل حذف و پاکسازی شد.", isDanger = true)
+            onCompleted()
         }
     }
 
@@ -1489,7 +1381,6 @@ class StudentViewModel @JvmOverloads constructor(
         }
 
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            _syncUiState.value = SyncUiState.Syncing
             try {
                 val db = AppDatabase.getDatabase(application)
                 val dao = db.studentDao()
@@ -1501,37 +1392,43 @@ class StudentViewModel @JvmOverloads constructor(
                 val exams = dao.getAllExamsSync()
                 val notes = dao.getAllNotesSync()
 
-                val pushResult = com.example.data.cloud.BackendSyncManager.pushAllData(application)
+                // 1. Push local changes to cloud
+                val pushResult = com.example.data.cloud.FirestoreSyncManager.syncAllDataToCloud(
+                    userId = user.uid,
+                    profile = profile,
+                    courses = courses,
+                    grades = grades,
+                    tasks = tasks,
+                    attendance = attendance,
+                    exams = exams,
+                    notes = notes
+                )
 
-                if (pushResult.isSuccess) {
-                    val restoreResult = com.example.data.cloud.BackendSyncManager.pullAllData(application)
-                    val success = restoreResult.isSuccess
-                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                        if (success) {
-                            _syncUiState.value = SyncUiState.Success("همگام‌سازی با سرور اختصاصی با موفقیت انجام شد.", System.currentTimeMillis())
-                        } else {
-                            _syncUiState.value = SyncUiState.Error("ارسال انجام شد، اما دریافت نهایی از سرور ناموفق بود.", System.currentTimeMillis())
-                        }
-                        onResult(
-                            success,
-                            if (success) "همگام‌سازی با سرور اختصاصی با موفقیت انجام شد."
-                            else "ارسال انجام شد، اما دریافت نهایی از سرور ناموفق بود."
-                        )
-                    }
+                // 2. Pull down any remote changes from cloud
+                val pullResult = com.example.data.cloud.FirestoreSyncManager.restoreAllDataFromCloud(
+                    userId = user.uid,
+                    dao = dao,
+                    curriculumDao = db.curriculumDao()
+                )
+
+                if (pushResult.isSuccess || pullResult.isSuccess) {
+                    onResult(true, "همگام‌سازی دوطرفه ابری با موفقیت کامل شد. ✨")
                 } else {
-                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                        _syncUiState.value = SyncUiState.Error("ارسال اطلاعات به سرور اختصاصی ناموفق بود.", System.currentTimeMillis())
-                        onResult(false, "ارسال اطلاعات به سرور اختصاصی ناموفق بود.")
-                    }
+                    val errMsg = pushResult.exceptionOrNull()?.message ?: pullResult.exceptionOrNull()?.message ?: "خطای ناشناخته شبکه"
+                    onResult(false, "خطا در همگام‌سازی: $errMsg")
                 }
-
             } catch (e: Exception) {
-                _syncUiState.value = SyncUiState.Error("خطا در اتصال به سرور: ${e.localizedMessage ?: "اتصال برقرار نشد."}", System.currentTimeMillis())
                 android.util.Log.e("StudentViewModel", "Manual cloud sync failed: ${e.message}", e)
-                onResult(false, "خطا در اتصال به سرور: ${e.localizedMessage ?: "اتصال برقرار نشد."}")
+                onResult(false, "خطا در اتصال به سرور: ${e.localizedMessage}")
             }
         }
     }
+
+    data class UndoAction(
+        val message: String,
+        val snapshot: String = "",
+        val generation: Long = 0L
+    )
 
     override fun onCleared() {
         super.onCleared()

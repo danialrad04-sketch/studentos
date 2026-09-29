@@ -70,7 +70,6 @@ import com.example.data.local.entity.AttendanceEntity
 import com.example.data.local.entity.CourseEntity
 import com.example.ui.theme.Amber500
 import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.Emerald500
 import com.example.ui.theme.Emerald600
 import com.example.ui.theme.NumericBadgeText

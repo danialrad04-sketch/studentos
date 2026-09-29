@@ -11,11 +11,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -161,7 +161,7 @@ fun AcademicIntelligenceScreen(
                 modifier = Modifier.padding(StudentSpacing.Xl),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Outlined.TrendingUp, contentDescription = null, tint = AcademicNavy)
+                Icon(Icons.AutoMirrored.Outlined.TrendingUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.size(StudentSpacing.Md))
                 Column(modifier = Modifier.weight(1f)) {
                     Text("گام پیشنهادی", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

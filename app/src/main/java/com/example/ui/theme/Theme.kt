@@ -24,41 +24,41 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 
 /**
- * Student OS Academic Premium Material 3 color system.
+ * Modern 'Student OS' 2026 Material 3 Color Schemes.
  * Dark Mode features:
  * - Deep Blue-Black Canvas: Dark Velvet (#07090E) & Navy Deep Space (#0E1322)
  * - Glassmorphic Surface: rgba(22, 28, 45, 0.70) with 1px soft highlight border
  * - Accents: Electric Sky/Cyan (#38BDF8 / #06B6D4), Emerald Neon (#10B981), Cyber Purple (#8B5CF6)
  */
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF7BAEBB),                // #38BDF8 Sky Cyan
+    primary = StudentPrimaryDark,                // #38BDF8 Sky Cyan
     onPrimary = Color(0xFF0C192C),
-    primaryContainer = Color(0xFF163F4D), // #1D4ED8 Electric Blue
+    primaryContainer = StudentPrimaryContainerDark, // #1D4ED8 Electric Blue
     onPrimaryContainer = StudentOnPrimaryContainerDark,
-    secondary = Color(0xFFA7AD78),            // #10B981 Emerald Neon
+    secondary = StudentSecondaryDark,            // #10B981 Emerald Neon
     onSecondary = Color(0xFF022C22),
-    secondaryContainer = Color(0xFF39402D),
+    secondaryContainer = StudentSecondaryContainerDark,
     onSecondaryContainer = StudentOnSecondaryContainerDark,
-    tertiary = Color(0xFF6FA7B8),              // #8B5CF6 Cyber Violet
+    tertiary = StudentTertiaryDark,              // #8B5CF6 Cyber Violet
     onTertiary = Color(0xFF1E1035),
-    tertiaryContainer = Color(0xFF17353F),
+    tertiaryContainer = StudentTertiaryContainerDark,
     onTertiaryContainer = StudentOnTertiaryContainerDark,
     error = StudentErrorDark,                    // #F43F5E Crimson Rose
     onError = Color(0xFF4C0519),
     errorContainer = StudentErrorContainerDark,
     onErrorContainer = StudentOnErrorContainerDark,
-    background = Color(0xFF08151B),              // #07090E Dark Velvet
+    background = StudentCanvasDark,              // #07090E Dark Velvet
     onBackground = StudentOnCanvasDark,
-    surface = Color(0xFF10242C),                // #161C2D Glass Slate
+    surface = StudentSurfaceDark,                // #161C2D Glass Slate
     onSurface = StudentOnSurfaceDark,
-    surfaceVariant = Color(0xFF16313A),  // #1C2438 Elevated Glass
+    surfaceVariant = StudentSurfaceVariantDark,  // #1C2438 Elevated Glass
     onSurfaceVariant = StudentOnSurfaceVariantDark,
-    outline = Color(0xFF29434C),
-    outlineVariant = Color(0xFF1F3942),
+    outline = StudentOutlineDark,
+    outlineVariant = StudentOutlineVariantDark,
     surfaceTint = StudentPrimaryDark,
     inverseSurface = Color(0xFFE2E8F0),
     inverseOnSurface = Color(0xFF0F172A),
-    inversePrimary = Color(0xFF7BAEBB),
+    inversePrimary = Color(0xFF2563EB),
     scrim = Color(0xCC000000)
 )
 
@@ -79,18 +79,18 @@ private val LightColorScheme = lightColorScheme(
     onError = Color(0xFFFFFFFF),
     errorContainer = StudentErrorContainerLight,
     onErrorContainer = StudentOnErrorContainerLight,
-    background = Color(0xFFF7F6F1),
+    background = StudentCanvasLight,
     onBackground = StudentOnCanvasLight,
     surface = StudentSurfaceLight,
     onSurface = StudentOnSurfaceLight,
-    surfaceVariant = Color(0xFFF0EFE9),
+    surfaceVariant = StudentSurfaceVariantLight,
     onSurfaceVariant = StudentOnSurfaceVariantLight,
-    outline = Color(0xFFDCDDD6),
-    outlineVariant = Color(0xFFE5E4DD),
+    outline = StudentOutlineLight,
+    outlineVariant = StudentOutlineVariantLight,
     surfaceTint = StudentPrimaryLight,
     inverseSurface = Color(0xFF0F172A),
     inverseOnSurface = Color(0xFFF8FAFC),
-    inversePrimary = Color(0xFF7D8A5C),
+    inversePrimary = Color(0xFF818CF8),
     scrim = Color(0x99000000)
 )
 
@@ -122,49 +122,49 @@ data class StudentSemanticColors(
 )
 
 private val LightStudentSemanticColors = StudentSemanticColors(
-    studyFocus = Color(0xFF0F3B4D),
-    streakFire = Color(0xFFF59E0B),
-    passedUnitBadge = Color(0xFF10B981),
-    attendanceSafe = Color(0xFF059669),
+    studyFocus = Color(0xFF667052),
+    streakFire = Color(0xFFD97706),
+    passedUnitBadge = Color(0xFF667052),
+    attendanceSafe = Color(0xFF16A34A),
     attendanceWarning = Color(0xFFD97706),
-    attendanceCritical = Color(0xFFE11D48),
-    gpaAlpha = Color(0xFF059669),
-    gpaProbation = Color(0xFFE11D48),
-    brandGradient = Brush.linearGradient(listOf(Color(0xFF0F3B4D), Color(0xFF1E5367), Color(0xFF6B705C))),
-    copilotGradient = Brush.horizontalGradient(listOf(Color(0xFF0F3B4D), Color(0xFF6B705C))),
-    heroPassportGradient = Brush.linearGradient(listOf(Color(0xFF0F3B4D), Color(0xFF285A6C), Color(0xFF6B705C))),
-    cardBorderGlow = Color(0x1A0F3B4D),
-    cyanAccent = AcademicNavy,
-    emeraldAccent = AcademicOliveLight,
-    purpleAccent = AcademicOlive,
+    attendanceCritical = Color(0xFFEF4444),
+    gpaAlpha = Color(0xFF667052),
+    gpaProbation = Color(0xFFEF4444),
+    brandGradient = Brush.linearGradient(listOf(Color(0xFF667052), Color(0xFF556B2F), Color(0xFF244953))),
+    copilotGradient = Brush.horizontalGradient(listOf(Color(0xFF667052), Color(0xFF244953))),
+    heroPassportGradient = Brush.linearGradient(listOf(Color(0xFF244953), Color(0xFF1B363E), Color(0xFF2E4230))),
+    cardBorderGlow = Color(0x1A667052),
+    cyanAccent = Color(0xFF244953),
+    emeraldAccent = Color(0xFF667052),
+    purpleAccent = Color(0xFF6B7280),
     deepSpaceCanvas = Color(0xFFF7F6F1),
     glassSurface = Color(0xFFFFFFFF),
     glassSurfaceElevated = Color(0xFFF0EFE9),
-    glassBorder = StudentOutlineLight,
-    glassBorderGradient = Brush.linearGradient(listOf(Color(0xFFE2E8F0), Color(0xFFCBD5E1)))
+    glassBorder = Color(0xFFDCDDD6),
+    glassBorderGradient = Brush.linearGradient(listOf(Color(0xFFDCDDD6), Color(0xFFE8E9E3)))
 )
 
 private val DarkStudentSemanticColors = StudentSemanticColors(
-    studyFocus = Color(0xFF6FA7B8),
-    streakFire = Color(0xFFD97757),
-    passedUnitBadge = Color(0xFF10B981),
-    attendanceSafe = Color(0xFF10B981),
+    studyFocus = Color(0xFF7E936A),
+    streakFire = Color(0xFFF59E0B),
+    passedUnitBadge = Color(0xFF7E936A),
+    attendanceSafe = Color(0xFF22C55E),
     attendanceWarning = Color(0xFFF59E0B),
-    attendanceCritical = Color(0xFFF43F5E),
-    gpaAlpha = Color(0xFF0D9488),
-    gpaProbation = Color(0xFFF43F5E),
-    brandGradient = Brush.linearGradient(listOf(Color(0xFF102D37), Color(0xFF3C7180), Color(0xFF7F8B5E))),
-    copilotGradient = Brush.horizontalGradient(listOf(Color(0xFF285968), Color(0xFF7F8B5E))),
-    heroPassportGradient = Brush.linearGradient(listOf(Color(0xFF0B222A), Color(0xFF163F4D), Color(0xFF6B705C))),
-    cardBorderGlow = Color(0x330D9488),
-    cyanAccent = Color(0xFF6FA7B8),
-    emeraldAccent = Color(0xFF10B981),
-    purpleAccent = Color(0xFFA7AD78),
-    deepSpaceCanvas = Color(0xFF08151B),
-    glassSurface = Color(0xFF10242C),
-    glassSurfaceElevated = Color(0xFF16313A),
-    glassBorder = Color(0x33FFFFFF),
-    glassBorderGradient = Brush.linearGradient(listOf(Color.White.copy(alpha = 0.20f), Color.White.copy(alpha = 0.05f)))
+    attendanceCritical = Color(0xFFEF4444),
+    gpaAlpha = Color(0xFF7E936A),
+    gpaProbation = Color(0xFFEF4444),
+    brandGradient = Brush.linearGradient(listOf(Color(0xFF163944), Color(0xFF244953), Color(0xFF336675))),
+    copilotGradient = Brush.horizontalGradient(listOf(Color(0xFF7E936A), Color(0xFF336675))),
+    heroPassportGradient = Brush.linearGradient(listOf(Color(0xFF0F2A33), Color(0xFF163944), Color(0xFF1C3E38))),
+    cardBorderGlow = Color(0x267E936A),
+    cyanAccent = Color(0xFF336675),
+    emeraldAccent = Color(0xFF7E936A),
+    purpleAccent = Color(0xFF94A3B8),
+    deepSpaceCanvas = Color(0xFF0F2A33),
+    glassSurface = Color(0xF2163944),
+    glassSurfaceElevated = Color(0xFF1A4350),
+    glassBorder = Color(0xFF224F5D),
+    glassBorderGradient = Brush.linearGradient(listOf(Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.04f)))
 )
 
 val LocalStudentSemanticColors = staticCompositionLocalOf { LightStudentSemanticColors }

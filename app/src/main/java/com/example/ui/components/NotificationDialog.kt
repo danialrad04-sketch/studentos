@@ -18,11 +18,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.DeleteSweep
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.NotificationsActive
-import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -237,7 +237,7 @@ fun NotificationDialog(
             ) {
                 TextButton(onClick = onTestAlarm) {
                     Icon(
-                        imageVector = Icons.Rounded.VolumeUp,
+                        imageVector = Icons.AutoMirrored.Rounded.VolumeUp,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )

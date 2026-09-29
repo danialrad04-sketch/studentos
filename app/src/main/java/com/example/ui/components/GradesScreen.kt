@@ -86,10 +86,12 @@ fun GradesScreen(
     val haptic = LocalHapticFeedback.current
     var editingGrade by remember { mutableStateOf<GradeEntity?>(null) }
 
-    // Weighted GPA calculation
+    // Weighted GPA calculation: evaluate based on graded courses so un-entered grades don't penalize the student
+    val evaluatedGrades = grades.filter { (it.midtermGrade + it.finalGrade) > 0.0 }
     val totalUnits = grades.sumOf { it.units }
-    val totalWeightedScore = grades.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
-    val gpa = if (totalUnits > 0) totalWeightedScore / totalUnits else 0.0
+    val evaluatedUnits = evaluatedGrades.sumOf { it.units }
+    val totalWeightedScore = evaluatedGrades.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
+    val gpa = if (evaluatedUnits > 0) totalWeightedScore / evaluatedUnits else 0.0
     val gpaFormatted = String.format(Locale.US, "%.2f", gpa)
 
     val isHonors = gpa >= 17.0

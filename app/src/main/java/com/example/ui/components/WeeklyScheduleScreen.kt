@@ -325,7 +325,7 @@ fun WeeklyScheduleScreen(
                                 .border(
                                     1.dp,
                                     if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                                    else if (isDark) Color(0x28FFFFFF) else Color(0xFFE2E8F0),
+                                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
                                     RoundedCornerShape(16.dp)
                                 )
                                 .clickable { selectedDayTab = index }

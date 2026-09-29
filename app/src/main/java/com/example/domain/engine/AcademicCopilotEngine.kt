@@ -995,9 +995,10 @@ object AcademicCopilotEngine {
     }
 
     fun computeGpa(grades: List<GradeEntity>, declaredGpa: Double? = null): Double {
-        return if (grades.isNotEmpty() && grades.sumOf { it.units } > 0) {
-            val totalWeighted = grades.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
-            val totalU = grades.sumOf { it.units }
+        val evaluated = grades.filter { (it.midtermGrade + it.finalGrade) > 0.0 }
+        return if (evaluated.isNotEmpty() && evaluated.sumOf { it.units } > 0) {
+            val totalWeighted = evaluated.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
+            val totalU = evaluated.sumOf { it.units }
             val computedGpa = totalWeighted / totalU
             computedGpa.coerceIn(0.0, 20.0)
         } else {

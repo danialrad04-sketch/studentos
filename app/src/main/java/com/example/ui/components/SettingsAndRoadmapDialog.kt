@@ -182,7 +182,7 @@ fun SettingsAndRoadmapDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Section Tabs
+                // Section Tabs (Layered Settings: Quick Settings -> Settings -> Advanced)
                 TabRow(
                     selectedTabIndex = selectedSection,
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
@@ -195,7 +195,7 @@ fun SettingsAndRoadmapDialog(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             selectedSection = 0
                         },
-                        text = { Text("ظاهر و حساب", fontSize = 11.5.sp, fontWeight = FontWeight.Bold) }
+                        text = { Text("تنظیمات سریع", fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                     )
                     Tab(
                         selected = selectedSection == 1,
@@ -203,7 +203,7 @@ fun SettingsAndRoadmapDialog(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             selectedSection = 1
                         },
-                        text = { Text("اعلان و داده‌ها", fontSize = 11.5.sp, fontWeight = FontWeight.Bold) }
+                        text = { Text("تنظیمات و پروفایل", fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                     )
                     Tab(
                         selected = selectedSection == 2,
@@ -211,7 +211,7 @@ fun SettingsAndRoadmapDialog(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             selectedSection = 2
                         },
-                        text = { Text("درباره و نقشه راه", fontSize = 11.5.sp, fontWeight = FontWeight.Bold) }
+                        text = { Text("پیشرفته و داده‌ها", fontSize = 11.sp, fontWeight = FontWeight.Bold) }
                     )
                 }
 

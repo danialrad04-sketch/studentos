@@ -1,16 +1,11 @@
 package com.example.ui.components
 
-import com.example.domain.model.AcademicCommand
-import com.example.ui.models.SyncUiState
-
-import android.app.Activity
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import com.example.ui.theme.MyApplicationTheme
@@ -29,7 +24,6 @@ import com.example.ui.models.AppTab
 import com.example.ui.models.ExamItem
 import com.example.ui.models.SystemNotification
 import com.example.ui.models.ThemeMode
-import kotlinx.coroutines.launch
 
 @Composable
 fun AppDialogManager(
@@ -48,14 +42,12 @@ fun AppDialogManager(
     curriculumCourses: List<CurriculumCourseEntity>,
     globalSearchResults: List<GlobalSearchResult>,
     searchQuery: String,
-    syncUiState: SyncUiState = SyncUiState.Idle,
     dialogState: AppDialogState,
     onUpdateDialogState: (AppDialogState) -> Unit,
     onOpenOnboardingWizard: () -> Unit,
     onSendDeviceTestNotif: () -> Unit,
     onRequestNotificationPermission: () -> Unit = {}
 ) {
-    val coroutineScope = rememberCoroutineScope()
     val dismiss = { onUpdateDialogState(AppDialogState.None) }
 
     val systemDark = isSystemInDarkTheme()
@@ -114,77 +106,68 @@ fun AppDialogManager(
 
         is AppDialogState.Auth -> {
             AuthAccountDialog(
-                    userAccount = userAccount,
-                    onSignInEmail = { email, password ->
-                        studentViewModel.signInWithBackend(email, password) { ok, msg ->
+                userAccount = userAccount,
+                onSignInEmail = { email, password ->
+                    studentViewModel.signInWithBackend(email, password) { ok, msg ->
+                        if (ok) {
                             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                            if (ok) dismiss()
-                        }
-                    },
-                    onSignUpEmail = { name, email, password ->
-                        studentViewModel.signUpWithBackend(name, email, password) { ok, msg ->
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                            if (ok) dismiss()
-                        }
-                    },
-                    onGoogleSignIn = {
-                        val activity = context as? Activity
-                        if (activity == null) {
-                            Toast.makeText(context, "امکان باز کردن ورود گوگل در این محیط وجود ندارد.", Toast.LENGTH_LONG).show()
+                            dismiss()
                         } else {
-                            coroutineScope.launch {
-                                try {
-                                    GoogleSignInManager.getIdToken(activity)
-                                        .fold(
-                                            onSuccess = { idToken ->
-                                                studentViewModel.signInWithGoogle(idToken) { ok, msg ->
-                                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                                                    if (ok) dismiss()
-                                                }
-                                            },
-                                            onFailure = { error ->
-                                                val raw = error.message.orEmpty()
-                                                val message = when {
-                                                    raw.contains("403", ignoreCase = true) ||
-                                                        raw.contains("forbidden", ignoreCase = true) ->
-                                                        "دسترسی ورود Google رد شد؛ تنظیمات OAuth و Web Client ID را بررسی کنید."
-                                                    raw.contains("network", ignoreCase = true) ||
-                                                        raw.contains("timeout", ignoreCase = true) ->
-                                                        "اتصال اینترنت برای ورود با Google در دسترس نیست."
-                                                    raw.contains("cancel", ignoreCase = true) ->
-                                                        "ورود با Google لغو شد."
-                                                    else ->
-                                                        "ورود با Google ناموفق بود؛ لطفاً دوباره تلاش کنید."
-                                                }
-                                                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                                            }
-                                        )
-                                } catch (error: Throwable) {
-                                    android.util.Log.e("AppDialogManager", "Guest Google sign-in failed unexpectedly", error)
-                                    Toast.makeText(context, "ورود با Google با خطای غیرمنتظره مواجه شد؛ لطفاً دوباره تلاش کنید.", Toast.LENGTH_LONG).show()
-                                }
+                            studentViewModel.signInWithEmail(email, password) { okFb, msgFb ->
+                                Toast.makeText(context, if (okFb) msgFb else msg, Toast.LENGTH_SHORT).show()
+                                if (okFb) dismiss()
                             }
                         }
-                    },
-                    onForgotPassword = { email ->
+                    }
+                },
+                onSignUpEmail = { name, email, password ->
+                    studentViewModel.signUpWithBackend(name, email, password) { ok, msg ->
+                        if (ok) {
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            dismiss()
+                        } else {
+                            studentViewModel.signUpWithEmail(name, email, password) { okFb, msgFb ->
+                                Toast.makeText(context, if (okFb) msgFb else msg, Toast.LENGTH_SHORT).show()
+                                if (okFb) dismiss()
+                            }
+                        }
+                    }
+                },
+                onGoogleSignIn = {
+                    studentViewModel.signInWithGoogle(activityContext = context) { ok, msg ->
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        if (ok) dismiss()
+                    }
+                },
+                onForgotPassword = { email ->
+                    if (email.isBlank() || !email.contains("@")) {
+                        Toast.makeText(context, "لطفاً ابتدا ایمیل معتبر خود را در کادر مربوطه وارد نمایید.", Toast.LENGTH_LONG).show()
+                    } else {
                         studentViewModel.sendPasswordResetEmail(email) { ok, msg ->
                             Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                         }
-                    },
-                    onSignOut = {
-                        studentViewModel.signOutUser()
-                        Toast.makeText(context, "از حساب خارج شدید.", Toast.LENGTH_SHORT).show()
-                        dismiss()
-                    },
-                    onDeleteAccount = {
-                        studentViewModel.deleteUserAccount {
-                            Toast.makeText(context, "حساب و داده‌ها حذف شدند.", Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    onOpenUpgrade = { onUpdateDialogState(AppDialogState.Upgrade) },
-                    onSyncNow = { studentViewModel.syncWithBackendNow { _, _ -> } },
-                    onDismiss = dismiss
-                )
+                    }
+                },
+                onSignOut = {
+                    studentViewModel.signOutUser()
+                    Toast.makeText(context, "از حساب کاربری خارج شدید.", Toast.LENGTH_SHORT).show()
+                },
+                onDeleteAccount = {
+                    studentViewModel.deleteUserAccount {
+                        Toast.makeText(context, "حساب و داده‌ها حذف شدند.", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onOpenUpgrade = {
+                    onUpdateDialogState(AppDialogState.Upgrade)
+                },
+                onSyncNow = {
+                    studentViewModel.triggerManualCloudSync { _, _ -> }
+                    studentViewModel.syncWithBackendNow { ok, msg ->
+                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                    }
+                },
+                onDismiss = dismiss
+            )
         }
 
         is AppDialogState.Upgrade -> {
@@ -193,21 +176,17 @@ fun AppDialogManager(
                 onUpgradeTier = { tier ->
                     studentViewModel.upgradeSubscriptionTier(tier) { success, msg ->
                         if (success) {
-                            Toast.makeText(
-                                context,
-                                "اشتراک شما به ${tier.titleFa} ارتقا یافت! ★",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            Toast.makeText(context, "اشتراک شما به ${tier.titleFa} ارتقا یافت! ★", Toast.LENGTH_LONG).show()
                             dismiss()
-                        } else {
-                            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                         }
                     }
                 },
                 onApplyPromoCode = { code ->
                     studentViewModel.applyPromoCode(code) { success, msg ->
                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                        if (success) dismiss()
+                        if (success) {
+                            dismiss()
+                        }
                     }
                 },
                 onDismiss = dismiss
@@ -369,22 +348,6 @@ fun AppDialogManager(
                 onNavigateToNotes = {
                     studentViewModel.selectTab(AppTab.POMODORO)
                     dismiss()
-                },
-                onExecuteCommand = { command: AcademicCommand ->
-                    studentViewModel.selectTab(
-                        when (command.destination) {
-                            com.example.domain.model.AcademicCommandDestination.SCHEDULE -> AppTab.SCHEDULE
-                            com.example.domain.model.AcademicCommandDestination.TASKS -> AppTab.TASKS
-                            com.example.domain.model.AcademicCommandDestination.EXAMS -> AppTab.EXAMS
-                            com.example.domain.model.AcademicCommandDestination.GRADES -> AppTab.GRADES
-                            com.example.domain.model.AcademicCommandDestination.ATTENDANCE -> AppTab.ATTENDANCE
-                            com.example.domain.model.AcademicCommandDestination.FOCUS -> AppTab.POMODORO
-                            com.example.domain.model.AcademicCommandDestination.INTELLIGENCE -> AppTab.ACADEMIC_INTELLIGENCE
-                            com.example.domain.model.AcademicCommandDestination.CURRICULUM -> AppTab.CURRICULUM
-                            com.example.domain.model.AcademicCommandDestination.SEMESTER_PLANNER -> AppTab.SEMESTER_PLANNER
-                        }
-                    )
-                    studentViewModel.setSearchQuery("")
                 }
             )
         }
