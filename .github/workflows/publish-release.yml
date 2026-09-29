@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag, e.g. v1.0.3"
+        description: "Release tag, e.g. v1.2"
         required: true
         default: "v1.2"
       title:
@@ -64,7 +64,7 @@ jobs:
           TAG_INPUT: ${{ inputs.tag }}
           REF_NAME: ${{ github.ref_name }}
           VERSION_CODE: ${{ inputs.version_code || '3' }}
-          VERSION_NAME: ${{ inputs.version_name || '1.0.3' }}
+          VERSION_NAME: ${{ inputs.version_name || '1.2' }}
         run: |
           TAG="$TAG_INPUT"
           if [ -z "$TAG" ]; then
@@ -148,4 +148,8 @@ jobs:
           if [ -z "$TITLE" ]; then
             TITLE="Student OS $TAG"
           fi
+          gh release view "$TAG" >/dev/null 2>&1 && {
+            echo "Release $TAG already exists; refusing to overwrite it."
+            exit 1
+          } || true
           gh release create "$TAG"             app/build/outputs/apk/release/app-release.apk             app/build/outputs/bundle/release/app-release.aab             --title "$TITLE"             --generate-notes
