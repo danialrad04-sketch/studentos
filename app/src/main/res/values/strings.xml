@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Student OS</string>
+    <!-- Firebase OAuth Web client ID; keep stable across app upgrades. -->
+    <string name="google_web_client_id">745175701566-5q7j89fpe9hdt9mmtga4dfh57qq56odp.apps.googleusercontent.com</string>
 </resources>

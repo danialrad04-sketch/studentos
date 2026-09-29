@@ -142,7 +142,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
-          ./gradlew assembleRelease bundleRelease -PVERSION_CODE=3 -PVERSION_NAME=1.2 --stacktrace
+          ./gradlew assembleRelease bundleRelease -PVERSION_CODE=3 -PVERSION_NAME=1.2.0 --stacktrace
 
       - name: Verify release package, version and signing certificate
         shell: bash
@@ -156,7 +156,7 @@ jobs:
           test -s "$APK"
           test -s "$AAB"
           "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner" verify --verbose "$APK"
-          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/aapt" dump badging "$APK" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='3' versionName='1.2'"
+          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/aapt" dump badging "$APK" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='3' versionName='1.2.0'"
           keytool -list -v -keystore "$KEYSTORE_PATH" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" | grep -E "Alias name:|SHA256:"
           ls -lh "$APK" "$AAB"
 

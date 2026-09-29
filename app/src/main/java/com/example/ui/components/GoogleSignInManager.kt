@@ -52,7 +52,7 @@ object GoogleSignInManager {
         preferAuthorized: Boolean
     ): Result<String> {
         val googleIdOption = GetGoogleIdOption.Builder()
-            .setServerClientId(activity.getString(R.string.default_web_client_id))
+            .setServerClientId(activity.getString(R.string.google_web_client_id))
             .setFilterByAuthorizedAccounts(preferAuthorized)
             .setAutoSelectEnabled(false)
             .build()

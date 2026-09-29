@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag, e.g. v1.2"
+        description: "Release tag, e.g. v1.2.0"
         required: true
-        default: "v1.2"
+        default: "v1.2.0"
       title:
         description: "Release title"
         required: true
-        default: "Student OS v1.2"
+        default: "Student OS v1.2.0"
       ref:
         description: "Git tag or commit SHA to build; must be immutable for a reproducible release."
         required: true
@@ -22,7 +22,7 @@ on:
       version_name:
         description: "Android versionName; must match the release tag without the leading v."
         required: false
-        default: "1.2"
+        default: "1.2.0"
 
 permissions:
   contents: write
@@ -64,7 +64,7 @@ jobs:
           TAG_INPUT: ${{ inputs.tag }}
           REF_NAME: ${{ github.ref_name }}
           VERSION_CODE: ${{ inputs.version_code || '3' }}
-          VERSION_NAME: ${{ inputs.version_name || '1.2' }}
+          VERSION_NAME: ${{ inputs.version_name || '1.2.0' }}
         run: |
           TAG="$TAG_INPUT"
           if [ -z "$TAG" ]; then
@@ -84,7 +84,7 @@ jobs:
         run: |
           ./gradlew testDebugUnitTest lintDebug lintRelease \
             -PVERSION_CODE=${{ inputs.version_code || '3' }} \
-            -PVERSION_NAME=${{ inputs.version_name || '1.2' }} \
+            -PVERSION_NAME=${{ inputs.version_name || '1.2.0' }} \
             --stacktrace
 
       - name: Run backend tests
@@ -107,7 +107,7 @@ jobs:
           script: |
             ./gradlew connectedDebugAndroidTest \
               -PVERSION_CODE=${{ inputs.version_code || '3' }} \
-              -PVERSION_NAME=${{ inputs.version_name || '1.2' }} \
+              -PVERSION_NAME=${{ inputs.version_name || '1.2.0' }} \
               --stacktrace
 
       - name: Build signed APK and AAB
@@ -117,7 +117,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
-          ./gradlew assembleRelease bundleRelease             -PVERSION_CODE=${{ inputs.version_code || '3' }}             -PVERSION_NAME=${{ inputs.version_name || '1.2' }}             --stacktrace
+          ./gradlew assembleRelease bundleRelease             -PVERSION_CODE=${{ inputs.version_code || '3' }}             -PVERSION_NAME=${{ inputs.version_name || '1.2.0' }}             --stacktrace
 
       - name: Verify signed outputs
         shell: bash
