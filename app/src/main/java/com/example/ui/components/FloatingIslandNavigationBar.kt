@@ -1,53 +1,31 @@
 package com.example.ui.components
 
 import android.content.res.Configuration
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.BarChart
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.MoreHoriz
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.BarChart
-import androidx.compose.material.icons.rounded.CalendarMonth
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -57,24 +35,14 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.models.AppTab
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.rememberReducedMotion
-import kotlinx.coroutines.launch
 
-private data class UltraNavItem(
+private data class NavItem(
     val tab: AppTab,
     val outlineIcon: ImageVector,
-    val filledIcon: ImageVector,
+    val selectedIcon: ImageVector,
     val label: String
 )
 
-/**
- * 3D Glassmorphic Responsive Floating Dock Navigation Bar.
- * Designed with Apple / Modern 2026 Mobile Architecture standards:
- * - 3D Specular Highlight Bevel Borders
- * - Responsive Max Width Clamp (Adaptive for phones, foldables, and tablets)
- * - Volumetric Spherical 3D Center FAB with Ambient Glow
- * - Spring Physics Active Pill Morphing & Micro-bounce
- * - Tactile Interactive Pressure Scaling (0.92f press depth)
- */
 @Composable
 fun FloatingIslandNavigationBar(
     selectedTab: AppTab,
@@ -84,17 +52,16 @@ fun FloatingIslandNavigationBar(
     var showAllModulesSheet by remember { mutableStateOf(false) }
     val reducedMotion = rememberReducedMotion()
 
-    val navItems = remember {
+    val items = remember {
         listOf(
-            UltraNavItem(AppTab.DASHBOARD, Icons.Outlined.Home, Icons.Rounded.Home, "خانه"),
-            UltraNavItem(AppTab.SCHEDULE, Icons.Outlined.CalendarMonth, Icons.Rounded.CalendarMonth, "برنامه"),
-            UltraNavItem(AppTab.TASKS, Icons.Outlined.CheckCircle, Icons.Rounded.CheckCircle, "کارها"),
-            UltraNavItem(AppTab.GRADES, Icons.Outlined.BarChart, Icons.Rounded.BarChart, "کارنامه")
+            NavItem(AppTab.DASHBOARD, Icons.Outlined.Home, Icons.Rounded.Home, "خانه"),
+            NavItem(AppTab.SCHEDULE, Icons.Outlined.CalendarMonth, Icons.Rounded.CalendarMonth, "برنامه"),
+            NavItem(AppTab.TASKS, Icons.Outlined.CheckCircle, Icons.Rounded.CheckCircle, "کارها"),
+            NavItem(AppTab.GRADES, Icons.Outlined.BarChart, Icons.Rounded.BarChart, "کارنامه")
         )
     }
-    val isOtherTab = navItems.none { it.tab == selectedTab }
+    val isMoreSelected = items.none { it.tab == selectedTab }
 
-    // Transparent edge-to-edge navigation: no opaque dock/background.
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -104,24 +71,21 @@ fun FloatingIslandNavigationBar(
     ) {
         Row(
             modifier = Modifier
-                .widthIn(max = 520.dp)
                 .fillMaxWidth()
+                .widthIn(max = 520.dp)
                 .height(64.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Modern3DNavItemButton(navItems[0], selectedTab == AppTab.DASHBOARD, { onTabSelected(AppTab.DASHBOARD) }, reducedMotion, Modifier.weight(1f))
-            Modern3DNavItemButton(navItems[1], selectedTab == AppTab.SCHEDULE, { onTabSelected(AppTab.SCHEDULE) }, reducedMotion, Modifier.weight(1f))
+            ModernNavItem(items[0], selectedTab == items[0].tab, { onTabSelected(items[0].tab) }, reducedMotion, Modifier.weight(1f))
+            ModernNavItem(items[1], selectedTab == items[1].tab, { onTabSelected(items[1].tab) }, reducedMotion, Modifier.weight(1f))
             Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                Modern3DCenterActionButton(
-                    onClick = { showAllModulesSheet = true },
-                    reducedMotion = reducedMotion
-                )
+                CenterActionButton({ showAllModulesSheet = true }, reducedMotion)
             }
-            Modern3DNavItemButton(navItems[2], selectedTab == AppTab.TASKS, { onTabSelected(AppTab.TASKS) }, reducedMotion, Modifier.weight(1f))
-            Modern3DNavItemButton(
-                UltraNavItem(AppTab.DASHBOARD, Icons.Outlined.MoreHoriz, Icons.Outlined.MoreHoriz, "بیشتر"),
-                isOtherTab,
+            ModernNavItem(items[2], selectedTab == items[2].tab, { onTabSelected(items[2].tab) }, reducedMotion, Modifier.weight(1f))
+            ModernNavItem(
+                NavItem(AppTab.DASHBOARD, Icons.Outlined.MoreHoriz, Icons.Outlined.MoreHoriz, "بیشتر"),
+                isMoreSelected,
                 { showAllModulesSheet = true },
                 reducedMotion,
                 Modifier.weight(1f)
@@ -141,49 +105,36 @@ fun FloatingIslandNavigationBar(
     }
 }
 
-/**
- * 3D Tab Item with Spring-Morph Pill Capsule and Micro-glow indicator.
- */
 @Composable
-private fun Modern3DNavItemButton(
-    item: UltraNavItem,
+private fun ModernNavItem(
+    item: NavItem,
     selected: Boolean,
     onClick: () -> Unit,
     reducedMotion: Boolean,
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    // Tactile press depth scale
-    val pressScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.90f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = when {
+            pressed -> 0.94f
+            selected -> 1.02f
+            else -> 1f
+        },
+        animationSpec = if (reducedMotion) tween(120) else spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
             stiffness = Spring.StiffnessMedium
         ),
-        label = "press_scale_${item.label}"
+        label = "nav_scale_${item.label}"
     )
 
-    // Selection pop scale with bouncy spring physics
-    val selectScale by animateFloatAsState(
-        targetValue = if (selected) 1.06f else 1.0f,
-        animationSpec = if (reducedMotion) {
-            tween(150)
-        } else {
-            spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            )
-        },
-        label = "select_scale_${item.label}"
-    )
-
-    val currentIcon = if (selected) item.filledIcon else item.outlineIcon
+    val primary = MaterialTheme.colorScheme.primary
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
 
     Column(
         modifier = modifier
-            .scale(pressScale * selectScale)
+            .scale(scale)
+            .semantics { role = Role.Tab }
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -193,253 +144,82 @@ private fun Modern3DNavItemButton(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Active 3D Pill Capsule surrounding the icon
         Box(
             modifier = Modifier
-                .height(34.dp)
-                .clip(RoundedCornerShape(18.dp))
+                .size(width = 44.dp, height = 34.dp)
                 .background(
-                    if (selected) {
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f),
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-                            )
-                        )
-                    } else {
-                        Brush.linearGradient(listOf(Color.Transparent, Color.Transparent))
-                    }
-                )
-                .border(
-                    width = if (selected) 1.dp else 0.dp,
-                    brush = if (selected) {
-                        Brush.linearGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.65f),
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-                            )
-                        )
-                    } else {
-                        Brush.linearGradient(listOf(Color.Transparent, Color.Transparent))
-                    },
-                    shape = RoundedCornerShape(18.dp)
-                )
-                .padding(horizontal = 14.dp, vertical = 5.dp),
+                    if (selected) primary.copy(alpha = if (isSystemInDarkTheme()) 0.20f else 0.12f) else Color.Transparent,
+                    RoundedCornerShape(17.dp)
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = currentIcon,
+                imageVector = if (selected) item.selectedIcon else item.outlineIcon,
                 contentDescription = item.label,
-                tint = if (selected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
-                },
+                tint = if (selected) primary else onSurfaceVariant,
                 modifier = Modifier.size(21.dp)
             )
         }
-
-        Spacer(Modifier.height(3.dp))
-
-        // Label with dynamic typography weight
         Text(
             text = item.label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 10.5.sp,
-                letterSpacing = 0.sp
-            ),
-            fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Medium,
-            color = if (selected) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.80f)
-            },
+            color = if (selected) primary else onSurfaceVariant,
+            style = MaterialTheme.typography.labelSmall,
+            fontSize = 10.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             maxLines = 1
-        )
-
-        // Micro-glow neon dot under active tab
-        Box(
-            modifier = Modifier
-                .padding(top = 2.dp)
-                .size(width = if (selected) 12.dp else 0.dp, height = 2.5.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(
-                    if (selected) {
-                        Brush.horizontalGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                            )
-                        )
-                    } else {
-                        Brush.linearGradient(listOf(Color.Transparent, Color.Transparent))
-                    }
-                )
         )
     }
 }
 
-/**
- * 3D Spherical Elevated Floating Action Button (Center Hero FAB).
- * Engineered with 3D volumetric multi-stop gradients, ambient pulsating aura,
- * and specular highlight reflection bevel.
- */
 @Composable
-private fun Modern3DCenterActionButton(
+private fun CenterActionButton(
     onClick: () -> Unit,
-    reducedMotion: Boolean,
-    modifier: Modifier = Modifier
+    reducedMotion: Boolean
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scope = rememberCoroutineScope()
-    val rotationAnim = remember { Animatable(0f) }
-
-    // Pulsing aura animation in background
-    val infiniteTransition = rememberInfiniteTransition(label = "fab_pulse")
-    val pulseGlowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.28f,
-        targetValue = 0.50f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "fab_pulse_alpha"
-    )
-
-    val pressScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.88f else 1.0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.94f else 1f,
+        animationSpec = if (reducedMotion) tween(120) else spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
             stiffness = Spring.StiffnessMedium
         ),
-        label = "fab_press_scale"
+        label = "center_action_scale"
     )
 
     Box(
-        modifier = modifier
-            .size(72.dp)
-            .scale(pressScale),
+        modifier = Modifier
+            .size(52.dp)
+            .scale(scale)
+            .background(MaterialTheme.colorScheme.primary, CircleShape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
         contentAlignment = Alignment.Center
     ) {
-        // 1. Ambient Glow Aura Ring
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = pulseGlowAlpha),
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
-                            Color.Transparent
-                        )
-                    )
-                )
+        Icon(
+            imageVector = Icons.Rounded.Add,
+            contentDescription = "امکانات و ابزارهای تحصیلی",
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(25.dp)
         )
-
-        // 2. 3D Floating Sphere Body
-        Surface(
-            shape = CircleShape,
-            color = Color.Transparent,
-            shadowElevation = 14.dp,
-            modifier = Modifier
-                .size(54.dp)
-                .clip(CircleShape)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = {
-                        scope.launch {
-                            rotationAnim.animateTo(
-                                targetValue = rotationAnim.value + 90f,
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                                    stiffness = Spring.StiffnessLow
-                                )
-                            )
-                        }
-                        onClick()
-                    }
-                )
-        ) {
-            // Volumetric 3D gradient surface
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.95f),
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.90f)
-                            )
-                        )
-                    )
-                    .border(
-                        border = BorderStroke(
-                            width = 1.6.dp,
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = 0.70f),
-                                    Color.White.copy(alpha = 0.15f),
-                                    Color.Transparent
-                                )
-                            )
-                        ),
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                // Top hemisphere specular 3D light reflection
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(26.dp)
-                        .align(Alignment.TopCenter)
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = 0.38f),
-                                    Color.Transparent
-                                )
-                            )
-                        )
-                )
-
-                // High-contrast Plus icon with spring rotation
-                Icon(
-                    imageVector = Icons.Rounded.Add,
-                    contentDescription = "امکانات و ابزارهای تحصیلی",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier
-                        .size(28.dp)
-                        .rotate(if (reducedMotion) 0f else rotationAnim.value)
-                )
-            }
-        }
     }
 }
 
-@Preview(name = "3D Floating Navigation Light", showBackground = true)
+@Preview(name = "Modern Navigation Light", showBackground = true)
 @Composable
-private fun FloatingIslandNavPreviewLight() {
+private fun NavigationLightPreview() {
     MyApplicationTheme(darkTheme = false) {
-        FloatingIslandNavigationBar(
-            selectedTab = AppTab.DASHBOARD,
-            onTabSelected = {}
-        )
+        FloatingIslandNavigationBar(AppTab.DASHBOARD, {})
     }
 }
 
-@Preview(name = "3D Floating Navigation Dark", uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
+@Preview(name = "Modern Navigation Dark", uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
-private fun FloatingIslandNavPreviewDark() {
+private fun NavigationDarkPreview() {
     MyApplicationTheme(darkTheme = true) {
-        FloatingIslandNavigationBar(
-            selectedTab = AppTab.DASHBOARD,
-            onTabSelected = {}
-        )
+        FloatingIslandNavigationBar(AppTab.DASHBOARD, {})
     }
 }
