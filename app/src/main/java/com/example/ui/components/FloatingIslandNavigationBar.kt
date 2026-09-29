@@ -92,151 +92,43 @@ fun FloatingIslandNavigationBar(
             UltraNavItem(AppTab.GRADES, Icons.Outlined.BarChart, Icons.Rounded.BarChart, "کارنامه")
         )
     }
-
     val isOtherTab = navItems.none { it.tab == selectedTab }
 
-    // Outer responsive layout container (centered with widthIn clamp for tablet/desktop)
+    // Transparent edge-to-edge navigation: no opaque dock/background.
     Box(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 6.dp),
+            .padding(horizontal = 12.dp, vertical = 4.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .widthIn(max = 440.dp)
-                .fillMaxWidth(),
-            contentAlignment = Alignment.BottomCenter
+                .widthIn(max = 520.dp)
+                .fillMaxWidth()
+                .height(64.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Ambient Underglow Blur Layer (Soft primary-colored 3D shadow)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .padding(horizontal = 12.dp)
-                    .offset(y = 6.dp)
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                                Color.Transparent
-                            )
-                        ),
-                        shape = RoundedCornerShape(36.dp)
-                    )
-            )
-
-            // Main 3D Glassmorphic Floating Dock Shell
-            Surface(
-                shape = RoundedCornerShape(34.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
-                border = BorderStroke(
-                    width = 1.2.dp,
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.55f),
-                            MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
-                            Color.White.copy(alpha = 0.10f)
-                        )
-                    )
-                ),
-                shadowElevation = 14.dp,
-                tonalElevation = 4.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(68.dp)
-            ) {
-                // Subtle top sheen highlight layer for real glass optical depth
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = 0.14f),
-                                    Color.Transparent
-                                )
-                            )
-                        )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 6.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // 1. خانه (Home)
-                        Modern3DNavItemButton(
-                            item = navItems[0],
-                            selected = selectedTab == AppTab.DASHBOARD,
-                            onClick = { onTabSelected(AppTab.DASHBOARD) },
-                            reducedMotion = reducedMotion,
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        // 2. برنامه (Schedule)
-                        Modern3DNavItemButton(
-                            item = navItems[1],
-                            selected = selectedTab == AppTab.SCHEDULE,
-                            onClick = { onTabSelected(AppTab.SCHEDULE) },
-                            reducedMotion = reducedMotion,
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        // 3. Center Spacer / Anchor for Elevated 3D FAB
-                        Box(
-                            modifier = Modifier
-                                .weight(1.1f)
-                                .fillMaxHeight(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            // Empty anchor to reserve space in dock row
-                        }
-
-                        // 4. کارها (Tasks)
-                        Modern3DNavItemButton(
-                            item = navItems[2],
-                            selected = selectedTab == AppTab.TASKS,
-                            onClick = { onTabSelected(AppTab.TASKS) },
-                            reducedMotion = reducedMotion,
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        // 5. بیشتر (More / Modules Hub)
-                        Modern3DNavItemButton(
-                            item = UltraNavItem(
-                                tab = AppTab.DASHBOARD,
-                                outlineIcon = Icons.Outlined.MoreHoriz,
-                                filledIcon = Icons.Outlined.MoreHoriz,
-                                label = "بیشتر"
-                            ),
-                            selected = isOtherTab,
-                            onClick = { showAllModulesSheet = true },
-                            reducedMotion = reducedMotion,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-
-            // 3D Elevated Center Floating Action Button (Raised above Dock)
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .offset(y = (-18).dp),
-                contentAlignment = Alignment.Center
-            ) {
+            Modern3DNavItemButton(navItems[0], selectedTab == AppTab.DASHBOARD, { onTabSelected(AppTab.DASHBOARD) }, reducedMotion, Modifier.weight(1f))
+            Modern3DNavItemButton(navItems[1], selectedTab == AppTab.SCHEDULE, { onTabSelected(AppTab.SCHEDULE) }, reducedMotion, Modifier.weight(1f))
+            Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
                 Modern3DCenterActionButton(
                     onClick = { showAllModulesSheet = true },
                     reducedMotion = reducedMotion
                 )
             }
+            Modern3DNavItemButton(navItems[2], selectedTab == AppTab.TASKS, { onTabSelected(AppTab.TASKS) }, reducedMotion, Modifier.weight(1f))
+            Modern3DNavItemButton(
+                UltraNavItem(AppTab.DASHBOARD, Icons.Outlined.MoreHoriz, Icons.Outlined.MoreHoriz, "بیشتر"),
+                isOtherTab,
+                { showAllModulesSheet = true },
+                reducedMotion,
+                Modifier.weight(1f)
+            )
         }
     }
 
-    // Modal Hub Sheet for all modules
     if (showAllModulesSheet) {
         StudentModuleHubSheet(
             currentTab = selectedTab,
