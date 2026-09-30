@@ -120,7 +120,7 @@ fun StudentTodayCommandStrip(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 TodaySignal(Icons.Default.CheckCircle, openTasks.toString(), "کار باز", AcademicNavy, Modifier.weight(1f))
-                TodaySignal(Icons.Default.CalendarToday, todaySessions.size.toString(), "کلاس امروز", AcademicOlive, Modifier.weight(1f))
+                TodaySignal(Icons.Default.CalendarToday, snapshot.todaySessionCount.toString(), "کلاس امروز", AcademicOlive, Modifier.weight(1f))
                 TodaySignal(Icons.Default.Event, dangerAttendance.toString(), "غیبت بحرانی", MaterialTheme.colorScheme.error, Modifier.weight(1f))
             }
 
