@@ -386,7 +386,7 @@ fun AppDialogManager(
                 val courseTasks = tasks.filter { it.courseName == activeCourse.name }
                 val courseExam = exams.find { it.courseName == activeCourse.name }
 
-                CourseWorkspaceDialog(
+                CourseWorkspaceDialogV2(
                     course = activeCourse,
                     sessions = courseSessions,
                     attendance = courseAttendance,
