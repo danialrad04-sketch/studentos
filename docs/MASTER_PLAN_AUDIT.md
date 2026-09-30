@@ -46,12 +46,12 @@ Verified:
 - window-size based density
 
 ## Phase 3 — Core Academic UX
-Status: **Implemented; Course Workspace / Weekly UX redesign in progress**
+Status: **Implemented; v1.3 UX overhaul applied**
 
 Verified modules/data paths for:
 - Dashboard
-- Weekly Schedule
-- Courses / Course Workspace — core logic exists; workspace UX was too dialog-centric and is being redesigned
+- Weekly Schedule — v1.3 course-card refresh applied
+- Courses / Course Workspace — core logic preserved; v1.3 Course Workspace 2.0 applied
 - Exams
 - Tasks
 - Grades
@@ -148,11 +148,11 @@ Remaining:
 4. Expanded critical UI regression coverage for auth/guest/onboarding flows — **Guest path covered; broader UI matrix remains**.
 
 ## Phase 9 — Release
-Status: **NOT RELEASED / INTENTIONALLY BLOCKED — artifact validation passed**
+Status: **v1.2.0 released; v1.3.0 pending final CI + device verification**
 
-The repository contains release/signing workflows, but no production release is authorized by this audit.
+v1.2.0 is published on GitHub with signed APK/AAB artifacts. v1.3.0 remains in a draft PR until its release-artifact validation and real-device verification are closed.
 
-Required before release:
+Required before v1.3.0 release:
 - all Phase 7 blockers closed
 - all Phase 8 blockers closed
 - real-device validation
@@ -163,6 +163,6 @@ Required before release:
 
 ## Current Release Decision
 
-**Do not publish a release yet.**
+**v1.2.0 is released. v1.3.0 is not published yet.**
 
-The implementation is substantially complete at the architecture/CI level, but the remaining product UX and real-device verification gates must be closed before calling the Master Plan fully complete.
+The v1.3 product UX changes are implemented and CI-quality gates are green, but final release-artifact verification and real-device accessibility/performance checks still need to be closed before publishing v1.3.0.
