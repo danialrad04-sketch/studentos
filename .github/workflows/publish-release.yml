@@ -32,7 +32,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: studentos-release-v2
+  group: studentos-release-v3
   cancel-in-progress: false
 
 jobs:
@@ -97,32 +97,29 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund
           npm test
 
-      - name: Verify Android CI gate for release ref
+      - name: Verify Android quality gate for release ref
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION_CODE: ${{ inputs.version_code || '3' }}
-          VERSION_NAME: ${{ inputs.version_name || '1.2.0' }}
         run: |
           echo "Release ref: ${GITHUB_SHA}"
-          echo "Release version: ${VERSION_NAME} (${VERSION_CODE})"
           for attempt in {1..30}; do
-            RUN=$(gh run list --repo "${GITHUB_REPOSITORY}" --workflow android-build.yml --commit "${GITHUB_SHA}" --limit 10 --json databaseId,status,conclusion)
-            COUNT=$(echo "${RUN}" | jq 'length')
-            if [ "${COUNT}" -gt 0 ]; then
-              echo "${RUN}" | jq
-              if echo "${RUN}" | jq -e '.[] | select(.status=="completed" and .conclusion=="success")' >/dev/null; then
-                echo "Android CI gate passed for release SHA."
+            RUN_IDS=$(gh run list --repo "${GITHUB_REPOSITORY}" --workflow android-build.yml --commit "${GITHUB_SHA}" --limit 10 --json databaseId --jq '.[].databaseId')
+            for RUN_ID in ${RUN_IDS}; do
+              CONCLUSION=$(gh run view "${RUN_ID}" --repo "${GITHUB_REPOSITORY}" --json jobs --jq '.jobs[] | select(.name=="android-quality") | .conclusion' | head -n 1)
+              echo "Android CI run ${RUN_ID}: android-quality=${CONCLUSION:-pending}"
+              if [ "${CONCLUSION}" = "success" ]; then
+                echo "Android quality gate passed for release SHA."
                 exit 0
               fi
-              if echo "${RUN}" | jq -e '.[] | select(.status=="completed" and .conclusion!="success")' >/dev/null; then
-                echo "::error::Android CI for release SHA completed without success."
+              if [ "${CONCLUSION}" = "failure" ] || [ "${CONCLUSION}" = "cancelled" ]; then
+                echo "::error::Android quality gate failed for release SHA."
                 exit 1
               fi
-            fi
-            echo "Waiting for Android CI gate... attempt ${attempt}/30"
+            done
+            echo "Waiting for Android quality gate... attempt ${attempt}/30"
             sleep 10
           done
-          echo "::error::Timed out waiting for Android CI gate for release SHA."
+          echo "::error::Timed out waiting for Android quality gate for release SHA."
           exit 1
 
       - name: Build signed APK and AAB
