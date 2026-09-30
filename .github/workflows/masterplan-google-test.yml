@@ -10,8 +10,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: studentos-masterplan-google-test
-  cancel-in-progress: false
+  group: studentos-masterplan-google-test-${{ github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   build-google-test:
