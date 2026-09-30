@@ -17,14 +17,21 @@ import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.Card
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +57,7 @@ fun ModernScheduleCourseCard(
     onDelete: (() -> Unit)?,
     onOpenWorkspace: (() -> Unit)?
 ) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     val fallback = MaterialTheme.colorScheme.primary
     val accent = remember(course.colorHex, fallback) {
         runCatching { Color(android.graphics.Color.parseColor(course.colorHex)) }.getOrDefault(fallback)
@@ -233,7 +241,7 @@ fun ModernScheduleCourseCard(
                     }
                     if (onDelete != null) {
                         IconButton(
-                            onClick = onDelete,
+                            onClick = { showDeleteConfirm = true },
                             modifier = Modifier.minimumInteractiveComponentSize()
                         ) {
                             Icon(
@@ -247,5 +255,35 @@ fun ModernScheduleCourseCard(
                 }
             }
         }
+
+    if (showDeleteConfirm && onDelete != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            icon = {
+                Icon(
+                    Icons.Default.WarningAmber,
+                    null,
+                    tint = MaterialTheme.studentColors.attendanceCritical
+                )
+            },
+            title = { Text("حذف این درس؟") },
+            text = { Text("این عملیات از برنامه هفتگی حذفش می‌کند. برای ادامه تأیید کنید.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteConfirm = false
+                        onDelete()
+                    },
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.studentColors.attendanceCritical
+                    )
+                ) { Text("حذف درس") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) { Text("انصراف") }
+            }
+        )
+    }
+
     }
 }
