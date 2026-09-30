@@ -81,6 +81,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.local.entity.CourseEntity
 import androidx.compose.material3.CircularProgressIndicator
 import com.example.ui.components.AppDialogManager
+import com.example.ui.components.AccountGateV2
 import com.example.ui.components.LoginRegisterScreen
 import com.example.ui.components.DynamicIslandLiveActivity
 import com.example.ui.components.FirstTimeAppTourDialog
