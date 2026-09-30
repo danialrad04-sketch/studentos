@@ -1,7 +1,6 @@
 package com.example
 
-import androidx.compose.ui.test.assertExists
-import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.example.data.local.entity.AttendanceEntity
 import com.example.data.local.entity.CourseEntity
@@ -12,6 +11,7 @@ import com.example.ui.models.AppTab
 import com.example.ui.theme.MyApplicationTheme
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Assert.assertTrue
 
 class StudentTodayCommandStripTest {
     @get:Rule
@@ -48,12 +48,12 @@ class StudentTodayCommandStripTest {
             }
         }
 
-        composeRule.onNodeWithText("امروز").assertExists()
-        composeRule.onNodeWithText("کار باز").assertExists()
-        composeRule.onNodeWithText("کلاس امروز").assertExists()
-        composeRule.onNodeWithText("غیبت بحرانی").assertExists()
-        composeRule.onNodeWithText("شروع تمرکز").assertExists()
-        composeRule.onNodeWithText("کارها").assertExists()
-        composeRule.onNodeWithText("1").assertExists()
+        assertTrue(composeRule.onAllNodesWithText("امروز").fetchSemanticsNodes().isNotEmpty())
+        assertTrue(composeRule.onAllNodesWithText("کار باز").fetchSemanticsNodes().isNotEmpty())
+        assertTrue(composeRule.onAllNodesWithText("کلاس امروز").fetchSemanticsNodes().isNotEmpty())
+        assertTrue(composeRule.onAllNodesWithText("غیبت بحرانی").fetchSemanticsNodes().isNotEmpty())
+        assertTrue(composeRule.onAllNodesWithText("شروع تمرکز").fetchSemanticsNodes().isNotEmpty())
+        assertTrue(composeRule.onAllNodesWithText("کارها").fetchSemanticsNodes().isNotEmpty())
+        assertTrue(composeRule.onAllNodesWithText("1").fetchSemanticsNodes().isNotEmpty())
     }
 }
