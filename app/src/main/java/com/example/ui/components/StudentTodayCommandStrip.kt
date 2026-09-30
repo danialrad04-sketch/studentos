@@ -34,11 +34,12 @@ import com.example.data.local.entity.AttendanceEntity
 import com.example.data.local.entity.CourseEntity
 import com.example.data.local.entity.TaskEntity
 import com.example.data.local.relation.CourseWithSessions
+import com.example.domain.engine.AcademicContextEngine
 import com.example.domain.model.StudySessionRecommendation
 import com.example.ui.models.AppTab
 import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.AcademicNavy
-import java.util.Calendar
+import com.example.domain.util.JalaliCalendarUtil
 
 @Composable
 fun StudentTodayCommandStrip(
@@ -51,13 +52,17 @@ fun StudentTodayCommandStrip(
     onStartFocus: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val openTasks = tasks.count { !it.isCompleted }
-    val dangerAttendance = attendance.count { it.maxAllowed > 0 && it.absentCount >= it.maxAllowed }
-    val todayIndex = ((Calendar.getInstance().get(Calendar.DAY_OF_WEEK) + 5) % 7)
-    val todaySessions = coursesWithSessions.flatMap { relation ->
-        relation.sessions.filter { it.day == todayIndex }.map { relation.course to it }
-    }.sortedBy { it.second.start }
-    val nextClass = todaySessions.firstOrNull()
+    val snapshot = AcademicContextEngine.buildSnapshot(
+        courses = courses,
+        coursesWithSessions = coursesWithSessions,
+        attendance = attendance,
+        tasks = tasks,
+        exams = emptyList(),
+        todayWeekdayIndex = JalaliCalendarUtil.getTodayWeekdayIndex(),
+        todayDate = JalaliCalendarUtil.today().format("/")
+    )
+    val openTasks = snapshot.openTaskCount
+    val dangerAttendance = snapshot.criticalAttendanceCount
     val recommendation = studyRecommendations.firstOrNull()
 
     Card(
@@ -119,8 +124,8 @@ fun StudentTodayCommandStrip(
                 TodaySignal(Icons.Default.Event, dangerAttendance.toString(), "غیبت بحرانی", MaterialTheme.colorScheme.error, Modifier.weight(1f))
             }
 
-            if (nextClass != null) {
-                val (course, session) = nextClass
+            if (snapshot.nextCourseName != null) {
+                val courseName = snapshot.nextCourseName.orEmpty()
                 Surface(
                     Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
@@ -138,13 +143,13 @@ fun StudentTodayCommandStrip(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                course.name,
+                                courseName,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Black
                             )
                             Text(
-                                "\u200E\${session.start} — \${session.end}\u200E" +
-                                    if (session.location.isNotBlank()) " · \${session.location}" else "",
+                                "\u200E\${snapshot.nextCourseStart.orEmpty()} — \${snapshot.nextCourseEnd.orEmpty()}\u200E" +
+                                    if (!snapshot.nextCourseLocation.isNullOrBlank()) " · \${snapshot.nextCourseLocation}" else "",
                                 fontSize = 10.5.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
