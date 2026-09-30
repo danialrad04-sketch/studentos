@@ -47,3 +47,7 @@
 - [ ] Upload AAB to Play Console
 - [ ] Review Play Console pre-launch report
 - [ ] Submit staged rollout
+
+
+## CI
+- CI canonical feature validation is executed on the pull request; direct feature-branch pushes do not create a duplicate Android CI run.
