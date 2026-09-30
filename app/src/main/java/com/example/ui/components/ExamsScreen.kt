@@ -289,4 +289,3 @@ private fun ExamPreparationIndicator(
         }
     }
 }
-
