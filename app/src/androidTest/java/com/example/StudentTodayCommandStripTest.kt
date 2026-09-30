@@ -27,14 +27,14 @@ class StudentTodayCommandStripTest {
                     attendance = emptyList<AttendanceEntity>(),
                     tasks = listOf(
                         TaskEntity(
-                            id = "task-1",
+                            id = 1L,
                             title = "تحویل پروژه",
                             courseName = "",
                             dueDate = "",
                             isCompleted = false
                         ),
                         TaskEntity(
-                            id = "task-2",
+                            id = 2L,
                             title = "تمرین",
                             courseName = "",
                             dueDate = "",
