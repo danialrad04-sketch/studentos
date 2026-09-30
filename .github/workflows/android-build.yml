@@ -223,15 +223,4 @@ jobs:
           force-avd-creation: true
           emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
           disable-animations: true
-          script: |
-            set -eu
-            run_test() {
-              local test_class="$1"
-              echo "=== Running instrumentation class: $test_class ==="
-              timeout 300 ./gradlew connectedDebugAndroidTest \
-                -Pandroid.testInstrumentationRunnerArguments.class="$test_class" \
-                --stacktrace
-            }
-            run_test com.example.ExampleInstrumentedTest
-            run_test com.example.AccessibilitySmokeTest
-            run_test com.example.StudentTodayCommandStripTest
+          script: ./gradlew connectedDebugAndroidTest --stacktrace
