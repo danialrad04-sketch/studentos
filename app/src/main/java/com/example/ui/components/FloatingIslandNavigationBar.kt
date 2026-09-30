@@ -104,6 +104,7 @@ fun FloatingIslandNavigationBar(
             )
             }
         }
+    }
 
     if (showAllModulesSheet) {
         StudentModuleHubSheet(
