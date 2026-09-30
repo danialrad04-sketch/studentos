@@ -137,6 +137,14 @@ fun WeeklyScheduleScreen(
             return@Column
         }
 
+        ScheduleContextStripV2(
+            courses = courses,
+            coursesWithSessions = effectiveCoursesWithSessions,
+            conflicts = conflicts,
+            selectedDay = selectedDayTab,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
+
         // Conflict Warning Banner
         if (conflicts.isNotEmpty()) {
             Card(
