@@ -10,12 +10,13 @@ permissions:
   contents: read
 
 concurrency:
-  group: studentos-ci-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  group: studentos-ci-${{ github.workflow }}-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
   android-quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -191,6 +192,7 @@ jobs:
 
   instrumented-smoke:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
