@@ -16,6 +16,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.Assume.assumeTrue
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -174,6 +175,10 @@ class AuthAndCopilotEngineTest {
 
     @Test
     fun testRealGeminiCopilotFiveQueries() = runBlocking {
+        assumeTrue(
+            "Live Gemini tests are opt-in. Set RUN_LIVE_AI_TESTS=1 to execute them.",
+            System.getenv("RUN_LIVE_AI_TESTS") == "1"
+        )
         val sampleProfile = StudentProfileEntity(
             id = 1,
             name = "امیرحسین",
