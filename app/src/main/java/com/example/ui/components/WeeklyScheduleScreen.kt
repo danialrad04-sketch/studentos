@@ -442,7 +442,7 @@ fun WeeklyScheduleScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         dayItems.forEach { item ->
                             val isConflicting = conflicts.any { it.course1Id == item.course.id || it.course2Id == item.course.id }
-                            CourseCard(
+                            ModernScheduleCourseCard(
                                 course = item.course,
                                 session = item.session,
                                 isPrimarySession = item.isPrimary,
@@ -512,7 +512,7 @@ fun WeeklyScheduleScreen(
                                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                         dayItems.forEach { item ->
                                             val isConflicting = conflicts.any { it.course1Id == item.course.id || it.course2Id == item.course.id }
-                                            CourseCard(
+                                            ModernScheduleCourseCard(
                                                 course = item.course,
                                                 session = item.session,
                                                 isPrimarySession = item.isPrimary,
