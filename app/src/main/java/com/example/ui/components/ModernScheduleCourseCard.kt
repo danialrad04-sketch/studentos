@@ -66,7 +66,7 @@ fun ModernScheduleCourseCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .tactileClickable(onClick),
+            .tactileClickable(onClick = onClick),
         shape = RoundedCornerShape(StudentOsShapes.mediumCard),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
