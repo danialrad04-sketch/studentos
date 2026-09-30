@@ -239,6 +239,7 @@ fun MainTabContent(
             AppTab.EXAMS -> {
                 ExamsScreen(
                     exams = exams,
+                    tasks = tasks,
                     onSetReminder = { exam ->
                         onRequestNotificationPermission()
                         studentViewModel.addNotification(
