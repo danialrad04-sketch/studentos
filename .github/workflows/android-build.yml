@@ -224,7 +224,7 @@ jobs:
           emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
           disable-animations: true
           script: |
-            set -euo pipefail
+            set -eu
             run_test() {
               local test_class="$1"
               echo "=== Running instrumentation class: $test_class ==="
