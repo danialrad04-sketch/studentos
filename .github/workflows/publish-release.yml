@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - "v2.0.0"
+    branches:
+      - "production-release/v2.0.0"
   create:
   workflow_dispatch:
     inputs:
