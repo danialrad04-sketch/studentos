@@ -23,9 +23,9 @@ class AccessibilitySmokeTest {
 
         composeRule.setContent {
             MyApplicationTheme {
-                com.example.ui.components.LoginRegisterScreen(
-                    onSignInBackend = { _, _, _ -> },
-                    onSignUpBackend = { _, _, _, _ -> },
+                com.example.ui.components.AccountGateV2(
+                    onSignIn = { _, _, result -> result(false, "test") },
+                    onSignUp = { _, _, _, result -> result(false, "test") },
                     onForgotPassword = {},
                     onGoogleSignIn = {},
                     onContinueAsGuest = { guestClicked = true }
