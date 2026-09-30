@@ -2,7 +2,9 @@ name: Android CI
 
 on:
   push:
-    branches: ["main", "release-readiness", "feat/**"]
+    branches: ["main", "release-readiness"]
+  pull_request:
+    branches: ["main"]
   pull_request:
     branches: ["main"]
 
@@ -10,7 +12,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: studentos-ci-${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  group: studentos-ci-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
