@@ -99,6 +99,13 @@ fun TasksScreen(
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
+        TaskContextSummaryV2(
+            tasks = tasks,
+            exams = exams,
+            courses = courses,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
         // Header & Add Action
         Row(
             modifier = Modifier.fillMaxWidth(),

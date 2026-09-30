@@ -3,17 +3,17 @@ name: Build and Publish Release
 on:
   push:
     tags:
-      - "v1.3.0"
+      - "v2.0.0"
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag, e.g. v1.2.0"
+        description: "Release tag, e.g. v2.0.0"
         required: true
-        default: "v1.3.0"
+        default: "v2.0.0"
       title:
         description: "Release title"
         required: true
-        default: "Student OS v1.3.0"
+        default: "Student OS v2.0.0"
       ref:
         description: "Git tag or commit SHA to build; must be immutable for a reproducible release."
         required: true
@@ -21,22 +21,23 @@ on:
       version_code:
         description: "Monotonic Android versionCode; verify against the latest published artifact."
         required: false
-        default: "4"
+        default: "5"
       version_name:
         description: "Android versionName; must match the release tag without the leading v."
         required: false
-        default: "1.3.0"
+        default: "2.0.0"
 
 permissions:
   contents: write
 
 concurrency:
-  group: studentos-release-v3
+  group: studentos-release-v4
   cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout release ref
         uses: actions/checkout@v4
@@ -68,8 +69,8 @@ jobs:
         env:
           TAG_INPUT: ${{ inputs.tag }}
           REF_NAME: ${{ github.ref_name }}
-          VERSION_CODE: ${{ inputs.version_code || '4' }}
-          VERSION_NAME: ${{ inputs.version_name || '1.3.0' }}
+          VERSION_CODE: ${{ inputs.version_code || '5' }}
+          VERSION_NAME: ${{ inputs.version_name || '2.0.0' }}
         run: |
           TAG="$TAG_INPUT"
           if [ -z "$TAG" ]; then
@@ -88,9 +89,9 @@ jobs:
       - name: Run Android unit and lint gates
         run: |
           ./gradlew testDebugUnitTest lintDebug lintRelease \
-            -PVERSION_CODE=${{ inputs.version_code || '4' }} \
-            -PVERSION_NAME=${{ inputs.version_name || '1.3.0' }} \
-            --stacktrace
+            -PVERSION_CODE=${{ inputs.version_code || '5' }} \
+            -PVERSION_NAME=${{ inputs.version_name || '2.0.0' }} \
+            --stacktrace --no-daemon
 
       - name: Run backend tests
         working-directory: backend
@@ -130,7 +131,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
-          ./gradlew assembleRelease bundleRelease             -PVERSION_CODE=${{ inputs.version_code || '4' }}             -PVERSION_NAME=${{ inputs.version_name || '1.3.0' }}             --stacktrace
+          ./gradlew assembleRelease bundleRelease             -PVERSION_CODE=${{ inputs.version_code || '5' }}             -PVERSION_NAME=${{ inputs.version_name || '2.0.0' }}             --stacktrace
 
       - name: Verify signed outputs
         shell: bash
@@ -147,7 +148,16 @@ jobs:
             "$SDK_APKSIGNER" verify --verbose --print-certs "$APK" 2>&1 || true
             exit 1
           }
+          EXPECTED_SHA256="a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950"
+          EXPECTED_SHA1="b25fe31884ec18a96ae09e6fc0070fd20717a766"
+          KEY_SHA256="$(keytool -list -v -keystore studentos-release.jks -storepass "${{ secrets.RELEASE_KEYSTORE_PASSWORD }}" -alias "${{ secrets.RELEASE_KEY_ALIAS }}" | awk -F': ' '/SHA256:/{print $2; exit}' | tr -d ':' | tr '[:upper:]' '[:lower:]')"
+          KEY_SHA1="$(keytool -list -v -keystore studentos-release.jks -storepass "${{ secrets.RELEASE_KEYSTORE_PASSWORD }}" -alias "${{ secrets.RELEASE_KEY_ALIAS }}" | awk -F': ' '/SHA1:/{print $2; exit}' | tr -d ':' | tr '[:upper:]' '[:lower:]')"
+          test "$KEY_SHA256" = "$EXPECTED_SHA256"
+          test "$KEY_SHA1" = "$EXPECTED_SHA1"
+          echo "Release certificate fingerprint matches Student OS production certificate."
+
           unzip -t "$AAB"
+          python3 scripts/check_apk_16kb.py "$APK"
           unzip -l "$AAB" | grep -E 'BundleConfig.pb|base/manifest/AndroidManifest.xml'
           ls -lh "$APK" "$AAB"
 

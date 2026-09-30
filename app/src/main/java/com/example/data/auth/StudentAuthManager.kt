@@ -412,16 +412,11 @@ class StudentAuthManager(private val context: Context) {
                     val rawContext = activityContext ?: context
                     val targetContext = rawContext.findActivity() ?: rawContext
                     val credentialManager = androidx.credentials.CredentialManager.create(targetContext)
-                    val resId = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
-                    val webClientId = if (resId != 0) {
-                        try { context.getString(resId) } catch (_: Throwable) { "330473390572-apps.googleusercontent.com" }
-                    } else {
-                        "330473390572-apps.googleusercontent.com"
-                    }
+                    val googleWebClientId = context.getString(com.example.R.string.google_web_client_id)
 
                     val googleIdOption = com.google.android.libraries.identity.googleid.GetGoogleIdOption.Builder()
                         .setFilterByAuthorizedAccounts(false)
-                        .setServerClientId(webClientId)
+                        .setServerClientId(googleWebClientId)
                         .setAutoSelectEnabled(false)
                         .build()
 
@@ -435,9 +430,12 @@ class StudentAuthManager(private val context: Context) {
                     )
 
                     val cred = result.credential
-                    if (cred is androidx.credentials.CustomCredential && cred.type == com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                        val googleIdTokenCredential = com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.createFrom(cred.data)
-                        googleIdTokenCredential.idToken
+                    if (cred is androidx.credentials.CustomCredential &&
+                        cred.type == com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                    ) {
+                        com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+                            .createFrom(cred.data)
+                            .idToken
                     } else {
                         null
                     }

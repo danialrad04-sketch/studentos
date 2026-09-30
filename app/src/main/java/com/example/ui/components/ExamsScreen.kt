@@ -33,12 +33,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.models.ExamItem
+import com.example.data.local.entity.TaskEntity
 import com.example.ui.theme.StudentShapeTokens
 import com.example.ui.theme.AcademicOlive
 
 @Composable
 fun ExamsScreen(
     exams: List<ExamItem>,
+    tasks: List<TaskEntity> = emptyList(),
     onSetReminder: (ExamItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -93,6 +95,7 @@ fun ExamsScreen(
                     ExamCard(
                         exam = exam,
                         index = index + 1,
+                        relatedTasks = tasks.filter { it.courseName == exam.courseName },
                         onSetReminder = { onSetReminder(exam) }
                     )
                 }
@@ -105,6 +108,7 @@ fun ExamsScreen(
 fun ExamCard(
     exam: ExamItem,
     index: Int,
+    relatedTasks: List<TaskEntity> = emptyList(),
     onSetReminder: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -197,6 +201,10 @@ fun ExamCard(
                 )
             }
 
+            ExamPreparationIndicator(
+                relatedTasks = relatedTasks
+            )
+
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(
@@ -235,6 +243,49 @@ fun ExamCard(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ExamPreparationIndicator(
+    relatedTasks: List<TaskEntity>
+) {
+    val total = relatedTasks.size
+    val completed = relatedTasks.count { it.isCompleted }
+    val progress = if (total == 0) 0f else completed.toFloat() / total.toFloat()
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(13.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Column(
+            Modifier.padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "آمادگی بر اساس کارهای مرتبط",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    if (total == 0) "هنوز کاری تعریف نشده" else "$completed از $total انجام شده",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            androidx.compose.material3.LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+                color = AcademicOlive,
+                trackColor = AcademicOlive.copy(alpha = 0.12f)
+            )
         }
     }
 }

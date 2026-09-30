@@ -191,6 +191,16 @@ fun ModernBentoDashboard(
             }
         }
 
+        StudentTodayCommandStrip(
+            courses = courses,
+            coursesWithSessions = coursesWithSessions,
+            attendance = attendanceList,
+            tasks = tasks,
+            studyRecommendations = studyRecommendations,
+            onNavigateTab = onNavigateTab,
+            onStartFocus = onTogglePomodoro
+        )
+
         // 4 Quick Actions Grid (برنامه هفتگی، امتحانات، تکالیف، کلاس‌ها)
         Row(
             modifier = Modifier.fillMaxWidth(),

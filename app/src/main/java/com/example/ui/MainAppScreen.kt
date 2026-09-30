@@ -81,6 +81,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.local.entity.CourseEntity
 import androidx.compose.material3.CircularProgressIndicator
 import com.example.ui.components.AppDialogManager
+import com.example.ui.components.AccountGateV2
 import com.example.ui.components.LoginRegisterScreen
 import com.example.ui.components.DynamicIslandLiveActivity
 import com.example.ui.components.FirstTimeAppTourDialog
@@ -287,21 +288,15 @@ fun MainAppScreen(
                     )
                 }
             } else if (currentUser.isGuest && !guestModeEnabled) {
-                LoginRegisterScreen(
-                    onSignInBackend = { email, pass, onResult ->
-                        studentViewModel.signInWithBackend(email, pass, onResult)
-                    },
-                    onSignUpBackend = { name, email, pass, onResult ->
-                        studentViewModel.signUpWithBackend(name, email, pass, onResult)
-                    },
-                    onSignInFirebase = { email, pass, onResult ->
+                AccountGateV2(
+                    onSignIn = { email, pass, onResult ->
                         studentViewModel.signInWithEmail(email, pass, onResult)
                     },
-                    onSignUpFirebase = { name, email, pass, onResult ->
+                    onSignUp = { name, email, pass, onResult ->
                         studentViewModel.signUpWithEmail(name, email, pass, onResult)
                     },
                     onForgotPassword = { email ->
-                        studentViewModel.sendPasswordResetEmail(email) { ok, msg ->
+                        studentViewModel.sendPasswordResetEmail(email) { _, msg ->
                             Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                         }
                     },
