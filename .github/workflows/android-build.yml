@@ -117,6 +117,7 @@ jobs:
 
   release-artifact-validation:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [android-quality, backend-quality, instrumented-smoke]
     steps:
       - name: Checkout
@@ -147,7 +148,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
-          ./gradlew assembleRelease bundleRelease -PVERSION_CODE=5 -PVERSION_NAME=2.0.0 --stacktrace
+          ./gradlew assembleRelease bundleRelease -PVERSION_CODE=5 -PVERSION_NAME=2.0.0 --stacktrace --no-daemon
 
       - name: Verify release package, version and signing certificate
         shell: bash
