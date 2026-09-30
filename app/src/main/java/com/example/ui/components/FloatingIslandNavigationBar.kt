@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -69,14 +70,25 @@ fun FloatingIslandNavigationBar(
             .padding(horizontal = 12.dp, vertical = 4.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
-        Row(
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .widthIn(max = 520.dp)
-                .height(64.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+                .widthIn(max = 520.dp),
+            shape = RoundedCornerShape(22.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.97f),
+            tonalElevation = 2.dp,
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.24f)
+            )
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
             ModernNavItem(items[0], selectedTab == items[0].tab, { onTabSelected(items[0].tab) }, reducedMotion, Modifier.weight(1f))
             ModernNavItem(items[1], selectedTab == items[1].tab, { onTabSelected(items[1].tab) }, reducedMotion, Modifier.weight(1f))
             Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) {
@@ -90,6 +102,7 @@ fun FloatingIslandNavigationBar(
                 reducedMotion,
                 Modifier.weight(1f)
             )
+            }
         }
     }
 
