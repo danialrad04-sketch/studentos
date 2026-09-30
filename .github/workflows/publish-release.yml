@@ -120,9 +120,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo "Release ref: ${GITHUB_SHA}"
+          echo "Release ref: ${RELEASE_TARGET_SHA}"
           for attempt in {1..30}; do
-            RUN_IDS=$(gh run list --repo "${GITHUB_REPOSITORY}" --workflow android-build.yml --commit "${GITHUB_SHA}" --limit 10 --json databaseId --jq '.[].databaseId')
+            RUN_IDS=$(gh run list --repo "${GITHUB_REPOSITORY}" --workflow android-build.yml --commit "${RELEASE_TARGET_SHA}" --limit 10 --json databaseId --jq '.[].databaseId')
             for RUN_ID in ${RUN_IDS}; do
               CONCLUSION=$(gh run view "${RUN_ID}" --repo "${GITHUB_REPOSITORY}" --json jobs --jq '.jobs[] | select(.name=="android-quality") | .conclusion' | head -n 1)
               echo "Android CI run ${RUN_ID}: android-quality=${CONCLUSION:-pending}"
@@ -201,6 +201,6 @@ jobs:
           gh release create "$TAG" \
             app/build/outputs/apk/release/app-release.apk \
             app/build/outputs/bundle/release/app-release.aab \
-            --target "$GITHUB_SHA" \
+            --target "$RELEASE_TARGET_SHA" \
             --title "$TITLE" \
             --generate-notes
