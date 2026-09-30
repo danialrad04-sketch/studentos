@@ -28,7 +28,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: studentos-release
+  group: studentos-release-v3
   cancel-in-progress: false
 
 jobs:
@@ -93,18 +93,30 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund
           npm test
 
-      - name: Run Android instrumentation smoke gate
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          target: google_apis
-          arch: x86_64
-          profile: pixel_7_pro
-          avd-name: studentos-release-api35
-          force-avd-creation: true
-          emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
-          disable-animations: true
-          script: ./gradlew connectedDebugAndroidTest -PVERSION_CODE=${{ inputs.version_code || '3' }} -PVERSION_NAME=${{ inputs.version_name || '1.2.0' }} --stacktrace
+      - name: Verify Android quality gate for release ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Release ref: ${GITHUB_SHA}"
+          for attempt in {1..30}; do
+            RUN_IDS=$(gh run list --repo "${GITHUB_REPOSITORY}" --workflow android-build.yml --commit "${GITHUB_SHA}" --limit 10 --json databaseId --jq '.[].databaseId')
+            for RUN_ID in ${RUN_IDS}; do
+              CONCLUSION=$(gh run view "${RUN_ID}" --repo "${GITHUB_REPOSITORY}" --json jobs --jq '.jobs[] | select(.name=="android-quality") | .conclusion' | head -n 1)
+              echo "Android CI run ${RUN_ID}: android-quality=${CONCLUSION:-pending}"
+              if [ "${CONCLUSION}" = "success" ]; then
+                echo "Android quality gate passed for release SHA."
+                exit 0
+              fi
+              if [ "${CONCLUSION}" = "failure" ] || [ "${CONCLUSION}" = "cancelled" ]; then
+                echo "::error::Android quality gate failed for release SHA."
+                exit 1
+              fi
+            done
+            echo "Waiting for Android quality gate... attempt ${attempt}/30"
+            sleep 10
+          done
+          echo "::error::Timed out waiting for Android quality gate for release SHA."
+          exit 1
 
       - name: Build signed APK and AAB
         env:
