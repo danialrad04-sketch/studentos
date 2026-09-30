@@ -51,7 +51,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
-          ./gradlew assembleRelease -PVERSION_CODE=1004 -PVERSION_NAME=1.0.4-masterplan-test --stacktrace
+          ./gradlew assembleRelease -PVERSION_CODE=2005 -PVERSION_NAME=2.0.0-google-test --stacktrace
 
       - name: Verify APK and certificate
         shell: bash
@@ -60,12 +60,16 @@ jobs:
           test -s "$APK"
           test -s "$APK"
           ls -lh "$APK"
-          echo "APK exists and release build completed successfully."
-
+          CERTS="$(keytool -printcert -jarfile "$APK")"
+          echo "$CERTS"
+          NORMALIZED="$(echo "$CERTS" | tr -d ":\r\n" | tr "[:upper:]" "[:lower:]")"
+          echo "$NORMALIZED" | grep -F "a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950" >/dev/null
+          echo "$NORMALIZED" | grep -F "b25fe31884ec18a96ae09e6fc0070fd20717a766" >/dev/null
+          echo "APK exists and matches the production Google Login signing certificate."
       - name: Upload signed test APK
         uses: actions/upload-artifact@v4
         with:
-          name: studentos-masterplan-google-test-apk
+          name: studentos-v2-google-test-apk
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14
