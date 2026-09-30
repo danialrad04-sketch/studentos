@@ -222,5 +222,4 @@ jobs:
           avd-name: studentos-api35
           force-avd-creation: true
           emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
-          disable-animations: true
           script: ./gradlew connectedDebugAndroidTest --stacktrace
