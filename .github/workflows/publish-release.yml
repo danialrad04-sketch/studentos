@@ -37,6 +37,7 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout release ref
         uses: actions/checkout@v4
@@ -90,7 +91,7 @@ jobs:
           ./gradlew testDebugUnitTest lintDebug lintRelease \
             -PVERSION_CODE=${{ inputs.version_code || '5' }} \
             -PVERSION_NAME=${{ inputs.version_name || '2.0.0' }} \
-            --stacktrace
+            --stacktrace --no-daemon
 
       - name: Run backend tests
         working-directory: backend
