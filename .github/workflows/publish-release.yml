@@ -49,6 +49,19 @@ jobs:
           ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 0
 
+      - name: Resolve immutable release source
+        shell: bash
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF_TYPE}" = "branch" ] && [ "${GITHUB_REF_NAME}" = "production-release/v2.0.0" ]; then
+            RELEASE_TARGET_SHA="$(git rev-parse HEAD^)"
+            test -n "$RELEASE_TARGET_SHA"
+            git checkout --detach "$RELEASE_TARGET_SHA"
+          else
+            RELEASE_TARGET_SHA="$GITHUB_SHA"
+          fi
+          echo "RELEASE_TARGET_SHA=$RELEASE_TARGET_SHA" >> "$GITHUB_ENV"
+          echo "Release source: $RELEASE_TARGET_SHA"
+
       - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
