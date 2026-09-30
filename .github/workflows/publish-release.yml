@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - "v2.0.0"
+    branches:
+      - "production-release/v2.0.0"
   workflow_dispatch:
     inputs:
       tag:
@@ -44,6 +46,19 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 0
+
+      - name: Resolve immutable release source
+        shell: bash
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF_TYPE}" = "branch" ] && [ "${GITHUB_REF_NAME}" = "production-release/v2.0.0" ]; then
+            RELEASE_TARGET_SHA="$(git rev-parse HEAD^)"
+            test -n "$RELEASE_TARGET_SHA"
+            git checkout --detach "$RELEASE_TARGET_SHA"
+          else
+            RELEASE_TARGET_SHA="$GITHUB_SHA"
+          fi
+          echo "RELEASE_TARGET_SHA=$RELEASE_TARGET_SHA" >> "$GITHUB_ENV"
+          echo "Release source: $RELEASE_TARGET_SHA"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -103,9 +118,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo "Release ref: ${GITHUB_SHA}"
+          echo "Release ref: ${RELEASE_TARGET_SHA}"
           for attempt in {1..30}; do
-            RUN_IDS=$(gh run list --repo "${GITHUB_REPOSITORY}" --workflow android-build.yml --commit "${GITHUB_SHA}" --limit 10 --json databaseId --jq '.[].databaseId')
+            RUN_IDS=$(gh run list --repo "${GITHUB_REPOSITORY}" --workflow android-build.yml --commit "${RELEASE_TARGET_SHA}" --limit 10 --json databaseId --jq '.[].databaseId')
             for RUN_ID in ${RUN_IDS}; do
               CONCLUSION=$(gh run view "${RUN_ID}" --repo "${GITHUB_REPOSITORY}" --json jobs --jq '.jobs[] | select(.name=="android-quality") | .conclusion' | head -n 1)
               echo "Android CI run ${RUN_ID}: android-quality=${CONCLUSION:-pending}"
