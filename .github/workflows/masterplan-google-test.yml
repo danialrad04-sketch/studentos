@@ -29,12 +29,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Run unit tests
-        run: ./gradlew testDebugUnitTest --stacktrace
-
-      - name: Run Android lint
-        run: ./gradlew lintDebug --stacktrace
-
+      # Google Login validation is intentionally focused on the release artifact and
+      # its production signing certificate. Full unit/lint coverage is provided by
+      # the canonical Android CI gate.
       - name: Decode release keystore
         shell: bash
         env:
