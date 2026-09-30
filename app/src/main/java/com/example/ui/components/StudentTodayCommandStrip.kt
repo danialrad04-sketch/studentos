@@ -104,7 +104,7 @@ fun StudentTodayCommandStrip(
                         when {
                             dangerAttendance > 0 -> "\${dangerAttendance} درس به توجه فوری نیاز دارد."
                             openTasks > 0 -> "\${openTasks} کار باز داری؛ یکی را جلو بینداز."
-                            nextClass != null -> "کلاس بعدی امروز را از دست نده."
+                            snapshot.nextCourseName != null -> "کلاس بعدی امروز را از دست نده."
                             else -> "برنامه امروز سبک است؛ برای جلو افتادن وقت خوبی است."
                         },
                         style = MaterialTheme.typography.bodySmall,
