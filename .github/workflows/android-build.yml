@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: studentos-ci-${{ github.workflow }}-${{ github.ref }}
+  group: studentos-ci-${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
