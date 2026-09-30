@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.sp
 import com.example.data.local.entity.CourseEntity
 import com.example.data.local.entity.TaskEntity
 import com.example.ui.models.ExamItem
+import com.example.domain.engine.AcademicContextEngine
+import com.example.domain.util.JalaliCalendarUtil
 import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.StudentSpacing
@@ -38,23 +40,19 @@ fun TaskContextSummaryV2(
     courses: List<CourseEntity>,
     modifier: Modifier = Modifier
 ) {
-    val today = JalaliCalendarUtil.today().format("/")
-        .trim()
-        .replace('۰','0').replace('۱','1').replace('۲','2').replace('۳','3')
-        .replace('۴','4').replace('۵','5').replace('۶','6').replace('۷','7')
-        .replace('۸','8').replace('۹','9')
+    val snapshot = AcademicContextEngine.buildSnapshot(
+        courses = courses,
+        coursesWithSessions = emptyList(),
+        attendance = emptyList(),
+        tasks = tasks,
+        exams = exams,
+        todayWeekdayIndex = JalaliCalendarUtil.getTodayWeekdayIndex(),
+        todayDate = JalaliCalendarUtil.today().format("/")
+    )
+    val open = snapshot.openTaskCount
+    val overdue = snapshot.overdueTaskCount
+    val examLinked = snapshot.examsWithOpenTasksCount
 
-    fun normalized(value: String): String = value.trim()
-        .replace('۰','0').replace('۱','1').replace('۲','2').replace('۳','3')
-        .replace('۴','4').replace('۵','5').replace('۶','6').replace('۷','7')
-        .replace('۸','8').replace('۹','9')
-
-    val open = tasks.count { !it.isCompleted }
-    val overdue = tasks.count { !it.isCompleted && it.dueDate.isNotBlank() && normalized(it.dueDate) < today }
-    val examCourseIds = exams.mapNotNull { exam ->
-        courses.find { it.name == exam.courseName }?.id
-    }.toSet()
-    val examLinked = tasks.count { !it.isCompleted && examCourseIds.contains(it.courseId) }
 
     Surface(
         modifier = modifier.fillMaxWidth(),
