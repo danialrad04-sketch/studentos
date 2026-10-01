@@ -359,11 +359,11 @@ fun AttendanceRadarScreen(
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
+                    StudentCardBody(
                         text = "درس: $courseName\nمی‌توانید هر تعداد جلسه غیبت را تایپ کرده یا از گزینه‌های سریع انتخاب کنید:",
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp
+                        maxLines = 3
                     )
 
                     OutlinedTextField(
