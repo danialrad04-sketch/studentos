@@ -642,11 +642,15 @@ private fun NextClassLiveBentoTile(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Text(\n                    text = featuredCourse?.name ?: "درسی برای امروز در سیستم ثبت نشده",\n                    fontSize = 20.sp,\n                    fontWeight = FontWeight.Black,\n                    color = MaterialTheme.colorScheme.onSurface,\n                    maxLines = 1,\n                    overflow = TextOverflow.Ellipsis\n                )
+                Text(
+                    text = featuredCourse?.name ?: "درسی برای امروز در سیستم ثبت نشده",\n                    fontSize = 20.sp,\n                    fontWeight = FontWeight.Black,\n                    color = MaterialTheme.colorScheme.onSurface,\n                    maxLines = 1,\n                    overflow = TextOverflow.Ellipsis
+                )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Text(\n                    text = if (featuredCourse != null) featuredLocation + " · " + featuredCourse.professor.ifBlank { "استاد درس" } else "جهت ثبت کلاس، از بخش برگه انتخاب واحد یا برنامه هفتگی اقدام کنید",\n                    fontSize = 12.5.sp,\n                    color = MaterialTheme.colorScheme.onSurfaceVariant,\n                    maxLines = 2,\n                    overflow = TextOverflow.Ellipsis\n                )
+                Text(
+                    text = if (featuredCourse != null) featuredLocation + " · " + featuredCourse.professor.ifBlank { "استاد درس" } else "جهت ثبت کلاس، از بخش برگه انتخاب واحد یا برنامه هفتگی اقدام کنید",\n                    fontSize = 12.5.sp,\n                    color = MaterialTheme.colorScheme.onSurfaceVariant,\n                    maxLines = 2,\n                    overflow = TextOverflow.Ellipsis
+                )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
@@ -1714,7 +1718,9 @@ fun BentoGamificationBanner(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(\n                                text = profile.studyStreakDays.toString() + " روز استریک پیوسته",\n                                fontSize = 13.5.sp,\n                                fontWeight = FontWeight.ExtraBold,\n                                color = MaterialTheme.colorScheme.onSurface,\n                                maxLines = 1,\n                                overflow = TextOverflow.Ellipsis\n                            )
+                            Text(
+                                text = profile.studyStreakDays.toString() + " روز استریک پیوسته",\n                                fontSize = 13.5.sp,\n                                fontWeight = FontWeight.ExtraBold,\n                                color = MaterialTheme.colorScheme.onSurface,\n                                maxLines = 1,\n                                overflow = TextOverflow.Ellipsis
+                            )
                             Spacer(modifier = Modifier.width(6.dp))
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
@@ -1733,7 +1739,8 @@ fun BentoGamificationBanner(
 
                         Spacer(modifier = Modifier.height(2.dp))
 
-                        Text(\n                            text = profile.levelTitle + " · " + unlockedCount + " مدال فعال از " + profile.badges.size,\n                            fontSize = 10.5.sp,\n                            color = MaterialTheme.colorScheme.onSurfaceVariant,\n                            maxLines = 1,\n                            overflow = TextOverflow.Ellipsis\n                        )
+                        Text(
+                            text = profile.levelTitle + " · " + unlockedCount + " مدال فعال از " + profile.badges.size,\n                            fontSize = 10.5.sp,\n                            color = MaterialTheme.colorScheme.onSurfaceVariant,\n                            maxLines = 1,\n                            overflow = TextOverflow.Ellipsis\n                        )
 
                         Spacer(modifier = Modifier.height(6.dp))
 
