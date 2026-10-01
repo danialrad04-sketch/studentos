@@ -206,7 +206,9 @@ fun CourseWorkspaceDialogV2(
                                         else -> "برای این درس هنوز فعالیتی ثبت نشده است."
                                     },
                                     style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 2,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                 )
                                 Row(
                                     Modifier.fillMaxWidth(),
@@ -320,10 +322,19 @@ fun CourseWorkspaceDialogV2(
                                     Text(exam.solarDate, fontWeight = FontWeight.Black)
                                     Text("\\u200E" + exam.time + "\\u200E", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                     if (exam.location.isNotBlank()) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
                                             Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                             Spacer(Modifier.width(5.dp))
-                                            Text(exam.location, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(
+                                                exam.location,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                                modifier = Modifier.weight(1f)
+                                            )
                                         }
                                     }
                                 }
@@ -356,7 +367,12 @@ fun CourseWorkspaceDialogV2(
                                 Text("استاد: " + course.professor, style = MaterialTheme.typography.bodyMedium)
                             }
                             if (!course.notes.isNullOrBlank()) {
-                                Text(course.notes.orEmpty(), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    course.notes.orEmpty(),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 3,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
                             }
                         }
                     }
