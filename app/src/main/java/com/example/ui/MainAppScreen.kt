@@ -78,7 +78,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.local.entity.CourseEntity
 import androidx.compose.material3.CircularProgressIndicator
 import com.example.ui.components.AppDialogManager
-import com.example.ui.components.LoginRegisterScreen
 import com.example.ui.components.DynamicIslandLiveActivity
 import com.example.ui.components.FirstTimeAppTourDialog
 import com.example.ui.components.FloatingIslandNavigationBar
@@ -265,44 +264,6 @@ fun MainAppScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-            } else if (currentUser.isGuest) {
-                LoginRegisterScreen(
-                    onSignInBackend = { email, pass, onResult ->
-                        studentViewModel.signInWithBackend(email, pass, onResult)
-                    },
-                    onSignUpBackend = { name, email, pass, onResult ->
-                        studentViewModel.signUpWithBackend(name, email, pass, onResult)
-                    },
-                    onSignInFirebase = { email, pass, onResult ->
-                        studentViewModel.signInWithEmail(email, pass, onResult)
-                    },
-                    onSignUpFirebase = { name, email, pass, onResult ->
-                        studentViewModel.signUpWithEmail(name, email, pass, onResult)
-                    },
-                    onForgotPassword = { email ->
-                        studentViewModel.sendPasswordResetEmail(email) { ok, msg ->
-                            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                        }
-                    },
-                    onGoogleSignIn = { onResult ->
-                        val activity = context as? Activity
-                        if (activity == null) {
-                            onResult(false, "امکان باز کردن ورود گوگل در این محیط وجود ندارد.")
-                        } else {
-                            coroutineScope.launch {
-                                com.example.ui.components.GoogleSignInManager.getIdToken(activity)
-                                    .fold(
-                                        onSuccess = { idToken ->
-                                            studentViewModel.signInWithGoogle(idToken, onResult)
-                                        },
-                                        onFailure = { error ->
-                                            onResult(false, error.message ?: "ورود با گوگل ناموفق بود.")
-                                        }
-                                    )
-                            }
-                        }
-                    }
-                )
             } else {
                 val shouldShowOnboarding = (!isOnboardingCompleted && !profile.isOnboardingCompleted) || showOnboardingWizard
                 if (shouldShowOnboarding) {
