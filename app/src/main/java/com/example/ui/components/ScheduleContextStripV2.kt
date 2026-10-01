@@ -45,9 +45,9 @@ fun ScheduleContextStripV2(
     val hours = minutes / 60
     val mins = minutes % 60
     val loadText = if (hours > 0) {
-        "\u200E\${hours}س \${mins}د\u200E"
+        "\u200E" + hours + "س " + mins + "د\u200E"
     } else {
-        "\u200E\${mins}د\u200E"
+        "\u200E" + mins + "د\u200E"
     }
 
     Surface(
@@ -82,7 +82,7 @@ fun ScheduleContextStripV2(
                         fontWeight = FontWeight.Black
                     )
                     Text(
-                        "\${sessions.size} جلسه · \${loadText} زمان کلاس",
+                        sessions.size.toString() + " جلسه · " + loadText + " زمان کلاس",
                         fontSize = 10.5.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -104,7 +104,7 @@ fun ScheduleContextStripV2(
                             )
                             Spacer(Modifier.width(3.dp))
                             Text(
-                                "\${conflicts.size} تداخل",
+                                conflicts.size.toString() + " تداخل",
                                 fontSize = 9.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.error
