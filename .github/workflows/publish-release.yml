@@ -86,6 +86,14 @@ jobs:
           esac
           test "$VERSION_CODE" -gt 0
 
+      - name: Configure production backend endpoint
+        shell: bash
+        env:
+          STUDENTOS_API_BASE_URL: ${{ secrets.STUDENTOS_API_BASE_URL }}
+        run: |
+          test -n "$STUDENTOS_API_BASE_URL"
+          printf 'STUDENTOS_API_BASE_URL=%s\n' "$STUDENTOS_API_BASE_URL" > app/.env
+
       - name: Run Android unit and lint gates
         run: |
           ./gradlew testDebugUnitTest lintDebug lintRelease \
