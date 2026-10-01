@@ -2,6 +2,9 @@ package com.example.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
@@ -14,6 +17,8 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.ui.theme.StudentShapeTokens
 import com.example.ui.theme.StudentSpacing
@@ -66,10 +71,10 @@ fun AcademicSectionHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleLarge)
+            Text(title, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             subtitle?.let {
                 Spacer(Modifier.height(StudentSpacing.Xs))
-                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
         if (actionLabel != null && onAction != null) {
@@ -95,7 +100,7 @@ fun AcademicPrimaryButton(
     ) {
         icon?.invoke()
         if (icon != null) Spacer(Modifier.width(StudentSpacing.Sm))
-        Text(label, style = MaterialTheme.typography.labelLarge)
+        Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -117,7 +122,7 @@ fun AcademicStatusChip(
         ) {
             icon?.invoke()
             if (icon != null) Spacer(Modifier.width(StudentSpacing.Xs))
-            Text(label, style = MaterialTheme.typography.labelMedium)
+            Text(label, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -146,7 +151,9 @@ fun AcademicEmptyState(
             description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis
         )
         if (actionLabel != null && onAction != null) {
             Spacer(Modifier.height(StudentSpacing.Lg))
@@ -188,6 +195,48 @@ fun AcademicErrorState(
                 shape = StudentShapeTokens.Compact,
                 modifier = Modifier.heightIn(min = 48.dp)
             ) { Text(retryLabel) }
+        }
+    }
+}
+
+@Composable
+fun AcademicInfoText(
+    text: String,
+    modifier: Modifier = Modifier,
+    maxLines: Int = 2,
+    style: TextStyle = MaterialTheme.typography.bodyMedium,
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant
+) {
+    Text(
+        text = text,
+        modifier = modifier,
+        style = style,
+        color = color,
+        maxLines = maxLines.coerceAtLeast(1),
+        overflow = TextOverflow.Ellipsis
+    )
+}
+
+@Composable
+fun AcademicBoundedCard(
+    modifier: Modifier = Modifier,
+    maxHeight: Dp = 128.dp,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Card(
+        modifier = modifier.heightIn(max = maxHeight),
+        shape = StudentShapeTokens.Card,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.82f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = maxHeight)
+                .verticalScroll(rememberScrollState())
+        ) {
+            content()
         }
     }
 }
