@@ -11,6 +11,7 @@ import com.example.data.local.entity.TaskEntity
 import com.example.data.local.relation.CourseWithSessions
 import com.example.data.seed.CurriculumSeedData
 import com.example.domain.model.ActionImpactType
+import com.example.domain.model.AcademicPriorityKind
 import com.example.domain.model.CopilotActionProposal
 import com.example.domain.model.CopilotMessage
 import com.example.domain.model.CopilotPayload
@@ -602,7 +603,96 @@ object AcademicCopilotEngine {
                 )
             }
 
-            // Attendance & 3/16 law analysis
+                        // Deterministic daily priority / command-center query
+            cleanQuery.contains("مهم‌ترین") ||
+                cleanQuery.contains("اولویت") ||
+                cleanQuery.contains("الان چی") ||
+                cleanQuery.contains("الان چه کاری") ||
+                cleanQuery.contains("چی کار کنم") -> {
+                val priority = AcademicPriorityEngine.topOrNull(
+                    courses = courses,
+                    coursesWithSessions = coursesWithSessions,
+                    attendance = attendanceList,
+                    tasks = tasks,
+                    exams = exams,
+                    todayWeekdayIndex = todayWeekdayIdx,
+                    todayDate = todayJalali
+                )
+
+                val text = if (priority == null) {
+                    "✅ در حال حاضر اولویت بحرانی یا فوری از روی داده‌های ثبت‌شده پیدا نشد. می‌توانی برنامه امروز یا کارهای باز را بررسی کنی."
+                } else {
+                    buildString {
+                        append("🎯 **اولویت اصلی الان:**\n\n")
+                        append("**" + priority.title + "**\n")
+                        append(priority.reason)
+                        if (!priority.courseName.isNullOrBlank()) {
+                            append("\n\n📚 درس مرتبط: " + priority.courseName)
+                        }
+                        if (!priority.dueDate.isNullOrBlank()) {
+                            append("\n📅 موعد: " + priority.dueDate)
+                        }
+                    }
+                }
+
+                val proposal = when (priority?.kind) {
+                    AcademicPriorityKind.CRITICAL_ATTENDANCE ->
+                        CopilotActionProposal(
+                            id = UUID.randomUUID().toString(),
+                            title = "باز کردن رادار غیبت",
+                            description = "بررسی وضعیت حضور و غیاب درس در معرض خطر",
+                            impactType = ActionImpactType.SAFE_QUERY,
+                            payload = CopilotPayload.NavigateToTab("ATTENDANCE"),
+                            buttonLabel = "رادار غیبت"
+                        )
+                    AcademicPriorityKind.OVERDUE_TASK,
+                    AcademicPriorityKind.TASK_TODAY,
+                    AcademicPriorityKind.EXAM_LINKED_TASK,
+                    AcademicPriorityKind.OPEN_TASK ->
+                        CopilotActionProposal(
+                            id = UUID.randomUUID().toString(),
+                            title = "باز کردن کارهای درسی",
+                            description = "مشاهده و تعیین تکلیف فعالیت‌های باز",
+                            impactType = ActionImpactType.SAFE_QUERY,
+                            payload = CopilotPayload.NavigateToTab("TASKS"),
+                            buttonLabel = "مشاهده کارها"
+                        )
+                    AcademicPriorityKind.EXAM_TODAY ->
+                        CopilotActionProposal(
+                            id = UUID.randomUUID().toString(),
+                            title = "مشاهده امتحان امروز",
+                            description = "بررسی جزئیات امتحان و ورود به برنامه امتحانات",
+                            impactType = ActionImpactType.SAFE_QUERY,
+                            payload = CopilotPayload.NavigateToTab("EXAMS"),
+                            buttonLabel = "امتحانات"
+                        )
+                    AcademicPriorityKind.NEXT_CLASS ->
+                        CopilotActionProposal(
+                            id = UUID.randomUUID().toString(),
+                            title = "باز کردن برنامه کلاسی",
+                            description = "مشاهده جلسه بعدی و برنامه روز",
+                            impactType = ActionImpactType.SAFE_QUERY,
+                            payload = CopilotPayload.NavigateToTab("SCHEDULE"),
+                            buttonLabel = "برنامه کلاسی"
+                        )
+                    else -> null
+                }
+
+                CopilotMessage(
+                    id = UUID.randomUUID().toString(),
+                    sender = CopilotSender.COPILOT,
+                    text = text,
+                    timestamp = currentTimeString(),
+                    proposedAction = proposal,
+                    suggestedQuickReplies = listOf(
+                        "برنامه امروز من چیست؟",
+                        "تکالیف عقب‌افتاده من چیست؟",
+                        "فردا چه امتحانی دارم؟"
+                    )
+                )
+            }
+
+// Attendance & 3/16 law analysis
             cleanQuery.contains("غیبت") || cleanQuery.contains("حضور") || cleanQuery.contains("رادار") || cleanQuery.contains("3/16") || cleanQuery.contains("۳/۱۶") -> {
                 val dangerous = attendanceList.filter { it.absentCount >= it.maxAllowed && it.maxAllowed > 0 }
                 val warning = attendanceList.filter { it.absentCount == it.maxAllowed - 1 && it.maxAllowed > 0 }
