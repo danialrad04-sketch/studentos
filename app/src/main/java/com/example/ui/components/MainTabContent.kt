@@ -126,6 +126,8 @@ fun MainTabContent(
                     exams = exams,
                     coursesWithSessions = coursesWithSessions,
                     curriculumCourses = currCourses,
+                    primaryPriority = primaryPriority,
+                    planningCollisions = planningCollisions,
                     onNavigateTab = { targetTab ->
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         studentViewModel.selectTab(targetTab)
