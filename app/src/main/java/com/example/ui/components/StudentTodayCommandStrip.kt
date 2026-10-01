@@ -145,7 +145,9 @@ fun StudentTodayCommandStrip(
                             Text(
                                 courseName,
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Black
+                                fontWeight = FontWeight.Black,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                             Text(
                                 "\u200E\${snapshot.nextCourseStart.orEmpty()} — \${snapshot.nextCourseEnd.orEmpty()}\u200E" +
