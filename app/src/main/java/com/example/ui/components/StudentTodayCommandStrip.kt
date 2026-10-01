@@ -144,13 +144,11 @@ fun StudentTodayCommandStrip(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                Text(
-                                    courseName,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Black,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                courseName,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Black,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 "\u200E\${snapshot.nextCourseStart.orEmpty()} — \${snapshot.nextCourseEnd.orEmpty()}\u200E" +
