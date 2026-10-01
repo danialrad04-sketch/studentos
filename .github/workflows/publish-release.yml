@@ -94,6 +94,15 @@ jobs:
           test -n "$STUDENTOS_API_BASE_URL"
           printf 'STUDENTOS_API_BASE_URL=%s\n' "$STUDENTOS_API_BASE_URL" > app/.env
 
+      - name: Verify production backend endpoint
+        shell: bash
+        env:
+          STUDENTOS_API_BASE_URL: ${{ secrets.STUDENTOS_API_BASE_URL }}
+        run: |
+          test -n "$STUDENTOS_API_BASE_URL"
+          curl --fail --silent --show-error --location --max-time 15 "${STUDENTOS_API_BASE_URL%/}/health"
+          echo "Production backend health check passed."
+
       - name: Run Android unit and lint gates
         run: |
           ./gradlew testDebugUnitTest lintDebug lintRelease \
