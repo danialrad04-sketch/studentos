@@ -455,9 +455,15 @@ class StudentViewModel @JvmOverloads constructor(
     // Study Planner Recommendations (Phase 28)
     val studyRecommendations: StateFlow<List<StudySessionRecommendation>> = combine(
         exams,
-        tasks
-    ) { currentExams, tasksList ->
-        StudyPlannerEngine.generateStudyPlan(currentExams, tasksList)
+        tasks,
+        attendance
+    ) { currentExams, tasksList, attendanceList ->
+        StudyPlannerEngine.generateStudyPlan(
+            exams = currentExams,
+            tasks = tasksList,
+            attendanceList = attendanceList,
+            todayDate = com.example.domain.util.JalaliCalendarUtil.today().format("/")
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Student Gamification & Academic Badges Profile (Phase v5)
