@@ -119,7 +119,6 @@ fun ExamCard(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 132.dp, max = 248.dp)
-            .testTag("exam_card")
             .tactileClickable { onSetReminder() },
         shape = StudentShapeTokens.Card,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
