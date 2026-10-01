@@ -256,7 +256,11 @@ object StudyPlannerEngine {
         val today = normalizeDate(todayDate)
 
         val upcomingExams = exams
-            .filter { it.courseName.isNotBlank() && normalizeDate(it.solarDate).isNotBlank() }
+            .filter {
+                it.courseName.isNotBlank() &&
+                    normalizeDate(it.solarDate).isNotBlank() &&
+                    normalizeDate(it.solarDate) >= today
+            }
             .distinctBy { it.id }
             .sortedWith(
                 compareBy<ExamItem>({ normalizeDate(it.solarDate) }, { it.time.trim() }, { it.courseName.trim() })
