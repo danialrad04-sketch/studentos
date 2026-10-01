@@ -290,6 +290,8 @@ fun FirstTimeAppTourDialog(
                         fontSize = 17.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = TourTextPrimary,
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(4.dp))
