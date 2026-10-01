@@ -150,7 +150,9 @@ fun AttendanceRadarScreen(
                 Text(
                     text = "مدیریت استرس غیبت و محافظت از کارت حضور در جلسه امتحانات",
                     fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
 
@@ -622,7 +624,10 @@ fun AttendanceCard(
                             text = courseName,
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 13.5.sp,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            modifier = Modifier.widthIn(max = 220.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Surface(
