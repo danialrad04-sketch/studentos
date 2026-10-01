@@ -300,11 +300,18 @@ fun AcademicCopilotDialog(
                         }
                     }
 
-                    AcademicMarkdownText(
-                        text = conversationResponse,
-                        isUser = false,
-                        fontSize = 13.sp
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 280.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        AcademicMarkdownText(
+                            text = conversationResponse,
+                            isUser = false,
+                            fontSize = 13.sp
+                        )
+                    }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
