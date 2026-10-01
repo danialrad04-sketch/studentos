@@ -103,8 +103,8 @@ fun StudentTodayCommandStrip(
                     )
                     Text(
                         when {
-                            dangerAttendance > 0 -> "\${dangerAttendance} درس به توجه فوری نیاز دارد."
-                            openTasks > 0 -> "\${openTasks} کار باز داری؛ یکی را جلو بینداز."
+                            dangerAttendance > 0 -> dangerAttendance.toString() + " درس به توجه فوری نیاز دارد."
+                            openTasks > 0 -> openTasks.toString() + " کار باز داری؛ یکی را جلو بینداز."
                             snapshot.nextCourseName != null -> "کلاس بعدی امروز را از دست نده."
                             else -> "برنامه امروز سبک است؛ برای جلو افتادن وقت خوبی است."
                         },
@@ -151,8 +151,8 @@ fun StudentTodayCommandStrip(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                "\u200E\${snapshot.nextCourseStart.orEmpty()} — \${snapshot.nextCourseEnd.orEmpty()}\u200E" +
-                                    if (!snapshot.nextCourseLocation.isNullOrBlank()) " · \${snapshot.nextCourseLocation}" else "",
+                                "\u200E" + snapshot.nextCourseStart.orEmpty() + " — " + snapshot.nextCourseEnd.orEmpty() + "\u200E" +
+                                    if (!snapshot.nextCourseLocation.isNullOrBlank()) " · " + snapshot.nextCourseLocation else "",
                                 fontSize = 10.5.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
@@ -180,7 +180,7 @@ fun StudentTodayCommandStrip(
                     Icon(Icons.Default.PlayArrow, null, Modifier.size(17.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        recommendation?.let { "شروع \${it.recommendedDurationMinutes} دقیقه" } ?: "شروع تمرکز"
+                        recommendation?.let { "شروع " + it.recommendedDurationMinutes + " دقیقه" } ?: "شروع تمرکز"
                     )
                 }
                 OutlinedButton(
