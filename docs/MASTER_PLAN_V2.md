@@ -638,10 +638,11 @@ The first implementation sprint after this plan is intentionally small:
 - shared Academic Context + Priority engines ✅
 
 ### Sprint 4
-- Academic Context Graph ✅ first deterministic implementation
+- Academic Context Graph ✅ explicit model + builder + regression test
 - Copilot command layer ✅ deterministic priority command
 - planning intelligence ✅ urgency-aware study planner
-- deadline collision engine
+- deadline collision engine ✅ task/exam + same-day task detection
+- risk integration ✅ planning collisions flow into Academic Intelligence
 - study-plan preview/accept flow
 
 ### Sprint 5
