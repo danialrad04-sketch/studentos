@@ -1222,7 +1222,7 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun signInWithEmail(email: String, password: String, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            when (val res = authManager.signInWithEmail(email, password)) {
+            when (val res = authManager.signInWithEmailResilient(email, password)) {
                 is com.example.domain.model.AuthResult.Success -> {
                     addNotification("ورود به حساب", "با موفقیت به حساب ${res.user.displayName} وارد شدید.")
                     _userMessage.emit(res.message)
@@ -1238,7 +1238,7 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun signUpWithEmail(name: String, email: String, password: String, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            when (val res = authManager.signUpWithEmail(name, email, password)) {
+            when (val res = authManager.signUpWithEmailResilient(name, email, password)) {
                 is com.example.domain.model.AuthResult.Success -> {
                     addNotification("ثبت‌نام حساب", "حساب کاربری جدید ایجاد شد.")
                     _userMessage.emit(res.message)
