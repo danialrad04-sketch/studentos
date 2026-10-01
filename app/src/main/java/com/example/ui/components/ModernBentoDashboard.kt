@@ -117,6 +117,7 @@ fun ModernBentoDashboard(
     academicRisks: List<com.example.domain.model.AcademicRisk> = emptyList(),
     weeklyWorkload: com.example.domain.model.WeeklyAcademicWorkload? = null,
     studyRecommendations: List<StudySessionRecommendation> = emptyList(),
+    primaryPriority: com.example.domain.model.AcademicPriorityItem? = null,
     pomodoroSeconds: Int,
     isPomodoroRunning: Boolean,
     onTogglePomodoro: () -> Unit,
@@ -209,6 +210,7 @@ fun ModernBentoDashboard(
             attendance = attendanceList,
             tasks = tasks,
             exams = exams,
+            priorityOverride = primaryPriority,
             onNavigateTab = onNavigateTab,
             onStartFocus = onTogglePomodoro
         )
