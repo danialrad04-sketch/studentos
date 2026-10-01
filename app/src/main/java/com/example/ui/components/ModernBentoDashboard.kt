@@ -1050,7 +1050,11 @@ private fun ModernCourseCard(
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .widthIn(max = 110.dp)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
                     }
