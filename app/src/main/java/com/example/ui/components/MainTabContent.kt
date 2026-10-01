@@ -79,6 +79,7 @@ fun MainTabContent(
                     coursesWithSessions = coursesWithSessions,
                     attendanceList = attendance,
                     tasks = tasks,
+                    exams = exams,
                     grades = grades,
                     passedUnits = profile.passedUnits,
                     gpa = gpaFormatted,
