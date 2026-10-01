@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -427,6 +428,7 @@ private fun CourseGradeCard(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 122.dp, max = 182.dp)
+            .testTag("grade_card")
             .clickable { onEdit() },
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
