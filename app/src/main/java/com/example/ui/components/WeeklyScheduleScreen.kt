@@ -391,10 +391,9 @@ fun WeeklyScheduleScreen(
                                     .background(MaterialTheme.colorScheme.primary)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(
+                            StudentCardMeta(
                                 text = "تایم‌لاین زنده دانشگاه · روز فعال: ${WEEKDAY_NAMES.getOrNull(selectedDayTab) ?: ""}",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
