@@ -85,15 +85,16 @@ fun TaskContextSummaryV2(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Black
                     )
-                    Text(
-                        when {
+                    StudentCardBody(
+                        text = when {
                             overdue > 0 -> overdue.toString() + " کار عقب‌افتاده داری؛ اول آن‌ها را تعیین تکلیف کن."
                             examLinked > 0 -> examLinked.toString() + " کار باز به امتحان‌های پیش‌رو مرتبط است."
                             open > 0 -> open.toString() + " کار باز داری."
                             else -> "کار بازی باقی نمانده؛ وضعیتت مرتب است."
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2
                     )
                 }
             }
