@@ -54,11 +54,10 @@ fun ExamsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
+                StudentCardTitle(
                     text = "امتحانات پایان‌ترم",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontWeight = FontWeight.Black
                 )
                 Text(
                     text = "برنامه امتحانات پایان‌ترم با ساعت، تاریخ و سالن آزمون",
@@ -204,10 +203,9 @@ fun ExamCard(
                     modifier = Modifier.size(15.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(
+                StudentCardMeta(
                     text = "محل آزمون: ${exam.location}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
