@@ -51,13 +51,11 @@ fun StudentCardBody(
 ) {
     Text(
         text = text,
-        modifier = modifier,
+        modifier = modifier.heightIn(max = 56.dp),
         style = style,
         color = color,
-        modifier = modifier.heightIn(max = 56.dp),
         maxLines = maxLines.coerceIn(1, 3),
-        overflow = TextOverflow.Ellipsis,
-        softWrap = false
+        overflow = TextOverflow.Ellipsis
     )
 }
 
