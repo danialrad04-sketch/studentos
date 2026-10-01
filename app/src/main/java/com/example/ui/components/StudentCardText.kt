@@ -61,13 +61,15 @@ fun StudentCardMeta(
     text: String,
     modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.labelSmall,
-    color: Color = MaterialTheme.colorScheme.onSurfaceVariant
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    fontWeight: FontWeight? = null
 ) {
     Text(
         text = text,
         modifier = modifier,
         style = style,
         color = color,
+        fontWeight = fontWeight,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis
     )
