@@ -1,6 +1,5 @@
 package com.example.ui.components
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,7 +33,7 @@ fun StudentCardTitle(
 ) {
     Text(
         text = text,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         style = style.withOptionalFontSize(fontSize),
         color = color,
         fontWeight = fontWeight,
