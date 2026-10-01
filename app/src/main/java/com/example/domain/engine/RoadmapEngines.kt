@@ -86,6 +86,27 @@ object AcademicRiskEngine {
             }
         }
 
+        // 3. Planning Collisions (Task ↔ Exam and same-day task clusters)
+        AcademicPlanningCollisionEngine.detect(
+            tasks = tasks,
+            exams = exams
+        ).forEach { collision ->
+            risks.add(
+                AcademicRisk(
+                    id = "planning_" + collision.id,
+                    title = collision.title,
+                    description = collision.description,
+                    severity = if (collision.severity == com.example.domain.model.AcademicPlanningCollisionSeverity.HIGH) {
+                        RiskSeverity.HIGH
+                    } else {
+                        RiskSeverity.MEDIUM
+                    },
+                    riskType = AcademicRiskType.UPCOMING_DEADLINE,
+                    recommendedAction = "یکی از فعالیت‌ها را زودتر انجام بده یا موعدها را جابه‌جا کن تا فشار روز موردنظر کاهش یابد."
+                )
+            )
+        }
+
         // 3. Pending Overdue Tasks
         val overdueTasks = tasks.filter { !it.isCompleted && it.dueDate.isNotBlank() }
         if (overdueTasks.size >= 3) {
