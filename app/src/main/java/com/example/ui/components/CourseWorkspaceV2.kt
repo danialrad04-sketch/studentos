@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,7 +54,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
@@ -207,9 +205,8 @@ fun CourseWorkspaceDialogV2(
                                         else -> "برای این درس هنوز فعالیتی ثبت نشده است."
                                     },
                                     style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 2,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 2
                                 )
                                 Row(
                                     Modifier.fillMaxWidth(),
@@ -320,8 +317,8 @@ fun CourseWorkspaceDialogV2(
                                 color = MaterialTheme.colorScheme.surface
                             ) {
                                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text(exam.solarDate, fontWeight = FontWeight.Black)
-                                    Text("\\u200E" + exam.time + "\\u200E", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                    StudentCardMeta(exam.solarDate, fontWeight = FontWeight.Black)
+                                    StudentCardMeta("\\u200E" + exam.time + "\\u200E", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                                     if (exam.location.isNotBlank()) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
@@ -445,7 +442,7 @@ fun CourseWorkspaceDialogV2(
 @Composable
 private fun WorkspaceMetric(value: String, label: String, modifier: Modifier = Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+        StudentCardTitle(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
         StudentCardMeta(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -453,7 +450,7 @@ private fun WorkspaceMetric(value: String, label: String, modifier: Modifier = M
 @Composable
 private fun WorkspaceScoreV2(label: String, value: String, modifier: Modifier = Modifier) {
     Column(modifier) {
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        StudentCardMeta(label, style = MaterialTheme.typography.labelMedium)
         StudentCardTitle(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
     }
 }
@@ -492,7 +489,7 @@ private fun WorkspaceSessionRow(session: CourseSessionEntity, accent: Color) {
                 )
             }
             Spacer(Modifier.width(10.dp))
-            Text("\\u200E" + session.start + " — " + session.end + "\\u200E", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            StudentCardMeta("\\u200E" + session.start + " — " + session.end + "\\u200E", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             if (session.location.isNotBlank()) {
                 Spacer(Modifier.width(8.dp))
                 Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(15.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
