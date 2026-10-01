@@ -93,18 +93,16 @@ object AcademicPriorityEngine {
                     normalizeDate(it.dueDate).isNotBlank()
             }
             .forEach { item ->
-                if (result.none { it.id == "overdue-task:" + item.id || it.id == "task-today:" + item.id }) {
-                    result += AcademicPriorityItem(
-                        id = "exam-linked-task:" + item.id,
-                        kind = AcademicPriorityKind.EXAM_LINKED_TASK,
-                        title = "کار مرتبط با امتحان: " + item.title,
-                        reason = "این کار به درسی مرتبط است که برای آن امتحان ثبت شده است.",
-                        score = 80,
-                        courseId = item.courseId,
-                        courseName = item.courseName,
-                        dueDate = item.dueDate.takeIf { it.isNotBlank() }
-                    )
-                }
+                result += AcademicPriorityItem(
+                    id = "exam-linked-task:" + item.id,
+                    kind = AcademicPriorityKind.EXAM_LINKED_TASK,
+                    title = "کار مرتبط با امتحان: " + item.title,
+                    reason = "این کار به درسی مرتبط است که برای آن امتحان ثبت شده است.",
+                    score = 80,
+                    courseId = item.courseId,
+                    courseName = item.courseName,
+                    dueDate = item.dueDate.takeIf { it.isNotBlank() }
+                )
             }
 
         val todaySessions = coursesWithSessions
