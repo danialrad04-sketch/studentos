@@ -654,6 +654,83 @@ The first implementation sprint after this plan is intentionally small:
 
 ---
 
+
+# 12. Distribution & Network Resilience
+
+Student OS must remain reviewable and usable on restricted networks common to the target market.
+
+## D1 — Authentication resilience
+- Firebase remains the primary identity provider.
+- Email sign-in/sign-up may fall back to the self-hosted backend only when Firebase transport/service access is unavailable.
+- Invalid credentials must never trigger fallback.
+- Google sign-in continues through Credential Manager + Firebase; the production signing certificate must remain unchanged.
+
+## D2 — Release configuration safety
+- Production builds must receive a real HTTPS backend endpoint through CI secrets.
+- Placeholder endpoints such as example.com are forbidden in release artifacts.
+- Release CI fails closed if the backend endpoint secret is absent.
+
+## D3 — Marketplace review mode
+- Guest mode must reach the core product without cloud authentication.
+- Review instructions must clearly explain Guest access and any required test credentials.
+- Public privacy-policy and account-deletion pages must be available before store submission.
+
+## D4 — Release hardening
+- Android API 36 target.
+- 16 KB page-size compatibility check.
+- AAB as primary store artifact.
+- APK for direct QA/reviewer testing.
+- Immutable versionCode progression.
+- Signing certificate continuity verification.
+
+# 13. Context Graph v2 — Next Capability Layer
+
+The shared academic context becomes the common read model for:
+- Dashboard
+- Schedule
+- Course Workspace
+- Task Center
+- Exam Center
+- Copilot
+- Planning
+
+New capability work should prefer deriving views from the graph instead of creating duplicated feature-specific state.
+
+# 14. Copilot Command Layer
+
+Phase C1:
+- deterministic intents for read-only queries
+- explicit action preview
+- confirmation for mutations
+- undo after safe mutations
+- context-aware suggested commands
+- offline fallback for deterministic queries
+
+Never allow the LLM to directly write Room/cloud state.
+
+# 15. Planning Intelligence
+
+Phase P1:
+- deadline collision detection
+- exam preparation windows
+- workload balancing
+- focus-session suggestions
+- explainable priority reasons
+- user override
+- preview-before-commit
+
+# 16. Layout Safety Contract
+
+Every information card has an explicit text policy:
+- title: 1 line
+- metadata: 1 line
+- body: 2 lines by default
+- expandable content: only when the user explicitly opens it
+- no dynamic string may define an uncontrolled card height
+- long text belongs in a scrollable detail surface, not a dashboard card
+
+Any new card that violates this contract requires a UI test or a documented exception.
+
 # 11. Success Criteria
 
 The v2 success test is not “more features”.
