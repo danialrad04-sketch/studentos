@@ -781,7 +781,7 @@ private fun EmptyStateCard(message: String) {
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
+            StudentCardBody(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
