@@ -13,7 +13,9 @@ import com.example.domain.model.SubscriptionDetails
 import com.example.domain.model.SubscriptionTier
 import com.example.domain.model.UserAccount
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.auth
@@ -142,22 +144,31 @@ class StudentAuthManager(private val context: Context) {
     }
 
     private fun isFirebaseTransportFailure(message: String): Boolean {
-        val value = message.lowercase()
-        return listOf(
-            "network",
-            "اتصال",
-            "در دسترس نیست",
-            "سرویس احراز هویت در دسترس نیست",
-            "unauthorized",
-            "401",
-            "403",
-            "unavailable",
-            "timeout",
-            "timed out",
-            "غیرمجاز"
-        ).any(value::contains)
+        return message == FIREBASE_TRANSPORT_ERROR
     }
 
+    private fun firebaseFailureMessage(exception: Exception): String {
+        val code = (exception as? FirebaseAuthException)?.errorCode.orEmpty()
+        val transport = exception is FirebaseNetworkException ||
+            code.equals("ERROR_NETWORK_REQUEST_FAILED", ignoreCase = true) ||
+            code.equals("ERROR_API_NOT_AVAILABLE", ignoreCase = true)
+
+        if (transport) return FIREBASE_TRANSPORT_ERROR
+
+        return when {
+            code.contains("USER_NOT_FOUND", ignoreCase = true) ->
+                "حسابی با این ایمیل یافت نشد. لطفاً ثبت‌نام کنید."
+            code.contains("WRONG_PASSWORD", ignoreCase = true) ||
+                code.contains("INVALID_CREDENTIAL", ignoreCase = true) ->
+                "ایمیل یا رمز عبور واردشده صحیح نیست."
+            code.contains("EMAIL_ALREADY_IN_USE", ignoreCase = true) ->
+                "این ایمیل قبلاً ثبت‌نام شده است. لطفاً وارد شوید."
+            code.contains("WEAK_PASSWORD", ignoreCase = true) ->
+                "رمز عبور انتخابی ضعیف است."
+            else ->
+                "خطای احراز هویت: " + (exception.localizedMessage ?: "لطفاً دوباره تلاش کنید.")
+        }
+    }
     private fun buildUserFromFirebase(fbUser: FirebaseUser?): UserAccount {
         if (fbUser == null) {
             return UserAccount(
@@ -246,13 +257,7 @@ class StudentAuthManager(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Sign in failed: ${e.message}", e)
             com.example.util.CrashLogger.recordException(e)
-            val friendlyMsg = when {
-                e.message?.contains("user-not-found", ignoreCase = true) == true -> "حسابی با این ایمیل یافت نشد. لطفاً ثبت‌نام کنید."
-                e.message?.contains("wrong-password", ignoreCase = true) == true -> "رمز عبور وارد شده اشتباه است."
-                e.message?.contains("network", ignoreCase = true) == true -> "خطا در اتصال به اینترنت. لطفاً شبکه را بررسی کنید."
-                else -> "خطای احراز هویت: ${e.localizedMessage ?: "اطلاعات نامعتبر است."}"
-            }
-            AuthResult.Error(friendlyMsg)
+            AuthResult.Error(firebaseFailureMessage(e))
         }
     }
 
@@ -318,12 +323,7 @@ class StudentAuthManager(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Sign up failed: ${e.message}", e)
             com.example.util.CrashLogger.recordException(e)
-            val friendlyMsg = when {
-                e.message?.contains("email-already-in-use", ignoreCase = true) == true -> "این ایمیل قبلاً ثبت‌نام شده است. لطفاً وارد شوید."
-                e.message?.contains("weak-password", ignoreCase = true) == true -> "رمز عبور انتخابی ضعیف است."
-                else -> "خطا در ثبت‌نام: ${e.localizedMessage ?: "لطفاً مجدداً تلاش نمایید."}"
-            }
-            AuthResult.Error(friendlyMsg)
+            AuthResult.Error(firebaseFailureMessage(e))
         }
     }
 
@@ -688,6 +688,7 @@ class StudentAuthManager(private val context: Context) {
 
     companion object {
         private const val TAG = "StudentAuthManager"
+        private const val FIREBASE_TRANSPORT_ERROR = "سرویس احراز هویت در دسترس نیست."
 
         @Volatile
         private var INSTANCE: StudentAuthManager? = null
