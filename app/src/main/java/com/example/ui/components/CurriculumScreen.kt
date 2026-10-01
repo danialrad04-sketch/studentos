@@ -433,14 +433,20 @@ private fun EvaluatedCourseRow(course: EvaluatedCurriculumCourse) {
                     text = course.name,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
                 if (course.courseType.isNotEmpty()) {
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "· ${course.courseType}",
+                        text = "· " + course.courseType,
                         fontSize = 10.sp,
-                        color = onSurfaceVariant
+                        color = onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = 100.dp)
                     )
                 }
             }
@@ -487,7 +493,9 @@ private fun EvaluatedCourseRow(course: EvaluatedCurriculumCourse) {
                             text = reason.explanation,
                             fontSize = 10.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            lineHeight = 14.sp
+                            lineHeight = 14.sp,
+                            maxLines = 3,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
                 }
