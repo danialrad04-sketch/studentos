@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -76,6 +77,7 @@ fun SemesterTimelineCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(max = 360.dp)
             .tactileClickable { isExpanded = !isExpanded },
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
@@ -110,7 +112,9 @@ fun SemesterTimelineCard(
                         text = timelineInfo.subHeadline,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp
+                        lineHeight = 18.sp,
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
 
