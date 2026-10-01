@@ -51,6 +51,8 @@ fun MainTabContent(
     studyRecommendations: List<StudySessionRecommendation> = emptyList(),
     primaryPriority: com.example.domain.model.AcademicPriorityItem? = null,
     planningCollisions: List<com.example.domain.model.AcademicPlanningCollision> = emptyList(),
+    acceptedStudyPlanIds: Set<String> = emptySet(),
+    onAcceptStudyPlan: (StudySessionRecommendation) -> Unit = {},
     pomodoroSeconds: Int,
     isPomodoroRunning: Boolean,
     gamificationProfile: StudentGamificationProfile,
@@ -92,6 +94,8 @@ fun MainTabContent(
                     weeklyWorkload = weeklyWorkload,
                     studyRecommendations = studyRecommendations,
                     primaryPriority = primaryPriority,
+                    acceptedStudyPlanIds = acceptedStudyPlanIds,
+                    onAcceptStudyPlan = onAcceptStudyPlan,
                     pomodoroSeconds = pomodoroSeconds,
                     isPomodoroRunning = isPomodoroRunning,
                     onTogglePomodoro = {
