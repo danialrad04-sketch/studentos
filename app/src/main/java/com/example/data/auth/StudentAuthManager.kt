@@ -100,7 +100,8 @@ class StudentAuthManager(private val context: Context) {
                 _isInitialized.value = true
                 return
             }
-            val tokenStore = BackendApiClient.getInstance(context).tokenStore()
+            val client = BackendApiClient.getInstance(context)
+            val tokenStore = client.tokenStore()
             val token = tokenStore.getAccessToken()
             val userId = tokenStore.getUserId()
             if (token != null && userId != null) {
