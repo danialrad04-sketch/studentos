@@ -235,6 +235,17 @@ Visual principles:
 - no generic neon/glass SaaS treatment
 - information first
 
+
+### Card Sizing Standard (mandatory)
+- Compact information cards must have bounded dynamic text.
+- Titles: max 1 line + ellipsis.
+- Descriptions: max 2–3 lines + ellipsis.
+- Metadata/chips: max 1 line + ellipsis.
+- Compact cards must use an explicit height band when their content is structurally fixed.
+- Detail/workspace surfaces may show full text only inside a bounded scrolling region.
+- No user-provided string may be allowed to determine the unbounded height of a reusable card.
+- Every new card component must include a long-content regression case before merge.
+
 ## Phase A2 — App Shell 2.0
 Improve:
 - responsive shell
@@ -605,18 +616,20 @@ The order intentionally front-loads UX consistency and shared context before add
 The first implementation sprint after this plan is intentionally small:
 
 ### Sprint 1
-- audit all main screens and shared components
-- create UX inventory
-- identify duplicate UI patterns
-- define v2 component conventions
-- establish Dashboard/Schedule/Course information hierarchy
-- add tests around newly shared context relationships
+- audit all main screens and shared components ✅
+- create UX inventory ✅
+- identify duplicate UI patterns ✅
+- define v2 component conventions ✅
+- establish Dashboard/Schedule/Course information hierarchy ✅
+- add tests around newly shared context relationships ✅
+- enforce card sizing/long-text standards across core screens ✅
 - no backend/schema migration
 
 ### Sprint 2
 - implement shell 2.0
-- implement Dashboard 2.0
-- implement Schedule 2.0
+- implement Dashboard 2.0 ✅ first contextual layer
+- implement Schedule 2.0 ✅ first contextual layer
+- unify bounded-card behavior across core academic surfaces ✅
 
 ### Sprint 3
 - Course Workspace 3.0
