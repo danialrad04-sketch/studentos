@@ -59,7 +59,9 @@ fun OfflineStatusBanner(
                 Text(
                     "آفلاین هستید؛ داده‌های ذخیره‌شده روی دستگاه همچنان در دسترس است.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
         }
