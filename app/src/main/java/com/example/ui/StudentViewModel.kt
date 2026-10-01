@@ -113,9 +113,14 @@ class StudentViewModel @JvmOverloads constructor(
     val isAuthInitialized: StateFlow<Boolean> = authManager.isInitialized
     val guestModeEnabled: StateFlow<Boolean> = preferencesRepository.guestModeEnabled
     val syncStatus: StateFlow<com.example.domain.model.SyncStatusSnapshot> = SyncStatusStore.status
+    val acceptedStudyPlanIds: StateFlow<Set<String>> = preferencesRepository.acceptedStudyPlanIds
 
     fun continueAsGuest() {
         preferencesRepository.setGuestModeEnabled(true)
+    }
+
+    fun acceptStudyRecommendation(recommendation: StudySessionRecommendation) {
+        preferencesRepository.acceptStudyRecommendation(recommendation.id)
     }
 
     private val _databaseRecoveryWarning = MutableStateFlow(false)
