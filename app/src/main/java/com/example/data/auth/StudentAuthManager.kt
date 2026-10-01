@@ -390,13 +390,7 @@ class StudentAuthManager(private val context: Context) {
                         displayName = dispName,
                         photoUrl = null,
                         isGuest = false,
-                        subscription = SubscriptionDetails(
-                            tier = SubscriptionTier.PRO,
-                            isCloudSyncEnabled = true,
-                            isUnlimitedExportEnabled = true,
-                            isGpaPredictorUnlocked = true,
-                            maxDailyAiQuota = 999
-                        )
+                        subscription = backendSubscription(client)
                     )
                     _currentUser.value = userAccount
 
@@ -427,8 +421,8 @@ class StudentAuthManager(private val context: Context) {
         if (email.isBlank() || !email.contains("@")) {
             return@withContext AuthResult.Error("ایمیل وارد شده نامعتبر است.")
         }
-        if (password.length < 6) {
-            return@withContext AuthResult.Error("رمز عبور باید حداقل ۶ کاراکتر باشد.")
+        if (password.length < 8) {
+            return@withContext AuthResult.Error("رمز عبور باید حداقل ۸ کاراکتر باشد.")
         }
 
         try {
@@ -453,13 +447,7 @@ class StudentAuthManager(private val context: Context) {
                         displayName = dispName,
                         photoUrl = null,
                         isGuest = false,
-                        subscription = SubscriptionDetails(
-                            tier = SubscriptionTier.PRO,
-                            isCloudSyncEnabled = true,
-                            isUnlimitedExportEnabled = true,
-                            isGpaPredictorUnlocked = true,
-                            maxDailyAiQuota = 999
-                        )
+                        subscription = backendSubscription(client)
                     )
                     _currentUser.value = userAccount
 
