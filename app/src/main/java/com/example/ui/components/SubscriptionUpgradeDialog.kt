@@ -109,9 +109,11 @@ fun SubscriptionUpgradeDialog(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "اشتراک فعلی: ${userAccount.subscription.tier.titleFa}",
+                            text = "اشتراک فعلی: " + userAccount.subscription.tier.titleFa,
                             fontSize = 10.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
                 }
