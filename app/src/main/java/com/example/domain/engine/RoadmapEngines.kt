@@ -253,12 +253,41 @@ object StudyPlannerEngine {
     fun generateStudyPlan(
         exams: List<ExamItem>,
         tasks: List<TaskEntity>
-    ): List<StudySessionRecommendation> = generateStudyPlan(
-        exams = exams,
-        tasks = tasks,
-        attendanceList = emptyList(),
-        todayDate = com.example.domain.util.JalaliCalendarUtil.today().format("/")
-    )
+    ): List<StudySessionRecommendation> {
+        // Keep the original two-argument contract deterministic and independent
+        // of the current calendar. The v2 overload below is date-aware.
+        val examRecommendations = exams
+            .filter { it.courseName.isNotBlank() }
+            .distinctBy { it.id }
+            .sortedWith(compareBy<ExamItem>({ normalizeDate(it.solarDate) }, { it.time.trim() }, { it.courseName.trim() }))
+            .take(4)
+            .map { exam ->
+                StudySessionRecommendation(
+                    id = "study_exam_" + exam.id,
+                    courseName = exam.courseName.trim(),
+                    recommendedDurationMinutes = 60,
+                    priorityReason = "آمادگی آزمون مورخ " + exam.solarDate.trim(),
+                    targetType = "آمادگی آزمون"
+                )
+            }
+
+        val taskRecommendations = tasks
+            .filter { !it.isCompleted && it.courseName.isNotBlank() && it.title.isNotBlank() }
+            .distinctBy { it.id }
+            .sortedWith(compareBy<TaskEntity>({ normalizeDate(it.dueDate) }, { it.courseName.trim() }, { it.title.trim() }))
+            .take(8)
+            .map { task ->
+                StudySessionRecommendation(
+                    id = "study_task_" + task.id,
+                    courseName = task.courseName.trim(),
+                    recommendedDurationMinutes = 30,
+                    priorityReason = "انجام کار: " + task.title.trim(),
+                    targetType = "تکمیل تکلیف"
+                )
+            }
+
+        return (examRecommendations + taskRecommendations).take(8)
+    }
 
     /**
      * v2 planner:
