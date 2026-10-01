@@ -97,7 +97,7 @@ fun AcademicIntelligenceBanner(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Text(
+                            StudentCardTitle(
                                 text = topRisk.title,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
@@ -119,14 +119,16 @@ fun AcademicIntelligenceBanner(
                             }
                         }
                         Spacer(modifier = Modifier.height(2.dp))
-                        Text(
+                        StudentCardBody(
                             text = topRisk.description,
+                            maxLines = 3,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(
+                        StudentCardBody(
                             text = "💡 راهکار پیشنهادی: ${topRisk.recommendedAction}",
+                            maxLines = 2,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium,
