@@ -280,7 +280,6 @@ fun TaskCard(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 72.dp, max = 112.dp)
-            .testTag("task_card")
             .tactileClickable { onToggle() },
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = containerColor),
