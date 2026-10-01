@@ -538,8 +538,8 @@ private fun CommandActionItem(
             }
             Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                Text(text = subtitle, fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                StudentCardTitle(text = title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                StudentCardMeta(text = subtitle)
             }
             Text(text = "اجرا ↵", fontSize = 10.sp, color = iconColor, fontWeight = FontWeight.Bold)
         }
