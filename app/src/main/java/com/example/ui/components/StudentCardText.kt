@@ -77,7 +77,7 @@ fun StudentCardMeta(
 ) {
     Text(
         text = text,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         style = style.withOptionalFontSize(fontSize),
         color = color,
         fontWeight = fontWeight,
