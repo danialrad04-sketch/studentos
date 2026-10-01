@@ -15,6 +15,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,6 +39,8 @@ fun SyncStatusBannerV2(
 ) {
     if (isGuest) return
 
+    val context = LocalContext.current
+    val online = rememberValidatedNetworkV2(context)
     val (icon, title) = when {
         !online -> Icons.Outlined.CloudOff to "آفلاین؛ داده‌های محلی در دسترس است"
         status.state == SyncState.SYNCING -> Icons.Outlined.CloudSync to "در حال همگام‌سازی"
@@ -67,4 +77,32 @@ fun SyncStatusBannerV2(
             }
         }
     }
+
+@Composable
+private fun rememberValidatedNetworkV2(context: android.content.Context): Boolean {
+    fun current(): Boolean {
+        val manager = context.getSystemService(ConnectivityManager::class.java)
+        val network = manager.activeNetwork ?: return false
+        val capabilities = manager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
+
+    val state = remember { mutableStateOf(current()) }
+
+    DisposableEffect(context) {
+        val manager = context.getSystemService(ConnectivityManager::class.java)
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) { state.value = current() }
+            override fun onLost(network: Network) { state.value = current() }
+            override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
+                state.value = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+            }
+        }
+        manager.registerDefaultNetworkCallback(callback)
+        onDispose { manager.unregisterNetworkCallback(callback) }
+    }
+
+    return state.value
+}
+
 }
