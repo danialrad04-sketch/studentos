@@ -312,7 +312,9 @@ fun SemesterHistoryScreen(
                     ) {
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(\n                                    text = semester.title,\n                                    style = MaterialTheme.typography.titleMedium,\n                                    fontWeight = FontWeight.Bold,\n                                    maxLines = 1,\n                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,\n                                    modifier = Modifier.widthIn(max = 180.dp)\n                                )
+                                Text(
+                                    text = semester.title,\n                                    style = MaterialTheme.typography.titleMedium,\n                                    fontWeight = FontWeight.Bold,\n                                    maxLines = 1,\n                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,\n                                    modifier = Modifier.widthIn(max = 180.dp)
+                                )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 if (isCurrent) {
                                     Box(
