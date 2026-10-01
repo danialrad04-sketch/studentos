@@ -141,16 +141,29 @@ fun AcademicIntelligenceScreen(
                                 tint = if (critical) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                             )
                             Spacer(Modifier.size(StudentSpacing.Sm))
-                            Text(risk.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(
+                                risk.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
                         }
                         Spacer(Modifier.height(StudentSpacing.Sm))
                         Text(
                             risk.description,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 3,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                         Spacer(Modifier.height(StudentSpacing.Md))
-                        Text("پیشنهاد: ${risk.recommendedAction}", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            "پیشنهاد: " + risk.recommendedAction,
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 2,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
                     }
                 }
             }
