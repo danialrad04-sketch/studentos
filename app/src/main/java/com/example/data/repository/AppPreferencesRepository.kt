@@ -103,7 +103,12 @@ class AppPreferencesRepository(context: Context) {
     }
 
     private fun readGuestModeEnabled(): Boolean {
-        return prefs.getBoolean(KEY_GUEST_MODE_ENABLED, false)
+        // Fresh installs must remain usable without network authentication.
+        // Existing users keep their explicit sign-out choice because sign-out writes this key.
+        return prefs.getBoolean(
+            KEY_GUEST_MODE_ENABLED,
+            !prefs.getBoolean(KEY_FIRST_LAUNCH_COMPLETED, false)
+        )
     }
 
     fun setGuestModeEnabled(enabled: Boolean) {
