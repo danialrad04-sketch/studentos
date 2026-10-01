@@ -269,7 +269,7 @@ fun BackupRestoreDialog(
                     border = androidx.compose.foundation.BorderStroke(1.dp, AcademicNavy.copy(alpha = 0.35f))
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
-                        Text("بازیابی از متن پشتیبان JSON", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("بازیابی از متن پشتیبان JSON", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             "متن پشتیبان قبلی را در کادر زیر جای‌گذاری کنید تا تمامی دروس و نمرات فوراً بازگردانی شوند.",
