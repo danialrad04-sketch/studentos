@@ -371,7 +371,7 @@ private fun Step1ReviewCurrentSemester(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text(text = course.name, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                        Text(text = course.name, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         val courseDetail = listOfNotNull(
                             course.courseCode.takeIf { it.isNotBlank() },
                             course.professor.takeIf { it.isNotBlank() }
@@ -736,8 +736,8 @@ private fun ActionItemRow(number: String, title: String, subtitle: String) {
         }
         Spacer(modifier = Modifier.width(10.dp))
         Column {
-            Text(text = title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-            Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text = title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            Text(text = subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         }
     }
 }
