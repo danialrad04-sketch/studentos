@@ -148,7 +148,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
-          ./gradlew assembleRelease bundleRelease -PVERSION_CODE=5 -PVERSION_NAME=2.0.0 --stacktrace --no-daemon
+          ./gradlew assembleRelease bundleRelease -PVERSION_CODE=6 -PVERSION_NAME=2.0.1 --stacktrace --no-daemon
 
       - name: Verify release package, version and signing certificate
         shell: bash
@@ -163,7 +163,7 @@ jobs:
           test -s "$AAB"
           "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner" verify --verbose "$APK"
           BADGING="$("$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/aapt" dump badging "$APK")"
-          echo "$BADGING" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='5' versionName='2.0.0'"
+          echo "$BADGING" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='6' versionName='2.0.1'"
           EXPECTED_SHA256="a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950"
           EXPECTED_SHA1="b25fe31884ec18a96ae09e6fc0070fd20717a766"
           KEY_SHA256="$(keytool -list -v -keystore "$KEYSTORE_PATH" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" | awk -F': ' '/SHA256:/{print $2; exit}' | tr -d ':' | tr '[:upper:]' '[:lower:]')"
