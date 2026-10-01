@@ -428,7 +428,6 @@ private fun CourseGradeCard(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 122.dp, max = 182.dp)
-            .testTag("grade_card")
             .clickable { onEdit() },
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
