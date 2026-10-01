@@ -103,7 +103,7 @@ class AppPreferencesRepository(context: Context) {
     }
 
     private fun readGuestModeEnabled(): Boolean {
-        return prefs.getBoolean(KEY_GUEST_MODE_ENABLED, false)
+        return prefs.getBoolean(KEY_GUEST_MODE_ENABLED, true)
     }
 
     fun setGuestModeEnabled(enabled: Boolean) {
