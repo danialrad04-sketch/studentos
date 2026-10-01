@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -869,6 +870,7 @@ private fun CopilotActionProposalCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = 112.dp, max = 236.dp)
             .padding(start = 40.dp, top = 4.dp, bottom = 4.dp),
         shape = StudentShapeTokens.Card,
         colors = CardDefaults.cardColors(
