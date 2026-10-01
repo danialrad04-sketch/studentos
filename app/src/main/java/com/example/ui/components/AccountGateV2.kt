@@ -185,11 +185,11 @@ fun AccountGateV2(
                         )
 
                         message?.let {
-                            Text(
-                                it,
+                            StudentCardBody(
+                                text = it,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.error,
-                                textAlign = TextAlign.Center,
+                                maxLines = 3,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
