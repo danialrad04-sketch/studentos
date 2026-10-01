@@ -490,10 +490,11 @@ private fun AcademicBadgeCard(
                     }
 
                     Spacer(modifier = Modifier.height(2.dp))
-                    Text(
+                    StudentCardBody(
                         text = badge.description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (badge.isUnlocked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = if (badge.isUnlocked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        maxLines = 2
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
