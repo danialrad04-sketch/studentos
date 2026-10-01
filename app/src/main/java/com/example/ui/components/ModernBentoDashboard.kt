@@ -196,6 +196,7 @@ fun ModernBentoDashboard(
             coursesWithSessions = coursesWithSessions,
             attendance = attendanceList,
             tasks = tasks,
+            exams = exams,
             studyRecommendations = studyRecommendations,
             onNavigateTab = onNavigateTab,
             onStartFocus = onTogglePomodoro
