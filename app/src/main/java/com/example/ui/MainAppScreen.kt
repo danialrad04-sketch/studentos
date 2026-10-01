@@ -228,6 +228,8 @@ fun MainAppScreen(
     val searchQuery by studentViewModel.searchQuery.collectAsStateWithLifecycle()
     val globalSearchResults by studentViewModel.globalSearchResults.collectAsStateWithLifecycle()
     val gamificationProfile by studentViewModel.gamificationProfile.collectAsStateWithLifecycle()
+    val studyRecommendations by studentViewModel.studyRecommendations.collectAsStateWithLifecycle()
+    val academicPriorities by studentViewModel.academicPriorities.collectAsStateWithLifecycle()
 
     // Dynamic weighted GPA: calculates accurately from evaluated grades, or falls back to declared GPA from setup
     val evaluatedGrades = grades.filter { (it.midtermGrade + it.finalGrade) > 0.0 }
@@ -499,6 +501,8 @@ fun MainAppScreen(
                                 academicRisks = academicRisks,
                                 weeklyWorkload = weeklyWorkload,
                                 candidateSemesterPlans = candidateSemesterPlans,
+                                studyRecommendations = studyRecommendations,
+                                primaryPriority = academicPriorities.firstOrNull(),
                                 pomodoroSeconds = pomodoroSeconds,
                                 isPomodoroRunning = isPomodoroRunning,
                                 gamificationProfile = gamificationProfile,
