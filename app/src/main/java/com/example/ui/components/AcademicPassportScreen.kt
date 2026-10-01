@@ -398,7 +398,7 @@ private fun MetricTile(
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(
+            StudentCardTitle(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Black,
