@@ -52,9 +52,10 @@ fun AcademicPriorityActionCardV2(
     exams: List<ExamItem>,
     onNavigateTab: (AppTab) -> Unit,
     onStartFocus: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    priorityOverride: AcademicPriorityItem? = null
 ) {
-    val priority = remember(courses, coursesWithSessions, attendance, tasks, exams) {
+    val priority = priorityOverride ?: remember(courses, coursesWithSessions, attendance, tasks, exams) {
         AcademicPriorityEngine.topOrNull(
             courses = courses,
             coursesWithSessions = coursesWithSessions,
