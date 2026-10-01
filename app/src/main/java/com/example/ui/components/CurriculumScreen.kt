@@ -82,12 +82,7 @@ fun CurriculumScreen(
             "اطلاعات چارت پس از تکمیل مشخصات تحصیلی نمایش داده می‌شود"
         }
         Column {
-            Text(
-                text = chartTitle,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            StudentCardTitle(text = chartTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
             Text(
                 text = "وضعیت زنده دروس و زنجیره پیش‌نیازها · $totalUnits",
                 fontSize = 11.sp,
@@ -182,7 +177,7 @@ fun CurriculumScreen(
                     ) {
                         Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = Rose600, modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = "چارت معتبر یافت نشد: ${matchState.explanation}", style = MaterialTheme.typography.bodySmall, color = Rose600)
+                        StudentCardBody(text = "چارت معتبر یافت نشد: ${matchState.explanation}", style = MaterialTheme.typography.bodySmall, color = Rose600, maxLines = 3)
                     }
                 }
             }
