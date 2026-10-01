@@ -444,12 +444,9 @@ fun SemesterHistoryScreen(
                                                 course.courseCode.takeIf { it.isNotBlank() },
                                                 course.professor.takeIf { it.isNotBlank() }
                                             ).joinToString(" | ").ifBlank { "ثبت شده در آرشیو" }
-                                            Text(
+                                            StudentCardMeta(
                                                 text = courseDetail,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                                style = MaterialTheme.typography.bodySmall
                                             )
                                         }
                                         Text(
