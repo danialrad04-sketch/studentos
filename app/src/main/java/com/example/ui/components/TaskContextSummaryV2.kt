@@ -27,6 +27,7 @@ import com.example.data.local.entity.CourseEntity
 import com.example.data.local.entity.TaskEntity
 import com.example.ui.models.ExamItem
 import com.example.domain.engine.AcademicContextEngine
+import com.example.domain.engine.AcademicPlanningCollisionEngine
 import com.example.domain.util.JalaliCalendarUtil
 import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.AcademicNavy
@@ -51,7 +52,10 @@ fun TaskContextSummaryV2(
     val open = snapshot.openTaskCount
     val overdue = snapshot.overdueTaskCount
     val examLinked = snapshot.examsWithOpenTasksCount
-
+    val collisionCount = AcademicPlanningCollisionEngine.detect(
+        tasks = tasks,
+        exams = exams
+    ).size
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -83,9 +87,9 @@ fun TaskContextSummaryV2(
                     )
                     Text(
                         when {
-                            overdue > 0 -> "\${overdue} کار عقب‌افتاده داری؛ اول آن‌ها را تعیین تکلیف کن."
-                            examLinked > 0 -> "\${examLinked} کار باز به امتحان‌های پیش‌رو مرتبط است."
-                            open > 0 -> "\${open} کار باز داری."
+                            overdue > 0 -> overdue.toString() + " کار عقب‌افتاده داری؛ اول آن‌ها را تعیین تکلیف کن."
+                            examLinked > 0 -> examLinked.toString() + " کار باز به امتحان‌های پیش‌رو مرتبط است."
+                            open > 0 -> open.toString() + " کار باز داری."
                             else -> "کار بازی باقی نمانده؛ وضعیتت مرتب است."
                         },
                         style = MaterialTheme.typography.bodySmall,
@@ -101,6 +105,7 @@ fun TaskContextSummaryV2(
                 TaskSignal(open.toString(), "باز", AcademicNavy, Modifier.weight(1f))
                 TaskSignal(overdue.toString(), "عقب‌افتاده", MaterialTheme.colorScheme.error, Modifier.weight(1f))
                 TaskSignal(examLinked.toString(), "مرتبط با امتحان", AcademicOlive, Modifier.weight(1f))
+                TaskSignal(collisionCount.toString(), "تداخل برنامه", MaterialTheme.colorScheme.error, Modifier.weight(1f))
             }
         }
     }
