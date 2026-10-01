@@ -49,6 +49,7 @@ fun MainTabContent(
     weeklyWorkload: WeeklyAcademicWorkload,
     candidateSemesterPlans: List<SemesterPlan>,
     studyRecommendations: List<StudySessionRecommendation> = emptyList(),
+    primaryPriority: com.example.domain.model.AcademicPriorityItem? = null,
     pomodoroSeconds: Int,
     isPomodoroRunning: Boolean,
     gamificationProfile: StudentGamificationProfile,
@@ -89,6 +90,7 @@ fun MainTabContent(
                     academicRisks = academicRisks,
                     weeklyWorkload = weeklyWorkload,
                     studyRecommendations = studyRecommendations,
+                    primaryPriority = primaryPriority,
                     pomodoroSeconds = pomodoroSeconds,
                     isPomodoroRunning = isPomodoroRunning,
                     onTogglePomodoro = {
