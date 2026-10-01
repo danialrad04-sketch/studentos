@@ -365,20 +365,15 @@ fun CourseWorkspaceDialogV2(
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             if (course.professor.isNotBlank()) {
-                                Text("استاد: " + course.professor, style = MaterialTheme.typography.bodyMedium)
+                                StudentCardMeta("استاد: " + course.professor, style = MaterialTheme.typography.bodyMedium)
                             }
                             if (!course.notes.isNullOrBlank()) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(max = 120.dp)
-                                        .verticalScroll(rememberScrollState())
-                                ) {
-                                    Text(
-                                        course.notes.orEmpty(),
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                                StudentCardBody(
+                                    text = course.notes.orEmpty(),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    maxLines = 3,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
                             }
                         }
                     }
@@ -451,7 +446,7 @@ fun CourseWorkspaceDialogV2(
 private fun WorkspaceMetric(value: String, label: String, modifier: Modifier = Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        StudentCardMeta(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -459,7 +454,7 @@ private fun WorkspaceMetric(value: String, label: String, modifier: Modifier = M
 private fun WorkspaceScoreV2(label: String, value: String, modifier: Modifier = Modifier) {
     Column(modifier) {
         Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+        StudentCardTitle(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
     }
 }
 
@@ -467,13 +462,13 @@ private fun WorkspaceScoreV2(label: String, value: String, modifier: Modifier = 
 private fun WorkspaceSectionTitleV2(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
         Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+        StudentCardTitle(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
     }
 }
 
 @Composable
 private fun WorkspaceHintV2(text: String) {
-    Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    StudentCardBody(text, maxLines = 2, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable
@@ -502,7 +497,7 @@ private fun WorkspaceSessionRow(session: CourseSessionEntity, accent: Color) {
                 Spacer(Modifier.width(8.dp))
                 Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(15.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.width(3.dp))
-                Text(session.location, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                StudentCardMeta(session.location, style = MaterialTheme.typography.bodySmall, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -540,7 +535,7 @@ private fun WorkspaceTaskRowV2(
                     overflow = TextOverflow.Ellipsis
                 )
                 if (task.dueDate.isNotBlank()) {
-                    Text("موعد: " + task.dueDate, fontSize = 10.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    StudentCardMeta("موعد: " + task.dueDate, fontSize = 10.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             if (onDelete != null) {
