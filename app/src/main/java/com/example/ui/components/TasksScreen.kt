@@ -310,6 +310,8 @@ fun TaskCard(
                     Text(
                         text = task.title,
                         style = MaterialTheme.typography.titleSmall,
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         fontWeight = FontWeight.SemiBold,
                         color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
                         textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
@@ -333,7 +335,11 @@ fun TaskCard(
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .widthIn(max = 150.dp)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
 
@@ -349,7 +355,9 @@ fun TaskCard(
                                 Text(
                                     text = "موعد: ${task.dueDate}",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                 )
                             }
                         }
