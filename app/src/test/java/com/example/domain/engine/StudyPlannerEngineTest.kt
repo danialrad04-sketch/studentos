@@ -59,6 +59,36 @@ class StudyPlannerEngineTest {
     }
 
     @Test
+    fun pastExamIsExcludedFromRecommendations() {
+        val recommendations = StudyPlannerEngine.generateStudyPlan(
+            exams = listOf(
+                ExamItem(
+                    id = "past",
+                    courseName = "ریاضی",
+                    solarDate = "1405/07/01",
+                    time = "10:00",
+                    location = "سالن",
+                    units = 3
+                ),
+                ExamItem(
+                    id = "future",
+                    courseName = "فیزیک",
+                    solarDate = "1405/08/01",
+                    time = "10:00",
+                    location = "سالن",
+                    units = 3
+                )
+            ),
+            tasks = emptyList(),
+            attendanceList = emptyList(),
+            todayDate = "1405/07/21"
+        )
+
+        assertTrue(recommendations.none { it.courseName == "ریاضی" })
+        assertTrue(recommendations.any { it.courseName == "فیزیک" })
+    }
+
+    @Test
     fun oldTwoArgumentApiStillReturnsRecommendations() {
         val recommendations = StudyPlannerEngine.generateStudyPlan(
             exams = listOf(
