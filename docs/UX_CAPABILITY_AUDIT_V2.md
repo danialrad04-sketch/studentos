@@ -210,3 +210,24 @@ Acceptance:
 - undo/confirmation for destructive actions
 - accessibility semantics
 - unit + UI + instrumentation coverage
+## 8. Latest v2 implementation status
+
+### Completed
+- Global long-text/card-growth hardening across core academic screens and high-risk modal/sheet surfaces.
+- Escaped Kotlin interpolation sweep across UI components; literal runtime placeholders removed from affected v2 surfaces.
+- Shared Academic Context Engine with deterministic top-priority mapping.
+- Academic Priority Engine for attendance, overdue work, exam urgency and next-class context.
+- Urgency-aware Study Planner connected to StudentViewModel.
+- Task ↔ Exam deadline collision detector surfaced in Task Center and Academic Risk Engine.
+- Deterministic Copilot priority command ("مهم‌ترین کارم چیه؟") with safe navigation proposal.
+- Dashboard Study Plan preview surface.
+- Account Gate v2 foundation and stable Google/Firebase path retained.
+
+### Active next work
+- Full Academic Context Graph model replacing repeated name-based relationship lookups.
+- Preview/accept flow for generated study plans.
+- Explicit undo/change history for consequential mutations.
+- Real sync-state model (Local / Syncing / Synced / Needs attention) from repository/worker state.
+- Large-screen/tablet layout pass.
+- Long-content regression tests for representative card families.
+- Physical-device accessibility/performance verification.
