@@ -111,6 +111,7 @@ class StudentViewModel @JvmOverloads constructor(
     val currentUser: StateFlow<com.example.domain.model.UserAccount> = authManager.currentUser
     val isAuthInitialized: StateFlow<Boolean> = authManager.isInitialized
     val guestModeEnabled: StateFlow<Boolean> = preferencesRepository.guestModeEnabled
+    val syncStatus: StateFlow<com.example.domain.model.SyncStatusSnapshot> = SyncStatusStore.status
 
     fun continueAsGuest() {
         preferencesRepository.setGuestModeEnabled(true)
@@ -123,6 +124,7 @@ class StudentViewModel @JvmOverloads constructor(
     val userMessage: SharedFlow<String> = _userMessage.asSharedFlow()
 
     init {
+        SyncStatusStore.initialize(application)
         try {
             NotificationHelper.initNotificationChannel(application)
         } catch (_: Throwable) {
