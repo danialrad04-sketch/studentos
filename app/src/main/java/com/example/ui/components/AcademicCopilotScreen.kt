@@ -128,6 +128,8 @@ fun AcademicCopilotScreen(
     exams: List<ExamItem>,
     coursesWithSessions: List<com.example.data.local.relation.CourseWithSessions> = emptyList(),
     curriculumCourses: List<com.example.data.local.entity.CurriculumCourseEntity> = emptyList(),
+    primaryPriority: com.example.domain.model.AcademicPriorityItem? = null,
+    planningCollisions: List<com.example.domain.model.AcademicPlanningCollision> = emptyList(),
     onNavigateTab: (AppTab) -> Unit,
     onExecuteAction: (CopilotPayload) -> Unit,
     onOpenPastSemestersDialog: () -> Unit,
@@ -301,7 +303,12 @@ fun AcademicCopilotScreen(
             onOpenApiKeyDialog = { showApiKeyDialog = true }
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        CopilotContextRibbonV2(
+            primaryPriority = primaryPriority,
+            collisions = planningCollisions,
+            onOpenTab = onNavigateTab,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
 
         // 2. Chat Conversation List
         LazyColumn(
