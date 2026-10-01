@@ -205,6 +205,16 @@ fun ModernBentoDashboard(
             onStartFocus = onTogglePomodoro
         )
 
+        AcademicPriorityActionCardV2(
+            courses = courses,
+            coursesWithSessions = coursesWithSessions,
+            attendance = attendanceList,
+            tasks = tasks,
+            exams = exams,
+            onNavigateTab = onNavigateTab,
+            onStartFocus = onTogglePomodoro
+        )
+
         StudyPlanPreviewCardV2(
             recommendations = studyRecommendations,
             onStartFocus = onTogglePomodoro
