@@ -348,8 +348,8 @@ private fun StudyRecommendationsSection(
         Column(modifier = Modifier.padding(StudentSpacing.Xxl)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("پیشنهادهای مطالعه", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text("اولویت‌بندی قطعی بر اساس امتحان‌ها و تکالیف باز", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    StudentCardTitle("پیشنهادهای مطالعه", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    StudentCardMeta("اولویت‌بندی قطعی بر اساس امتحان‌ها و تکالیف باز", style = MaterialTheme.typography.bodySmall)
                 }
                 TextButton(onClick = onOpenFocus) { Text("شروع تمرکز") }
             }
@@ -361,8 +361,8 @@ private fun StudyRecommendationsSection(
                     }
                     Spacer(Modifier.width(StudentSpacing.Md))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(item.courseName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                        Text(item.priorityReason, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        StudentCardTitle(item.courseName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        StudentCardBody(item.priorityReason, style = MaterialTheme.typography.bodySmall, maxLines = 2, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -1619,9 +1619,9 @@ private fun CurriculumAndExamActionBanner(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(2.dp))
-                        Text(
+                        StudentCardMeta(
                             text = "$chartUnitsText · مصوب",
-                            fontSize = 9.5.sp,
+                            style = MaterialTheme.typography.labelSmall,
                             color = StudentOsColors.CyberCyan
                         )
                     }
@@ -1660,10 +1660,9 @@ private fun CurriculumAndExamActionBanner(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(2.dp))
-                        Text(
+                        StudentCardMeta(
                             text = "تاریخ، ساعات و صندلی",
-                            fontSize = 9.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = MaterialTheme.typography.labelSmall
                         )
                     }
                 }
