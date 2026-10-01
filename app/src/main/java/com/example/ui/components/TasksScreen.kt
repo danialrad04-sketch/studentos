@@ -61,6 +61,7 @@ fun TasksScreen(
     tasks: List<TaskEntity>,
     courses: List<CourseEntity> = emptyList(),
     exams: List<ExamItem> = emptyList(),
+    planningCollisions: List<com.example.domain.model.AcademicPlanningCollision> = emptyList(),
     onAddTask: () -> Unit,
     onToggleTask: (TaskEntity) -> Unit,
     onDeleteTask: (TaskEntity) -> Unit,
@@ -105,6 +106,12 @@ fun TasksScreen(
             tasks = tasks,
             exams = exams,
             courses = courses,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        PlanningCollisionBannerV2(
+            collisions = planningCollisions,
+            onOpenTasks = { selectedFilter = "priority" },
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
