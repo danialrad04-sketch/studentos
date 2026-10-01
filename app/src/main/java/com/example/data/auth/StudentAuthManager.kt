@@ -111,13 +111,7 @@ class StudentAuthManager(private val context: Context) {
                     displayName = disp,
                     photoUrl = null,
                     isGuest = false,
-                    subscription = SubscriptionDetails(
-                        tier = SubscriptionTier.PRO,
-                        isCloudSyncEnabled = true,
-                        isUnlimitedExportEnabled = true,
-                        isGpaPredictorUnlocked = true,
-                        maxDailyAiQuota = 999
-                    )
+                    subscription = backendSubscription(client)
                 )
                 // Schedule periodic sync and pull latest data on startup
                 BackendSyncWorker.schedulePeriodicSync(context)
@@ -167,6 +161,29 @@ class StudentAuthManager(private val context: Context) {
                 "رمز عبور انتخابی ضعیف است."
             else ->
                 "خطای احراز هویت: " + (exception.localizedMessage ?: "لطفاً دوباره تلاش کنید.")
+        }
+    }
+    private suspend fun backendSubscription(client: BackendApiClient): SubscriptionDetails {
+        return try {
+            val response = client.api.getEntitlement()
+            val entitlement = response.body()
+            if (!response.isSuccessful || entitlement == null) {
+                SubscriptionDetails(tier = SubscriptionTier.FREE, maxDailyAiQuota = 5)
+            } else {
+                val tier = runCatching {
+                    SubscriptionTier.valueOf(entitlement.tier.uppercase())
+                }.getOrDefault(SubscriptionTier.FREE)
+                SubscriptionDetails(
+                    tier = tier,
+                    maxDailyAiQuota = entitlement.maxDailyAiQuota,
+                    isCloudSyncEnabled = entitlement.allowsCloudSync,
+                    isUnlimitedExportEnabled = entitlement.allowsPdfExport,
+                    isGpaPredictorUnlocked = entitlement.gpaPredictorUnlocked
+                )
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "Backend entitlement lookup failed: ${e.message}")
+            SubscriptionDetails(tier = SubscriptionTier.FREE, maxDailyAiQuota = 5)
         }
     }
     private fun buildUserFromFirebase(fbUser: FirebaseUser?): UserAccount {
