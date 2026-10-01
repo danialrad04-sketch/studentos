@@ -70,6 +70,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -299,9 +300,19 @@ fun CommandCenterDialog(
                                     ) {
                                         Icon(imageVector = Icons.Default.BookmarkBorder, contentDescription = null, tint = AcademicOlive, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Column {
-                                            Text(text = "تکلیف: ${task.title}", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
-                                            Text(text = "درس مربوطه: ${task.courseName} · مهلت: ${task.dueDate}", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "تکلیف: ${task.title}",
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            AcademicInfoText(
+                                                text = "درس مربوطه: ${task.courseName} · مهلت: ${task.dueDate}",
+                                                maxLines = 2,
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
                                         }
                                     }
                                 }
@@ -322,9 +333,19 @@ fun CommandCenterDialog(
                                     ) {
                                         Icon(imageVector = Icons.Default.Alarm, contentDescription = null, tint = Amber500, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Column {
-                                            Text(text = "امتحان: ${exam.courseName}", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
-                                            Text(text = "${exam.solarDate} ساعت ${exam.time} · مکان: ${exam.location}", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "امتحان: ${exam.courseName}",
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            AcademicInfoText(
+                                                text = "${exam.solarDate} ساعت ${exam.time} · مکان: ${exam.location}",
+                                                maxLines = 2,
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
                                         }
                                     }
                                 }
@@ -345,9 +366,19 @@ fun CommandCenterDialog(
                                     ) {
                                         Icon(imageVector = Icons.Default.Description, contentDescription = null, tint = AcademicNavy, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Column {
-                                            Text(text = "یافت‌شده در یادداشت‌ها و فرمول‌ها", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
-                                            Text(text = notes.take(70) + "...", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "یافت‌شده در یادداشت‌ها و فرمول‌ها",
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            AcademicInfoText(
+                                                text = notes.take(70) + "...",
+                                                maxLines = 2,
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
                                         }
                                     }
                                 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -65,7 +66,7 @@ fun AcademicIntelligenceBanner(
             }
 
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().heightIn(max = 150.dp),
                 shape = RoundedCornerShape(StudentOsShapes.mediumCard),
                 colors = CardDefaults.cardColors(containerColor = riskBg),
                 border = CardDefaults.outlinedCardBorder()
@@ -101,7 +102,9 @@ fun AcademicIntelligenceBanner(
                                 text = topRisk.title,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                             if (risks.size > 1) {
                                 Surface(
@@ -122,7 +125,9 @@ fun AcademicIntelligenceBanner(
                         Text(
                             text = topRisk.description,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 3,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -130,7 +135,9 @@ fun AcademicIntelligenceBanner(
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium,
-                            lineHeight = 18.sp
+                            lineHeight = 18.sp,
+                            maxLines = 2,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -140,7 +147,7 @@ fun AcademicIntelligenceBanner(
         // 2. Weekly Workload Estimate Card
         if (workload.totalEstimatedWeeklyHours > 0) {
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().heightIn(max = 96.dp),
                 shape = RoundedCornerShape(StudentOsShapes.mediumCard),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 border = CardDefaults.outlinedCardBorder()

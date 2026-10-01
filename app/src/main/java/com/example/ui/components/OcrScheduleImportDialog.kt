@@ -521,7 +521,7 @@ private fun DraftCardItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = draft.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Text(text = draft.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                     Spacer(modifier = Modifier.width(6.dp))
                     if (draft.validationState == DraftValidationState.INCOMPLETE) {
                         Icon(Icons.Default.Warning, contentDescription = null, tint = Amber600, modifier = Modifier.size(14.dp))
@@ -529,6 +529,8 @@ private fun DraftCardItem(
                 }
                 Text(
                     text = "${draft.dayName} (${draft.startTime} تا ${draft.endTime}) | ${draft.instructor}",
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

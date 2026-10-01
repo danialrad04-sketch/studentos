@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -298,6 +301,8 @@ private fun CalloutBox(
             .background(bgBrush)
             .border(0.8.dp, borderColor, RoundedCornerShape(12.dp))
             .padding(horizontal = 12.dp, vertical = 8.dp)
+            .heightIn(max = 140.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         Text(
             text = annotated,
@@ -319,6 +324,8 @@ private fun CodeBlockCard(codeText: String) {
             .background(Color(0xFF0F172A))
             .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
             .padding(10.dp)
+            .heightIn(max = 160.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         Text(
             text = codeText.trim(),

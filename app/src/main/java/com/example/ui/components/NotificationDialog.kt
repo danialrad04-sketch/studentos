@@ -192,14 +192,18 @@ fun NotificationDialog(
                                     ) {
                                         Text(
                                             text = notif.title,
+                                            modifier = Modifier.weight(1f),
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 12.sp,
-                                            color = if (isDanger) StudentOsColors.CrimsonRose else MaterialTheme.colorScheme.onSurface
+                                            color = if (isDanger) StudentOsColors.CrimsonRose else MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                         )
                                         Text(
                                             text = notif.time,
                                             fontSize = 10.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(3.dp))
@@ -207,7 +211,9 @@ fun NotificationDialog(
                                         text = notif.description,
                                         fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        lineHeight = 16.sp
+                                        lineHeight = 16.sp,
+                                        maxLines = 3,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                     )
                                 }
                             }

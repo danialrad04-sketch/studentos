@@ -74,6 +74,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -363,17 +364,23 @@ fun SettingsAndRoadmapDialog(
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(
                                                 text = profile.name.ifEmpty { "دانشجوی گرامی" },
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                                 fontSize = 13.5.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.onSurface
                                             )
                                             Text(
                                                 text = "شماره دانشجویی: ${profile.studentId.ifEmpty { "ثبت نشده" }}",
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                                 fontSize = 10.5.sp,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                             Text(
                                                 text = "${profile.university} · ${profile.major} · ترم ${profile.currentSemester}",
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                                 fontSize = 10.sp,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )

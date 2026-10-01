@@ -54,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -121,6 +122,8 @@ fun AuthAccountDialog(
                     )
                     Text(
                         text = if (userAccount.isGuest) "حساب کاربری مهمان (آفلاین)" else "حساب متصل ابری: ${userAccount.displayName}",
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         fontSize = 10.5.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -293,6 +296,8 @@ fun AuthAccountDialog(
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = userAccount.displayName,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -300,6 +305,8 @@ fun AuthAccountDialog(
                         userAccount.email?.let {
                             Text(
                                 text = it,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

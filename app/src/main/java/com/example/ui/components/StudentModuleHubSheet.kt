@@ -131,9 +131,13 @@ fun StudentModuleHubSheet(
                             )
                             Spacer(Modifier.width(StudentSpacing.Sm))
                             Column(Modifier.weight(1f)) {
-                                Text(item.title, style = MaterialTheme.typography.titleSmall)
+                                Text(item.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                                 Text(
                                     item.subtitle,
+                                    maxLines = 2,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    maxLines = 2,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1
