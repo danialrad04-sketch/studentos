@@ -118,6 +118,8 @@ fun ModernBentoDashboard(
     weeklyWorkload: com.example.domain.model.WeeklyAcademicWorkload? = null,
     studyRecommendations: List<StudySessionRecommendation> = emptyList(),
     primaryPriority: com.example.domain.model.AcademicPriorityItem? = null,
+    acceptedStudyPlanIds: Set<String> = emptySet(),
+    onAcceptStudyPlan: (StudySessionRecommendation) -> Unit = {},
     pomodoroSeconds: Int,
     isPomodoroRunning: Boolean,
     onTogglePomodoro: () -> Unit,
@@ -217,6 +219,8 @@ fun ModernBentoDashboard(
 
         StudyPlanPreviewCardV2(
             recommendations = studyRecommendations,
+            acceptedRecommendationIds = acceptedStudyPlanIds,
+            onAcceptRecommendation = onAcceptStudyPlan,
             onStartFocus = onTogglePomodoro
         )
 
