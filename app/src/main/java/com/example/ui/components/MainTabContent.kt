@@ -50,6 +50,7 @@ fun MainTabContent(
     candidateSemesterPlans: List<SemesterPlan>,
     studyRecommendations: List<StudySessionRecommendation> = emptyList(),
     primaryPriority: com.example.domain.model.AcademicPriorityItem? = null,
+    planningCollisions: List<com.example.domain.model.AcademicPlanningCollision> = emptyList(),
     pomodoroSeconds: Int,
     isPomodoroRunning: Boolean,
     gamificationProfile: StudentGamificationProfile,
@@ -231,6 +232,7 @@ fun MainTabContent(
                     tasks = tasks,
                     courses = courses,
                     exams = exams,
+                    planningCollisions = planningCollisions,
                     onAddTask = onOpenAddTask,
                     onToggleTask = {
                         studentViewModel.toggleTask(it)
