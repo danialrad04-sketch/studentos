@@ -66,7 +66,7 @@ fun AcademicSectionHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleLarge)
+            StudentCardTitle(title, style = MaterialTheme.typography.titleLarge)
             subtitle?.let {
                 Spacer(Modifier.height(StudentSpacing.Xs))
                 Text(
@@ -188,11 +188,12 @@ fun AcademicErrorState(
         Spacer(Modifier.height(StudentSpacing.Md))
         Text(title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
         Spacer(Modifier.height(StudentSpacing.Sm))
-        Text(
-            description,
+        StudentCardBody(
+            text = description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            maxLines = 4,
+            modifier = Modifier.fillMaxWidth()
         )
         onRetry?.let {
             Spacer(Modifier.height(StudentSpacing.Lg))
