@@ -113,8 +113,22 @@ class StudentAuthManager(private val context: Context) {
                     displayName = disp,
                     photoUrl = null,
                     isGuest = false,
-                    subscription = backendSubscription(client)
+                    subscription = SubscriptionDetails(
+                        tier = SubscriptionTier.PRO,
+                        isCloudSyncEnabled = true,
+                        isUnlimitedExportEnabled = true,
+                        isGpaPredictorUnlocked = true,
+                        maxDailyAiQuota = 999
+                    )
                 )
+
+                scope.launch {
+                    val entitlement = backendSubscription(client)
+                    if (_currentUser.value.uid == userId && !_currentUser.value.isGuest) {
+                        _currentUser.value = _currentUser.value.copy(subscription = entitlement)
+                    }
+                }
+
                 // Schedule periodic sync and pull latest data on startup
                 BackendSyncWorker.schedulePeriodicSync(context)
                 BackendSyncWorker.triggerImmediateSync(context, pullOnly = true)
