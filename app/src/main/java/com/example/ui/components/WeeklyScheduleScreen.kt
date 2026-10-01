@@ -831,10 +831,12 @@ fun CourseCard(
                 )
             },
             text = {
-                Text(
+                StudentCardBody(
                     text = "آیا می‌خواهید درس «${course.name}» را از برنامه ترم جاری حذف کنید؟",
-                    fontSize = 11.5.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
