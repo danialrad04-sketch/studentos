@@ -198,3 +198,27 @@ Definition of done:
 > Every screen should answer what is happening, what matters, and what the student can do next.
 
 > Visual polish is successful only when it improves comprehension, speed and trust.
+
+## Phase 24 — Product Quality Gates
+For every feature:
+
+Design → States → Persistence → Offline → Error → Accessibility → Unit → UI → Instrumentation → Performance → Release
+
+Definition of done:
+- no known critical UX overflow
+- no known blocking auth flow
+- deterministic domain tests green
+- critical UI flow tested
+- release artifact signed and verified
+
+## Phase 25 — v2.1 execution order
+1. finish overflow migration across every remaining information surface
+2. migrate legacy cards to canonical Academic primitives
+3. unify Task/Exam actions
+4. expand Context Engine coverage
+5. upgrade Copilot commands
+6. add planning preview/accept
+7. add recovery/change history
+8. finish adaptive tablet/large-screen layouts
+9. complete accessibility/performance audit
+10. publish v2.1 release candidate
