@@ -105,6 +105,7 @@ fun ModernBentoDashboard(
     coursesWithSessions: List<CourseWithSessions> = emptyList(),
     attendanceList: List<AttendanceEntity>,
     tasks: List<TaskEntity>,
+    exams: List<com.example.ui.models.ExamItem> = emptyList(),
     grades: List<GradeEntity>,
     passedUnits: Int = 0,
     gpa: String = "۰.۰۰",
