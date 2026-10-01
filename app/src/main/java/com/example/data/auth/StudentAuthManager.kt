@@ -14,6 +14,7 @@ import com.example.domain.model.SubscriptionTier
 import com.example.domain.model.UserAccount
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.FirebaseApiNotAvailableException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
@@ -144,8 +145,11 @@ class StudentAuthManager(private val context: Context) {
     private fun firebaseFailureMessage(exception: Exception): String {
         val code = (exception as? FirebaseAuthException)?.errorCode.orEmpty()
         val transport = exception is FirebaseNetworkException ||
+            exception is FirebaseApiNotAvailableException ||
             code.equals("ERROR_NETWORK_REQUEST_FAILED", ignoreCase = true) ||
-            code.equals("ERROR_API_NOT_AVAILABLE", ignoreCase = true)
+            code.equals("ERROR_API_NOT_AVAILABLE", ignoreCase = true) ||
+            code.equals("ERROR_APP_NOT_AUTHORIZED", ignoreCase = true) ||
+            code.equals("ERROR_INVALID_API_KEY", ignoreCase = true)
 
         if (transport) return FIREBASE_TRANSPORT_ERROR
 
