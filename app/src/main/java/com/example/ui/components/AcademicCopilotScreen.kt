@@ -688,6 +688,8 @@ private fun CopilotMessageItem(
 
             Box(
                 modifier = Modifier
+                    .heightIn(max = if (isUser) 260.dp else 340.dp)
+                    .verticalScroll(rememberScrollState())
                     .clip(
                         RoundedCornerShape(
                             topStart = 20.dp,
@@ -750,7 +752,9 @@ private fun CopilotMessageItem(
                                 text = message.confidenceBadge,
                                 fontSize = 9.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = badgeColor
+                                color = badgeColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
