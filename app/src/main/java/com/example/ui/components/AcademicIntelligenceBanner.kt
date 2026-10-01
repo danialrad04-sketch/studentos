@@ -129,10 +129,11 @@ fun AcademicIntelligenceBanner(
                         StudentCardBody(
                             text = "💡 راهکار پیشنهادی: ${topRisk.recommendedAction}",
                             maxLines = 2,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium,
-                            lineHeight = 18.sp
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Medium,
+                                lineHeight = 18.sp
+                            ),
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
