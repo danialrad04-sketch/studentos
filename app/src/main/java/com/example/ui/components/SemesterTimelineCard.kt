@@ -106,11 +106,11 @@ fun SemesterTimelineCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(3.dp))
-                    Text(
+                    StudentCardBody(
                         text = timelineInfo.subHeadline,
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp
+                        maxLines = 2
                     )
                 }
 
@@ -135,7 +135,7 @@ fun SemesterTimelineCard(
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onTertiaryContainer
                         )
-                        Text(
+                        StudentCardTitle(
                             text = if (!timelineInfo.isStarted) "۱ مهر" else "${timelineInfo.progressPercent}٪",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Black,
@@ -279,11 +279,11 @@ fun SemesterTimelineCard(
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
+                    StudentCardBody(
                         text = "💡 تقویم آموزشی: تاریخ رسمی آغاز نیم‌سال اول دانشگاه‌ها ۱ مهرماه است و فرآیند ثبت نمرات تا اوایل بهمن ادامه دارد.",
-                        fontSize = 10.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 16.sp
+                        maxLines = 2
                     )
                 }
             }
