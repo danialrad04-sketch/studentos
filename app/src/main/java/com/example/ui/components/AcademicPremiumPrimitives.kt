@@ -153,13 +153,12 @@ fun AcademicEmptyState(
         Spacer(Modifier.height(StudentSpacing.Md))
         StudentCardTitle(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(StudentSpacing.Sm))
-        Text(
-            description,
+        StudentCardBody(
+            text = description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            maxLines = 4,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            maxLines = 3,
+            modifier = Modifier.fillMaxWidth()
         )
         if (actionLabel != null && onAction != null) {
             Spacer(Modifier.height(StudentSpacing.Lg))
@@ -186,7 +185,7 @@ fun AcademicErrorState(
             tint = MaterialTheme.colorScheme.error
         )
         Spacer(Modifier.height(StudentSpacing.Md))
-        Text(title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+        StudentCardTitle(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(StudentSpacing.Sm))
         StudentCardBody(
             text = description,
