@@ -630,15 +630,19 @@ The first implementation sprint after this plan is intentionally small:
 - implement Dashboard 2.0 ✅ first contextual layer
 - implement Schedule 2.0 ✅ first contextual layer
 - unify bounded-card behavior across core academic surfaces ✅
+- Command Center/OCR/Support/Copilot bounded surfaces ✅
 
 ### Sprint 3
-- Course Workspace 3.0
-- Task / Exam unified UX
+- Course Workspace 3.0 ✅ bounded context foundation from v1.3/v2
+- Task / Exam unified UX ✅ context summaries
+- shared Academic Context + Priority engines ✅
 
 ### Sprint 4
-- Academic Context Graph
-- Copilot command layer
-- planning intelligence
+- Academic Context Graph ✅ first deterministic implementation
+- Copilot command layer ✅ deterministic priority command
+- planning intelligence ✅ urgency-aware study planner
+- deadline collision engine
+- study-plan preview/accept flow
 
 ### Sprint 5
 - import/recovery/notifications
