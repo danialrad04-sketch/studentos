@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -34,7 +35,8 @@ fun StudentCardTitle(
         color = color,
         fontWeight = fontWeight,
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis
+        overflow = TextOverflow.Ellipsis,
+        softWrap = false
     )
 }
 
@@ -51,8 +53,10 @@ fun StudentCardBody(
         modifier = modifier,
         style = style,
         color = color,
-        maxLines = maxLines.coerceIn(1, 4),
-        overflow = TextOverflow.Ellipsis
+        modifier = modifier.heightIn(max = 56.dp),
+        maxLines = maxLines.coerceIn(1, 3),
+        overflow = TextOverflow.Ellipsis,
+        softWrap = false
     )
 }
 
@@ -71,6 +75,7 @@ fun StudentCardMeta(
         color = color,
         fontWeight = fontWeight,
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis
+        overflow = TextOverflow.Ellipsis,
+        softWrap = false
     )
 }
