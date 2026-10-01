@@ -92,6 +92,11 @@ class StudentAuthManager(private val context: Context) {
 
     private fun checkAndRestoreBackendSession() {
         try {
+            if (!com.example.data.api.backend.BackendConfig.isConfigured) {
+                _currentUser.value = buildUserFromFirebase(null)
+                _isInitialized.value = true
+                return
+            }
             val tokenStore = BackendApiClient.getInstance(context).tokenStore()
             val token = tokenStore.getAccessToken()
             val userId = tokenStore.getUserId()
@@ -265,6 +270,10 @@ class StudentAuthManager(private val context: Context) {
             return firebaseResult
         }
 
+        if (!com.example.data.api.backend.BackendConfig.isConfigured) {
+            return firebaseResult
+        }
+
         val backendResult = signInWithBackend(email, password)
         return when (backendResult) {
             is AuthResult.Success -> backendResult.copy(
@@ -321,6 +330,10 @@ class StudentAuthManager(private val context: Context) {
     suspend fun signUpWithEmailResilient(name: String, email: String, password: String): AuthResult {
         val firebaseResult = signUpWithEmail(name, email, password)
         if (firebaseResult !is AuthResult.Error || !isFirebaseTransportFailure(firebaseResult.errorMessage)) {
+            return firebaseResult
+        }
+
+        if (!com.example.data.api.backend.BackendConfig.isConfigured) {
             return firebaseResult
         }
 
