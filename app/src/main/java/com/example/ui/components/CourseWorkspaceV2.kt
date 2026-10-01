@@ -197,7 +197,7 @@ fun CourseWorkspaceDialogV2(
                                     WorkspaceMetric(openTasks.toString(), "کار باز", Modifier.weight(1f))
                                     WorkspaceMetric(sessions.size.toString(), "جلسه", Modifier.weight(1f))
                                 }
-                                Text(
+                                StudentCardBody(
                                     text = when {
                                         nextTask != null -> "گام بعدی: " + nextTask.title
                                         exam != null -> "امتحان بعدی: " + exam.solarDate
@@ -206,7 +206,8 @@ fun CourseWorkspaceDialogV2(
                                     },
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 2
+                                    maxLines = 2,
+                                    modifier = Modifier.fillMaxWidth()
                                 )
                                 Row(
                                     Modifier.fillMaxWidth(),
