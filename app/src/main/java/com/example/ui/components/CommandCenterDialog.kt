@@ -309,6 +309,7 @@ fun CommandCenterDialog(
                                 Surface(
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 68.dp, max = 96.dp)
                                         .clip(RoundedCornerShape(12.dp)),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                                     border = androidx.compose.foundation.BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
@@ -390,8 +391,20 @@ fun CommandCenterDialog(
                                         Icon(imageVector = Icons.Default.Description, contentDescription = null, tint = AcademicNavy, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Column {
-                                            Text(text = "یافت‌شده در یادداشت‌ها و فرمول‌ها", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
-                                            Text(text = notes.take(70) + "...", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(
+                                                text = "یافت‌شده در یادداشت‌ها و فرمول‌ها",
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = notes.take(70) + "...",
+                                                fontSize = 9.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 2,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
                                         }
                                     }
                                 }
