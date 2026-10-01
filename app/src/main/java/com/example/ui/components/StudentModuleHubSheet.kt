@@ -134,6 +134,8 @@ fun StudentModuleHubSheet(
                                 Text(item.title, style = MaterialTheme.typography.titleSmall)
                                 Text(
                                     item.subtitle,
+                                    maxLines = 2,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1
