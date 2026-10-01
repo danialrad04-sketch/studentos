@@ -90,6 +90,7 @@ import com.example.ui.components.HeaderSection
 import com.example.ui.components.MainTabContent
 import com.example.ui.components.OnboardingScreen
 import com.example.ui.components.SubScreenHeaderSection
+import com.example.ui.components.SyncStatusBannerV2
 import com.example.ui.components.export.ExportSourcePayload
 import com.example.ui.models.AppDialogState
 import com.example.ui.models.AppTab
