@@ -170,16 +170,14 @@ fun ModernBentoDashboard(
                             }
                         }
                         Column {
-                            Text(
+                            StudentCardTitle(
                                 text = "راهنمای تعاملی تمام بخش‌ها (App Tour) 🚀",
-                                fontSize = 12.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.ExtraBold
                             )
-                            Text(
+                            StudentCardMeta(
                                 text = "آشنایی با قابلیت‌های سیستم‌عامل و تکمیل اطلاعات ضروری",
-                                fontSize = 10.5.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }
