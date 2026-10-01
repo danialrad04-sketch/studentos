@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -117,6 +118,7 @@ fun ExamCard(
     Surface(
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(min = 132.dp, max = 248.dp)
             .tactileClickable { onSetReminder() },
         shape = StudentShapeTokens.Card,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
