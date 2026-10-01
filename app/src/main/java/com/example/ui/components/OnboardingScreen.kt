@@ -1264,6 +1264,8 @@ private fun StepTwoSetupMode(
                                         ) {
                                             Text(
                                                 text = draft.name,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                                 fontSize = 12.5.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = TextPureWhite
@@ -1555,7 +1557,7 @@ private fun StepThreeReviewAndConfirm(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = "دانشگاه و رشته:", fontSize = 11.5.sp, color = TextSubtleGray)
-                    Text(text = "$university · $major", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPureWhite)
+                    Text(text = "$university · $major", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPureWhite, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                 }
 
                 Row(
