@@ -81,9 +81,9 @@ fun ScheduleContextStripV2(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Black
                     )
-                    Text(
-                        sessions.size.toString() + " جلسه · " + loadText + " زمان کلاس",
-                        fontSize = 10.5.sp,
+                    StudentCardMeta(
+                        text = sessions.size.toString() + " جلسه · " + loadText + " زمان کلاس",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
