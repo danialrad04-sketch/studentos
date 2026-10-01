@@ -151,7 +151,7 @@ fun AcademicEmptyState(
             tint = MaterialTheme.colorScheme.primary
         )
         Spacer(Modifier.height(StudentSpacing.Md))
-        Text(title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+        StudentCardTitle(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(StudentSpacing.Sm))
         Text(
             description,
