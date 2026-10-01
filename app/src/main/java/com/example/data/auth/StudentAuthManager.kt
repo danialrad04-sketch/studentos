@@ -136,6 +136,23 @@ class StudentAuthManager(private val context: Context) {
         }
     }
 
+    private fun isFirebaseTransportFailure(message: String): Boolean {
+        val value = message.lowercase()
+        return listOf(
+            "network",
+            "اتصال",
+            "در دسترس نیست",
+            "سرویس احراز هویت در دسترس نیست",
+            "unauthorized",
+            "401",
+            "403",
+            "unavailable",
+            "timeout",
+            "timed out",
+            "غیرمجاز"
+        ).any(value::contains)
+    }
+
     private fun buildUserFromFirebase(fbUser: FirebaseUser?): UserAccount {
         if (fbUser == null) {
             return UserAccount(
@@ -234,6 +251,32 @@ class StudentAuthManager(private val context: Context) {
         }
     }
 
+    /**
+     * Resilient email authentication for restricted networks.
+     *
+     * Firebase remains the primary identity provider. When the Firebase
+     * transport/service itself is unreachable, fall back to the self-hosted
+     * backend so the app can still authenticate on networks where Google/Firebase
+     * endpoints are not reachable. Invalid credentials never trigger fallback.
+     */
+    suspend fun signInWithEmailResilient(email: String, password: String): AuthResult {
+        val firebaseResult = signInWithEmail(email, password)
+        if (firebaseResult !is AuthResult.Error || !isFirebaseTransportFailure(firebaseResult.errorMessage)) {
+            return firebaseResult
+        }
+
+        val backendResult = signInWithBackend(email, password)
+        return when (backendResult) {
+            is AuthResult.Success -> backendResult.copy(
+                message = "ورود از مسیر پشتیبان سرور با موفقیت انجام شد. همگام‌سازی این حساب فعال است."
+            )
+            is AuthResult.Error -> AuthResult.Error(
+                "سرویس Firebase از این شبکه در دسترس نبود و مسیر پشتیبان هم نتوانست وارد حساب شود. اتصال اینترنت را بررسی کنید و دوباره تلاش کنید."
+            )
+            else -> backendResult
+        }
+    }
+
     suspend fun signUpWithEmail(name: String, email: String, password: String): AuthResult = withContext(Dispatchers.IO) {
         if (name.isBlank()) {
             return@withContext AuthResult.Error("لطفاً نام و نام خانوادگی خود را وارد کنید.")
@@ -272,6 +315,24 @@ class StudentAuthManager(private val context: Context) {
                 else -> "خطا در ثبت‌نام: ${e.localizedMessage ?: "لطفاً مجدداً تلاش نمایید."}"
             }
             AuthResult.Error(friendlyMsg)
+        }
+    }
+
+    suspend fun signUpWithEmailResilient(name: String, email: String, password: String): AuthResult {
+        val firebaseResult = signUpWithEmail(name, email, password)
+        if (firebaseResult !is AuthResult.Error || !isFirebaseTransportFailure(firebaseResult.errorMessage)) {
+            return firebaseResult
+        }
+
+        val backendResult = signUpWithBackend(name, email, password)
+        return when (backendResult) {
+            is AuthResult.Success -> backendResult.copy(
+                message = "حساب شما از مسیر پشتیبان سرور ایجاد شد و همگام‌سازی فعال است."
+            )
+            is AuthResult.Error -> AuthResult.Error(
+                "سرویس Firebase از این شبکه در دسترس نبود و ایجاد حساب از مسیر پشتیبان هم انجام نشد."
+            )
+            else -> backendResult
         }
     }
 
