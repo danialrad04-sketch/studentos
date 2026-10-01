@@ -39,7 +39,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.data.local.entity.CourseEntity
 import com.example.data.local.entity.CourseSessionEntity
 import com.example.ui.theme.NumericDisplayStat
@@ -115,12 +114,11 @@ fun ModernScheduleCourseCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(7.dp)
                 ) {
-                    Text(
-                        course.name,
+                    StudentCardTitle(
+                        text = course.name,
+                        modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Black,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        fontWeight = FontWeight.Black
                     )
                     if (!isPrimarySession) {
                         Surface(
@@ -146,12 +144,12 @@ fun ModernScheduleCourseCard(
                         shape = RoundedCornerShape(7.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f)
                     ) {
-                        Text(
-                            course.units.toString() + " واحد",
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
-                            fontSize = 9.5.sp,
+                        StudentCardMeta(
+                            text = course.units.toString() + " واحد",
+                            style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
                         )
                     }
                     if (course.professor.isNotBlank()) {
