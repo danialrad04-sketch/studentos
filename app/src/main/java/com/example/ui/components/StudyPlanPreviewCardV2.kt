@@ -19,6 +19,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +37,8 @@ import com.example.ui.theme.AcademicNavy
 @Composable
 fun StudyPlanPreviewCardV2(
     recommendations: List<StudySessionRecommendation>,
+    acceptedRecommendationIds: Set<String> = emptySet(),
+    onAcceptRecommendation: (StudySessionRecommendation) -> Unit = {},
     onStartFocus: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -141,15 +144,49 @@ fun StudyPlanPreviewCardV2(
                 }
             }
 
-            Button(
-                onClick = onStartFocus,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(11.dp),
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = AcademicOlive)
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(Icons.Default.PlayArrow, null, Modifier.size(17.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("شروع پیشنهاد اول")
+                val first = recommendations.first()
+                val accepted = acceptedRecommendationIds.contains(first.id)
+                if (!accepted) {
+                    OutlinedButton(
+                        onClick = { onAcceptRecommendation(first) },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(11.dp)
+                    ) {
+                        Icon(Icons.Default.CheckCircle, null, Modifier.size(17.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("پذیرش برنامه")
+                    }
+                } else {
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(11.dp),
+                        color = AcademicOlive.copy(alpha = 0.10f)
+                    ) {
+                        Row(
+                            Modifier.padding(horizontal = 10.dp, vertical = 11.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(Icons.Default.CheckCircle, null, tint = AcademicOlive, modifier = Modifier.size(17.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("برنامه پذیرفته شد", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                Button(
+                    onClick = onStartFocus,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(11.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = AcademicOlive)
+                ) {
+                    Icon(Icons.Default.PlayArrow, null, Modifier.size(17.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (accepted) "شروع جلسه اول" else "شروع اول")
+                }
             }
         }
     }
