@@ -231,6 +231,7 @@ fun MainAppScreen(
     val studyRecommendations by studentViewModel.studyRecommendations.collectAsStateWithLifecycle()
     val academicPriorities by studentViewModel.academicPriorities.collectAsStateWithLifecycle()
     val planningCollisions by studentViewModel.planningCollisions.collectAsStateWithLifecycle()
+    val syncStatus by studentViewModel.syncStatus.collectAsStateWithLifecycle()
 
     // Dynamic weighted GPA: calculates accurately from evaluated grades, or falls back to declared GPA from setup
     val evaluatedGrades = grades.filter { (it.midtermGrade + it.finalGrade) > 0.0 }
@@ -474,6 +475,18 @@ fun MainAppScreen(
                             }
 
                             Spacer(modifier = Modifier.height(4.dp))
+
+                        SyncStatusBannerV2(
+                            status = syncStatus,
+                            isGuest = currentUser.isGuest,
+                            onSyncNow = {
+                                studentViewModel.syncWithBackendNow { ok, message ->
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
 
                         // Tab Content decomposed into MainTabContent with animated transition
                         AnimatedContent(
