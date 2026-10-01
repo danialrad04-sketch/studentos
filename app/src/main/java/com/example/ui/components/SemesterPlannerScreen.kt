@@ -245,11 +245,7 @@ fun SemesterPlannerScreen(
                                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                     modifier = Modifier.widthIn(max = 220.dp)
                                 )
-                                Text(
-                                    text = "${activePlan.courses.size} درس انتخاب شده",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Text(\n                                    text = activePlan.courses.size.toString() + " درس انتخاب شده",\n                                    style = MaterialTheme.typography.bodySmall,\n                                    color = MaterialTheme.colorScheme.onSurfaceVariant,\n                                    maxLines = 1,\n                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis\n                                )
                             }
 
                             Surface(
@@ -292,12 +288,7 @@ fun SemesterPlannerScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            Text(
-                                text = "حدود ${activePlan.estimatedWeeklyWorkloadHours.toInt()} ساعت در هفته",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            Text(\n                                text = "حدود " + activePlan.estimatedWeeklyWorkloadHours.toInt() + " ساعت در هفته",\n                                style = MaterialTheme.typography.bodySmall,\n                                fontWeight = FontWeight.Bold,\n                                color = MaterialTheme.colorScheme.primary,\n                                maxLines = 1,\n                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis\n                            )
                         }
 
                         // Trade-offs list
