@@ -203,6 +203,11 @@ fun ModernBentoDashboard(
             onStartFocus = onTogglePomodoro
         )
 
+        StudyPlanPreviewCardV2(
+            recommendations = studyRecommendations,
+            onStartFocus = onTogglePomodoro
+        )
+
         // 4 Quick Actions Grid (برنامه هفتگی، امتحانات، تکالیف، کلاس‌ها)
         Row(
             modifier = Modifier.fillMaxWidth(),
