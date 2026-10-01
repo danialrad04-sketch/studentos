@@ -315,7 +315,9 @@ fun SemesterHistoryScreen(
                                 Text(
                                     text = semester.title,
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 if (isCurrent) {
@@ -348,7 +350,9 @@ fun SemesterHistoryScreen(
                             Text(
                                 text = "سال تحصیلی: ${semester.academicYear} | ترم ${semester.termNumber}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                         }
 
@@ -431,7 +435,9 @@ fun SemesterHistoryScreen(
                                             Text(
                                                 text = course.name,
                                                 style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.Medium
+                                                fontWeight = FontWeight.Medium,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                             )
                                             val courseDetail = listOfNotNull(
                                                 course.courseCode.takeIf { it.isNotBlank() },
@@ -440,7 +446,9 @@ fun SemesterHistoryScreen(
                                             Text(
                                                 text = courseDetail,
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                             )
                                         }
                                         Text(
