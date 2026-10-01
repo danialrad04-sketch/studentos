@@ -47,6 +47,7 @@ fun StudentTodayCommandStrip(
     coursesWithSessions: List<CourseWithSessions>,
     attendance: List<AttendanceEntity>,
     tasks: List<TaskEntity>,
+    exams: List<com.example.ui.models.ExamItem> = emptyList(),
     studyRecommendations: List<StudySessionRecommendation>,
     onNavigateTab: (AppTab) -> Unit,
     onStartFocus: () -> Unit,
@@ -57,7 +58,7 @@ fun StudentTodayCommandStrip(
         coursesWithSessions = coursesWithSessions,
         attendance = attendance,
         tasks = tasks,
-        exams = emptyList(),
+        exams = exams,
         todayWeekdayIndex = JalaliCalendarUtil.getTodayWeekdayIndex(),
         todayDate = JalaliCalendarUtil.today().format("/")
     )
@@ -143,9 +144,13 @@ fun StudentTodayCommandStrip(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                courseName,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Black
+                                Text(
+                                    courseName,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Black,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             )
                             Text(
                                 "\u200E\${snapshot.nextCourseStart.orEmpty()} — \${snapshot.nextCourseEnd.orEmpty()}\u200E" +
