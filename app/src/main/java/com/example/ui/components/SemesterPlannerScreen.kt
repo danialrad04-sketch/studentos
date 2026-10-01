@@ -245,7 +245,9 @@ fun SemesterPlannerScreen(
                                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                     modifier = Modifier.widthIn(max = 220.dp)
                                 )
-                                Text(\n                                    text = activePlan.courses.size.toString() + " درس انتخاب شده",\n                                    style = MaterialTheme.typography.bodySmall,\n                                    color = MaterialTheme.colorScheme.onSurfaceVariant,\n                                    maxLines = 1,\n                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis\n                                )
+                                Text(
+                                    text = activePlan.courses.size.toString() + " درس انتخاب شده",\n                                    style = MaterialTheme.typography.bodySmall,\n                                    color = MaterialTheme.colorScheme.onSurfaceVariant,\n                                    maxLines = 1,\n                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
                             }
 
                             Surface(
@@ -288,7 +290,8 @@ fun SemesterPlannerScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            Text(\n                                text = "حدود " + activePlan.estimatedWeeklyWorkloadHours.toInt() + " ساعت در هفته",\n                                style = MaterialTheme.typography.bodySmall,\n                                fontWeight = FontWeight.Bold,\n                                color = MaterialTheme.colorScheme.primary,\n                                maxLines = 1,\n                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis\n                            )
+                            Text(
+                                text = "حدود " + activePlan.estimatedWeeklyWorkloadHours.toInt() + " ساعت در هفته",\n                                style = MaterialTheme.typography.bodySmall,\n                                fontWeight = FontWeight.Bold,\n                                color = MaterialTheme.colorScheme.primary,\n                                maxLines = 1,\n                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis\n                            )
                         }
 
                         // Trade-offs list
