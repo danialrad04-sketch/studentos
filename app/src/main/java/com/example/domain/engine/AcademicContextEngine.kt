@@ -7,6 +7,7 @@ import com.example.data.local.entity.CourseSessionEntity
 import com.example.data.local.relation.CourseWithSessions
 import com.example.domain.model.AcademicContextAction
 import com.example.domain.model.AcademicContextSnapshot
+import com.example.domain.model.AcademicPriorityItem
 import com.example.domain.model.ExamItem
 
 object AcademicContextEngine {
@@ -55,12 +56,24 @@ object AcademicContextEngine {
             durationMinutes(session)
         }
 
-        val action = when {
-            criticalAttendance > 0 -> AcademicContextAction.OPEN_ATTENDANCE
-            overdueTasks > 0 -> AcademicContextAction.OPEN_OVERDUE_TASKS
-            examsWithOpenTasks > 0 -> AcademicContextAction.REVIEW_EXAM
-            next != null -> AcademicContextAction.OPEN_NEXT_CLASS
-            openTasks > 0 -> AcademicContextAction.START_FOCUS
+        val topPriority: AcademicPriorityItem? = AcademicPriorityEngine.topOrNull(
+            courses = courses,
+            coursesWithSessions = coursesWithSessions,
+            attendance = attendance,
+            tasks = tasks,
+            exams = exams,
+            todayWeekdayIndex = todayWeekdayIndex,
+            todayDate = todayDate
+        )
+
+        val action = when (topPriority?.kind) {
+            com.example.domain.model.AcademicPriorityKind.CRITICAL_ATTENDANCE -> AcademicContextAction.OPEN_ATTENDANCE
+            com.example.domain.model.AcademicPriorityKind.OVERDUE_TASK -> AcademicContextAction.OPEN_OVERDUE_TASKS
+            com.example.domain.model.AcademicPriorityKind.EXAM_TODAY,
+            com.example.domain.model.AcademicPriorityKind.EXAM_LINKED_TASK -> AcademicContextAction.REVIEW_EXAM
+            com.example.domain.model.AcademicPriorityKind.NEXT_CLASS -> AcademicContextAction.OPEN_NEXT_CLASS
+            com.example.domain.model.AcademicPriorityKind.TASK_TODAY,
+            com.example.domain.model.AcademicPriorityKind.OPEN_TASK -> AcademicContextAction.START_FOCUS
             else -> AcademicContextAction.NONE
         }
 
@@ -78,7 +91,8 @@ object AcademicContextEngine {
             nextCourseStart = next?.second?.start,
             nextCourseEnd = next?.second?.end,
             nextCourseLocation = next?.second?.location?.takeIf { it.isNotBlank() },
-            primaryAction = action
+            primaryAction = action,
+            topPriority = topPriority
         )
     }
 
