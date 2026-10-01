@@ -25,12 +25,18 @@ import com.example.ui.util.NotificationHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import com.example.domain.engine.AcademicGamificationEngine
+import com.example.domain.engine.AcademicContextGraphBuilder
+import com.example.domain.engine.AcademicPriorityEngine
+import com.example.domain.engine.AcademicPlanningCollisionEngine
 import com.example.domain.engine.AcademicRiskEngine
 import com.example.domain.engine.GlobalSearchEngine
 import com.example.domain.engine.SemesterPlannerEngine
 import com.example.domain.engine.StudyPlannerEngine
 import com.example.domain.engine.WorkloadEngine
 import com.example.domain.model.AcademicBadge
+import com.example.domain.model.AcademicContextGraph
+import com.example.domain.model.AcademicPlanningCollision
+import com.example.domain.model.AcademicPriorityItem
 import com.example.domain.model.AcademicRisk
 import com.example.domain.model.GlobalSearchResult
 import com.example.domain.model.SemesterPlan
@@ -465,6 +471,65 @@ class StudentViewModel @JvmOverloads constructor(
             todayDate = com.example.domain.util.JalaliCalendarUtil.today().format("/")
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Shared Academic Context Graph (v2)
+    val academicContextGraph: StateFlow<AcademicContextGraph> = combine(
+        courses,
+        coursesWithSessions,
+        attendance,
+        tasks,
+        exams
+    ) { coursesList, sessionsList, attendanceList, tasksList, examsList ->
+        AcademicContextGraphBuilder.build(
+            courses = coursesList,
+            coursesWithSessions = sessionsList,
+            attendance = attendanceList,
+            tasks = tasksList,
+            exams = examsList
+        )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        AcademicContextGraph(emptyList(), emptyList(), emptyList())
+    )
+
+    // Shared academic priorities (single source for Dashboard / future Copilot)
+    val academicPriorities: StateFlow<List<AcademicPriorityItem>> = combine(
+        courses,
+        coursesWithSessions,
+        attendance,
+        tasks,
+        exams
+    ) { coursesList, sessionsList, attendanceList, tasksList, examsList ->
+        AcademicPriorityEngine.rank(
+            courses = coursesList,
+            coursesWithSessions = sessionsList,
+            attendance = attendanceList,
+            tasks = tasksList,
+            exams = examsList,
+            todayWeekdayIndex = com.example.domain.util.JalaliCalendarUtil.getTodayWeekdayIndex(),
+            todayDate = com.example.domain.util.JalaliCalendarUtil.today().format("/")
+        )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        emptyList()
+    )
+
+    // Planning collisions derived from canonical tasks/exams
+    val planningCollisions: StateFlow<List<AcademicPlanningCollision>> = combine(
+        tasks,
+        exams
+    ) { tasksList, examsList ->
+        AcademicPlanningCollisionEngine.detect(
+            tasks = tasksList,
+            exams = examsList
+        )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        emptyList()
+    )
 
     // Student Gamification & Academic Badges Profile (Phase v5)
     val gamificationProfile: StateFlow<StudentGamificationProfile> = combine(
