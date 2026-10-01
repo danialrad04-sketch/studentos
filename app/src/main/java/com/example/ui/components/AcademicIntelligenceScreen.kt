@@ -78,8 +78,8 @@ fun AcademicIntelligenceScreen(
                     }
                     Spacer(Modifier.size(StudentSpacing.Md))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("وضعیت کلی تحصیلی", style = MaterialTheme.typography.headlineSmall)
-                        Text(status, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        StudentCardTitle("وضعیت کلی تحصیلی", style = MaterialTheme.typography.headlineSmall)
+                        StudentCardBody(status, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
                     }
                 }
 
@@ -122,10 +122,11 @@ fun AcademicIntelligenceScreen(
                     Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = AcademicOlive)
                     Spacer(Modifier.height(StudentSpacing.Md))
                     Text("مورد مهمی شناسایی نشد", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "بر اساس داده‌های فعلی، موتور ارزیابی مورد قابل توجهی گزارش نکرده است.",
+                    StudentCardBody(
+                        text = "بر اساس داده‌های فعلی، موتور ارزیابی مورد قابل توجهی گزارش نکرده است.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 3
                     )
                 }
             }
@@ -178,11 +179,12 @@ fun AcademicIntelligenceScreen(
                 Spacer(Modifier.size(StudentSpacing.Md))
                 Column(modifier = Modifier.weight(1f)) {
                     Text("گام پیشنهادی", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(
-                        if (tasks.count { !it.isCompleted } > 0) "تکالیف باز را مرور و بر اساس موعد مرتب کنید."
-                        else "برای حفظ روند فعلی، یک هدف مطالعه مشخص کنید.",
+                    StudentCardBody(
+                        text = if (tasks.count { !it.isCompleted } > 0) "تکالیف باز را مرور و بر اساس موعد مرتب کنید."
+                            else "برای حفظ روند فعلی، یک هدف مطالعه مشخص کنید.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2
                     )
                 }
             }
