@@ -2,7 +2,7 @@ name: Android CI
 
 on:
   push:
-    branches: ["main", "release-readiness"]
+    branches: ["main", "release-readiness", "feat/v2.1-context-planning"]
   pull_request:
     branches: ["main"]
 
