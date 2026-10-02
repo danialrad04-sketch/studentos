@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -181,9 +179,7 @@ fun CourseWorkspaceDialogV2(
                 ) {
                     item {
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 180.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(22.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = accent.copy(alpha = if (isDark) 0.11f else 0.065f)
@@ -202,19 +198,16 @@ fun CourseWorkspaceDialogV2(
                                     WorkspaceMetric(openTasks.toString(), "کار باز", Modifier.weight(1f))
                                     WorkspaceMetric(sessions.size.toString(), "جلسه", Modifier.weight(1f))
                                 }
-                                Text(
+                                StudentCardText(
                                     text = when {
                                         nextTask != null -> "گام بعدی: " + nextTask.title
                                         exam != null -> "امتحان بعدی: " + exam.solarDate
                                         sessions.isNotEmpty() -> "جلسه بعدی: " + (WORKSPACE_DAYS.getOrNull(sessions.first().day) ?: "روز") + " · " + sessions.first().start
                                         else -> "برای این درس هنوز فعالیتی ثبت نشده است."
                                     },
+                                    maxLines = 2,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Row(
                                     Modifier.fillMaxWidth(),
@@ -320,9 +313,7 @@ fun CourseWorkspaceDialogV2(
                             WorkspaceHintV2("امتحانی برای این درس ثبت نشده است.")
                         } else {
                             Surface(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(max = 108.dp),
+                                Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(17.dp),
                                 color = MaterialTheme.colorScheme.surface
                             ) {
@@ -333,12 +324,7 @@ fun CourseWorkspaceDialogV2(
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                             Spacer(Modifier.width(5.dp))
-                                            Text(
-                                                exam.location,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
+                                            StudentCardMetaText(exam.location, maxLines = 1)
                                         }
                                     }
                                 }
@@ -368,18 +354,10 @@ fun CourseWorkspaceDialogV2(
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             if (course.professor.isNotBlank()) {
-                                Text(
-                                    "استاد: " + course.professor,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                StudentCardMetaText("استاد: " + course.professor, maxLines = 1)
                             }
                             if (!course.notes.isNullOrBlank()) {
-                                AcademicInfoText(
-                                    course.notes.orEmpty(),
-                                    maxLines = 3
-                                )
+                                StudentCardText(course.notes.orEmpty(), maxLines = 3, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -452,33 +430,15 @@ fun CourseWorkspaceDialogV2(
 private fun WorkspaceMetric(value: String, label: String, modifier: Modifier = Modifier) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-        Text(
-            label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
 private fun WorkspaceScoreV2(label: String, value: String, modifier: Modifier = Modifier) {
     Column(modifier) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Black,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
     }
 }
 
@@ -492,7 +452,7 @@ private fun WorkspaceSectionTitleV2(title: String, icon: androidx.compose.ui.gra
 
 @Composable
 private fun WorkspaceHintV2(text: String) {
-    AcademicInfoText(text, maxLines = 2)
+    Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable
@@ -510,8 +470,6 @@ private fun WorkspaceSessionRow(session: CourseSessionEntity, accent: Color) {
                 Text(
                     WORKSPACE_DAYS.getOrNull(session.day) ?: "روز",
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = accent
@@ -553,19 +511,15 @@ private fun WorkspaceTaskRowV2(
                 )
             }
             Column(Modifier.weight(1f)) {
-                Text(
+                StudentCardText(
                     task.title,
-                    fontWeight = if (task.isCompleted) FontWeight.Medium else FontWeight.Bold,
-                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
                 )
                 if (task.dueDate.isNotBlank()) {
-                    AcademicInfoText(
-                        "موعد: " + task.dueDate,
-                        maxLines = 1,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Text("موعد: " + task.dueDate, fontSize = 10.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             if (onDelete != null) {
