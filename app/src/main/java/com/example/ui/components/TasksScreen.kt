@@ -312,7 +312,9 @@ fun TaskCard(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
