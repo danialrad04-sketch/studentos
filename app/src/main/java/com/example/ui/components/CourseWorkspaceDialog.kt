@@ -924,7 +924,11 @@ fun CourseWorkspaceDialog(
                                     text = notesMemo,
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.padding(14.dp),
+                                    modifier = Modifier
+                                        .padding(14.dp)
+                                        .heightIn(max = 120.dp),
+                                    maxLines = 6,
+                                    overflow = TextOverflow.Ellipsis,
                                     lineHeight = 19.sp
                                 )
                             }
