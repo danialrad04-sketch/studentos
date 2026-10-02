@@ -1,6 +1,7 @@
 package com.example
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.fetchSemanticsNode
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.material3.MaterialTheme
@@ -8,6 +9,7 @@ import androidx.compose.runtime.Composable
 import com.example.ui.components.StudentCardBody
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Assert.assertTrue
 
 class StudentCardTextBoundsTest {
     @get:Rule
@@ -27,8 +29,15 @@ class StudentCardTextBoundsTest {
             }
         }
 
-        composeRule
+        val node = composeRule
             .onNodeWithText(longText)
             .assertIsDisplayed()
+            .fetchSemanticsNode()
+
+        val maxHeightPx = with(composeRule.density) { 72.dp.roundToPx() }
+        assertTrue(
+            "StudentCardBody exceeded the 72dp visual height contract: ${node.size.height}px > ${maxHeightPx}px",
+            node.size.height <= maxHeightPx
+        )
     }
 }
