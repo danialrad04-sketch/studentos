@@ -853,7 +853,9 @@ fun CourseWorkspaceDialog(
                                                     text = task.title,
                                                     fontSize = 12.sp,
                                                     fontWeight = FontWeight.SemiBold,
-                                                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
+                                                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
+                                                    maxLines = 2,
+                                                    overflow = TextOverflow.Ellipsis
                                                 )
                                                 if (task.dueDate.isNotBlank()) {
                                                     Text(text = "مهلت تحویل: ${task.dueDate}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
