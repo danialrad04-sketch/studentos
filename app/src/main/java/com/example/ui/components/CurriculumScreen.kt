@@ -429,10 +429,11 @@ private fun EvaluatedCourseRow(course: EvaluatedCurriculumCourse) {
                     color = statusColor
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
+                StudentCardText(
                     text = course.name,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 if (course.courseType.isNotEmpty()) {
