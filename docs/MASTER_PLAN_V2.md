@@ -645,3 +645,36 @@ It is:
 > A student can open Student OS, understand their current academic state immediately, decide what to do next, execute it quickly, and trust that their data is safe.
 
 That is the product standard for v2.
+
+
+# 12. Sprint 1.1 — Content Safety & Marketplace Review Hardening
+
+This sprint is a prerequisite for the next vertical slice. It closes a class of UI failures that can make academic cards visually unstable when data is long, imported, or user-generated.
+
+## UX hardening
+- All high-signal academic cards must use bounded text primitives for titles, metadata, locations, notes and explanations.
+- Dynamic text in compact cards uses explicit line budgets and ellipsis rather than allowing content to determine unbounded card height.
+- Row-based cards must give dynamic text a bounded width before rendering secondary actions.
+- Long imported content is previewed or truncated in compact surfaces; full content belongs in a dedicated detail/edit context.
+- Add regression coverage for pathological long strings, RTL text and mixed Persian/Latin content.
+
+## Marketplace / reviewer path
+- Fresh installs are Guest-first and can reach the core local experience without Firebase, Google or the dedicated backend.
+- Account features remain available through explicit sign-in/create-account actions.
+- Reviewer instructions must clearly state the offline guest path and which features require network/account access.
+- No production signing identity or Google OAuth client configuration is changed by this path.
+
+## Capability next slice
+After hardening, the next implementation slice is:
+1. Course ↔ Task ↔ Exam relationship presentation.
+2. Unified Task/Exam action vocabulary: Start, Complete, Snooze, Reschedule, Link, Undo.
+3. Explainable priority reasons surfaced in the Course Workspace and Today context.
+4. Academic Context Graph becomes the shared read model for these surfaces; Room entities remain the canonical source of truth.
+5. Copilot commands consume the same context model and never mutate records without an explicit confirmation when the action is consequential.
+
+## Exit criteria
+- No critical academic card expands beyond its intended content budget because of user text.
+- Guest-first launch reaches the dashboard/onboarding without authentication dependency.
+- Existing Google/Firebase sign-in path remains regression-tested.
+- Course/Task/Exam context can be traversed without creating duplicate state.
+- Unit, UI and instrumentation coverage exists for the new vertical slice.

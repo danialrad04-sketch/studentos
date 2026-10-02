@@ -428,19 +428,20 @@ fun SemesterHistoryScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Column {
-                                            Text(
+                                            StudentCardText(
                                                 text = course.name,
                                                 style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.Medium
+                                                fontWeight = FontWeight.Medium,
+                                                maxLines = 1,
+                                                modifier = Modifier.weight(1f)
                                             )
                                             val courseDetail = listOfNotNull(
                                                 course.courseCode.takeIf { it.isNotBlank() },
                                                 course.professor.takeIf { it.isNotBlank() }
                                             ).joinToString(" | ").ifBlank { "ثبت شده در آرشیو" }
-                                            Text(
+                                            StudentCardMetaText(
                                                 text = courseDetail,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                maxLines = 1
                                             )
                                         }
                                         Text(

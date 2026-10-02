@@ -306,13 +306,12 @@ fun TaskCard(
 
                 Spacer(modifier = Modifier.width(StudentSpacing.Sm))
 
-                Column {
-                    Text(
+                Column(modifier = Modifier.weight(1f)) {
+                    StudentCardText(
                         text = task.title,
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
                         color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                        maxLines = 2
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -333,6 +332,8 @@ fun TaskCard(
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
@@ -349,7 +350,9 @@ fun TaskCard(
                                 Text(
                                     text = "موعد: ${task.dueDate}",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
