@@ -206,7 +206,9 @@ fun CourseWorkspaceDialogV2(
                                         else -> "برای این درس هنوز فعالیتی ثبت نشده است."
                                     },
                                     style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                                 Row(
                                     Modifier.fillMaxWidth(),
@@ -323,7 +325,7 @@ fun CourseWorkspaceDialogV2(
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                             Spacer(Modifier.width(5.dp))
-                                            Text(exam.location, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(exam.location, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                         }
                                     }
                                 }
@@ -356,7 +358,13 @@ fun CourseWorkspaceDialogV2(
                                 Text("استاد: " + course.professor, style = MaterialTheme.typography.bodyMedium)
                             }
                             if (!course.notes.isNullOrBlank()) {
-                                Text(course.notes.orEmpty(), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    course.notes.orEmpty(),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 3,
+                                    overflow = TextOverflow.Ellipsis,
+                                    lineHeight = 18.sp
+                                )
                             }
                         }
                     }
@@ -451,7 +459,13 @@ private fun WorkspaceSectionTitleV2(title: String, icon: androidx.compose.ui.gra
 
 @Composable
 private fun WorkspaceHintV2(text: String) {
-    Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text(
+        text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis
+    )
 }
 
 @Composable
