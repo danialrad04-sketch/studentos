@@ -192,7 +192,13 @@ fun CourseWorkspaceDialog(
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text("مرکز درس", style = MaterialTheme.typography.labelMedium, color = courseColor, fontWeight = FontWeight.Bold)
-                                Text(course.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                                Text(
+    course.name,
+    style = MaterialTheme.typography.headlineSmall,
+    fontWeight = FontWeight.Black,
+    maxLines = 1,
+    overflow = TextOverflow.Ellipsis
+)
                             }
                             Surface(shape = CircleShape, color = courseColor.copy(alpha = 0.12f)) {
                                 Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = courseColor, modifier = Modifier.padding(10.dp).size(22.dp))
@@ -583,7 +589,10 @@ fun CourseWorkspaceDialog(
                                 Text(
                                     text = "میان‌ترم: $midterm از ۸ · پایان‌ترم: $finalExam از ۱۲",
                                     fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.fillMaxWidth()
                                 )
                             }
 
@@ -945,7 +954,12 @@ fun CourseWorkspaceDialog(
                                         text = notesMemo.ifBlank { "هنوز یادداشتی برای این درس ثبت نشده است." },
                                         fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.onSurface,
-                                        lineHeight = 19.sp
+                                        lineHeight = 19.sp,
+                                        maxLines = 5,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(max = 110.dp)
                                     )
                                 }
                             }
