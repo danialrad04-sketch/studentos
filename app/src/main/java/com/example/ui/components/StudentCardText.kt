@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 
@@ -20,13 +21,15 @@ fun StudentCardText(
     modifier: Modifier = Modifier,
     maxLines: Int = 2,
     color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface,
-    style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium
+    style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium,
+    fontWeight: FontWeight? = null
 ) {
     Text(
         text = text,
         modifier = modifier.fillMaxWidth(),
         style = style,
         color = color,
+        fontWeight = fontWeight,
         maxLines = maxLines.coerceIn(1, 6),
         overflow = TextOverflow.Ellipsis
     )
