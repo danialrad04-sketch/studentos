@@ -110,6 +110,16 @@ class StudentViewModel @JvmOverloads constructor(
         preferencesRepository.setGuestModeEnabled(true)
     }
 
+    /**
+     * Guest-first entry while the dedicated backend is not yet connected.
+     * Cloud authentication remains available from the account area.
+     */
+    private fun ensureGuestFirstEntry() {
+        if (!preferencesRepository.guestModeEnabled.value && currentUser.value.isGuest) {
+            preferencesRepository.setGuestModeEnabled(true)
+        }
+    }
+
     private val _databaseRecoveryWarning = MutableStateFlow(false)
     val databaseRecoveryWarning: StateFlow<Boolean> = _databaseRecoveryWarning.asStateFlow()
 
@@ -117,6 +127,8 @@ class StudentViewModel @JvmOverloads constructor(
     val userMessage: SharedFlow<String> = _userMessage.asSharedFlow()
 
     init {
+        ensureGuestFirstEntry()
+
         try {
             NotificationHelper.initNotificationChannel(application)
         } catch (_: Throwable) {
