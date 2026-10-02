@@ -198,15 +198,16 @@ fun CourseWorkspaceDialogV2(
                                     WorkspaceMetric(openTasks.toString(), "کار باز", Modifier.weight(1f))
                                     WorkspaceMetric(sessions.size.toString(), "جلسه", Modifier.weight(1f))
                                 }
-                                Text(
+                                StudentCardText(
                                     text = when {
                                         nextTask != null -> "گام بعدی: " + nextTask.title
                                         exam != null -> "امتحان بعدی: " + exam.solarDate
                                         sessions.isNotEmpty() -> "جلسه بعدی: " + (WORKSPACE_DAYS.getOrNull(sessions.first().day) ?: "روز") + " · " + sessions.first().start
                                         else -> "برای این درس هنوز فعالیتی ثبت نشده است."
                                     },
+                                    maxLines = 2,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Row(
                                     Modifier.fillMaxWidth(),
@@ -323,7 +324,7 @@ fun CourseWorkspaceDialogV2(
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                             Spacer(Modifier.width(5.dp))
-                                            Text(exam.location, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            StudentCardMetaText(exam.location, maxLines = 1)
                                         }
                                     }
                                 }
@@ -353,10 +354,10 @@ fun CourseWorkspaceDialogV2(
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             if (course.professor.isNotBlank()) {
-                                Text("استاد: " + course.professor, style = MaterialTheme.typography.bodyMedium)
+                                StudentCardMetaText("استاد: " + course.professor, maxLines = 1)
                             }
                             if (!course.notes.isNullOrBlank()) {
-                                Text(course.notes.orEmpty(), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                StudentCardText(course.notes.orEmpty(), maxLines = 3, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -510,12 +511,12 @@ private fun WorkspaceTaskRowV2(
                 )
             }
             Column(Modifier.weight(1f)) {
-                Text(
+                StudentCardText(
                     task.title,
-                    fontWeight = if (task.isCompleted) FontWeight.Medium else FontWeight.Bold,
-                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
                 )
                 if (task.dueDate.isNotBlank()) {
                     Text("موعد: " + task.dueDate, fontSize = 10.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
