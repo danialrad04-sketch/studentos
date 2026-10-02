@@ -1,14 +1,11 @@
 package com.example.ui.components
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.ui.unit.dp
 
 /**
  * Stable text primitive for user-provided / imported academic content.
@@ -27,9 +24,7 @@ fun StudentCardText(
 ) {
     Text(
         text = text,
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(max = (style.lineHeight.value.takeIf { it > 0f } ?: 20f) * maxLines.dp.value / 20f .coerceAtLeast(1f).dp),
+        modifier = modifier.fillMaxWidth(),
         style = style,
         color = color,
         maxLines = maxLines.coerceIn(1, 6),
