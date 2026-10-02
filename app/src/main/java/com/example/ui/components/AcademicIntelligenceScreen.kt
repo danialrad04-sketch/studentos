@@ -141,13 +141,14 @@ fun AcademicIntelligenceScreen(
                                 tint = if (critical) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                             )
                             Spacer(Modifier.size(StudentSpacing.Sm))
-                            Text(risk.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            StudentCardText(risk.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1)
                         }
                         Spacer(Modifier.height(StudentSpacing.Sm))
-                        Text(
+                        StudentCardText(
                             risk.description,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 3
                         )
                         Spacer(Modifier.height(StudentSpacing.Md))
                         Text("پیشنهاد: ${risk.recommendedAction}", style = MaterialTheme.typography.bodySmall)
