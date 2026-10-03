@@ -297,18 +297,13 @@ object FirestoreSyncManager {
 
             val subcollections = listOf("courses", "course_sessions", "attendance", "grades", "tasks", "exams", "notes", "profile")
             for (subcol in subcollections) {
-                try {
-                    val snapshot = userDoc.collection(subcol).get().awaitResult()
-                    if (!snapshot.isEmpty) {
-                        val batch = db.batch()
-                        snapshot.documents.forEach { doc ->
-                            batch.delete(doc.reference)
-                        }
-                        batch.commit().awaitResult()
-                    }
-                } catch (e: Exception) {
-                    Log.w(TAG, "Error deleting subcollection $subcol: ${e.message}")
-                    com.example.util.CrashLogger.recordException(e)
+                // Firestore batches have a write limit. Failed deletions must reach
+                // the caller instead of allowing auth deletion to orphan cloud data.
+                val snapshot = userDoc.collection(subcol).get().awaitResult()
+                snapshot.documents.chunked(400).forEach { documents ->
+                    val batch = db.batch()
+                    documents.forEach { batch.delete(it.reference) }
+                    batch.commit().awaitResult()
                 }
             }
 

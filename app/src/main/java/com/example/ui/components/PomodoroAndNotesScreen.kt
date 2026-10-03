@@ -44,8 +44,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import com.example.domain.model.StudySessionRecommendation
-import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.Rose600
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -302,7 +300,7 @@ fun PomodoroAndNotesScreen(
                             Icon(
                                 imageVector = Icons.Default.AutoAwesome,
                                 contentDescription = null,
-                                tint = AcademicNavy,
+                                tint = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -316,13 +314,13 @@ fun PomodoroAndNotesScreen(
 
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = AcademicNavy.copy(alpha = 0.12f)
+                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f)
                         ) {
                             Text(
                                 text = "${studyRecommendations.size} اولویت",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = AcademicNavy,
+                                color = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
@@ -332,7 +330,7 @@ fun PomodoroAndNotesScreen(
 
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         studyRecommendations.forEach { rec ->
-                            val badgeColor = if (rec.targetType.contains("آزمون")) Rose600 else AcademicOlive
+                            val badgeColor = if (rec.targetType.contains("آزمون")) Rose600 else MaterialTheme.colorScheme.primary
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
@@ -385,13 +383,13 @@ fun PomodoroAndNotesScreen(
 
                                     Surface(
                                         shape = RoundedCornerShape(8.dp),
-                                        color = AcademicNavy.copy(alpha = 0.1f)
+                                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
                                     ) {
                                         Text(
                                             text = "${rec.recommendedDurationMinutes} دقیقه",
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = AcademicNavy,
+                                            color = MaterialTheme.colorScheme.secondary,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                         )
                                     }

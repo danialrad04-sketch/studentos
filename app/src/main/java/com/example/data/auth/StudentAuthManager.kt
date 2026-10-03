@@ -13,7 +13,10 @@ import com.example.domain.model.SubscriptionDetails
 import com.example.domain.model.SubscriptionTier
 import com.example.domain.model.UserAccount
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.FirebaseApiNotAvailableException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.auth
@@ -57,6 +60,8 @@ class StudentAuthManager(private val context: Context) {
         )
     )
     val currentUser: StateFlow<UserAccount> = _currentUser.asStateFlow()
+    val usesFirebaseAccount: Boolean
+        get() = safeFirebaseAuth?.currentUser?.let { !it.isAnonymous } == true
 
     private val _isInitialized = MutableStateFlow(false)
     val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()
@@ -92,7 +97,13 @@ class StudentAuthManager(private val context: Context) {
 
     private fun checkAndRestoreBackendSession() {
         try {
-            val tokenStore = BackendApiClient.getInstance(context).tokenStore()
+            if (!com.example.data.api.backend.BackendConfig.isConfigured) {
+                _currentUser.value = buildUserFromFirebase(null)
+                _isInitialized.value = true
+                return
+            }
+            val client = BackendApiClient.getInstance(context)
+            val tokenStore = client.tokenStore()
             val token = tokenStore.getAccessToken()
             val userId = tokenStore.getUserId()
             if (token != null && userId != null) {
@@ -104,14 +115,16 @@ class StudentAuthManager(private val context: Context) {
                     displayName = disp,
                     photoUrl = null,
                     isGuest = false,
-                    subscription = SubscriptionDetails(
-                        tier = SubscriptionTier.PRO,
-                        isCloudSyncEnabled = true,
-                        isUnlimitedExportEnabled = true,
-                        isGpaPredictorUnlocked = true,
-                        maxDailyAiQuota = 999
-                    )
+                    subscription = SubscriptionDetails()
                 )
+
+                scope.launch {
+                    val entitlement = backendSubscription(client)
+                    if (_currentUser.value.uid == userId && !_currentUser.value.isGuest) {
+                        _currentUser.value = _currentUser.value.copy(subscription = entitlement)
+                    }
+                }
+
                 // Schedule periodic sync and pull latest data on startup
                 BackendSyncWorker.schedulePeriodicSync(context)
                 BackendSyncWorker.triggerImmediateSync(context, pullOnly = true)
@@ -136,6 +149,58 @@ class StudentAuthManager(private val context: Context) {
         }
     }
 
+    private fun isFirebaseTransportFailure(message: String): Boolean {
+        return message == FIREBASE_TRANSPORT_ERROR
+    }
+
+    private fun firebaseFailureMessage(exception: Exception): String {
+        val code = (exception as? FirebaseAuthException)?.errorCode.orEmpty()
+        val transport = exception is FirebaseNetworkException ||
+            exception is FirebaseApiNotAvailableException ||
+            code.equals("ERROR_NETWORK_REQUEST_FAILED", ignoreCase = true) ||
+            code.equals("ERROR_API_NOT_AVAILABLE", ignoreCase = true) ||
+            code.equals("ERROR_APP_NOT_AUTHORIZED", ignoreCase = true) ||
+            code.equals("ERROR_INVALID_API_KEY", ignoreCase = true)
+
+        if (transport) return FIREBASE_TRANSPORT_ERROR
+
+        return when {
+            code.contains("USER_NOT_FOUND", ignoreCase = true) ->
+                "حسابی با این ایمیل یافت نشد. لطفاً ثبت‌نام کنید."
+            code.contains("WRONG_PASSWORD", ignoreCase = true) ||
+                code.contains("INVALID_CREDENTIAL", ignoreCase = true) ->
+                "ایمیل یا رمز عبور واردشده صحیح نیست."
+            code.contains("EMAIL_ALREADY_IN_USE", ignoreCase = true) ->
+                "این ایمیل قبلاً ثبت‌نام شده است. لطفاً وارد شوید."
+            code.contains("WEAK_PASSWORD", ignoreCase = true) ->
+                "رمز عبور انتخابی ضعیف است."
+            else ->
+                "خطای احراز هویت: " + (exception.localizedMessage ?: "لطفاً دوباره تلاش کنید.")
+        }
+    }
+    private suspend fun backendSubscription(client: BackendApiClient): SubscriptionDetails {
+        return try {
+            val response = client.api.getEntitlement()
+            val entitlement = response.body()
+            if (!response.isSuccessful || entitlement == null) {
+                SubscriptionDetails(tier = SubscriptionTier.FREE, maxDailyAiQuota = 5)
+            } else {
+                val tier = runCatching {
+                    SubscriptionTier.valueOf(entitlement.tier.uppercase())
+                }.getOrDefault(SubscriptionTier.FREE)
+                SubscriptionDetails(
+                    tier = tier,
+                    maxDailyAiQuota = entitlement.maxDailyAiQuota,
+                    isCloudSyncEnabled = entitlement.allowsCloudSync,
+                    isUnlimitedExportEnabled = entitlement.allowsPdfExport,
+                    isGpaPredictorUnlocked = entitlement.gpaPredictorUnlocked
+                )
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "Backend entitlement lookup failed: ${e.message}")
+            SubscriptionDetails(tier = SubscriptionTier.FREE, maxDailyAiQuota = 5)
+        }
+    }
     private fun buildUserFromFirebase(fbUser: FirebaseUser?): UserAccount {
         if (fbUser == null) {
             return UserAccount(
@@ -224,13 +289,37 @@ class StudentAuthManager(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Sign in failed: ${e.message}", e)
             com.example.util.CrashLogger.recordException(e)
-            val friendlyMsg = when {
-                e.message?.contains("user-not-found", ignoreCase = true) == true -> "حسابی با این ایمیل یافت نشد. لطفاً ثبت‌نام کنید."
-                e.message?.contains("wrong-password", ignoreCase = true) == true -> "رمز عبور وارد شده اشتباه است."
-                e.message?.contains("network", ignoreCase = true) == true -> "خطا در اتصال به اینترنت. لطفاً شبکه را بررسی کنید."
-                else -> "خطای احراز هویت: ${e.localizedMessage ?: "اطلاعات نامعتبر است."}"
-            }
-            AuthResult.Error(friendlyMsg)
+            AuthResult.Error(firebaseFailureMessage(e))
+        }
+    }
+
+    /**
+     * Resilient email authentication for restricted networks.
+     *
+     * Firebase remains the primary identity provider. When the Firebase
+     * transport/service itself is unreachable, fall back to the self-hosted
+     * backend so the app can still authenticate on networks where Google/Firebase
+     * endpoints are not reachable. Invalid credentials never trigger fallback.
+     */
+    suspend fun signInWithEmailResilient(email: String, password: String): AuthResult {
+        val firebaseResult = signInWithEmail(email, password)
+        if (firebaseResult !is AuthResult.Error || !isFirebaseTransportFailure(firebaseResult.errorMessage)) {
+            return firebaseResult
+        }
+
+        if (!com.example.data.api.backend.BackendConfig.isConfigured) {
+            return firebaseResult
+        }
+
+        val backendResult = signInWithBackend(email, password)
+        return when (backendResult) {
+            is AuthResult.Success -> backendResult.copy(
+                message = "ورود از مسیر پشتیبان سرور با موفقیت انجام شد. همگام‌سازی این حساب فعال است."
+            )
+            is AuthResult.Error -> AuthResult.Error(
+                "سرویس Firebase از این شبکه در دسترس نبود و مسیر پشتیبان هم نتوانست وارد حساب شود. اتصال اینترنت را بررسی کنید و دوباره تلاش کنید."
+            )
+            else -> backendResult
         }
     }
 
@@ -266,12 +355,29 @@ class StudentAuthManager(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Sign up failed: ${e.message}", e)
             com.example.util.CrashLogger.recordException(e)
-            val friendlyMsg = when {
-                e.message?.contains("email-already-in-use", ignoreCase = true) == true -> "این ایمیل قبلاً ثبت‌نام شده است. لطفاً وارد شوید."
-                e.message?.contains("weak-password", ignoreCase = true) == true -> "رمز عبور انتخابی ضعیف است."
-                else -> "خطا در ثبت‌نام: ${e.localizedMessage ?: "لطفاً مجدداً تلاش نمایید."}"
-            }
-            AuthResult.Error(friendlyMsg)
+            AuthResult.Error(firebaseFailureMessage(e))
+        }
+    }
+
+    suspend fun signUpWithEmailResilient(name: String, email: String, password: String): AuthResult {
+        val firebaseResult = signUpWithEmail(name, email, password)
+        if (firebaseResult !is AuthResult.Error || !isFirebaseTransportFailure(firebaseResult.errorMessage)) {
+            return firebaseResult
+        }
+
+        if (!com.example.data.api.backend.BackendConfig.isConfigured) {
+            return firebaseResult
+        }
+
+        val backendResult = signUpWithBackend(name, email, password)
+        return when (backendResult) {
+            is AuthResult.Success -> backendResult.copy(
+                message = "حساب شما از مسیر پشتیبان سرور ایجاد شد و همگام‌سازی فعال است."
+            )
+            is AuthResult.Error -> AuthResult.Error(
+                "سرویس Firebase از این شبکه در دسترس نبود و ایجاد حساب از مسیر پشتیبان هم انجام نشد."
+            )
+            else -> backendResult
         }
     }
 
@@ -299,13 +405,7 @@ class StudentAuthManager(private val context: Context) {
                         displayName = dispName,
                         photoUrl = null,
                         isGuest = false,
-                        subscription = SubscriptionDetails(
-                            tier = SubscriptionTier.PRO,
-                            isCloudSyncEnabled = true,
-                            isUnlimitedExportEnabled = true,
-                            isGpaPredictorUnlocked = true,
-                            maxDailyAiQuota = 999
-                        )
+                        subscription = backendSubscription(client)
                     )
                     _currentUser.value = userAccount
 
@@ -336,8 +436,8 @@ class StudentAuthManager(private val context: Context) {
         if (email.isBlank() || !email.contains("@")) {
             return@withContext AuthResult.Error("ایمیل وارد شده نامعتبر است.")
         }
-        if (password.length < 6) {
-            return@withContext AuthResult.Error("رمز عبور باید حداقل ۶ کاراکتر باشد.")
+        if (password.length < 8) {
+            return@withContext AuthResult.Error("رمز عبور باید حداقل ۸ کاراکتر باشد.")
         }
 
         try {
@@ -362,13 +462,7 @@ class StudentAuthManager(private val context: Context) {
                         displayName = dispName,
                         photoUrl = null,
                         isGuest = false,
-                        subscription = SubscriptionDetails(
-                            tier = SubscriptionTier.PRO,
-                            isCloudSyncEnabled = true,
-                            isUnlimitedExportEnabled = true,
-                            isGpaPredictorUnlocked = true,
-                            maxDailyAiQuota = 999
-                        )
+                        subscription = backendSubscription(client)
                     )
                     _currentUser.value = userAccount
 
@@ -539,20 +633,8 @@ class StudentAuthManager(private val context: Context) {
     }
 
     suspend fun upgradeSubscriptionTier(tier: SubscriptionTier): Result<SubscriptionTier> = withContext(Dispatchers.IO) {
-        val current = _currentUser.value
-        // Server update through Firestore
-        val result = FirestoreSyncManager.redeemPromoCode(current.uid, "UPGRADE_${tier.name}")
-        val effectiveTier = if (result.isSuccess) tier else tier // Local fallback with cloud sync trigger
-        _currentUser.value = current.copy(
-            subscription = current.subscription.copy(
-                tier = effectiveTier,
-                isCloudSyncEnabled = true,
-                isUnlimitedExportEnabled = true,
-                isGpaPredictorUnlocked = true,
-                maxDailyAiQuota = if (tier == SubscriptionTier.FREE) 5 else 999
-            )
-        )
-        Result.success(effectiveTier)
+        // Entitlements must come from the server; a failed purchase never grants access.
+        applyPromoCode("UPGRADE_${tier.name}")
     }
 
     suspend fun signOutUser() = withContext(Dispatchers.IO) {
@@ -572,17 +654,12 @@ class StudentAuthManager(private val context: Context) {
     suspend fun deleteUserAccount(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val user = safeFirebaseAuth?.currentUser
-            val userId = user?.uid
-            if (userId != null && !userId.startsWith("guest_")) {
-                try {
-                    com.example.data.cloud.FirestoreSyncManager.deleteAllUserDataFromCloud(userId)
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed wiping cloud documents for user $userId: ${e.message}")
-                    com.example.util.CrashLogger.recordException(e)
-                }
-            }
-            if (user != null) {
+            if (user != null && !user.isAnonymous) {
+                FirestoreSyncManager.deleteAllUserDataFromCloud(user.uid).getOrThrow()
                 user.delete().awaitResult()
+            } else if (!_currentUser.value.isGuest) {
+                val response = BackendApiClient.getInstance(context).api.deleteAccount()
+                if (!response.isSuccessful) throw IllegalStateException("حذف حساب روی سرور انجام نشد؛ دوباره تلاش کنید.")
             }
             signOutUser()
             Result.success(Unit)
@@ -614,6 +691,7 @@ class StudentAuthManager(private val context: Context) {
 
     companion object {
         private const val TAG = "StudentAuthManager"
+        private const val FIREBASE_TRANSPORT_ERROR = "سرویس احراز هویت در دسترس نیست."
 
         @Volatile
         private var INSTANCE: StudentAuthManager? = null

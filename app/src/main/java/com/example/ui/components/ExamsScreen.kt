@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Alarm
@@ -35,7 +37,6 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.models.ExamItem
 import com.example.data.local.entity.TaskEntity
 import com.example.ui.theme.StudentShapeTokens
-import com.example.ui.theme.AcademicOlive
 
 @Composable
 fun ExamsScreen(
@@ -52,16 +53,17 @@ fun ExamsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
+                StudentCardTitle(
                     text = "امتحانات پایان‌ترم",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontWeight = FontWeight.Black
                 )
                 Text(
                     text = "برنامه امتحانات پایان‌ترم با ساعت، تاریخ و سالن آزمون",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
 
@@ -115,6 +117,7 @@ fun ExamCard(
     Surface(
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(min = 132.dp, max = 248.dp)
             .tactileClickable { onSetReminder() },
         shape = StudentShapeTokens.Card,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -141,6 +144,9 @@ fun ExamCard(
                     Text(
                         text = exam.courseName,
                         style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = 220.dp),
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -177,7 +183,9 @@ fun ExamCard(
                     text = "تاریخ: ${exam.solarDate}  |  ساعت: ${exam.time}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
 
@@ -194,10 +202,9 @@ fun ExamCard(
                     modifier = Modifier.size(15.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(
+                StudentCardMeta(
                     text = "محل آزمون: ${exam.location}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
@@ -214,13 +221,13 @@ fun ExamCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = AcademicOlive.copy(alpha = 0.14f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
                 ) {
                     Text(
                         text = "⏳ آزمون شماره #$index",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = AcademicOlive,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -283,8 +290,8 @@ private fun ExamPreparationIndicator(
             androidx.compose.material3.LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth(),
-                color = AcademicOlive,
-                trackColor = AcademicOlive.copy(alpha = 0.12f)
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
             )
         }
     }

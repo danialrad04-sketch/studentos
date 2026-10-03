@@ -17,8 +17,8 @@ android {
     applicationId = "com.aistudio.studentos.appvzk"
     minSdk = 24
     targetSdk = 36
-    versionCode = 5
-    versionName = "2.0.0"
+    versionCode = providers.gradleProperty("VERSION_CODE").orElse("2006").get().toInt()
+    versionName = providers.gradleProperty("VERSION_NAME").orElse("2.1.0").get()
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -65,6 +65,9 @@ android {
     unitTests {
       isIncludeAndroidResources = true
       isReturnDefaultValues = true
+      all {
+        it.systemProperty("robolectric.dependency.repo.url", "https://repo.maven.apache.org/maven2")
+      }
     }
   }
   dependenciesInfo {

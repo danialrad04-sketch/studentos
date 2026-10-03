@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,6 +66,7 @@ fun ModernScheduleCourseCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = 88.dp, max = 136.dp)
             .tactileClickable(onClick = onClick),
         shape = RoundedCornerShape(StudentOsShapes.mediumCard),
         colors = CardDefaults.cardColors(
@@ -94,14 +95,14 @@ fun ModernScheduleCourseCard(
                     Icon(Icons.Default.Schedule, null, tint = accent, modifier = Modifier.size(15.dp))
                     Spacer(Modifier.size(4.dp))
                     Text(
-                        "\\u200E" + session.start + "\\u200E",
+                        "\u200E" + session.start + "\u200E",
                         style = NumericDisplayStat,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Black,
                         color = accent
                     )
                     Text(
-                        "\\u200E" + session.end + "\\u200E",
+                        "\u200E" + session.end + "\u200E",
                         style = NumericDisplayStat,
                         fontSize = 9.5.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -114,12 +115,11 @@ fun ModernScheduleCourseCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(7.dp)
                 ) {
-                    Text(
-                        course.name,
+                    StudentCardTitle(
+                        text = course.name,
+                        modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Black,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        fontWeight = FontWeight.Black
                     )
                     if (!isPrimarySession) {
                         Surface(
@@ -145,12 +145,12 @@ fun ModernScheduleCourseCard(
                         shape = RoundedCornerShape(7.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f)
                     ) {
-                        Text(
-                            course.units.toString() + " واحد",
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
-                            fontSize = 9.5.sp,
+                        StudentCardMeta(
+                            text = course.units.toString() + " واحد",
+                            style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
                         )
                     }
                     if (course.professor.isNotBlank()) {

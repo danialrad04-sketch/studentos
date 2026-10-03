@@ -26,8 +26,6 @@ import androidx.compose.ui.unit.sp
 import com.example.data.local.entity.CourseEntity
 import com.example.domain.engine.CourseConflict
 import com.example.data.local.relation.CourseWithSessions
-import com.example.ui.theme.AcademicOlive
-import com.example.ui.theme.AcademicNavy
 
 @Composable
 fun ScheduleContextStripV2(
@@ -45,9 +43,9 @@ fun ScheduleContextStripV2(
     val hours = minutes / 60
     val mins = minutes % 60
     val loadText = if (hours > 0) {
-        "\u200E\${hours}س \${mins}د\u200E"
+        "\u200E" + hours + "س " + mins + "د\u200E"
     } else {
-        "\u200E\${mins}د\u200E"
+        "\u200E" + mins + "د\u200E"
     }
 
     Surface(
@@ -65,12 +63,12 @@ fun ScheduleContextStripV2(
             ) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = AcademicOlive.copy(alpha = 0.12f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
                     Icon(
                         Icons.Default.CalendarToday,
                         contentDescription = null,
-                        tint = AcademicOlive,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(7.dp).size(17.dp)
                     )
                 }
@@ -81,9 +79,9 @@ fun ScheduleContextStripV2(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Black
                     )
-                    Text(
-                        "\${sessions.size} جلسه · \${loadText} زمان کلاس",
-                        fontSize = 10.5.sp,
+                    StudentCardMeta(
+                        text = sessions.size.toString() + " جلسه · " + loadText + " زمان کلاس",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -104,7 +102,7 @@ fun ScheduleContextStripV2(
                             )
                             Spacer(Modifier.width(3.dp))
                             Text(
-                                "\${conflicts.size} تداخل",
+                                conflicts.size.toString() + " تداخل",
                                 fontSize = 9.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.error
@@ -121,13 +119,13 @@ fun ScheduleContextStripV2(
                 ScheduleContextMetric(
                     value = courses.distinctBy { it.id }.size.toString(),
                     label = "درس فعال",
-                    accent = AcademicNavy,
+                    accent = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.weight(1f)
                 )
                 ScheduleContextMetric(
                     value = sessions.size.toString(),
                     label = "جلسه امروز",
-                    accent = AcademicOlive,
+                    accent = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
                 )
                 ScheduleContextMetric(

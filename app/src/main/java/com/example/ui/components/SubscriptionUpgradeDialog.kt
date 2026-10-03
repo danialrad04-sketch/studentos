@@ -52,8 +52,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.model.SubscriptionTier
 import com.example.domain.model.UserAccount
-import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.StudentOsColors
 
 @Composable
@@ -90,7 +88,7 @@ fun SubscriptionUpgradeDialog(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(AcademicNavy.copy(alpha = 0.16f)),
+                            .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -109,9 +107,11 @@ fun SubscriptionUpgradeDialog(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "اشتراک فعلی: ${userAccount.subscription.tier.titleFa}",
+                            text = "اشتراک فعلی: " + userAccount.subscription.tier.titleFa,
                             fontSize = 10.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -193,7 +193,7 @@ fun SubscriptionUpgradeDialog(
                             modifier = Modifier
                                 .size(20.dp)
                                 .clip(CircleShape)
-                                .background(AcademicOlive.copy(alpha = 0.16f)),
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(

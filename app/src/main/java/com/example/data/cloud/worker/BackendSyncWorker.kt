@@ -14,6 +14,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.example.data.api.backend.BackendApiClient
 import com.example.data.cloud.BackendSyncManager
+import com.example.data.cloud.SyncStatusStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -30,6 +31,7 @@ class BackendSyncWorker(
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val client = BackendApiClient.getInstance(applicationContext)
         val token = client.tokenStore().getAccessToken()
+        SyncStatusStore.initialize(applicationContext)
         if (token == null) {
             Log.d(TAG, "Backend sync skipped: No access token stored.")
             return@withContext Result.success()
@@ -39,25 +41,29 @@ class BackendSyncWorker(
         val isPullOnly = inputData.getBoolean(KEY_PULL_ONLY, false)
 
         try {
+            SyncStatusStore.markSyncing(applicationContext)
             if (isPullOnly) {
                 if (dataType != null) {
-                    BackendSyncManager.pullDataType(applicationContext, dataType)
+                    BackendSyncManager.pullDataType(applicationContext, dataType).getOrThrow()
                 } else {
-                    BackendSyncManager.pullAllData(applicationContext)
+                    BackendSyncManager.pullAllData(applicationContext).getOrThrow()
                 }
             } else {
                 if (dataType != null) {
-                    BackendSyncManager.pushDataType(applicationContext, dataType)
+                    BackendSyncManager.pushDataType(applicationContext, dataType).getOrThrow()
                 } else {
-                    BackendSyncManager.pushAllData(applicationContext)
+                    BackendSyncManager.pushAllData(applicationContext).getOrThrow()
                 }
             }
+            SyncStatusStore.markSynced(applicationContext)
             Result.success()
         } catch (e: Exception) {
             Log.e(TAG, "BackendSyncWorker error: ${e.message}", e)
             if (runAttemptCount < 3) {
+                SyncStatusStore.markSyncing(applicationContext)
                 Result.retry()
             } else {
+                SyncStatusStore.markNeedsAttention(applicationContext)
                 Result.failure()
             }
         }

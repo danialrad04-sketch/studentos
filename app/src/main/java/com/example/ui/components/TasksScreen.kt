@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
@@ -59,6 +61,7 @@ fun TasksScreen(
     tasks: List<TaskEntity>,
     courses: List<CourseEntity> = emptyList(),
     exams: List<ExamItem> = emptyList(),
+    planningCollisions: List<com.example.domain.model.AcademicPlanningCollision> = emptyList(),
     onAddTask: () -> Unit,
     onToggleTask: (TaskEntity) -> Unit,
     onDeleteTask: (TaskEntity) -> Unit,
@@ -103,6 +106,12 @@ fun TasksScreen(
             tasks = tasks,
             exams = exams,
             courses = courses,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        PlanningCollisionBannerV2(
+            collisions = planningCollisions,
+            onOpenTasks = { selectedFilter = "priority" },
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
@@ -278,6 +287,7 @@ fun TaskCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .heightIn(min = 72.dp, max = 112.dp)
             .tactileClickable { onToggle() },
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = containerColor),
@@ -310,11 +320,11 @@ fun TaskCard(
                     Text(
                         text = task.title,
                         style = MaterialTheme.typography.titleSmall,
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         fontWeight = FontWeight.SemiBold,
                         color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
-                        maxLines = 2,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -335,7 +345,11 @@ fun TaskCard(
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .widthIn(max = 150.dp)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
 
@@ -351,7 +365,9 @@ fun TaskCard(
                                 Text(
                                     text = "موعد: ${task.dueDate}",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                 )
                             }
                         }

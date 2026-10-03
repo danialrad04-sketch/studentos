@@ -1,3 +1,5 @@
+> Current status: see [V2_1_VERIFICATION.md](V2_1_VERIFICATION.md). The following is a historical audit, not evidence of current release certification.
+
 # Student OS — Master Plan Audit (2026-09-26)
 
 This document records the implementation audit against `docs/STUDENT_OS_MASTER_PLAN.md`.

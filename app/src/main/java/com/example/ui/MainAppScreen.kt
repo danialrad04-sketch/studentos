@@ -90,6 +90,7 @@ import com.example.ui.components.HeaderSection
 import com.example.ui.components.MainTabContent
 import com.example.ui.components.OnboardingScreen
 import com.example.ui.components.SubScreenHeaderSection
+import com.example.ui.components.SyncStatusBannerV2
 import com.example.ui.components.export.ExportSourcePayload
 import com.example.ui.models.AppDialogState
 import com.example.ui.models.AppTab
@@ -228,6 +229,11 @@ fun MainAppScreen(
     val searchQuery by studentViewModel.searchQuery.collectAsStateWithLifecycle()
     val globalSearchResults by studentViewModel.globalSearchResults.collectAsStateWithLifecycle()
     val gamificationProfile by studentViewModel.gamificationProfile.collectAsStateWithLifecycle()
+    val studyRecommendations by studentViewModel.studyRecommendations.collectAsStateWithLifecycle()
+    val academicPriorities by studentViewModel.academicPriorities.collectAsStateWithLifecycle()
+    val planningCollisions by studentViewModel.planningCollisions.collectAsStateWithLifecycle()
+    val syncStatus by studentViewModel.syncStatus.collectAsStateWithLifecycle()
+    val acceptedStudyPlanIds by studentViewModel.acceptedStudyPlanIds.collectAsStateWithLifecycle()
 
     // Dynamic weighted GPA: calculates accurately from evaluated grades, or falls back to declared GPA from setup
     val evaluatedGrades = grades.filter { (it.midtermGrade + it.finalGrade) > 0.0 }
@@ -472,6 +478,18 @@ fun MainAppScreen(
 
                             Spacer(modifier = Modifier.height(4.dp))
 
+                        SyncStatusBannerV2(
+                            status = syncStatus,
+                            isGuest = currentUser.isGuest,
+                            onSyncNow = {
+                                studentViewModel.triggerManualCloudSync { ok, message ->
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+
                         // Tab Content decomposed into MainTabContent with animated transition
                         AnimatedContent(
                             targetState = selectedTab,
@@ -499,6 +517,11 @@ fun MainAppScreen(
                                 academicRisks = academicRisks,
                                 weeklyWorkload = weeklyWorkload,
                                 candidateSemesterPlans = candidateSemesterPlans,
+                                studyRecommendations = studyRecommendations,
+                                primaryPriority = academicPriorities.firstOrNull(),
+                                planningCollisions = planningCollisions,
+                                acceptedStudyPlanIds = acceptedStudyPlanIds,
+                                onAcceptStudyPlan = { studentViewModel.acceptStudyRecommendation(it) },
                                 pomodoroSeconds = pomodoroSeconds,
                                 isPomodoroRunning = isPomodoroRunning,
                                 gamificationProfile = gamificationProfile,

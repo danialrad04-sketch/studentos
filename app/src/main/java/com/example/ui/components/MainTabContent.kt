@@ -49,6 +49,10 @@ fun MainTabContent(
     weeklyWorkload: WeeklyAcademicWorkload,
     candidateSemesterPlans: List<SemesterPlan>,
     studyRecommendations: List<StudySessionRecommendation> = emptyList(),
+    primaryPriority: com.example.domain.model.AcademicPriorityItem? = null,
+    planningCollisions: List<com.example.domain.model.AcademicPlanningCollision> = emptyList(),
+    acceptedStudyPlanIds: Set<String> = emptySet(),
+    onAcceptStudyPlan: (StudySessionRecommendation) -> Unit = {},
     pomodoroSeconds: Int,
     isPomodoroRunning: Boolean,
     gamificationProfile: StudentGamificationProfile,
@@ -79,6 +83,7 @@ fun MainTabContent(
                     coursesWithSessions = coursesWithSessions,
                     attendanceList = attendance,
                     tasks = tasks,
+                    exams = exams,
                     grades = grades,
                     passedUnits = profile.passedUnits,
                     gpa = gpaFormatted,
@@ -88,6 +93,10 @@ fun MainTabContent(
                     academicRisks = academicRisks,
                     weeklyWorkload = weeklyWorkload,
                     studyRecommendations = studyRecommendations,
+                    primaryPriority = primaryPriority,
+                    acceptedStudyPlanIds = acceptedStudyPlanIds,
+                    onAcceptStudyPlan = onAcceptStudyPlan,
+                    onStartStudyPlan = studentViewModel::startStudyRecommendation,
                     pomodoroSeconds = pomodoroSeconds,
                     isPomodoroRunning = isPomodoroRunning,
                     onTogglePomodoro = {
@@ -122,6 +131,8 @@ fun MainTabContent(
                     exams = exams,
                     coursesWithSessions = coursesWithSessions,
                     curriculumCourses = currCourses,
+                    primaryPriority = primaryPriority,
+                    planningCollisions = planningCollisions,
                     onNavigateTab = { targetTab ->
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         studentViewModel.selectTab(targetTab)
@@ -228,6 +239,7 @@ fun MainTabContent(
                     tasks = tasks,
                     courses = courses,
                     exams = exams,
+                    planningCollisions = planningCollisions,
                     onAddTask = onOpenAddTask,
                     onToggleTask = {
                         studentViewModel.toggleTask(it)

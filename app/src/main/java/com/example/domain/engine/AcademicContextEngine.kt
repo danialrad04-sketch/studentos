@@ -7,6 +7,7 @@ import com.example.data.local.entity.CourseSessionEntity
 import com.example.data.local.relation.CourseWithSessions
 import com.example.domain.model.AcademicContextAction
 import com.example.domain.model.AcademicContextSnapshot
+import com.example.domain.model.AcademicPriorityItem
 import com.example.domain.model.ExamItem
 
 object AcademicContextEngine {
@@ -18,11 +19,12 @@ object AcademicContextEngine {
         tasks: List<TaskEntity>,
         exams: List<ExamItem>,
         todayWeekdayIndex: Int,
-        todayDate: String
+        todayDate: String,
+        minuteOfDay: Int = 0
     ): AcademicContextSnapshot {
         val normalizedToday = normalizeDate(todayDate)
 
-        val todaySessions = coursesWithSessions
+        val todaySessions = coursesWithSessions.filterNot { it.course.isArchived }
             .flatMap { relation ->
                 relation.sessions
                     .filter { it.day == todayWeekdayIndex }
@@ -50,17 +52,31 @@ object AcademicContextEngine {
             !it.isCompleted && examCourseNames.contains(it.courseName.trim())
         }
 
-        val next = todaySessions.firstOrNull()
+        val next = NextClassEngine.next(coursesWithSessions, todayWeekdayIndex, minuteOfDay)
+            ?.takeIf { it.daysAhead == 0 }
         val classMinutes = todaySessions.sumOf { (_, session) ->
             durationMinutes(session)
         }
 
-        val action = when {
-            criticalAttendance > 0 -> AcademicContextAction.OPEN_ATTENDANCE
-            overdueTasks > 0 -> AcademicContextAction.OPEN_OVERDUE_TASKS
-            examsWithOpenTasks > 0 -> AcademicContextAction.REVIEW_EXAM
-            next != null -> AcademicContextAction.OPEN_NEXT_CLASS
-            openTasks > 0 -> AcademicContextAction.START_FOCUS
+        val topPriority: AcademicPriorityItem? = AcademicPriorityEngine.topOrNull(
+            courses = courses,
+            coursesWithSessions = coursesWithSessions,
+            attendance = attendance,
+            tasks = tasks,
+            exams = exams,
+            todayWeekdayIndex = todayWeekdayIndex,
+            todayDate = todayDate,
+            minuteOfDay = minuteOfDay
+        )
+
+        val action = when (topPriority?.kind) {
+            com.example.domain.model.AcademicPriorityKind.CRITICAL_ATTENDANCE -> AcademicContextAction.OPEN_ATTENDANCE
+            com.example.domain.model.AcademicPriorityKind.OVERDUE_TASK -> AcademicContextAction.OPEN_OVERDUE_TASKS
+            com.example.domain.model.AcademicPriorityKind.EXAM_TODAY,
+            com.example.domain.model.AcademicPriorityKind.EXAM_LINKED_TASK -> AcademicContextAction.REVIEW_EXAM
+            com.example.domain.model.AcademicPriorityKind.NEXT_CLASS -> AcademicContextAction.OPEN_NEXT_CLASS
+            com.example.domain.model.AcademicPriorityKind.TASK_TODAY,
+            com.example.domain.model.AcademicPriorityKind.OPEN_TASK -> AcademicContextAction.START_FOCUS
             else -> AcademicContextAction.NONE
         }
 
@@ -73,12 +89,13 @@ object AcademicContextEngine {
             criticalAttendanceCount = criticalAttendance,
             examsWithOpenTasksCount = examsWithOpenTasks,
             totalActiveCourseCount = courses.distinctBy { it.id }.size,
-            nextCourseId = next?.first?.id,
-            nextCourseName = next?.first?.name,
-            nextCourseStart = next?.second?.start,
-            nextCourseEnd = next?.second?.end,
-            nextCourseLocation = next?.second?.location?.takeIf { it.isNotBlank() },
-            primaryAction = action
+            nextCourseId = next?.course?.id,
+            nextCourseName = next?.course?.name,
+            nextCourseStart = next?.session?.start,
+            nextCourseEnd = next?.session?.end,
+            nextCourseLocation = next?.session?.location?.takeIf { it.isNotBlank() },
+            primaryAction = action,
+            topPriority = topPriority
         )
     }
 

@@ -482,7 +482,9 @@ private fun TicketDetailView(
                     text = ticket.subject,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -532,7 +534,10 @@ private fun TicketDetailView(
                                     text = msg.senderName,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = textColor.copy(alpha = 0.8f)
+                                    color = textColor.copy(alpha = 0.8f),
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
                                 )
                                 Text(
                                     text = SimpleDateFormat("HH:mm", Locale.US).format(Date(msg.timestamp)),
@@ -543,7 +548,9 @@ private fun TicketDetailView(
                             Text(
                                 text = msg.message,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = textColor
+                                color = textColor,
+                                maxLines = 6,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                         }
                     }

@@ -59,8 +59,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.StudentShapeTokens
-import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicOlive
 
 @Composable
 fun BackupRestoreDialog(
@@ -113,13 +111,13 @@ fun BackupRestoreDialog(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(StudentShapeTokens.Compact)
-                        .background(AcademicNavy.copy(alpha = 0.16f)),
+                        .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Security,
                         contentDescription = null,
-                        tint = AcademicNavy,
+                        tint = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -166,7 +164,7 @@ fun BackupRestoreDialog(
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.Security, contentDescription = null, tint = AcademicOlive, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Rounded.Security, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("پایگاه داده کامل و امن (Zero Data Loss)", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
@@ -182,7 +180,7 @@ fun BackupRestoreDialog(
 
                 if (isExporting) {
                     Box(modifier = Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(modifier = Modifier.size(28.dp), color = AcademicNavy)
+                        CircularProgressIndicator(modifier = Modifier.size(28.dp), color = MaterialTheme.colorScheme.secondary)
                     }
                 } else {
                     OutlinedTextField(
@@ -208,7 +206,7 @@ fun BackupRestoreDialog(
                             .fillMaxWidth()
                             .height(46.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = AcademicNavy)
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                     ) {
                         Icon(Icons.Rounded.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
@@ -220,13 +218,13 @@ fun BackupRestoreDialog(
                 // Cloud Restore Card & Action
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = AcademicNavy.copy(alpha = 0.12f)),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f)),
                     shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, AcademicNavy.copy(alpha = 0.35f))
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f))
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.CloudDownload, contentDescription = null, tint = AcademicNavy, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Rounded.CloudDownload, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("بازیابی مستقیم از فضای ابری (Cloud Sync)", fontWeight = FontWeight.Bold, fontSize = 12.5.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
@@ -244,7 +242,7 @@ fun BackupRestoreDialog(
                             },
                             enabled = !isCloudRestoring && !isRestoring,
                             shape = StudentShapeTokens.Compact,
-                            colors = ButtonDefaults.buttonColors(containerColor = AcademicNavy),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(44.dp)
@@ -264,9 +262,9 @@ fun BackupRestoreDialog(
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = AcademicNavy.copy(alpha = 0.12f)),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f)),
                     shape = RoundedCornerShape(14.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, AcademicNavy.copy(alpha = 0.35f))
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f))
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         Text("بازیابی از متن پشتیبان JSON", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
@@ -323,7 +321,7 @@ fun BackupRestoreDialog(
                         },
                         enabled = jsonInputToRestore.isNotBlank() && !isRestoring,
                         shape = StudentShapeTokens.Compact,
-                        colors = ButtonDefaults.buttonColors(containerColor = AcademicOlive),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier
                             .weight(1.3f)
                             .height(46.dp)

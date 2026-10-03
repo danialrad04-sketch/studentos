@@ -192,7 +192,13 @@ fun CourseWorkspaceDialog(
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text("مرکز درس", style = MaterialTheme.typography.labelMedium, color = courseColor, fontWeight = FontWeight.Bold)
-                                Text(course.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                                Text(
+    course.name,
+    style = MaterialTheme.typography.headlineSmall,
+    fontWeight = FontWeight.Black,
+    maxLines = 1,
+    overflow = TextOverflow.Ellipsis
+)
                             }
                             Surface(shape = CircleShape, color = courseColor.copy(alpha = 0.12f)) {
                                 Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = courseColor, modifier = Modifier.padding(10.dp).size(22.dp))
@@ -390,7 +396,9 @@ fun CourseWorkspaceDialog(
                                                         text = sess.location,
                                                         fontSize = 10.5.sp,
                                                         fontWeight = FontWeight.SemiBold,
-                                                        color = MaterialTheme.colorScheme.onSurface
+                                                        color = MaterialTheme.colorScheme.onSurface,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
                                                     )
                                                 }
                                             }
@@ -581,7 +589,10 @@ fun CourseWorkspaceDialog(
                                 Text(
                                     text = "میان‌ترم: $midterm از ۸ · پایان‌ترم: $finalExam از ۱۲",
                                     fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.fillMaxWidth()
                                 )
                             }
 
@@ -632,7 +643,10 @@ fun CourseWorkspaceDialog(
                                     Text(
                                         text = "تاریخ: ${exam.solarDate} · ساعت: ${exam.time} · سالن: ${exam.location}",
                                         fontSize = 10.5.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
                             }
@@ -855,10 +869,17 @@ fun CourseWorkspaceDialog(
                                                     fontWeight = FontWeight.SemiBold,
                                                     color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
                                                     maxLines = 2,
-                                                    overflow = TextOverflow.Ellipsis
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    modifier = Modifier.fillMaxWidth()
                                                 )
                                                 if (task.dueDate.isNotBlank()) {
-                                                    Text(text = "مهلت تحویل: ${task.dueDate}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                    Text(
+                                                        text = "مهلت تحویل: ${task.dueDate}",
+                                                        fontSize = 10.sp,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
                                                 }
                                             }
                                         }
@@ -922,17 +943,25 @@ fun CourseWorkspaceDialog(
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                                 border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkWorkspace) Color(0x33FFFFFF) else Color(0xFFCBD5E1))
                             ) {
-                                Text(
-                                    text = notesMemo,
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                Box(
                                     modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 48.dp, max = 150.dp)
+                                        .verticalScroll(rememberScrollState())
                                         .padding(14.dp)
-                                        .heightIn(max = 120.dp),
-                                    maxLines = 6,
-                                    overflow = TextOverflow.Ellipsis,
-                                    lineHeight = 19.sp
-                                )
+                                ) {
+                                    Text(
+                                        text = notesMemo.ifBlank { "هنوز یادداشتی برای این درس ثبت نشده است." },
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        lineHeight = 19.sp,
+                                        maxLines = 5,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(max = 110.dp)
+                                    )
+                                }
                             }
                         }
 
@@ -975,7 +1004,10 @@ fun CourseWorkspaceDialog(
                                     text = "این درس دارای ${course.units} واحد است. برآورد استاندارد برای تسلط کامل، حدود $estimatedStudy ساعت مطالعه در هفته است.",
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    lineHeight = 18.sp
+                                    lineHeight = 18.sp,
+                                    maxLines = 3,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.fillMaxWidth()
                                 )
                             }
                         }
@@ -993,7 +1025,14 @@ fun CourseWorkspaceDialog(
                         ) {
                             Icon(imageVector = Icons.Default.HourglassTop, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(text = "شروع جلسه تمرکز پومودورو ۲۵ دقیقه‌ای برای ${course.name}", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "شروع جلسه تمرکز پومودورو ۲۵ دقیقه‌ای برای ${course.name}",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
                 }
@@ -1044,14 +1083,18 @@ fun CourseWorkspaceDialog(
                 Text(
                     text = "حذف و اضافه · حذف درس «${course.name}»",
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Black
+                    fontWeight = FontWeight.Black,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             },
             text = {
                 Text(
                     text = "با حذف این درس، تمامی رکوردهای غیبت و تمرین‌های این درس از کارنامه حذف خواهد شد.",
                     fontSize = 11.5.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
                 )
             },
             confirmButton = {

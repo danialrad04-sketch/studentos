@@ -177,7 +177,9 @@ fun OcrScheduleImportDialog(
         ) {
             // Dialog Header
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 76.dp, max = 126.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -521,22 +523,33 @@ private fun DraftCardItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = draft.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = draft.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
                     Spacer(modifier = Modifier.width(6.dp))
                     if (draft.validationState == DraftValidationState.INCOMPLETE) {
                         Icon(Icons.Default.Warning, contentDescription = null, tint = Amber600, modifier = Modifier.size(14.dp))
                     }
                 }
                 Text(
-                    text = "${draft.dayName} (${draft.startTime} تا ${draft.endTime}) | ${draft.instructor}",
+                    text = draft.dayName + " (" + draft.startTime + " تا " + draft.endTime + ") | " + draft.instructor,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
                 if (draft.examDate.isNotBlank()) {
                     Text(
-                        text = "امتحان: ${draft.examDate} ساعت ${draft.examTime}",
+                        text = "امتحان: " + draft.examDate + " ساعت " + draft.examTime,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
             }

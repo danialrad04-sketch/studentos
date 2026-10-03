@@ -66,10 +66,16 @@ fun AcademicSectionHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleLarge)
+            StudentCardTitle(title, style = MaterialTheme.typography.titleLarge)
             subtitle?.let {
                 Spacer(Modifier.height(StudentSpacing.Xs))
-                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
             }
         }
         if (actionLabel != null && onAction != null) {
@@ -117,7 +123,12 @@ fun AcademicStatusChip(
         ) {
             icon?.invoke()
             if (icon != null) Spacer(Modifier.width(StudentSpacing.Xs))
-            Text(label, style = MaterialTheme.typography.labelMedium)
+            Text(
+                label,
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
         }
     }
 }
@@ -140,13 +151,14 @@ fun AcademicEmptyState(
             tint = MaterialTheme.colorScheme.primary
         )
         Spacer(Modifier.height(StudentSpacing.Md))
-        Text(title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+        StudentCardTitle(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(StudentSpacing.Sm))
-        Text(
-            description,
+        StudentCardBody(
+            text = description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            maxLines = 3,
+            modifier = Modifier.fillMaxWidth()
         )
         if (actionLabel != null && onAction != null) {
             Spacer(Modifier.height(StudentSpacing.Lg))
@@ -173,13 +185,14 @@ fun AcademicErrorState(
             tint = MaterialTheme.colorScheme.error
         )
         Spacer(Modifier.height(StudentSpacing.Md))
-        Text(title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+        StudentCardTitle(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(StudentSpacing.Sm))
-        Text(
-            description,
+        StudentCardBody(
+            text = description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            maxLines = 4,
+            modifier = Modifier.fillMaxWidth()
         )
         onRetry?.let {
             Spacer(Modifier.height(StudentSpacing.Lg))

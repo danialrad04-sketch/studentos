@@ -1,3 +1,5 @@
+> Current status: see [V2_1_VERIFICATION.md](V2_1_VERIFICATION.md). The following is a historical audit, not evidence of current release certification.
+
 # Student OS — Master Plan Implementation Status
 
 Branch: `main`

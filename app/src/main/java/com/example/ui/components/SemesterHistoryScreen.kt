@@ -315,7 +315,10 @@ fun SemesterHistoryScreen(
                                 Text(
                                     text = semester.title,
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    modifier = Modifier.widthIn(max = 180.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 if (isCurrent) {
@@ -348,7 +351,9 @@ fun SemesterHistoryScreen(
                             Text(
                                 text = "سال تحصیلی: ${semester.academicYear} | ترم ${semester.termNumber}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                         }
 
@@ -431,16 +436,17 @@ fun SemesterHistoryScreen(
                                             Text(
                                                 text = course.name,
                                                 style = MaterialTheme.typography.bodyMedium,
-                                                fontWeight = FontWeight.Medium
+                                                fontWeight = FontWeight.Medium,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                             )
                                             val courseDetail = listOfNotNull(
                                                 course.courseCode.takeIf { it.isNotBlank() },
                                                 course.professor.takeIf { it.isNotBlank() }
                                             ).joinToString(" | ").ifBlank { "ثبت شده در آرشیو" }
-                                            Text(
+                                            StudentCardMeta(
                                                 text = courseDetail,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                style = MaterialTheme.typography.bodySmall
                                             )
                                         }
                                         Text(

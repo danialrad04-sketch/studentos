@@ -14,7 +14,8 @@ data class AcademicContextSnapshot(
     val nextCourseStart: String? = null,
     val nextCourseEnd: String? = null,
     val nextCourseLocation: String? = null,
-    val primaryAction: AcademicContextAction = AcademicContextAction.NONE
+    val primaryAction: AcademicContextAction = AcademicContextAction.NONE,
+    val topPriority: AcademicPriorityItem? = null
 )
 
 enum class AcademicContextAction {

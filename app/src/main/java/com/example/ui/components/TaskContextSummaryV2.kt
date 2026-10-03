@@ -27,9 +27,8 @@ import com.example.data.local.entity.CourseEntity
 import com.example.data.local.entity.TaskEntity
 import com.example.ui.models.ExamItem
 import com.example.domain.engine.AcademicContextEngine
+import com.example.domain.engine.AcademicPlanningCollisionEngine
 import com.example.domain.util.JalaliCalendarUtil
-import com.example.ui.theme.AcademicOlive
-import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.StudentSpacing
 
 @Composable
@@ -39,19 +38,24 @@ fun TaskContextSummaryV2(
     courses: List<CourseEntity>,
     modifier: Modifier = Modifier
 ) {
+    val clock = rememberAcademicClock()
     val snapshot = AcademicContextEngine.buildSnapshot(
         courses = courses,
         coursesWithSessions = emptyList(),
         attendance = emptyList(),
         tasks = tasks,
         exams = exams,
-        todayWeekdayIndex = JalaliCalendarUtil.getTodayWeekdayIndex(),
-        todayDate = JalaliCalendarUtil.today().format("/")
+        todayWeekdayIndex = clock.get(java.util.Calendar.DAY_OF_WEEK) % 7,
+        todayDate = JalaliCalendarUtil.today().format("/"),
+        minuteOfDay = clock.get(java.util.Calendar.HOUR_OF_DAY) * 60 + clock.get(java.util.Calendar.MINUTE)
     )
     val open = snapshot.openTaskCount
     val overdue = snapshot.overdueTaskCount
     val examLinked = snapshot.examsWithOpenTasksCount
-
+    val collisionCount = AcademicPlanningCollisionEngine.detect(
+        tasks = tasks,
+        exams = exams
+    ).size
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -65,12 +69,12 @@ fun TaskContextSummaryV2(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = AcademicOlive.copy(alpha = 0.12f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
                     Icon(
                         Icons.Default.Assignment,
                         contentDescription = null,
-                        tint = AcademicOlive,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(7.dp).size(17.dp)
                     )
                 }
@@ -81,15 +85,16 @@ fun TaskContextSummaryV2(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Black
                     )
-                    Text(
-                        when {
-                            overdue > 0 -> "\${overdue} کار عقب‌افتاده داری؛ اول آن‌ها را تعیین تکلیف کن."
-                            examLinked > 0 -> "\${examLinked} کار باز به امتحان‌های پیش‌رو مرتبط است."
-                            open > 0 -> "\${open} کار باز داری."
+                    StudentCardBody(
+                        text = when {
+                            overdue > 0 -> overdue.toString() + " کار عقب‌افتاده داری؛ اول آن‌ها را تعیین تکلیف کن."
+                            examLinked > 0 -> examLinked.toString() + " کار باز به امتحان‌های پیش‌رو مرتبط است."
+                            open > 0 -> open.toString() + " کار باز داری."
                             else -> "کار بازی باقی نمانده؛ وضعیتت مرتب است."
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2
                     )
                 }
             }
@@ -98,9 +103,10 @@ fun TaskContextSummaryV2(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                TaskSignal(open.toString(), "باز", AcademicNavy, Modifier.weight(1f))
+                TaskSignal(open.toString(), "باز", MaterialTheme.colorScheme.secondary, Modifier.weight(1f))
                 TaskSignal(overdue.toString(), "عقب‌افتاده", MaterialTheme.colorScheme.error, Modifier.weight(1f))
-                TaskSignal(examLinked.toString(), "مرتبط با امتحان", AcademicOlive, Modifier.weight(1f))
+                TaskSignal(examLinked.toString(), "مرتبط با امتحان", MaterialTheme.colorScheme.primary, Modifier.weight(1f))
+                TaskSignal(collisionCount.toString(), "تداخل برنامه", MaterialTheme.colorScheme.error, Modifier.weight(1f))
             }
         }
     }

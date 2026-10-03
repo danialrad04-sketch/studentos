@@ -391,10 +391,9 @@ fun WeeklyScheduleScreen(
                                     .background(MaterialTheme.colorScheme.primary)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(
+                            StudentCardMeta(
                                 text = "تایم‌لاین زنده دانشگاه · روز فعال: ${WEEKDAY_NAMES.getOrNull(selectedDayTab) ?: ""}",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
@@ -832,10 +831,12 @@ fun CourseCard(
                 )
             },
             text = {
-                Text(
+                StudentCardBody(
                     text = "آیا می‌خواهید درس «${course.name}» را از برنامه ترم جاری حذف کنید؟",
-                    fontSize = 11.5.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {

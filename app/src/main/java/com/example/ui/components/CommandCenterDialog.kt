@@ -269,17 +269,37 @@ fun CommandCenterDialog(
                                     border = androidx.compose.foundation.BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                                 ) {
                                     Row(
-                                        modifier = Modifier.padding(10.dp),
+                                        modifier = Modifier
+                                            .heightIn(min = 68.dp, max = 96.dp)
+                                            .padding(10.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Icon(imageVector = Icons.Default.Description, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Column(modifier = Modifier.weight(1f)) {
-                                            Text(text = "درس: ${course.name}", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                                            Text(
+                                                text = "درس: " + course.name,
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
                                             val detail = if (course.professor.isNotBlank()) "${course.units} واحد · ${course.professor}" else "${course.units} واحد"
-                                            Text(text = detail, fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(
+                                                text = detail,
+                                                fontSize = 9.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
                                         }
-                                        Text(text = "ورود به Workspace ↗", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.primary)
+                                        Text(
+                                            text = "ورود به Workspace ↗",
+                                            fontSize = 9.5.sp,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            maxLines = 1,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                        )
                                     }
                                 }
                             }
@@ -289,6 +309,7 @@ fun CommandCenterDialog(
                                 Surface(
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 68.dp, max = 96.dp)
                                         .clip(RoundedCornerShape(12.dp)),
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                                     border = androidx.compose.foundation.BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
@@ -299,9 +320,21 @@ fun CommandCenterDialog(
                                     ) {
                                         Icon(imageVector = Icons.Default.BookmarkBorder, contentDescription = null, tint = AcademicOlive, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Column {
-                                            Text(text = "تکلیف: ${task.title}", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
-                                            Text(text = "درس مربوطه: ${task.courseName} · مهلت: ${task.dueDate}", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "تکلیف: " + task.title,
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = "درس مربوطه: " + task.courseName + " · مهلت: " + task.dueDate,
+                                                fontSize = 9.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
                                         }
                                     }
                                 }
@@ -322,9 +355,21 @@ fun CommandCenterDialog(
                                     ) {
                                         Icon(imageVector = Icons.Default.Alarm, contentDescription = null, tint = Amber500, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Column {
-                                            Text(text = "امتحان: ${exam.courseName}", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
-                                            Text(text = "${exam.solarDate} ساعت ${exam.time} · مکان: ${exam.location}", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "امتحان: " + exam.courseName,
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = exam.solarDate + " ساعت " + exam.time + " · مکان: " + exam.location,
+                                                fontSize = 9.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
                                         }
                                     }
                                 }
@@ -346,8 +391,20 @@ fun CommandCenterDialog(
                                         Icon(imageVector = Icons.Default.Description, contentDescription = null, tint = AcademicNavy, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Column {
-                                            Text(text = "یافت‌شده در یادداشت‌ها و فرمول‌ها", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
-                                            Text(text = notes.take(70) + "...", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(
+                                                text = "یافت‌شده در یادداشت‌ها و فرمول‌ها",
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                text = notes.take(70) + "...",
+                                                fontSize = 9.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 2,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
                                         }
                                     }
                                 }
@@ -481,8 +538,8 @@ private fun CommandActionItem(
             }
             Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, fontSize = 11.5.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                Text(text = subtitle, fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                StudentCardTitle(text = title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                StudentCardMeta(text = subtitle)
             }
             Text(text = "اجرا ↵", fontSize = 10.sp, color = iconColor, fontWeight = FontWeight.Bold)
         }

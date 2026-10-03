@@ -37,8 +37,6 @@ import com.example.data.local.relation.CourseWithSessions
 import com.example.domain.engine.AcademicContextEngine
 import com.example.domain.model.StudySessionRecommendation
 import com.example.ui.models.AppTab
-import com.example.ui.theme.AcademicOlive
-import com.example.ui.theme.AcademicNavy
 import com.example.domain.util.JalaliCalendarUtil
 
 @Composable
@@ -47,19 +45,22 @@ fun StudentTodayCommandStrip(
     coursesWithSessions: List<CourseWithSessions>,
     attendance: List<AttendanceEntity>,
     tasks: List<TaskEntity>,
+    exams: List<com.example.ui.models.ExamItem> = emptyList(),
     studyRecommendations: List<StudySessionRecommendation>,
     onNavigateTab: (AppTab) -> Unit,
     onStartFocus: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val clock = rememberAcademicClock()
     val snapshot = AcademicContextEngine.buildSnapshot(
         courses = courses,
         coursesWithSessions = coursesWithSessions,
         attendance = attendance,
         tasks = tasks,
-        exams = emptyList(),
-        todayWeekdayIndex = JalaliCalendarUtil.getTodayWeekdayIndex(),
-        todayDate = JalaliCalendarUtil.today().format("/")
+        exams = exams,
+        todayWeekdayIndex = clock.get(java.util.Calendar.DAY_OF_WEEK) % 7,
+        todayDate = JalaliCalendarUtil.today().format("/"),
+        minuteOfDay = clock.get(java.util.Calendar.HOUR_OF_DAY) * 60 + clock.get(java.util.Calendar.MINUTE)
     )
     val openTasks = snapshot.openTaskCount
     val dangerAttendance = snapshot.criticalAttendanceCount
@@ -85,12 +86,12 @@ fun StudentTodayCommandStrip(
             ) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = AcademicOlive.copy(alpha = 0.12f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
                     Icon(
                         Icons.Default.Event,
                         contentDescription = null,
-                        tint = AcademicOlive,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(8.dp).size(18.dp)
                     )
                 }
@@ -102,8 +103,8 @@ fun StudentTodayCommandStrip(
                     )
                     Text(
                         when {
-                            dangerAttendance > 0 -> "\${dangerAttendance} درس به توجه فوری نیاز دارد."
-                            openTasks > 0 -> "\${openTasks} کار باز داری؛ یکی را جلو بینداز."
+                            dangerAttendance > 0 -> dangerAttendance.toString() + " درس به توجه فوری نیاز دارد."
+                            openTasks > 0 -> openTasks.toString() + " کار باز داری؛ یکی را جلو بینداز."
                             snapshot.nextCourseName != null -> "کلاس بعدی امروز را از دست نده."
                             else -> "برنامه امروز سبک است؛ برای جلو افتادن وقت خوبی است."
                         },
@@ -119,8 +120,8 @@ fun StudentTodayCommandStrip(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                TodaySignal(Icons.Default.CheckCircle, openTasks.toString(), "کار باز", AcademicNavy, Modifier.weight(1f))
-                TodaySignal(Icons.Default.CalendarToday, snapshot.todaySessionCount.toString(), "کلاس امروز", AcademicOlive, Modifier.weight(1f))
+                TodaySignal(Icons.Default.CheckCircle, openTasks.toString(), "کار باز", MaterialTheme.colorScheme.secondary, Modifier.weight(1f))
+                TodaySignal(Icons.Default.CalendarToday, snapshot.todaySessionCount.toString(), "کلاس امروز", MaterialTheme.colorScheme.primary, Modifier.weight(1f))
                 TodaySignal(Icons.Default.Event, dangerAttendance.toString(), "غیبت بحرانی", MaterialTheme.colorScheme.error, Modifier.weight(1f))
             }
 
@@ -145,11 +146,13 @@ fun StudentTodayCommandStrip(
                             Text(
                                 courseName,
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Black
+                                fontWeight = FontWeight.Black,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                "\u200E\${snapshot.nextCourseStart.orEmpty()} — \${snapshot.nextCourseEnd.orEmpty()}\u200E" +
-                                    if (!snapshot.nextCourseLocation.isNullOrBlank()) " · \${snapshot.nextCourseLocation}" else "",
+                                "\u200E" + snapshot.nextCourseStart.orEmpty() + " — " + snapshot.nextCourseEnd.orEmpty() + "\u200E" +
+                                    if (!snapshot.nextCourseLocation.isNullOrBlank()) " · " + snapshot.nextCourseLocation else "",
                                 fontSize = 10.5.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
@@ -172,12 +175,12 @@ fun StudentTodayCommandStrip(
                     onClick = onStartFocus,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(11.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = AcademicOlive)
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(Icons.Default.PlayArrow, null, Modifier.size(17.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        recommendation?.let { "شروع \${it.recommendedDurationMinutes} دقیقه" } ?: "شروع تمرکز"
+                        recommendation?.let { "شروع " + it.recommendedDurationMinutes + " دقیقه" } ?: "شروع تمرکز"
                     )
                 }
                 OutlinedButton(

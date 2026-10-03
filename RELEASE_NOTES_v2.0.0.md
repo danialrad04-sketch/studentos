@@ -36,3 +36,11 @@ Student OS 2.0 is the first product-grade UX and capability evolution release bu
 - No intentional backend API contract break.
 - No change of production signing identity.
 - Core offline-first data model remains the source of truth.
+
+
+## اطلاعات لازم برای بررسی بازار / Reviewer
+
+- ورود به هسته برنامه بدون حساب الزامی نیست: در صفحه شروع، گزینه **«ادامه بدون حساب — دسترسی آفلاین»** را انتخاب کنید.
+- Guest Mode برای استفاده از قابلیت‌های اصلی محلی برنامه طراحی شده و برای شروع به Firebase یا سرور اختصاصی نیاز ندارد.
+- ورود با Google و همگام‌سازی ابری قابلیت‌های حساب کاربری هستند و برای تست مسیر اصلی آفلاین الزامی نیستند.
+- برای بررسی قابلیت‌های حساب و همگام‌سازی، اتصال اینترنت و دسترسی مناسب به Firebase لازم است.

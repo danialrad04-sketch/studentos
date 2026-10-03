@@ -211,59 +211,51 @@ val BentoDarkCoralSoft = Color(0xFF3A1D18)
 val BentoDarkSky = Color(0xFF79A8F2)
 val BentoDarkSkySoft = Color(0xFF182A46)
 
-// =========================================================
-// Academic Premium Palette (Student OS 2026 Master Plan)
-// Primary Foundation: Navy / Deep Petrol Blue (آبی نفتی)
-// Accent / Emphasis: Olive Green (سبز زیتونی)
-// =========================================================
-val AcademicNavy = Color(0xFF1E3A5F)                      // Academic Deep Petrol Blue / Navy
-val AcademicNavyDark = Color(0xFF0F2338)                  // Deep Navy Dark
-val AcademicOlive = Color(0xFF556B2F)                     // Academic Olive Green
-val AcademicOliveLight = Color(0xFF8DA366)                // Academic Olive Light
+// Canonical identity: soft violet on light surfaces; petrol/navy at night.
+val AcademicNavy = Color(0xFF1E3A5F)
+val AcademicNavyDark = Color(0xFF0F2338)
+// Legacy names retained for source compatibility across existing screens.
+val AcademicOlive = Color(0xFF7352B5)
+val AcademicOliveLight = Color(0xFFCBB9F2)
 
-// Light Palette Tokens (Nature & Olive Calm look)
-val StudentPrimaryLight = Color(0xFF667052)              // Olive Accent
-val StudentPrimaryContainerLight = Color(0xFFEEF1E8)     // Soft Olive Tint
-val StudentOnPrimaryContainerLight = Color(0xFF20231F)   // Text Primary
-val StudentSecondaryLight = Color(0xFF244953)            // Petrol
-val StudentSecondaryContainerLight = Color(0xFFE2EAF4)   // Petrol Tint
-val StudentOnSecondaryContainerLight = Color(0xFF0F2A33) // Deep Petrol Ink
-val StudentTertiaryLight = Color(0xFFD97706)             // Semantic Amber (Deadlines)
-val StudentTertiaryContainerLight = Color(0xFFFEF3C7)    // Soft Amber Warmth
-val StudentOnTertiaryContainerLight = Color(0xFF78350F)  // Deep Amber Ink
-val StudentErrorLight = Color(0xFFEF4444)                // Semantic Error
-val StudentErrorContainerLight = Color(0xFFFEE2E2)       // Rose Wash
-val StudentOnErrorContainerLight = Color(0xFF7F1D1D)     // Deep Rose Ink
-val StudentCanvasLight = Color(0xFFF7F6F1)               // Nature/Calm background (#F7F6F1)
-val StudentOnCanvasLight = Color(0xFF20231F)             // Text Primary (#20231F)
-val StudentSurfaceLight = Color(0xFFFFFFFF)              // Pure White Elevated Cards
-val StudentOnSurfaceLight = Color(0xFF20231F)            // Text Primary
-val StudentSurfaceVariantLight = Color(0xFFF0EFE9)       // Surface Soft (#F0EFE9)
-val StudentOnSurfaceVariantLight = Color(0xFF62665E)     // Text Secondary (#62665E)
-val StudentOutlineLight = Color(0xFFDCDDD6)              // Border (#DCDDD6)
-val StudentOutlineVariantLight = Color(0xFFE8E9E3)       // Muted Divider
+val StudentPrimaryLight = Color(0xFF7352B5)
+val StudentPrimaryContainerLight = Color(0xFFEDE5FC)
+val StudentOnPrimaryContainerLight = Color(0xFF342052)
+val StudentSecondaryLight = Color(0xFF476278)
+val StudentSecondaryContainerLight = Color(0xFFE4EDF5)
+val StudentOnSecondaryContainerLight = Color(0xFF183249)
+val StudentTertiaryLight = Color(0xFF855C20)
+val StudentTertiaryContainerLight = Color(0xFFFFECCD)
+val StudentOnTertiaryContainerLight = Color(0xFF412D0E)
+val StudentErrorLight = Color(0xFFB32642)
+val StudentErrorContainerLight = Color(0xFFFFE1E8)
+val StudentOnErrorContainerLight = Color(0xFF680C26)
+val StudentCanvasLight = Color(0xFFFAF9FD)
+val StudentOnCanvasLight = Color(0xFF242131)
+val StudentSurfaceLight = Color(0xFFFFFFFF)
+val StudentOnSurfaceLight = Color(0xFF242131)
+val StudentSurfaceVariantLight = Color(0xFFF2EFF7)
+val StudentOnSurfaceVariantLight = Color(0xFF625C70)
+val StudentOutlineLight = Color(0xFF81788F)
+val StudentOutlineVariantLight = Color(0xFFE3DDEA)
 
-// Dark Palette Tokens (آبی نفتی - Petrol Dark)
-val StudentPrimaryDark = Color(0xFF7E936A)               // Olive Accent Buttons & Rings
-val StudentPrimaryContainerDark = Color(0xFF1C3E38)      // Olive Forest Container
-val StudentOnPrimaryContainerDark = Color(0xFFEDF5F7)    // Crisp Text
-val StudentSecondaryDark = Color(0xFF336675)             // Petrol Accent
-val StudentSecondaryContainerDark = Color(0xFF1A4350)    // Deep Petrol Container
-val StudentOnSecondaryContainerDark = Color(0xFFEDF5F7)  // Text
-val StudentTertiaryDark = Color(0xFFFBBF24)              // Amber Warning
-val StudentTertiaryContainerDark = Color(0xFF452205)     // Deep Amber Well
-val StudentOnTertiaryContainerDark = Color(0xFFFEF3C7)   // Amber Text
-val StudentErrorDark = Color(0xFFF87171)                 // Semantic Red
-val StudentErrorContainerDark = Color(0xFF450A0A)        // Deep Red Well
-val StudentOnErrorContainerDark = Color(0xFFFEE2E2)      // Red Text
-val StudentCanvasDark = Color(0xFF0F2A33)                // Deep Petrol Canvas (#0F2A33)
-val StudentOnCanvasDark = Color(0xFFEDF5F7)              // Text Primary
-val StudentSurfaceDark = Color(0xFF163944)               // Petrol Surface (#163944)
-val StudentOnSurfaceDark = Color(0xFFEDF5F7)             // Text Primary
-val StudentSurfaceVariantDark = Color(0xFF1A4350)        // Surface Soft (#1A4350)
-val StudentOnSurfaceVariantDark = Color(0xFFA0B9C0)      // Text Secondary (#A0B9C0)
-val StudentOutlineDark = Color(0xFF224F5D)               // Border (#224F5D)
-val StudentOutlineVariantDark = Color(0xFF2C5C6B)        // Muted Divider
-
-
-
+val StudentPrimaryDark = Color(0xFFCBB9F2)
+val StudentPrimaryContainerDark = Color(0xFF42325F)
+val StudentOnPrimaryContainerDark = Color(0xFFF0E8FF)
+val StudentSecondaryDark = Color(0xFFA9CDE0)
+val StudentSecondaryContainerDark = Color(0xFF254555)
+val StudentOnSecondaryContainerDark = Color(0xFFD9EDF8)
+val StudentTertiaryDark = Color(0xFFE7C58F)
+val StudentTertiaryContainerDark = Color(0xFF503B1E)
+val StudentOnTertiaryContainerDark = Color(0xFFFFECCD)
+val StudentErrorDark = Color(0xFFFFB2C0)
+val StudentErrorContainerDark = Color(0xFF642036)
+val StudentOnErrorContainerDark = Color(0xFFFFD9E2)
+val StudentCanvasDark = Color(0xFF0C1B25)
+val StudentOnCanvasDark = Color(0xFFE8EFF5)
+val StudentSurfaceDark = Color(0xFF142936)
+val StudentOnSurfaceDark = Color(0xFFE8EFF5)
+val StudentSurfaceVariantDark = Color(0xFF203847)
+val StudentOnSurfaceVariantDark = Color(0xFFB5C5D2)
+val StudentOutlineDark = Color(0xFF8498A7)
+val StudentOutlineVariantDark = Color(0xFF304957)
