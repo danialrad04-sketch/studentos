@@ -113,13 +113,7 @@ class StudentAuthManager(private val context: Context) {
                     displayName = disp,
                     photoUrl = null,
                     isGuest = false,
-                    subscription = SubscriptionDetails(
-                        tier = SubscriptionTier.PRO,
-                        isCloudSyncEnabled = true,
-                        isUnlimitedExportEnabled = true,
-                        isGpaPredictorUnlocked = true,
-                        maxDailyAiQuota = 999
-                    )
+                    subscription = SubscriptionDetails()
                 )
 
                 scope.launch {
@@ -637,20 +631,8 @@ class StudentAuthManager(private val context: Context) {
     }
 
     suspend fun upgradeSubscriptionTier(tier: SubscriptionTier): Result<SubscriptionTier> = withContext(Dispatchers.IO) {
-        val current = _currentUser.value
-        // Server update through Firestore
-        val result = FirestoreSyncManager.redeemPromoCode(current.uid, "UPGRADE_${tier.name}")
-        val effectiveTier = if (result.isSuccess) tier else tier // Local fallback with cloud sync trigger
-        _currentUser.value = current.copy(
-            subscription = current.subscription.copy(
-                tier = effectiveTier,
-                isCloudSyncEnabled = true,
-                isUnlimitedExportEnabled = true,
-                isGpaPredictorUnlocked = true,
-                maxDailyAiQuota = if (tier == SubscriptionTier.FREE) 5 else 999
-            )
-        )
-        Result.success(effectiveTier)
+        // Entitlements must come from the server; a failed purchase never grants access.
+        applyPromoCode("UPGRADE_${tier.name}")
     }
 
     suspend fun signOutUser() = withContext(Dispatchers.IO) {
@@ -670,17 +652,12 @@ class StudentAuthManager(private val context: Context) {
     suspend fun deleteUserAccount(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val user = safeFirebaseAuth?.currentUser
-            val userId = user?.uid
-            if (userId != null && !userId.startsWith("guest_")) {
-                try {
-                    com.example.data.cloud.FirestoreSyncManager.deleteAllUserDataFromCloud(userId)
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed wiping cloud documents for user $userId: ${e.message}")
-                    com.example.util.CrashLogger.recordException(e)
-                }
-            }
-            if (user != null) {
+            if (user != null && !user.isAnonymous) {
+                FirestoreSyncManager.deleteAllUserDataFromCloud(user.uid).getOrThrow()
                 user.delete().awaitResult()
+            } else if (!_currentUser.value.isGuest) {
+                val response = BackendApiClient.getInstance(context).api.deleteAccount()
+                if (!response.isSuccessful) throw IllegalStateException("حذف حساب روی سرور انجام نشد؛ دوباره تلاش کنید.")
             }
             signOutUser()
             Result.success(Unit)

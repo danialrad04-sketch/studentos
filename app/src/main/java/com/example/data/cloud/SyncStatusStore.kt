@@ -25,7 +25,7 @@ object SyncStatusStore {
             SyncState.valueOf(prefs.getString(KEY_STATE, SyncState.LOCAL.name) ?: SyncState.LOCAL.name)
         }.getOrDefault(SyncState.LOCAL)
         _status.value = SyncStatusSnapshot(
-            state = state,
+            state = if (state == SyncState.SYNCING) SyncState.NEEDS_ATTENTION else state,
             lastSyncedAt = prefs.getLong(KEY_LAST_SYNCED_AT, 0L)
         )
     }

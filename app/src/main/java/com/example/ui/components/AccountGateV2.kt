@@ -146,7 +146,7 @@ fun AccountGateV2(
                             fontWeight = FontWeight.Black
                         )
                         Text(
-                            "برای همگام‌سازی بین دستگاه‌ها وارد شو؛ برای شروع فوری می‌توانی بدون حساب هم ادامه بدهی. اگر دسترسی Firebase از شبکه محدود باشد، مسیر پشتیبان سرور به‌صورت خودکار امتحان می‌شود.",
+                            "برای همگام‌سازی بین دستگاه‌ها وارد شو؛ برای شروع فوری می‌توانی بدون حساب هم ادامه بدهی.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

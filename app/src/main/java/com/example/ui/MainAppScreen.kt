@@ -482,7 +482,7 @@ fun MainAppScreen(
                             status = syncStatus,
                             isGuest = currentUser.isGuest,
                             onSyncNow = {
-                                studentViewModel.syncWithBackendNow { ok, message ->
+                                studentViewModel.triggerManualCloudSync { ok, message ->
                                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                                 }
                             },

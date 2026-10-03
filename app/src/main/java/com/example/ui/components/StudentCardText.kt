@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
 
 private fun TextStyle.withOptionalFontSize(fontSize: TextUnit?): TextStyle =
     if (fontSize == null || fontSize == TextUnit.Unspecified) this else copy(fontSize = fontSize)
@@ -54,11 +55,12 @@ fun StudentCardBody(
     fontSize: TextUnit? = null
 ) {
     val safeLines = maxLines.coerceIn(1, 3)
+    val visualHeight = 72.dp * LocalDensity.current.fontScale.coerceAtLeast(1f)
     Text(
         text = text,
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(max = 72.dp),
+            .heightIn(max = visualHeight),
         style = style.withOptionalFontSize(fontSize),
         color = color,
         maxLines = safeLines,

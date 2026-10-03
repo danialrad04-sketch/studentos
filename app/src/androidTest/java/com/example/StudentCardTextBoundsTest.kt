@@ -1,11 +1,10 @@
 package com.example
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.fetchSemanticsNode
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import com.example.ui.components.StudentCardBody
 import org.junit.Rule
 import org.junit.Test

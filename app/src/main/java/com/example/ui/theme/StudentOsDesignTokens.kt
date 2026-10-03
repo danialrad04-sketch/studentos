@@ -9,27 +9,27 @@ import androidx.compose.ui.unit.dp
  * Compatibility token layer for Student OS.
  *
  * The product source of truth is the Academic Premium palette:
- * Petrol/Navy + Olive with separate semantic status colors.
+ * Soft Violet + Petrol/Navy with separate semantic status colors.
  *
  * Existing public token names are retained so feature screens can migrate
  * incrementally without a wholesale rewrite.
  */
 object StudentOsColors {
     // Core Academic Premium surfaces
-    val LightCanvas = Color(0xFFF7F6F1)
-    val LightPaper = Color(0xFFF0EFE9)
+    val LightCanvas = Color(0xFFFAF9FD)
+    val LightPaper = Color(0xFFF2EFF7)
     val LightSurface = Color(0xFFFFFFFF)
-    val LightSurface2 = Color(0xFFF0F2E8)
-    val LightInk = Color(0xFF20231F)
-    val LightInkSoft = Color(0xFF62665E)
+    val LightSurface2 = Color(0xFFF2EFF7)
+    val LightInk = Color(0xFF242131)
+    val LightInkSoft = Color(0xFF625C70)
     val LightInkFaint = Color(0xFF94A3B8)
-    val LightBrand = Color(0xFF667052)
-    val LightIndigoStrong = Color(0xFF3E4335)
-    val LightIndigoSoft = Color(0xFFE7E8DE)
+    val LightBrand = Color(0xFF7352B5)
+    val LightIndigoStrong = Color(0xFF342052)
+    val LightIndigoSoft = Color(0xFFEDE5FC)
 
     // Semantic status colors — deliberately separate from brand colors
     val LightAmber = Color(0xFFD97706)
-    val LightMint = Color(0xFF6B705C)
+    val LightMint = Color(0xFF297557)
     val LightCoral = Color(0xFFE11D48)
     val LightSky = Color(0xFF0284C7)
 
@@ -47,8 +47,8 @@ object StudentOsColors {
     // Compatibility accent names mapped to the restrained Academic Premium system
     val CyanAccent = Color(0xFF163F4D)
     val CyanGlow = Color(0xFF6FA7B8)
-    val EmeraldAccent = Color(0xFF6B705C)
-    val EmeraldGlow = Color(0xFF8A9070)
+    val EmeraldAccent = Color(0xFF297557)
+    val EmeraldGlow = Color(0xFF91D6B3)
     val PurpleAccent = AcademicOlive
     val PurpleGlow = AcademicOliveLight
     val ElectricBlue = Color(0xFF0F3B4D)

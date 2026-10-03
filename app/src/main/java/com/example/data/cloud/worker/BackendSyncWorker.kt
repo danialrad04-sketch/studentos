@@ -33,7 +33,6 @@ class BackendSyncWorker(
         val token = client.tokenStore().getAccessToken()
         SyncStatusStore.initialize(applicationContext)
         if (token == null) {
-            SyncStatusStore.markLocal(applicationContext)
             Log.d(TAG, "Backend sync skipped: No access token stored.")
             return@withContext Result.success()
         }

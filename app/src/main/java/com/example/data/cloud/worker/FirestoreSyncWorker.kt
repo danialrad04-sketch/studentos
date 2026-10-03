@@ -10,6 +10,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.example.data.cloud.FirestoreSyncManager
+import com.example.data.cloud.SyncStatusStore
 import com.example.data.local.AppDatabase
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -40,6 +41,7 @@ class FirestoreSyncWorker(
                 return@withContext Result.success()
             }
 
+            SyncStatusStore.markSyncing(applicationContext)
             val db = AppDatabase.getDatabase(applicationContext)
             val dao = db.studentDao()
             val profile = dao.getProfileSync()
@@ -48,11 +50,15 @@ class FirestoreSyncWorker(
             // If local data is empty, restore from cloud first to prevent overwriting cloud with empty state
             if (courses.isEmpty() && (profile == null || profile.name == "دانشجو" || profile.name.isBlank())) {
                 Log.i(TAG, "Local Room database is empty in worker. Restoring from cloud first...")
-                FirestoreSyncManager.restoreAllDataFromCloud(fbUser.uid, dao, db.curriculumDao())
+                FirestoreSyncManager.restoreAllDataFromCloud(fbUser.uid, dao, db.curriculumDao()).getOrThrow()
+                SyncStatusStore.markSynced(applicationContext)
                 return@withContext Result.success()
             }
 
-            if (profile == null) return@withContext Result.success()
+            if (profile == null) {
+                SyncStatusStore.markLocal(applicationContext)
+                return@withContext Result.success()
+            }
 
             val grades = dao.getAllGradesSync()
             val tasks = dao.getAllTasksSync()
@@ -72,13 +78,16 @@ class FirestoreSyncWorker(
             )
 
             if (result.isSuccess) {
+                SyncStatusStore.markSynced(applicationContext)
                 Log.i(TAG, "Background Firestore synchronization completed successfully.")
                 Result.success()
             } else {
+                SyncStatusStore.markNeedsAttention(applicationContext)
                 Log.w(TAG, "Background sync failed: ${result.exceptionOrNull()?.message}")
                 Result.retry()
             }
         } catch (e: Exception) {
+            SyncStatusStore.markNeedsAttention(applicationContext)
             Log.e(TAG, "Error during background Firestore sync", e)
             Result.retry()
         }

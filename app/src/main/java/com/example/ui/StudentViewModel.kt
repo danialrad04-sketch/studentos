@@ -75,6 +75,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -1295,7 +1296,7 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun signInWithEmail(email: String, password: String, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            when (val res = authManager.signInWithEmailResilient(email, password)) {
+            when (val res = authManager.signInWithEmail(email, password)) {
                 is com.example.domain.model.AuthResult.Success -> {
                     addNotification("ورود به حساب", "با موفقیت به حساب ${res.user.displayName} وارد شدید.")
                     _userMessage.emit(res.message)
@@ -1311,7 +1312,7 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun signUpWithEmail(name: String, email: String, password: String, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            when (val res = authManager.signUpWithEmailResilient(name, email, password)) {
+            when (val res = authManager.signUpWithEmail(name, email, password)) {
                 is com.example.domain.model.AuthResult.Success -> {
                     addNotification("ثبت‌نام حساب", "حساب کاربری جدید ایجاد شد.")
                     _userMessage.emit(res.message)
@@ -1420,16 +1421,21 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun upgradeSubscriptionTier(tier: com.example.domain.model.SubscriptionTier, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            authManager.upgradeSubscriptionTier(tier)
-            addNotification("ارتقای حساب", "طرح ${tier.titleFa} فعال گردید.")
-            _userMessage.emit("اشتراک شما ارتقا یافت.")
-            onResult(true, "طرح ${tier.titleFa} فعال شد.")
+            val result = authManager.upgradeSubscriptionTier(tier)
+            if (result.isSuccess) {
+                _userMessage.emit("اشتراک شما ارتقا یافت.")
+                onResult(true, "طرح ${result.getOrThrow().titleFa} فعال شد.")
+            } else {
+                onResult(false, result.exceptionOrNull()?.localizedMessage ?: "ارتقای اشتراک انجام نشد.")
+            }
         }
     }
 
     fun signOutUser() {
         viewModelScope.launch {
-            preferencesRepository.setGuestModeEnabled(false)
+            preferencesRepository.setGuestModeEnabled(true)
+            preferencesRepository.clearAcceptedStudyPlan()
+            SyncStatusStore.markLocal(application)
             authManager.signOutUser()
             // Clear onboarding preferences
             preferencesRepository.setOnboardingCompleted(false)
@@ -1445,9 +1451,16 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun deleteUserAccount(onCompleted: () -> Unit) {
         viewModelScope.launch {
-            authManager.deleteUserAccount()
-            repository.clearToFreshSlate("دانشجوی جدید", "۴۰۳۰۰۰۰۱", "دانشگاه سراسری", "مهندسی", 1403, 1)
-            addNotification("حذف حساب", "حساب کاربری و اطلاعات به طور کامل حذف و پاکسازی شد.", isDanger = true)
+            val result = authManager.deleteUserAccount()
+            if (result.isFailure) {
+                _userMessage.emit(result.exceptionOrNull()?.localizedMessage ?: "حذف حساب انجام نشد؛ دوباره وارد حساب شوید و تلاش کنید.")
+                return@launch
+            }
+            preferencesRepository.clearAcceptedStudyPlan()
+            SyncStatusStore.markLocal(application)
+            preferencesRepository.setGuestModeEnabled(true)
+            repository.clearToFreshSlate("دانشجوی جدید", "", "", "", 1403, 1)
+            _userMessage.emit("حساب کاربری حذف شد.")
             onCompleted()
         }
     }
@@ -1461,6 +1474,7 @@ class StudentViewModel @JvmOverloads constructor(
 
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
+                SyncStatusStore.markSyncing(application)
                 val db = AppDatabase.getDatabase(application)
                 val dao = db.studentDao()
                 val profile = dao.getProfileSync()
@@ -1490,15 +1504,18 @@ class StudentViewModel @JvmOverloads constructor(
                     curriculumDao = db.curriculumDao()
                 )
 
-                if (pushResult.isSuccess || pullResult.isSuccess) {
-                    onResult(true, "همگام‌سازی دوطرفه ابری با موفقیت کامل شد. ✨")
+                if (pushResult.isSuccess && pullResult.isSuccess) {
+                    SyncStatusStore.markSynced(application)
+                    withContext(kotlinx.coroutines.Dispatchers.Main) { onResult(true, "همگام‌سازی دوطرفه ابری با موفقیت کامل شد. ✨") }
                 } else {
                     val errMsg = pushResult.exceptionOrNull()?.message ?: pullResult.exceptionOrNull()?.message ?: "خطای ناشناخته شبکه"
-                    onResult(false, "خطا در همگام‌سازی: $errMsg")
+                    SyncStatusStore.markNeedsAttention(application)
+                    withContext(kotlinx.coroutines.Dispatchers.Main) { onResult(false, "خطا در همگام‌سازی: $errMsg") }
                 }
             } catch (e: Exception) {
                 android.util.Log.e("StudentViewModel", "Manual cloud sync failed: ${e.message}", e)
-                onResult(false, "خطا در اتصال به سرور: ${e.localizedMessage}")
+                SyncStatusStore.markNeedsAttention(application)
+                withContext(kotlinx.coroutines.Dispatchers.Main) { onResult(false, "خطا در اتصال به سرور: ${e.localizedMessage}") }
             }
         }
     }
