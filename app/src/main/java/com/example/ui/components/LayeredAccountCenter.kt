@@ -33,8 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.domain.model.UserAccount
-import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.StudentShapeTokens
 import com.example.ui.theme.StudentSpacing
 
@@ -61,7 +59,7 @@ fun LayeredAccountCenter(
         TabRow(
             selectedTabIndex = section,
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-            contentColor = AcademicNavy
+            contentColor = MaterialTheme.colorScheme.secondary
         ) {
             Tab(selected = section == 0, onClick = { section = 0 }, text = { Text("Identity") }, icon = {
                 Icon(Icons.Outlined.Person, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -132,7 +130,7 @@ private fun AccountInfoCard(userAccount: UserAccount) {
     ) {
         Column(modifier = Modifier.padding(StudentSpacing.Xl)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.Person, contentDescription = null, tint = AcademicNavy)
+                Icon(Icons.Outlined.Person, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
                 Spacer(Modifier.size(StudentSpacing.Md))
                 Column {
                     Text(userAccount.displayName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -155,7 +153,7 @@ private fun AccountInfoCard(userAccount: UserAccount) {
 private fun SecurityInfoCard() {
     Card(shape = StudentShapeTokens.Card, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))) {
         Column(modifier = Modifier.padding(StudentSpacing.Xl)) {
-            Icon(Icons.Outlined.Lock, contentDescription = null, tint = AcademicNavy)
+            Icon(Icons.Outlined.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
             Spacer(Modifier.height(StudentSpacing.Md))
             Text("امنیت حساب", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(StudentSpacing.Sm))
@@ -176,7 +174,7 @@ private fun DataControlsCard(
 ) {
     Card(shape = StudentShapeTokens.Card, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))) {
         Column(modifier = Modifier.padding(StudentSpacing.Xl), verticalArrangement = Arrangement.spacedBy(StudentSpacing.Md)) {
-            Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = AcademicOlive)
+            Icon(Icons.Outlined.CloudSync, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Text("داده و همگام‌سازی", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(
                 "همگام‌سازی داده‌های تحصیلی جدا از اطلاعات هویت مدیریت می‌شود. عملیات حذف داده باید آگاهانه و برگشت‌ناپذیر تلقی شود.",
@@ -189,12 +187,12 @@ private fun DataControlsCard(
                 SyncUiState.Syncing -> Text(
                     "در حال همگام‌سازی اطلاعات…",
                     style = MaterialTheme.typography.bodySmall,
-                    color = AcademicNavy
+                    color = MaterialTheme.colorScheme.secondary
                 )
                 is SyncUiState.Success -> Text(
                     syncState.message,
                     style = MaterialTheme.typography.bodySmall,
-                    color = AcademicOlive
+                    color = MaterialTheme.colorScheme.primary
                 )
                 is SyncUiState.Error -> Text(
                     syncState.message,

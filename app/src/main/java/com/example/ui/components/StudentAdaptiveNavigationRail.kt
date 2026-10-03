@@ -81,7 +81,7 @@ fun StudentAdaptiveNavigationRail(
     if (showAllModulesSheet) {
         StudentModuleHubSheet(
             currentTab = selectedTab,
-            onSelectTab = onTabSelected,
+            onSelectTab = { onTabSelected(it); showAllModulesSheet = false },
             onDismiss = { showAllModulesSheet = false }
         )
     }

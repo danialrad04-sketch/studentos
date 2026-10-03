@@ -1,48 +1,50 @@
-Cafe Bazaar Review Notes — Student OS v2
+# راهنمای بررسی کافه‌بازار — Student OS 2.1
 
-Review path
+شناسه بسته: `com.aistudio.studentos.appvzk`
+نسخه نامزد: `2.1.0`، کد نسخه: `2006`
 
-Guest / offline review
-From the account gate, choose:
-فعلاً بدون حساب ادامه بده
+## ورود و تست آفلاین
 
-This opens the core local-first experience without cloud authentication.
+نصب تازه بدون الزام ورود به حساب قابل استفاده است. اگر صفحه ورود نمایش داده شد،
+«ادامه بدون حساب — دسترسی آفلاین» را انتخاب کنید. سپس اطلاعات اولیه را وارد کنید.
+برنامه هفتگی، ثبت درس/تکلیف/امتحان، نمرات و حضور و غیاب به ورود ابری نیاز ندارند.
 
-Email account review
-Use the Email sign-in/register form.
+حساب ابری اختیاری است. ایمیل و گوگل از Firebase استفاده می‌کنند و نیازمند دسترسی
+شبکه به سرویس‌های مربوط‌اند. این نسخه برای امکانات اصلی به VPS خصوصی نیاز ندارد.
+ورود با ایمیل نباید بی‌اطلاع کاربر به یک ارائه‌دهنده حساب دیگر منتقل شود.
+هیچ رمز یا حساب آزمایش‌کننده‌ای در سورس عمومی ذخیره نشود.
 
-Student OS tries Firebase Authentication first. If Firebase transport/service access is unavailable from the reviewer network, the app can fall back to the configured self-hosted Student OS backend.
+## چک نصب نسخه نهایی
 
-The fallback is limited to service/transport failures; invalid email/password credentials do not trigger provider fallback.
+- APK امضاشده release را نصب کنید؛ فایل debug برای ارسال فروشگاهی نیست.
+- نصب تازه در حالت آفلاین و مسیر مهمان را بررسی کنید.
+- نسخه قبلی را با داده آزمایشی نصب و بدون حذف برنامه ارتقا دهید؛ حفظ داده را بررسی کنید.
+- ورود گوگل/ایمیل، خروج، همگام‌سازی و خطای شبکه را روی دستگاه واقعی بررسی کنید.
+- خطای حذف حساب نباید پیام موفقیت یا پاک‌سازی محلی نشان دهد.
+- فارسی/RTL، فونت بزرگ، تم روشن/تیره و ناوبری حرکتی/سه‌دکمه‌ای را بررسی کنید.
+- یادآور امتحان، مجوز اعلان و خروجی گالری را تست کنید.
 
-Google Sign-In
-Google Sign-In continues through Android Credential Manager + Firebase Authentication. It intentionally keeps the existing production Web Client ID and release signing certificate.
+## اطلاعات فروشگاه
 
-A network that blocks Google/Firebase endpoints may prevent the Google flow from opening; this does not mean the signing certificate changed.
+نام پیشنهادی: دونینو | Student OS
+توضیح کوتاه: برنامه کلاس‌ها، امتحان‌ها، نمره‌ها و کارهای دانشگاهت را یک‌جا مدیریت کن.
 
-Credentials
+توضیح:
+Student OS یک همراه فارسی برای مدیریت کارهای روزمره دانشجویی است.
+برنامه هفتگی و جلسات درس، امتحان‌ها، تکالیف، حضور و غیاب و نمرات را در یک محیط
+منظم نگه دارید. از تایمر تمرکز، پیشنهادهای مطالعه و نمای وضعیت تحصیلی استفاده کنید.
+امکانات اصلی به‌صورت محلی و بدون اجبار به ساخت حساب قابل استفاده‌اند؛ قابلیت‌های
+ابری و هوش مصنوعی به اینترنت و دسترسی به سرویس مربوط نیاز دارند.
 
-For a Bazaar review account, provide a dedicated test email/password through the Bazaar release description or reviewer-support channel.
+## پیش از ارسال
 
-Do not commit reviewer credentials to GitHub.
+- اسکرین‌شات‌ها باید از همین نسخه واقعی باشند.
+- نسخهCode را با بالاترین بسته بارگذاری‌شده در پیشخوان بازار هم تطبیق دهید.
+- آدرس عمومی سیاست حریم خصوصی و مسیر تماس واقعی برای درخواست حذف حساب لازم است؛
+  وجود فایل HTML در سورس به‌معنی منتشر بودن آن نیست.
+- شرایط جاری پیشخوان بازار، اطلاعات تماس، رده‌بندی سنی و مجوزها بررسی شوند.
+  دسترسی این جلسه به متن کامل راهنمای رسمی بازار فراهم نشد؛ تأیید انطباق ادعا نمی‌شود.
 
-Release configuration requirement
-
-The release build must have the GitHub Actions secret:
-STUDENTOS_API_BASE_URL
-
-configured with the real HTTPS Student OS backend endpoint.
-
-The release workflow verifies the endpoint health response before building the production artifact.
-
-Placeholder endpoints such as api.example.com are rejected by the release build configuration.
-
-Important signing continuity
-
-Production certificate must remain unchanged.
-
-SHA-1:
-b25fe31884ec18a96ae09e6fc0070fd20717a766
-
-SHA-256:
-a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950
+امضای فعلی باید حفظ شود:
+SHA-1: `b25fe31884ec18a96ae09e6fc0070fd20717a766`
+SHA-256: `a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950`

@@ -60,6 +60,8 @@ class StudentAuthManager(private val context: Context) {
         )
     )
     val currentUser: StateFlow<UserAccount> = _currentUser.asStateFlow()
+    val usesFirebaseAccount: Boolean
+        get() = safeFirebaseAuth?.currentUser?.let { !it.isAnonymous } == true
 
     private val _isInitialized = MutableStateFlow(false)
     val isInitialized: StateFlow<Boolean> = _isInitialized.asStateFlow()

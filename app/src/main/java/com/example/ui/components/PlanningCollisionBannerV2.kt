@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.model.AcademicPlanningCollision
 import com.example.domain.model.AcademicPlanningCollisionSeverity
-import com.example.ui.theme.AcademicOlive
 
 @Composable
 fun PlanningCollisionBannerV2(
@@ -103,7 +102,7 @@ fun PlanningCollisionBannerV2(
                         )
                         StudentCardMeta(
                             text = "تاریخ: " + collision.date,
-                            color = AcademicOlive
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }

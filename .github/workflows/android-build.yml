@@ -33,6 +33,16 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest assembleDebugAndroidTest --stacktrace
 
+      - name: Upload visual review and unit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: studentos-visual-review
+          path: |
+            app/build/outputs/visual-review/
+            app/build/reports/tests/
+          if-no-files-found: ignore
+
       - name: Run Android lint
         run: ./gradlew lintDebug --stacktrace
 

@@ -74,8 +74,6 @@ import com.example.ui.models.AppTab
 import com.example.domain.model.StudySessionRecommendation
 import com.example.ui.theme.NumericBadgeText
 import com.example.ui.theme.NumericDisplayStat
-import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.StudentOsColors
 import com.example.ui.theme.StudentOsGlassTokens
 import com.example.ui.theme.StudentShapeTokens
@@ -120,6 +118,7 @@ fun ModernBentoDashboard(
     primaryPriority: com.example.domain.model.AcademicPriorityItem? = null,
     acceptedStudyPlanIds: Set<String> = emptySet(),
     onAcceptStudyPlan: (StudySessionRecommendation) -> Unit = {},
+    onStartStudyPlan: ((StudySessionRecommendation) -> Unit)? = null,
     pomodoroSeconds: Int,
     isPomodoroRunning: Boolean,
     onTogglePomodoro: () -> Unit,
@@ -174,6 +173,7 @@ fun ModernBentoDashboard(
             recommendations = studyRecommendations,
             acceptedRecommendationIds = acceptedStudyPlanIds,
             onAcceptRecommendation = onAcceptStudyPlan,
+            onStartRecommendation = onStartStudyPlan,
             onStartFocus = { if (!isPomodoroRunning) onTogglePomodoro(); onNavigateTab(AppTab.POMODORO) }
         )
 
@@ -307,8 +307,8 @@ private fun StudyRecommendationsSection(
             Spacer(Modifier.height(StudentSpacing.Md))
             recommendations.take(3).forEach { item ->
                 Row(modifier = Modifier.fillMaxWidth().padding(vertical = StudentSpacing.Xs), verticalAlignment = Alignment.CenterVertically) {
-                    Surface(shape = StudentShapeTokens.Compact, color = AcademicNavy.copy(alpha = 0.10f)) {
-                        Text("${item.recommendedDurationMinutes} دقیقه", style = NumericBadgeText, color = AcademicNavy, modifier = Modifier.padding(horizontal = StudentSpacing.Sm, vertical = StudentSpacing.Xs))
+                    Surface(shape = StudentShapeTokens.Compact, color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.10f)) {
+                        Text("${item.recommendedDurationMinutes} دقیقه", style = NumericBadgeText, color = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(horizontal = StudentSpacing.Sm, vertical = StudentSpacing.Xs))
                     }
                     Spacer(Modifier.width(StudentSpacing.Md))
                     Column(modifier = Modifier.weight(1f)) {
@@ -362,7 +362,7 @@ private fun AnalyticsKpiSection(
                 value = displayGpa,
                 subtitle = targetGpa?.let { "هدف ثبت‌شده: ${String.format(Locale.US, "%.2f", it)} 🎯" } ?: "هدف معدل ثبت نشده",
                 emojiType = AppEmojiType.CHART,
-                accentColor = AcademicNavy,
+                accentColor = MaterialTheme.colorScheme.secondary,
                 onClick = onNavigateToGrades,
                 modifier = Modifier.weight(1f)
             )
@@ -372,7 +372,7 @@ private fun AnalyticsKpiSection(
                 value = "$displayPassed / $totalRequiredCredits",
                 subtitle = "${((passedUnits.toFloat() / totalRequiredCredits.coerceAtLeast(1)) * 100).toInt()}% چارت 📈",
                 emojiType = AppEmojiType.CHECK,
-                accentColor = AcademicOlive,
+                accentColor = MaterialTheme.colorScheme.primary,
                 onClick = onNavigateToPassport,
                 modifier = Modifier.weight(1f)
             )
@@ -388,7 +388,7 @@ private fun AnalyticsKpiSection(
                 value = displayAttendance,
                 subtitle = if (dangerCourses > 0) "$dangerCourses هشدار غیبت!" else if (attendanceList.isEmpty()) "هنوز داده‌ای ثبت نشده" else "وضعیت پایدار 🛡️",
                 emojiType = AppEmojiType.CALENDAR,
-                accentColor = if (dangerCourses > 0) StudentOsColors.CrimsonRose else AcademicOlive,
+                accentColor = if (dangerCourses > 0) StudentOsColors.CrimsonRose else MaterialTheme.colorScheme.primary,
                 onClick = onNavigateToAttendance,
                 modifier = Modifier.weight(1f)
             )

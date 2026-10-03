@@ -44,15 +44,15 @@ class BackendSyncWorker(
             SyncStatusStore.markSyncing(applicationContext)
             if (isPullOnly) {
                 if (dataType != null) {
-                    BackendSyncManager.pullDataType(applicationContext, dataType)
+                    BackendSyncManager.pullDataType(applicationContext, dataType).getOrThrow()
                 } else {
-                    BackendSyncManager.pullAllData(applicationContext)
+                    BackendSyncManager.pullAllData(applicationContext).getOrThrow()
                 }
             } else {
                 if (dataType != null) {
-                    BackendSyncManager.pushDataType(applicationContext, dataType)
+                    BackendSyncManager.pushDataType(applicationContext, dataType).getOrThrow()
                 } else {
-                    BackendSyncManager.pushAllData(applicationContext)
+                    BackendSyncManager.pushAllData(applicationContext).getOrThrow()
                 }
             }
             SyncStatusStore.markSynced(applicationContext)

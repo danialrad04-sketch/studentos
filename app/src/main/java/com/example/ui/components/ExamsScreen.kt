@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.models.ExamItem
 import com.example.data.local.entity.TaskEntity
 import com.example.ui.theme.StudentShapeTokens
-import com.example.ui.theme.AcademicOlive
 
 @Composable
 fun ExamsScreen(
@@ -222,13 +221,13 @@ fun ExamCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = AcademicOlive.copy(alpha = 0.14f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
                 ) {
                     Text(
                         text = "⏳ آزمون شماره #$index",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = AcademicOlive,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -291,8 +290,8 @@ private fun ExamPreparationIndicator(
             androidx.compose.material3.LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth(),
-                color = AcademicOlive,
-                trackColor = AcademicOlive.copy(alpha = 0.12f)
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
             )
         }
     }

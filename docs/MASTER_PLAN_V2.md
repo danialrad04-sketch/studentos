@@ -1,3 +1,5 @@
+> Current implementation and remaining scope: [V2_1_VERIFICATION.md](V2_1_VERIFICATION.md). Checkmarks below describe historical implementation, not completed live/device verification.
+
 # Student OS — Master Plan v2
 ## Product-grade UX/UI + Capability Evolution
 
@@ -58,7 +60,7 @@ Core rule:
 **Answer:** Consistency, hierarchy, restraint, speed, recoverability, responsive layouts and predictable interactions—not decoration.
 
 ## Q4. What visual language should define the brand?
-**Answer:** Academic premium: deep petrol/navy foundation, olive accent, quiet surfaces, strong typography, restrained elevation, limited gradients and minimal visual noise.
+**Answer:** Academic premium: deep petrol/navy foundation, soft violet accent, quiet surfaces, strong typography, restrained elevation, limited gradients and minimal visual noise.
 
 ## Q5. What should be removed from the experience?
 **Answer:** Duplicate controls, decorative cards without information value, overly nested dialogs, redundant labels, unnecessary animations, and settings that belong in advanced areas.
@@ -229,7 +231,7 @@ Build:
 - dark/light parity
 
 Visual principles:
-- deep petrol/navy + olive brand
+- soft violet light + petrol/navy dark brand
 - neutral surfaces
 - limited color accents
 - no generic neon/glass SaaS treatment
@@ -661,14 +663,14 @@ Student OS must remain reviewable and usable on restricted networks common to th
 
 ## D1 — Authentication resilience
 - Firebase remains the primary identity provider.
-- Email sign-in/sign-up may fall back to the self-hosted backend only when Firebase transport/service access is unavailable.
+- Email sign-in/sign-up uses Firebase for this release. Do not silently create accounts with another provider.
 - Invalid credentials must never trigger fallback.
 - Google sign-in continues through Credential Manager + Firebase; the production signing certificate must remain unchanged.
 
 ## D2 — Release configuration safety
-- Production builds must receive a real HTTPS backend endpoint through CI secrets.
+- A dedicated backend is optional for the guest/Firebase release. Backend flows require explicit configuration.
 - Placeholder endpoints such as example.com are forbidden in release artifacts.
-- Release CI fails closed if the backend endpoint secret is absent.
+- Guest and Firebase core operation must not be blocked by an absent VPS endpoint.
 
 ## D3 — Marketplace review mode
 - Guest mode must reach the core product without cloud authentication.

@@ -25,8 +25,6 @@ import androidx.compose.ui.unit.sp
 import com.example.domain.model.AcademicPlanningCollision
 import com.example.domain.model.AcademicPriorityItem
 import com.example.ui.models.AppTab
-import com.example.ui.theme.AcademicOlive
-import com.example.ui.theme.AcademicNavy
 
 @Composable
 fun CopilotContextRibbonV2(
@@ -50,12 +48,12 @@ fun CopilotContextRibbonV2(
             ) {
                 Surface(
                     shape = RoundedCornerShape(9.dp),
-                    color = AcademicOlive.copy(alpha = 0.12f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
                     Icon(
                         Icons.Default.AutoAwesome,
                         contentDescription = null,
-                        tint = AcademicOlive,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(6.dp).size(16.dp)
                     )
                 }
@@ -71,7 +69,7 @@ fun CopilotContextRibbonV2(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    color = AcademicNavy.copy(alpha = 0.06f)
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.06f)
                 ) {
                     Column(Modifier.padding(9.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                         Text(

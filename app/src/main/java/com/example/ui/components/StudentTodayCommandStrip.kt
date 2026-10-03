@@ -37,8 +37,6 @@ import com.example.data.local.relation.CourseWithSessions
 import com.example.domain.engine.AcademicContextEngine
 import com.example.domain.model.StudySessionRecommendation
 import com.example.ui.models.AppTab
-import com.example.ui.theme.AcademicOlive
-import com.example.ui.theme.AcademicNavy
 import com.example.domain.util.JalaliCalendarUtil
 
 @Composable
@@ -86,12 +84,12 @@ fun StudentTodayCommandStrip(
             ) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = AcademicOlive.copy(alpha = 0.12f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
                     Icon(
                         Icons.Default.Event,
                         contentDescription = null,
-                        tint = AcademicOlive,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(8.dp).size(18.dp)
                     )
                 }
@@ -120,8 +118,8 @@ fun StudentTodayCommandStrip(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                TodaySignal(Icons.Default.CheckCircle, openTasks.toString(), "کار باز", AcademicNavy, Modifier.weight(1f))
-                TodaySignal(Icons.Default.CalendarToday, snapshot.todaySessionCount.toString(), "کلاس امروز", AcademicOlive, Modifier.weight(1f))
+                TodaySignal(Icons.Default.CheckCircle, openTasks.toString(), "کار باز", MaterialTheme.colorScheme.secondary, Modifier.weight(1f))
+                TodaySignal(Icons.Default.CalendarToday, snapshot.todaySessionCount.toString(), "کلاس امروز", MaterialTheme.colorScheme.primary, Modifier.weight(1f))
                 TodaySignal(Icons.Default.Event, dangerAttendance.toString(), "غیبت بحرانی", MaterialTheme.colorScheme.error, Modifier.weight(1f))
             }
 
@@ -175,7 +173,7 @@ fun StudentTodayCommandStrip(
                     onClick = onStartFocus,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(11.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = AcademicOlive)
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(Icons.Default.PlayArrow, null, Modifier.size(17.dp))
                     Spacer(Modifier.width(6.dp))

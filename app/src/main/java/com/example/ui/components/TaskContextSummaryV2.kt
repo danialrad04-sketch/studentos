@@ -29,8 +29,6 @@ import com.example.ui.models.ExamItem
 import com.example.domain.engine.AcademicContextEngine
 import com.example.domain.engine.AcademicPlanningCollisionEngine
 import com.example.domain.util.JalaliCalendarUtil
-import com.example.ui.theme.AcademicOlive
-import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.StudentSpacing
 
 @Composable
@@ -69,12 +67,12 @@ fun TaskContextSummaryV2(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = AcademicOlive.copy(alpha = 0.12f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
                     Icon(
                         Icons.Default.Assignment,
                         contentDescription = null,
-                        tint = AcademicOlive,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(7.dp).size(17.dp)
                     )
                 }
@@ -103,9 +101,9 @@ fun TaskContextSummaryV2(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                TaskSignal(open.toString(), "باز", AcademicNavy, Modifier.weight(1f))
+                TaskSignal(open.toString(), "باز", MaterialTheme.colorScheme.secondary, Modifier.weight(1f))
                 TaskSignal(overdue.toString(), "عقب‌افتاده", MaterialTheme.colorScheme.error, Modifier.weight(1f))
-                TaskSignal(examLinked.toString(), "مرتبط با امتحان", AcademicOlive, Modifier.weight(1f))
+                TaskSignal(examLinked.toString(), "مرتبط با امتحان", MaterialTheme.colorScheme.primary, Modifier.weight(1f))
                 TaskSignal(collisionCount.toString(), "تداخل برنامه", MaterialTheme.colorScheme.error, Modifier.weight(1f))
             }
         }

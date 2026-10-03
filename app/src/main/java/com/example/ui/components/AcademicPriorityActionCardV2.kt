@@ -39,8 +39,6 @@ import com.example.domain.model.AcademicPriorityItem
 import com.example.domain.model.AcademicPriorityKind
 import com.example.domain.model.ExamItem
 import com.example.ui.models.AppTab
-import com.example.ui.theme.AcademicOlive
-import com.example.ui.theme.AcademicNavy
 import com.example.domain.util.JalaliCalendarUtil
 
 @Composable
@@ -71,8 +69,8 @@ fun AcademicPriorityActionCardV2(
         AcademicPriorityKind.CRITICAL_ATTENDANCE,
         AcademicPriorityKind.EXAM_TODAY -> MaterialTheme.colorScheme.error
         AcademicPriorityKind.OVERDUE_TASK,
-        AcademicPriorityKind.TASK_TODAY -> AcademicOlive
-        else -> AcademicNavy
+        AcademicPriorityKind.TASK_TODAY -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.secondary
     }
 
     val destination = when (priority.kind) {

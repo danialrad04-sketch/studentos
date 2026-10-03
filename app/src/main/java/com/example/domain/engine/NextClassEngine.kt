@@ -20,6 +20,9 @@ object NextClassEngine {
         return courses.filterNot { it.course.isArchived }.flatMap { course ->
             course.sessions.mapNotNull { session ->
                 if (session.day !in 0..6 || session.start.isBlank() || session.end.isBlank()) return@mapNotNull null
+                val timePattern = Regex("^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
+                if (!timePattern.matches(DateTimeNormalizer.normalizeDigits(session.start).trim()) ||
+                    !timePattern.matches(DateTimeNormalizer.normalizeDigits(session.end).trim())) return@mapNotNull null
                 val start = DateTimeNormalizer.timeToMinutes(session.start)
                 val end = DateTimeNormalizer.timeToMinutes(session.end)
                 if (start !in 0..1439 || end !in 1..1440 || end <= start) return@mapNotNull null

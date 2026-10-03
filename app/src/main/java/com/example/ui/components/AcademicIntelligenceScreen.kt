@@ -32,8 +32,6 @@ import com.example.data.local.entity.TaskEntity
 import com.example.domain.model.AcademicRisk
 import com.example.domain.model.RiskSeverity
 import com.example.ui.models.AppTab
-import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.StudentShapeTokens
 import com.example.ui.theme.StudentSpacing
 
@@ -68,11 +66,11 @@ fun AcademicIntelligenceScreen(
         AcademicCard {
             Column(modifier = Modifier.padding(StudentSpacing.Xxl)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(shape = StudentShapeTokens.Compact, color = AcademicNavy.copy(alpha = 0.10f)) {
+                    Surface(shape = StudentShapeTokens.Compact, color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.10f)) {
                         Icon(
                             Icons.Outlined.Analytics,
                             contentDescription = null,
-                            tint = AcademicNavy,
+                            tint = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.padding(StudentSpacing.Sm).size(20.dp)
                         )
                     }
@@ -100,7 +98,7 @@ fun AcademicIntelligenceScreen(
                 LinearProgressIndicator(
                     progress = { completion },
                     modifier = Modifier.fillMaxWidth(),
-                    color = AcademicOlive
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(Modifier.height(StudentSpacing.Xs))
                 Text(
@@ -119,7 +117,7 @@ fun AcademicIntelligenceScreen(
         if (risks.isEmpty()) {
             AcademicCard {
                 Column(modifier = Modifier.padding(StudentSpacing.Xxl)) {
-                    Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = AcademicOlive)
+                    Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(StudentSpacing.Md))
                     Text("مورد مهمی شناسایی نشد", style = MaterialTheme.typography.titleMedium)
                     StudentCardBody(

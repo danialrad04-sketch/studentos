@@ -96,6 +96,7 @@ fun MainTabContent(
                     primaryPriority = primaryPriority,
                     acceptedStudyPlanIds = acceptedStudyPlanIds,
                     onAcceptStudyPlan = onAcceptStudyPlan,
+                    onStartStudyPlan = studentViewModel::startStudyRecommendation,
                     pomodoroSeconds = pomodoroSeconds,
                     isPomodoroRunning = isPomodoroRunning,
                     onTogglePomodoro = {

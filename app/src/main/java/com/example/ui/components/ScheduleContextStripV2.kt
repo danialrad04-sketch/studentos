@@ -26,8 +26,6 @@ import androidx.compose.ui.unit.sp
 import com.example.data.local.entity.CourseEntity
 import com.example.domain.engine.CourseConflict
 import com.example.data.local.relation.CourseWithSessions
-import com.example.ui.theme.AcademicOlive
-import com.example.ui.theme.AcademicNavy
 
 @Composable
 fun ScheduleContextStripV2(
@@ -65,12 +63,12 @@ fun ScheduleContextStripV2(
             ) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = AcademicOlive.copy(alpha = 0.12f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
                     Icon(
                         Icons.Default.CalendarToday,
                         contentDescription = null,
-                        tint = AcademicOlive,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(7.dp).size(17.dp)
                     )
                 }
@@ -121,13 +119,13 @@ fun ScheduleContextStripV2(
                 ScheduleContextMetric(
                     value = courses.distinctBy { it.id }.size.toString(),
                     label = "درس فعال",
-                    accent = AcademicNavy,
+                    accent = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.weight(1f)
                 )
                 ScheduleContextMetric(
                     value = sessions.size.toString(),
                     label = "جلسه امروز",
-                    accent = AcademicOlive,
+                    accent = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
                 )
                 ScheduleContextMetric(

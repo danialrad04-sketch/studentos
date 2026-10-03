@@ -31,8 +31,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.model.StudySessionRecommendation
-import com.example.ui.theme.AcademicOlive
-import com.example.ui.theme.AcademicNavy
 
 @Composable
 fun StudyPlanPreviewCardV2(
@@ -40,6 +38,7 @@ fun StudyPlanPreviewCardV2(
     acceptedRecommendationIds: Set<String> = emptySet(),
     onAcceptRecommendation: (StudySessionRecommendation) -> Unit = {},
     onStartFocus: () -> Unit,
+    onStartRecommendation: ((StudySessionRecommendation) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     if (recommendations.isEmpty()) return
@@ -63,12 +62,12 @@ fun StudyPlanPreviewCardV2(
             ) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = AcademicOlive.copy(alpha = 0.12f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
                     Icon(
                         Icons.Default.School,
                         contentDescription = null,
-                        tint = AcademicOlive,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(8.dp).size(18.dp)
                     )
                 }
@@ -93,10 +92,10 @@ fun StudyPlanPreviewCardV2(
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 66.dp, max = 88.dp),
+                        .heightIn(min = 66.dp),
                     shape = RoundedCornerShape(14.dp),
                     color = if (index == 0) {
-                        AcademicOlive.copy(alpha = 0.08f)
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
                     } else {
                         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
                     }
@@ -107,14 +106,14 @@ fun StudyPlanPreviewCardV2(
                     ) {
                         Surface(
                             shape = RoundedCornerShape(9.dp),
-                            color = if (index == 0) AcademicOlive.copy(alpha = 0.14f) else AcademicNavy.copy(alpha = 0.09f)
+                            color = if (index == 0) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f) else MaterialTheme.colorScheme.secondary.copy(alpha = 0.09f)
                         ) {
                             Text(
                                 (index + 1).toString(),
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                                 fontWeight = FontWeight.Black,
                                 fontSize = 11.sp,
-                                color = if (index == 0) AcademicOlive else AcademicNavy
+                                color = if (index == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
                             )
                         }
                         Spacer(Modifier.width(9.dp))
@@ -137,7 +136,7 @@ fun StudyPlanPreviewCardV2(
                             item.recommendedDurationMinutes.toString() + " دقیقه",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = AcademicOlive,
+                            color = MaterialTheme.colorScheme.primary,
                             maxLines = 1
                         )
                     }
@@ -158,34 +157,34 @@ fun StudyPlanPreviewCardV2(
                     ) {
                         Icon(Icons.Default.CheckCircle, null, Modifier.size(17.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("پذیرش برنامه")
+                        Text("ذخیره پیشنهاد اول")
                     }
                 } else {
                     Surface(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(11.dp),
-                        color = AcademicOlive.copy(alpha = 0.10f)
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
                     ) {
                         Row(
                             Modifier.padding(horizontal = 10.dp, vertical = 11.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            Icon(Icons.Default.CheckCircle, null, tint = AcademicOlive, modifier = Modifier.size(17.dp))
+                            Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(17.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("برنامه پذیرفته شد", fontWeight = FontWeight.Bold)
+                            Text("پیشنهاد ذخیره شد", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
                 Button(
-                    onClick = onStartFocus,
+                    onClick = { onStartRecommendation?.invoke(first) ?: onStartFocus() },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(11.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = AcademicOlive)
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(Icons.Default.PlayArrow, null, Modifier.size(17.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text(if (accepted) "شروع جلسه اول" else "شروع اول")
+                    Text("شروع مطالعه")
                 }
             }
         }

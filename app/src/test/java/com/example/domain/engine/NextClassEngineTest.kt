@@ -30,6 +30,10 @@ class NextClassEngineTest {
         val result = NextClassEngine.next(listOf(course(0,"08:00","10:00")),6,600)!!
         assertEquals(1,result.daysAhead)
     }
+    @Test fun persianTimesAreAcceptedButMalformedTimesAreNot() {
+        assertNotNull(NextClassEngine.next(listOf(course(0,"۰۸:۰۰","۱۰:۰۰")),0,540))
+        assertNull(NextClassEngine.next(listOf(course(0,"oops","10:00"),course(0,"25:00","26:00")),0,540))
+    }
     @Test fun invalidAndArchivedSessionsAreExcluded() {
         assertNull(NextClassEngine.next(listOf(course(-1,"08:00","10:00"),course(0,"10:00","08:00")),0,600))
         val archived = course(0,"08:00","10:00").let { it.copy(course=it.course.copy(isArchived=true)) }

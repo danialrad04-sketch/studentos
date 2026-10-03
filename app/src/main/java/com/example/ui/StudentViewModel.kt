@@ -654,6 +654,15 @@ class StudentViewModel @JvmOverloads constructor(
     private val _isPomodoroRunning = MutableStateFlow(false)
     val isPomodoroRunning: StateFlow<Boolean> = _isPomodoroRunning.asStateFlow()
 
+    fun startStudyRecommendation(recommendation: StudySessionRecommendation) {
+        if (!_isPomodoroRunning.value) {
+            _pomodoroSeconds.value = recommendation.recommendedDurationMinutes.coerceIn(5, 120) * 60
+            togglePomodoro()
+        }
+        preferencesRepository.acceptStudyRecommendation(recommendation.id)
+        selectTab(AppTab.POMODORO)
+    }
+
     fun togglePomodoro() {
         if (_isPomodoroRunning.value) {
             pomodoroJob?.cancel()
@@ -669,7 +678,7 @@ class StudentViewModel @JvmOverloads constructor(
                     _isPomodoroRunning.value = false
                     addNotification(
                         "پایان تایم مطالعه پومودورو",
-                        "25 دقیقه تمرکز به پایان رسید! 5 دقیقه استراحت چشمی داشته باشید.",
+                        "جلسه تمرکز به پایان رسید؛ چند دقیقه استراحت کنید.",
                         isDanger = false
                     )
                 }
@@ -1361,15 +1370,17 @@ class StudentViewModel @JvmOverloads constructor(
     fun syncWithBackendNow(onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             try {
-                com.example.data.cloud.worker.BackendSyncWorker.triggerImmediateSync(application, pullOnly = false)
-                val pullRes = com.example.data.cloud.BackendSyncManager.pullAllData(application)
-                if (pullRes.isSuccess) {
-                    _userMessage.emit("همگام‌سازی با سرور اختصاصی با موفقیت انجام شد.")
-                    onResult(true, "اطلاعات با سرور همگام شد.")
-                } else {
-                    onResult(false, "برخی داده‌ها در همگام‌سازی دریافت نشدند.")
+                if (currentUser.value.isGuest || !com.example.data.api.backend.BackendConfig.isConfigured) {
+                    onResult(false, "برای همگام‌سازی سرور، یک حساب سرور متصل لازم است.")
+                    return@launch
                 }
+                SyncStatusStore.markSyncing(application)
+                com.example.data.cloud.BackendSyncManager.pushAllData(application).getOrThrow()
+                com.example.data.cloud.BackendSyncManager.pullAllData(application).getOrThrow()
+                SyncStatusStore.markSynced(application)
+                onResult(true, "اطلاعات با سرور همگام شد.")
             } catch (e: Exception) {
+                SyncStatusStore.markNeedsAttention(application)
                 onResult(false, "خطا در همگام‌سازی: ${e.message}")
             }
         }
@@ -1443,7 +1454,7 @@ class StudentViewModel @JvmOverloads constructor(
             _optimisticProfile.value = null
             
             // Clear the local cache to prevent previous user data residue
-            repository.clearToFreshSlate("دانشجو", "۴۰۳۰۰۰۰۱", "دانشگاه سراسری", "مهندسی", 1403, 1)
+            repository.clearToFreshSlate("دانشجو", "", "", "", 1403, 1)
             
             addNotification("خروج از حساب", "از حساب کاربری خارج شدید و به حالت مهمان تغییر کردید.")
         }
@@ -1469,6 +1480,11 @@ class StudentViewModel @JvmOverloads constructor(
         val user = currentUser.value
         if (user.isGuest) {
             onResult(false, "لطفاً ابتدا وارد حساب کاربری خود شوید.")
+            return
+        }
+
+        if (!authManager.usesFirebaseAccount) {
+            syncWithBackendNow(onResult)
             return
         }
 
