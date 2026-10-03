@@ -412,7 +412,7 @@ private fun BentoKpiTile(
     value: String,
     subtitle: String = "",
     emojiType: AppEmojiType,
-    accentColor: Color = StudentOsColors.CyanAccent,
+    accentColor: Color = MaterialTheme.colorScheme.secondary,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -508,7 +508,7 @@ private fun NextClassLiveBentoTile(
         }
     }
     val now = java.util.Calendar.getInstance().apply { timeInMillis = clock }
-    val dayIndex = (now.get(java.util.Calendar.DAY_OF_WEEK) + 1) % 7
+    val dayIndex = now.get(java.util.Calendar.DAY_OF_WEEK) % 7
     val featured = com.example.domain.engine.NextClassEngine.next(
         coursesWithSessions, dayIndex,
         now.get(java.util.Calendar.HOUR_OF_DAY) * 60 + now.get(java.util.Calendar.MINUTE)
@@ -542,7 +542,7 @@ private fun NextClassLiveBentoTile(
                 .background(
                     Brush.radialGradient(
                         colors = listOf(
-                            StudentOsColors.CyanAccent.copy(alpha = 0.12f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
                             Color(0x00000000)
                         ),
                         radius = 450f
@@ -561,27 +561,27 @@ private fun NextClassLiveBentoTile(
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
-                                .background(StudentOsColors.CyberCyan)
+                                .background(MaterialTheme.colorScheme.secondary)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = classLabel,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StudentOsColors.CyberCyan
+                            color = MaterialTheme.colorScheme.secondary
                         )
                     }
 
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = StudentOsColors.CyberCyan.copy(alpha = 0.14f),
-                        border = androidx.compose.foundation.BorderStroke(0.8.dp, StudentOsColors.CyberCyan.copy(alpha = 0.35f))
+                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.14f),
+                        border = androidx.compose.foundation.BorderStroke(0.8.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f))
                     ) {
                         Text(
                             text = if (featuredCourse != null) "${featuredCourse.units} واحد" else "برنامه هفتگی",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StudentOsColors.CyberCyan,
+                            color = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }
@@ -590,7 +590,7 @@ private fun NextClassLiveBentoTile(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = featuredCourse?.name ?: "درسی برای امروز در سیستم ثبت نشده",
+                    text = featuredCourse?.name ?: "هنوز جلسه‌ای در برنامه ثبت نشده",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -626,8 +626,8 @@ private fun NextClassLiveBentoTile(
                             .background(
                                 Brush.horizontalGradient(
                                     colors = listOf(
-                                        StudentOsColors.CyberCyan,
-                                        StudentOsColors.SkyCyan
+                                        MaterialTheme.colorScheme.secondary,
+                                        MaterialTheme.colorScheme.tertiary
                                     )
                                 )
                             )
@@ -713,7 +713,7 @@ private fun TodayScheduleAndAiSection(
                             text = "${todaySessions.size} کلاس",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StudentOsColors.CyberCyan
+                            color = MaterialTheme.colorScheme.secondary
                         )
                     }
                     Spacer(modifier = Modifier.height(10.dp))
@@ -816,7 +816,7 @@ private fun ScheduleBulletItem(time: String, name: String) {
             modifier = Modifier
                 .size(6.dp)
                 .clip(CircleShape)
-                .background(StudentOsColors.CyberCyan)
+                .background(MaterialTheme.colorScheme.secondary)
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(
@@ -1568,7 +1568,7 @@ private fun CurriculumAndExamActionBanner(
                         StudentCardMeta(
                             text = "$chartUnitsText · مصوب",
                             style = MaterialTheme.typography.labelSmall,
-                            color = StudentOsColors.CyberCyan
+                            color = MaterialTheme.colorScheme.secondary
                         )
                     }
                 }

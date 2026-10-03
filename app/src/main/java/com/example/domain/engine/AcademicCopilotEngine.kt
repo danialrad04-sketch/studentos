@@ -616,7 +616,8 @@ object AcademicCopilotEngine {
                     tasks = tasks,
                     exams = exams,
                     todayWeekdayIndex = todayWeekdayIdx,
-                    todayDate = todayJalali
+                    todayDate = todayJalali,
+                    minuteOfDay = java.util.Calendar.getInstance().let { it.get(java.util.Calendar.HOUR_OF_DAY) * 60 + it.get(java.util.Calendar.MINUTE) }
                 )
 
                 val text = if (priority == null) {

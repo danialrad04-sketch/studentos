@@ -18,7 +18,8 @@ object AcademicPriorityEngine {
         tasks: List<TaskEntity>,
         exams: List<ExamItem>,
         todayWeekdayIndex: Int,
-        todayDate: String
+        todayDate: String,
+        minuteOfDay: Int = 0
     ): List<AcademicPriorityItem> {
         val today = normalizeDate(todayDate)
         val result = mutableListOf<AcademicPriorityItem>()
@@ -105,20 +106,15 @@ object AcademicPriorityEngine {
                 )
             }
 
-        val todaySessions = coursesWithSessions
-            .flatMap { relation ->
-                relation.sessions
-                    .filter { it.day == todayWeekdayIndex }
-                    .map { relation.course to it }
-            }
-            .sortedBy { it.second.start }
-
-        todaySessions.firstOrNull()?.let { (course, session) ->
+        NextClassEngine.next(coursesWithSessions, todayWeekdayIndex, minuteOfDay)
+            ?.takeIf { it.daysAhead == 0 }?.let { next ->
+            val course = next.course
+            val session = next.session
             result += AcademicPriorityItem(
                 id = "next-class:" + session.id,
                 kind = AcademicPriorityKind.NEXT_CLASS,
-                title = "کلاس بعدی: " + course.name,
-                reason = "جلسه بعدی امروز در برنامه هفتگی توست.",
+                title = (if (next.isOngoing) "کلاس در حال برگزاری: " else "کلاس بعدی: ") + course.name,
+                reason = if (next.isOngoing) "این جلسه اکنون در حال برگزاری است." else "جلسه بعدی امروز در برنامه هفتگی توست.",
                 score = 70,
                 courseId = course.id,
                 courseName = course.name
@@ -163,7 +159,8 @@ object AcademicPriorityEngine {
         tasks: List<TaskEntity>,
         exams: List<ExamItem>,
         todayWeekdayIndex: Int,
-        todayDate: String
+        todayDate: String,
+        minuteOfDay: Int = 0
     ): AcademicPriorityItem? = rank(
         courses = courses,
         coursesWithSessions = coursesWithSessions,
@@ -171,7 +168,8 @@ object AcademicPriorityEngine {
         tasks = tasks,
         exams = exams,
         todayWeekdayIndex = todayWeekdayIndex,
-        todayDate = todayDate
+        todayDate = todayDate,
+        minuteOfDay = minuteOfDay
     ).firstOrNull()
 
     private fun normalizeDate(value: String): String {

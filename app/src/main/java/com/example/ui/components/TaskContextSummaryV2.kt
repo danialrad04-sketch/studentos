@@ -38,14 +38,16 @@ fun TaskContextSummaryV2(
     courses: List<CourseEntity>,
     modifier: Modifier = Modifier
 ) {
+    val clock = rememberAcademicClock()
     val snapshot = AcademicContextEngine.buildSnapshot(
         courses = courses,
         coursesWithSessions = emptyList(),
         attendance = emptyList(),
         tasks = tasks,
         exams = exams,
-        todayWeekdayIndex = JalaliCalendarUtil.getTodayWeekdayIndex(),
-        todayDate = JalaliCalendarUtil.today().format("/")
+        todayWeekdayIndex = clock.get(java.util.Calendar.DAY_OF_WEEK) % 7,
+        todayDate = JalaliCalendarUtil.today().format("/"),
+        minuteOfDay = clock.get(java.util.Calendar.HOUR_OF_DAY) * 60 + clock.get(java.util.Calendar.MINUTE)
     )
     val open = snapshot.openTaskCount
     val overdue = snapshot.overdueTaskCount

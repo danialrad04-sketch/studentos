@@ -53,15 +53,17 @@ fun AcademicPriorityActionCardV2(
     modifier: Modifier = Modifier,
     priorityOverride: AcademicPriorityItem? = null
 ) {
-    val priority = priorityOverride ?: remember(courses, coursesWithSessions, attendance, tasks, exams) {
+    val clock = rememberAcademicClock()
+    val priority = priorityOverride?.takeUnless { it.kind == AcademicPriorityKind.NEXT_CLASS } ?: remember(courses, coursesWithSessions, attendance, tasks, exams, clock) {
         AcademicPriorityEngine.topOrNull(
             courses = courses,
             coursesWithSessions = coursesWithSessions,
             attendance = attendance,
             tasks = tasks,
             exams = exams,
-            todayWeekdayIndex = JalaliCalendarUtil.getTodayWeekdayIndex(),
-            todayDate = JalaliCalendarUtil.today().format("/")
+            todayWeekdayIndex = clock.get(java.util.Calendar.DAY_OF_WEEK) % 7,
+            todayDate = JalaliCalendarUtil.today().format("/"),
+        minuteOfDay = clock.get(java.util.Calendar.HOUR_OF_DAY) * 60 + clock.get(java.util.Calendar.MINUTE)
         )
     } ?: return
 

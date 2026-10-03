@@ -19,11 +19,12 @@ object AcademicContextEngine {
         tasks: List<TaskEntity>,
         exams: List<ExamItem>,
         todayWeekdayIndex: Int,
-        todayDate: String
+        todayDate: String,
+        minuteOfDay: Int = 0
     ): AcademicContextSnapshot {
         val normalizedToday = normalizeDate(todayDate)
 
-        val todaySessions = coursesWithSessions
+        val todaySessions = coursesWithSessions.filterNot { it.course.isArchived }
             .flatMap { relation ->
                 relation.sessions
                     .filter { it.day == todayWeekdayIndex }
@@ -51,7 +52,8 @@ object AcademicContextEngine {
             !it.isCompleted && examCourseNames.contains(it.courseName.trim())
         }
 
-        val next = todaySessions.firstOrNull()
+        val next = NextClassEngine.next(coursesWithSessions, todayWeekdayIndex, minuteOfDay)
+            ?.takeIf { it.daysAhead == 0 }
         val classMinutes = todaySessions.sumOf { (_, session) ->
             durationMinutes(session)
         }
@@ -63,7 +65,8 @@ object AcademicContextEngine {
             tasks = tasks,
             exams = exams,
             todayWeekdayIndex = todayWeekdayIndex,
-            todayDate = todayDate
+            todayDate = todayDate,
+            minuteOfDay = minuteOfDay
         )
 
         val action = when (topPriority?.kind) {
@@ -86,11 +89,11 @@ object AcademicContextEngine {
             criticalAttendanceCount = criticalAttendance,
             examsWithOpenTasksCount = examsWithOpenTasks,
             totalActiveCourseCount = courses.distinctBy { it.id }.size,
-            nextCourseId = next?.first?.id,
-            nextCourseName = next?.first?.name,
-            nextCourseStart = next?.second?.start,
-            nextCourseEnd = next?.second?.end,
-            nextCourseLocation = next?.second?.location?.takeIf { it.isNotBlank() },
+            nextCourseId = next?.course?.id,
+            nextCourseName = next?.course?.name,
+            nextCourseStart = next?.session?.start,
+            nextCourseEnd = next?.session?.end,
+            nextCourseLocation = next?.session?.location?.takeIf { it.isNotBlank() },
             primaryAction = action,
             topPriority = topPriority
         )

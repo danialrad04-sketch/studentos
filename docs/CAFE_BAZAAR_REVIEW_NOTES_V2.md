@@ -48,3 +48,15 @@ Student OS یک همراه فارسی برای مدیریت کارهای روز�
 امضای فعلی باید حفظ شود:
 SHA-1: `b25fe31884ec18a96ae09e6fc0070fd20717a766`
 SHA-256: `a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950`
+
+## Firebase و نصب خارج از Google Play
+
+نسخه release از Play Integrity برای App Check استفاده می‌کند. در کنسول Firebase،
+اثر انگشت SHA-256 بالا و تنظیمات متناسب با کانال توزیع را بررسی کنید. برای توزیع
+صرفاً خارج از Google Play، راهنمای رسمی Firebase می‌گوید PLAY_RECOGNIZED و LICENSED
+نباید اجباری باشند؛ حداقل سلامت دستگاه طبق سیاست پروژه تنظیم شود. تنظیم مختلط Play
+و بازار متفاوت است و باید با کانال واقعی انتشار تطبیق داشته باشد.
+این بررسی به معنی خاموش کردن App Check یا فعال‌کردن Debug Provider در release نیست.
+با APK امضاشده، ورود و خواندن/نوشتن Firestore را روی دستگاه واقعی آزمایش کنید.
+
+مرجع: https://firebase.google.com/docs/app-check/android/play-integrity-provider

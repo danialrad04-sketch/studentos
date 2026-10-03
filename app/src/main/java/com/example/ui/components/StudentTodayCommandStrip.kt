@@ -51,14 +51,16 @@ fun StudentTodayCommandStrip(
     onStartFocus: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val clock = rememberAcademicClock()
     val snapshot = AcademicContextEngine.buildSnapshot(
         courses = courses,
         coursesWithSessions = coursesWithSessions,
         attendance = attendance,
         tasks = tasks,
         exams = exams,
-        todayWeekdayIndex = JalaliCalendarUtil.getTodayWeekdayIndex(),
-        todayDate = JalaliCalendarUtil.today().format("/")
+        todayWeekdayIndex = clock.get(java.util.Calendar.DAY_OF_WEEK) % 7,
+        todayDate = JalaliCalendarUtil.today().format("/"),
+        minuteOfDay = clock.get(java.util.Calendar.HOUR_OF_DAY) * 60 + clock.get(java.util.Calendar.MINUTE)
     )
     val openTasks = snapshot.openTaskCount
     val dangerAttendance = snapshot.criticalAttendanceCount

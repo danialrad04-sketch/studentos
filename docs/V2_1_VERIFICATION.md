@@ -52,4 +52,10 @@ Do not replace the signing key or publish a fresh unrelated application ID.
 
 ## Validation results
 
-Updated with final run links and local results after execution.
+- Baseline integration commit `0777457` passed all four jobs: Android unit/lint, emulator smoke, backend unit/integration and signed release artifact validation: https://github.com/danialrad04-sketch/studentos/actions/runs/37112348252
+- Follow-up commit `ce405fe` passed Android unit tests and backend checks and generated real Compose captures: https://github.com/danialrad04-sketch/studentos/actions/runs/37128565966
+- Visual review caught a low-contrast next-class label in dark mode and inconsistent current-class timing. Both were corrected; regression coverage now checks completed and ongoing sessions.
+- Each later commit must pass the complete CI matrix again. The authoritative latest status and downloadable artifacts are attached to PR #12: https://github.com/danialrad04-sketch/studentos/pull/12
+- Captures cover the dashboard in light/dark and 150% font scale plus account entry. They are seeded test data, not proof of live cloud behavior or the complete screen/device matrix.
+- Local Android compilation succeeded during setup; local Robolectric execution was blocked by dependency DNS. GitHub Actions provides the executable validation evidence.
+
