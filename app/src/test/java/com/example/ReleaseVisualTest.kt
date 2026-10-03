@@ -61,6 +61,7 @@ class ReleaseVisualTest {
                 }
             }
         }
+        rule.waitForIdle()
         rule.onRoot().captureRoboImage("build/outputs/visual-review/dashboard-${if(dark) "dark" else "light"}-$scale.png")
     }
     @Test fun dashboardLight() = dashboard(false)
@@ -72,6 +73,7 @@ class ReleaseVisualTest {
                 AccountGateV2(onSignIn={_,_,_->},onSignUp={_,_,_,_->},onForgotPassword={},onGoogleSignIn={},onContinueAsGuest={})
             }
         }
+        rule.waitForIdle()
         rule.onRoot().captureRoboImage("build/outputs/visual-review/account-light.png")
     }
 }

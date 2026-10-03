@@ -132,6 +132,17 @@ fun ModernBentoDashboard(
     onOpenAppTour: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val startFocus: () -> Unit = {
+        if (!isPomodoroRunning) {
+            val recommendation = studyRecommendations.firstOrNull()
+            if (recommendation != null && onStartStudyPlan != null) {
+                onStartStudyPlan(recommendation)
+            } else {
+                onTogglePomodoro()
+            }
+        }
+        onNavigateTab(AppTab.POMODORO)
+    }
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -144,7 +155,7 @@ fun ModernBentoDashboard(
             exams = exams,
             studyRecommendations = studyRecommendations,
             onNavigateTab = onNavigateTab,
-            onStartFocus = { if (!isPomodoroRunning) onTogglePomodoro(); onNavigateTab(AppTab.POMODORO) }
+            onStartFocus = startFocus
         )
 
         // 2. HERO GRADIENT CARD ("کلاس بعدی")
@@ -166,7 +177,7 @@ fun ModernBentoDashboard(
             exams = exams,
             priorityOverride = primaryPriority,
             onNavigateTab = onNavigateTab,
-            onStartFocus = { if (!isPomodoroRunning) onTogglePomodoro(); onNavigateTab(AppTab.POMODORO) }
+            onStartFocus = startFocus
         )
 
         StudyPlanPreviewCardV2(
@@ -174,7 +185,7 @@ fun ModernBentoDashboard(
             acceptedRecommendationIds = acceptedStudyPlanIds,
             onAcceptRecommendation = onAcceptStudyPlan,
             onStartRecommendation = onStartStudyPlan,
-            onStartFocus = { if (!isPomodoroRunning) onTogglePomodoro(); onNavigateTab(AppTab.POMODORO) }
+            onStartFocus = startFocus
         )
 
         // 4 Quick Actions Grid (برنامه هفتگی، امتحانات، تکالیف، کلاس‌ها)
@@ -369,7 +380,7 @@ private fun AnalyticsKpiSection(
 
             BentoKpiTile(
                 title = "واحد گذرانده",
-                value = "$displayPassed / $totalRequiredCredits",
+                value = "$displayPassed از $totalRequiredCredits",
                 subtitle = "${((passedUnits.toFloat() / totalRequiredCredits.coerceAtLeast(1)) * 100).toInt()}% چارت 📈",
                 emojiType = AppEmojiType.CHECK,
                 accentColor = MaterialTheme.colorScheme.primary,

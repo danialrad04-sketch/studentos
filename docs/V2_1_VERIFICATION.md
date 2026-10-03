@@ -58,4 +58,3 @@ Do not replace the signing key or publish a fresh unrelated application ID.
 - Each later commit must pass the complete CI matrix again. The authoritative latest status and downloadable artifacts are attached to PR #12: https://github.com/danialrad04-sketch/studentos/pull/12
 - Captures cover the dashboard in light/dark and 150% font scale plus account entry. They are seeded test data, not proof of live cloud behavior or the complete screen/device matrix.
 - Local Android compilation succeeded during setup; local Robolectric execution was blocked by dependency DNS. GitHub Actions provides the executable validation evidence.
-
