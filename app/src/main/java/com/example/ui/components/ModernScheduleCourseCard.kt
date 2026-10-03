@@ -95,14 +95,14 @@ fun ModernScheduleCourseCard(
                     Icon(Icons.Default.Schedule, null, tint = accent, modifier = Modifier.size(15.dp))
                     Spacer(Modifier.size(4.dp))
                     Text(
-                        "\\u200E" + session.start + "\\u200E",
+                        "\u200E" + session.start + "\u200E",
                         style = NumericDisplayStat,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Black,
                         color = accent
                     )
                     Text(
-                        "\\u200E" + session.end + "\\u200E",
+                        "\u200E" + session.end + "\u200E",
                         style = NumericDisplayStat,
                         fontSize = 9.5.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

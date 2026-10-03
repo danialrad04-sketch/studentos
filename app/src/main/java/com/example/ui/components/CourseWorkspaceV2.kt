@@ -319,7 +319,7 @@ fun CourseWorkspaceDialogV2(
                             ) {
                                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     StudentCardMeta(exam.solarDate, fontWeight = FontWeight.Black)
-                                    StudentCardMeta("\\u200E" + exam.time + "\\u200E", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                                    StudentCardMeta("\u200E" + exam.time + "\u200E", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                                     if (exam.location.isNotBlank()) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
@@ -490,7 +490,7 @@ private fun WorkspaceSessionRow(session: CourseSessionEntity, accent: Color) {
                 )
             }
             Spacer(Modifier.width(10.dp))
-            StudentCardMeta("\\u200E" + session.start + " — " + session.end + "\\u200E", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+            StudentCardMeta("\u200E" + session.start + " — " + session.end + "\u200E", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
             if (session.location.isNotBlank()) {
                 Spacer(Modifier.width(8.dp))
                 Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(15.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)

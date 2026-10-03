@@ -13,6 +13,13 @@ import org.robolectric.annotation.Config
 class GuestModePreferenceTest {
 
     @Test
+    fun fresh_install_has_guest_access_without_network_authentication() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val repository = AppPreferencesRepository(context)
+        assertTrue(repository.guestModeEnabled.value)
+    }
+
+    @Test
     fun guest_mode_persists_across_repository_instances() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val first = AppPreferencesRepository(context)
