@@ -4,6 +4,7 @@
 - Replace violet brand colors with a restrained olive accent on neutral light surfaces and a readable olive accent on navy dark surfaces.
 - Simplify secondary screen headers; keep search visible and move secondary actions into an accessible overflow menu.
 - Make task filters horizontally scrollable and single-line on compact phones.
+- Save courses and their sessions in one database transaction so readers never receive a partially replaced session set; preserve the previous data if a session write fails.
 - Add compact-phone and enlarged-text visual regression coverage using the same app scaffold as production, including bottom action visibility.
 
 Package: `com.aistudio.studentos.appvzk`

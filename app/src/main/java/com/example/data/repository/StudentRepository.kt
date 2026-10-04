@@ -182,58 +182,66 @@ class StudentRepository(
         course: CourseEntity,
         sessions: List<CourseSessionEntity> = emptyList()
     ) = withContext(Dispatchers.IO) {
-        val courseId = if (course.id.isNotBlank()) course.id else "c_${UUID.randomUUID().toString().take(8)}"
-        val entity = course.copy(id = courseId)
-        dao.insertCourse(entity)
+        val persistCourse = suspend {
+            val courseId = if (course.id.isNotBlank()) course.id else "c_${UUID.randomUUID().toString().take(8)}"
+            val entity = course.copy(id = courseId)
+            dao.insertCourse(entity)
 
-        // Sync course sessions
-        dao.deleteSessionsByCourseId(courseId)
-        if (sessions.isNotEmpty()) {
-            val sessionsToInsert = sessions.mapIndexed { idx, s ->
-                s.copy(
-                    id = if (s.id.isNotBlank()) s.id else "sess_${courseId.take(8)}_$idx",
-                    courseId = courseId
+            // Sync course sessions
+            dao.deleteSessionsByCourseId(courseId)
+            if (sessions.isNotEmpty()) {
+                val sessionsToInsert = sessions.mapIndexed { idx, s ->
+                    s.copy(
+                        id = if (s.id.isNotBlank()) s.id else "sess_${courseId.take(8)}_$idx",
+                        courseId = courseId
+                    )
+                }
+                dao.insertCourseSessions(sessionsToInsert)
+            }
+
+            // Ensure Attendance record with courseId as primary key
+            val existingAtt = dao.getAttendanceByCourseId(courseId)
+            if (existingAtt == null) {
+                dao.insertAttendance(
+                    AttendanceEntity(
+                        courseId = courseId,
+                        courseName = entity.name,
+                        absentCount = 0,
+                        maxAllowed = if (entity.name.contains("آزمایشگاه") || entity.name.contains("کارگاه")) 2 else 3
+                    )
+                )
+            } else if (existingAtt.courseName != entity.name) {
+                dao.updateAttendance(existingAtt.copy(courseName = entity.name))
+            }
+
+            // Existing grades are updated when present; a new course does not receive
+            // a fabricated zero grade. A grade record is created only when the user
+            // actually records a score.
+            dao.getGradeByCourseId(courseId)?.let { existingGrade ->
+                if (existingGrade.courseName != entity.name || existingGrade.units != entity.units) {
+                    dao.updateGrade(existingGrade.copy(courseName = entity.name, units = entity.units))
+                }
+            }
+
+            // Sync Exam record if exam details are provided
+            if (entity.examDate.isNotBlank() || entity.examTime.isNotBlank()) {
+                dao.insertExam(
+                    ExamEntity(
+                        id = "exam_$courseId",
+                        courseId = courseId,
+                        courseName = entity.name,
+                        date = entity.examDate,
+                        time = entity.examTime,
+                        location = entity.examLocation
+                    )
                 )
             }
-            dao.insertCourseSessions(sessionsToInsert)
         }
-
-        // Ensure Attendance record with courseId as primary key
-        val existingAtt = dao.getAttendanceByCourseId(courseId)
-        if (existingAtt == null) {
-            dao.insertAttendance(
-                AttendanceEntity(
-                    courseId = courseId,
-                    courseName = entity.name,
-                    absentCount = 0,
-                    maxAllowed = if (entity.name.contains("آزمایشگاه") || entity.name.contains("کارگاه")) 2 else 3
-                )
-            )
-        } else if (existingAtt.courseName != entity.name) {
-            dao.updateAttendance(existingAtt.copy(courseName = entity.name))
-        }
-
-        // Existing grades are updated when present; a new course does not receive
-        // a fabricated zero grade. A grade record is created only when the user
-        // actually records a score.
-        dao.getGradeByCourseId(courseId)?.let { existingGrade ->
-            if (existingGrade.courseName != entity.name || existingGrade.units != entity.units) {
-                dao.updateGrade(existingGrade.copy(courseName = entity.name, units = entity.units))
-            }
-        }
-
-        // Sync Exam record if exam details are provided
-        if (entity.examDate.isNotBlank() || entity.examTime.isNotBlank()) {
-            dao.insertExam(
-                ExamEntity(
-                    id = "exam_$courseId",
-                    courseId = courseId,
-                    courseName = entity.name,
-                    date = entity.examDate,
-                    time = entity.examTime,
-                    location = entity.examLocation
-                )
-            )
+        // Readers must see the complete course and session set, including on updates.
+        if (database != null) {
+            database.withTransaction { persistCourse() }
+        } else {
+            persistCourse()
         }
     }
 
