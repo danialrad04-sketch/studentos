@@ -27,6 +27,7 @@ fun SubScreenHeaderSection(
     isDarkTheme: Boolean,
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     onToggleTheme: () -> Unit,
+    onOpenMenu: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -54,6 +55,7 @@ fun SubScreenHeaderSection(
                 Icon(Icons.Default.MoreVert, "گزینه‌های صفحه", tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                if (onOpenMenu != null) DropdownMenuItem(text = { Text("منوی برنامه") }, onClick = { expanded = false; onOpenMenu() })
                 DropdownMenuItem(
                     text = { Text(if (notifCount > 0) "اعلان‌ها ($notifCount)" else "اعلان‌ها") },
                     onClick = { expanded = false; onOpenNotifications() }

@@ -72,7 +72,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
+import com.example.ui.components.StudentDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.local.entity.CourseEntity
 import com.example.data.local.entity.TaskEntity
@@ -139,6 +139,8 @@ fun CommandCenterDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
+        val dismissWindow = LocalStudentModalDismiss.current ?: onDismiss
+
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
@@ -202,7 +204,7 @@ fun CommandCenterDialog(
                         }
                     }
 
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                    IconButton(onClick = dismissWindow, modifier = Modifier.size(32.dp)) {
                         Icon(imageVector = Icons.Default.Close, contentDescription = "بستن", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                     }
                 }
@@ -263,7 +265,7 @@ fun CommandCenterDialog(
                                         .clip(RoundedCornerShape(12.dp))
                                         .tactileClickable {
                                             onSelectCourse(course)
-                                            onDismiss()
+                                            dismissWindow()
                                         },
                                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                                     border = androidx.compose.foundation.BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
@@ -430,7 +432,7 @@ fun CommandCenterDialog(
                         subtitle = "تعیین عنوان، درس و مهلت تحویل در تسک‌لیست",
                         iconColor = MaterialTheme.colorScheme.primary,
                         onClick = {
-                            onDismiss()
+                            dismissWindow()
                             onQuickAddTask()
                         }
                     )
@@ -441,7 +443,7 @@ fun CommandCenterDialog(
                         subtitle = "تحلیل هوشمند فارغ‌التحصیلی، معدل الف و برنامه هفتگی",
                         iconColor = MaterialTheme.colorScheme.primary,
                         onClick = {
-                            onDismiss()
+                            dismissWindow()
                             onOpenCopilot()
                         }
                     )
@@ -452,7 +454,7 @@ fun CommandCenterDialog(
                         subtitle = "فعال‌سازی تایمر ۲۵ دقیقه‌ای دیپ‌ورک",
                         iconColor = AcademicNavy,
                         onClick = {
-                            onDismiss()
+                            dismissWindow()
                             onQuickPomodoro()
                         }
                     )
@@ -463,7 +465,7 @@ fun CommandCenterDialog(
                         subtitle = "پردازش خودکار کارنامه تصویری و ذخیره در برنامه هفتگی",
                         iconColor = Emerald600,
                         onClick = {
-                            onDismiss()
+                            dismissWindow()
                             onOpenOcrImport()
                         }
                     )
@@ -474,7 +476,7 @@ fun CommandCenterDialog(
                         subtitle = "پارس خودکار متن کپی‌شده به تفکیک درس، واحد و ساعت",
                         iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         onClick = {
-                            onDismiss()
+                            dismissWindow()
                             onOpenTextImport()
                         }
                     )
@@ -485,7 +487,7 @@ fun CommandCenterDialog(
                         subtitle = "ثبت و اصلاح غیبت‌ها در رادار حضور و غیبت ۳/۱۶",
                         iconColor = Rose600,
                         onClick = {
-                            onDismiss()
+                            dismissWindow()
                             onQuickAttendance()
                         }
                     )
@@ -497,7 +499,7 @@ fun CommandCenterDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = onDismiss) {
+                    TextButton(onClick = dismissWindow) {
                         Text(text = "بستن مرکز فرمان", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }

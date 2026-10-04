@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -593,22 +595,19 @@ fun EditGradeDialog(
     var fin by remember { mutableStateOf(grade.finalGrade) }
 
     StudentGlassModalSheet(
+        title = "ویرایش نمره",
+        subtitle = grade.courseName,
         onDismiss = onDismiss,
         maxHeightPercent = 0.70f
     ) {
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .weight(1f, fill = false)
+                .verticalScroll(rememberScrollState())
                 .padding(vertical = 4.dp)
         ) {
-            Text(
-                text = "تنظیم نمرات: ${grade.courseName}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
             // Midterm Stepper (out of 6)
             Text(
                 text = "میان‌ترم (از ۶ نمره):",
@@ -747,9 +746,9 @@ fun EditGradeDialog(
                 horizontalArrangement = Arrangement.End
             ) {
                 OutlinedButton(
-                    onClick = onDismiss,
+                    onClick = dismissModal,
                     shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.height(44.dp)
+                    modifier = Modifier.heightIn(min = 48.dp)
                 ) {
                     Text(text = "انصراف", style = MaterialTheme.typography.labelLarge)
                 }
@@ -758,7 +757,7 @@ fun EditGradeDialog(
                     onClick = { onSave(mid, fin) },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.height(44.dp)
+                    modifier = Modifier.heightIn(min = 48.dp)
                 ) {
                     Text(
                         text = "ثبت نمره",
@@ -951,7 +950,7 @@ fun GradeWhatIfSimulatorCard(
                         }
                         onApplySimulation(simulated)
                     },
-                    modifier = Modifier.fillMaxWidth().height(44.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {

@@ -65,9 +65,13 @@ fun SubscriptionUpgradeDialog(
     var selectedPlan by remember { mutableStateOf(SubscriptionTier.PRO) }
 
     StudentGlassModalSheet(
+        title = "طرح حساب",
+        subtitle = "بررسی دسترسی‌ها و امکانات حساب",
         onDismiss = onDismiss,
         maxWidth = 580.dp
     ) {
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -75,62 +79,7 @@ fun SubscriptionUpgradeDialog(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Stars,
-                            contentDescription = null,
-                            tint = StudentOsColors.CyberViolet,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
 
-                    Column {
-                        Text(
-                            text = "ارتقای اشتراک تحصیلی",
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 15.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "اشتراک فعلی: " + userAccount.subscription.tier.titleFa,
-                            fontSize = 10.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = "بستن",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
 
             // Hero Banner
             Box(
@@ -165,7 +114,7 @@ fun SubscriptionUpgradeDialog(
                     Text(
                         text = "دسترسی کامل به OCR جدول درسی و تحلیل معدل الف",
                         color = Color.White.copy(alpha = 0.85f),
-                        fontSize = 11.sp,
+                        fontSize = 14.sp,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -206,7 +155,7 @@ fun SubscriptionUpgradeDialog(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = feat,
-                            fontSize = 11.5.sp,
+                            fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -238,9 +187,9 @@ fun SubscriptionUpgradeDialog(
                     ) {
                         Text("طرح پرو", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(modifier = Modifier.height(2.dp))
-                        Text("یک‌ساله", fontSize = 10.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("یک‌ساله", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.height(6.dp))
-                        Text("رایگان با کد هدیه", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = StudentOsColors.EmeraldNeon)
+                        Text("رایگان با کد هدیه", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = StudentOsColors.EmeraldNeon)
                     }
                 }
 
@@ -264,9 +213,9 @@ fun SubscriptionUpgradeDialog(
                     ) {
                         Text("طرح طلایی", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(modifier = Modifier.height(2.dp))
-                        Text("دائمی و نامحدود", fontSize = 10.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("دائمی و نامحدود", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.height(6.dp))
-                        Text("دانشجوی برتر", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = StudentOsColors.AmberGlow)
+                        Text("دانشجوی برتر", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = StudentOsColors.AmberGlow)
                     }
                 }
             }
@@ -280,7 +229,7 @@ fun SubscriptionUpgradeDialog(
                 OutlinedTextField(
                     value = promoCode,
                     onValueChange = { promoCode = it },
-                    label = { Text("کد هدیه یا معرف (مثلاً DANESHJOO)", fontSize = 11.sp) },
+                    label = { Text("کد هدیه یا معرف (مثلاً DANESHJOO)", fontSize = 14.sp) },
                     leadingIcon = { Icon(Icons.Rounded.CardGiftcard, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.weight(1f),
                     singleLine = true,

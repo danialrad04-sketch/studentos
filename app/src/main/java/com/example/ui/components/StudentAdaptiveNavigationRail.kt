@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -15,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -22,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.ui.models.AppTab
 import com.example.ui.theme.StudentSpacing
@@ -35,7 +39,8 @@ import com.example.ui.theme.StudentSpacing
 fun StudentAdaptiveNavigationRail(
     selectedTab: AppTab,
     onTabSelected: (AppTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenMore: (() -> Unit)? = null
 ) {
     var showAllModulesSheet by remember { mutableStateOf(false) }
 
@@ -47,9 +52,14 @@ fun StudentAdaptiveNavigationRail(
         AppTab.COPILOT to Icons.Default.SmartToy
     )
     val isSecondaryTab = destinations.none { it.first == selectedTab }
+    val itemColors = NavigationRailItemDefaults.colors(
+        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+        selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        selectedTextColor = MaterialTheme.colorScheme.primary
+    )
 
     NavigationRail(
-        modifier = modifier.fillMaxHeight(),
+        modifier = modifier.fillMaxHeight().testTag("navigation_rail"),
         containerColor = MaterialTheme.colorScheme.surface,
         header = {
             Text(
@@ -59,9 +69,10 @@ fun StudentAdaptiveNavigationRail(
             )
         }
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(StudentSpacing.Xs)) {
+        Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(StudentSpacing.Xs)) {
             destinations.forEach { (tab, icon) ->
                 NavigationRailItem(
+                    colors = itemColors,
                     selected = selectedTab == tab,
                     onClick = { onTabSelected(tab) },
                     icon = { Icon(icon, contentDescription = tab.title) },
@@ -70,8 +81,10 @@ fun StudentAdaptiveNavigationRail(
             }
 
             NavigationRailItem(
+                colors = itemColors,
+                modifier = Modifier.testTag("rail_more"),
                 selected = isSecondaryTab,
-                onClick = { showAllModulesSheet = true },
+                onClick = { onOpenMore?.invoke() ?: run { showAllModulesSheet = true } },
                 icon = { Icon(Icons.Default.MoreHoriz, contentDescription = "بیشتر") },
                 label = { Text("بیشتر") }
             )

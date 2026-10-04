@@ -134,7 +134,7 @@ fun AddEditCourseDialog(
     var courseCode by remember { mutableStateOf(initialCourse?.courseCode ?: "") }
     var professor by remember { mutableStateOf(initialCourse?.professor ?: "") }
     var units by remember { mutableIntStateOf(initialCourse?.units ?: 3) }
-    var selectedColorHex by remember { mutableStateOf(initialCourse?.colorHex ?: "#0D9488") }
+    var selectedColorHex by remember { mutableStateOf(initialCourse?.colorHex ?: "#59652F") }
     var examDate by remember { mutableStateOf(initialCourse?.examDate ?: "") }
     var examTime by remember { mutableStateOf(initialCourse?.examTime ?: "09:00") }
     var examLocation by remember { mutableStateOf(initialCourse?.examLocation ?: "") }
@@ -179,68 +179,16 @@ fun AddEditCourseDialog(
     )
 
     StudentGlassModalSheet(
+        title = if (initialCourse == null) "افزودن درس" else "ویرایش درس",
+        subtitle = "مشخصات درس و جلسه‌های هفتگی",
         onDismiss = onDismiss,
         maxWidth = 580.dp,
         maxHeightPercent = 0.88f
     ) {
-        // ── Sticky Header ─────────────────────────────────────────
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(activeColor.copy(alpha = 0.16f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.School,
-                        contentDescription = null,
-                        tint = activeColor,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Column {
-                    Text(
-                        text = if (initialCourse == null) "افزودن درس جدید" else "ویرایش مشخصات درس",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    val primarySession = sessionsList.firstOrNull()
-                    val sessionSummary = if (primarySession != null) {
-                        "${DAY_LABELS.getOrElse(primarySession.day) { "شنبه" }} • ${primarySession.start} تا ${primarySession.end}"
-                    } else ""
-                    Text(
-                        text = "$sessionSummary • $units واحد${if (sessionsList.size > 1) " • ${sessionsList.size} جلسه در هفته" else ""}",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
 
-            IconButton(
-                onClick = onDismiss,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "بستن",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
+        // ── Sticky Header ─────────────────────────────────────────
+
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -270,7 +218,7 @@ fun AddEditCourseDialog(
                 ) {
                     Text(
                         text = "مشخصات و جلسات هفتگی",
-                        fontSize = 11.5.sp,
+                        fontSize = 14.sp,
                         fontWeight = if (tab0Selected) FontWeight.Bold else FontWeight.Medium,
                         color = if (tab0Selected) activeColor else MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -295,7 +243,7 @@ fun AddEditCourseDialog(
                     ) {
                         Text(
                             text = "استاد، آزمون و جزئیات",
-                            fontSize = 11.5.sp,
+                            fontSize = 14.sp,
                             fontWeight = if (tab1Selected) FontWeight.Bold else FontWeight.Medium,
                             color = if (tab1Selected) activeColor else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -344,13 +292,13 @@ fun AddEditCourseDialog(
                     ) {
                         Text(
                             text = "پیشنهاد عنوان‌های پرتکرار",
-                            fontSize = 11.sp,
+                            fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         TextButton(onClick = { showQuickPresets = !showQuickPresets }) {
                             Text(
                                 text = if (showQuickPresets) "بستن لیست" else "مشاهده لیست",
-                                fontSize = 11.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = activeColor
                             )
@@ -394,7 +342,7 @@ fun AddEditCourseDialog(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp), tint = activeColor)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("+ افزودن جلسه هفتگی دیگر", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = activeColor)
+                            Text("+ افزودن جلسه هفتگی دیگر", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = activeColor)
                         }
                     }
 
@@ -416,7 +364,7 @@ fun AddEditCourseDialog(
                                 ) {
                                     Text(
                                         text = if (sIndex == 0) "جلسه اول (اصلی)" else "جلسه ${sIndex + 1} (حل‌تمرین / جلسه دوم)",
-                                        fontSize = 11.5.sp,
+                                        fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = activeColor
                                     )
@@ -462,7 +410,7 @@ fun AddEditCourseDialog(
                                             ) {
                                                 Text(
                                                     text = dLabel,
-                                                    fontSize = 10.5.sp,
+                                                    fontSize = 14.sp,
                                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                                     color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
@@ -590,7 +538,7 @@ fun AddEditCourseDialog(
                         FormSectionLabel(Icons.Default.Palette, "رنگ شاخص درس", activeColor)
                         Text(
                             text = PALETTE_COLORS.firstOrNull { it.first.equals(selectedColorHex, true) }?.second ?: "",
-                            fontSize = 11.sp,
+                            fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -750,7 +698,7 @@ fun AddEditCourseDialog(
                 ) {
                     Icon(Icons.Default.DeleteOutline, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("حذف درس", fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold)
+                    Text("حذف درس", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 }
             } else {
                 Spacer(modifier = Modifier.width(4.dp))
@@ -758,11 +706,11 @@ fun AddEditCourseDialog(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(
-                    onClick = onDismiss,
+                    onClick = dismissModal,
                     shape = ButtonShape,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                 ) {
-                    Text("انصراف", fontSize = 11.5.sp)
+                    Text("انصراف", fontSize = 14.sp)
                 }
 
                 Button(
@@ -812,7 +760,7 @@ fun AddEditCourseDialog(
                             initialCourse == null -> "ثبت درس"
                             else -> "ذخیره تغییرات"
                         },
-                        fontSize = 11.5.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -861,12 +809,12 @@ fun AddEditCourseDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.studentColors.attendanceCritical),
                     shape = ButtonShape
                 ) {
-                    Text("بله، حذف کن", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                    Text("بله، حذف کن", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("انصراف", fontSize = 11.5.sp)
+                    Text("انصراف", fontSize = 14.sp)
                 }
             },
             shape = RoundedCornerShape(20.dp)
@@ -882,7 +830,7 @@ private fun FormSectionLabel(icon: ImageVector, text: String, tint: Color) {
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = text,
-            fontSize = 11.5.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -905,7 +853,7 @@ private fun SelectableChip(
     ) {
         Text(
             text = text,
-            fontSize = 11.sp,
+            fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
             color = if (selected) activeColor else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp)

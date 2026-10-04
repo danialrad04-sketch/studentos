@@ -1,5 +1,7 @@
 package com.example.ui.components.datepicker
 
+import com.example.ui.components.LocalStudentModalDismiss
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -62,7 +64,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
+import com.example.ui.components.StudentDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.ui.theme.BrandIndigo600
 import com.example.ui.theme.BrandIndigo900
@@ -113,6 +115,8 @@ fun JalaliDatePickerDialog(
         onDismissRequest = onDismissRequest,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
+        val dismissWindow = LocalStudentModalDismiss.current ?: onDismissRequest
+
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             Surface(
                 modifier = Modifier
@@ -343,7 +347,7 @@ fun JalaliDatePickerDialog(
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             OutlinedButton(
-                                onClick = onDismissRequest,
+                                onClick = dismissWindow,
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Text("انصراف", fontSize = 12.sp)
@@ -352,7 +356,7 @@ fun JalaliDatePickerDialog(
                             Button(
                                 onClick = {
                                     onDateSelected(selectedJalaliDate.format())
-                                    onDismissRequest()
+                                    dismissWindow()
                                 },
                                 shape = RoundedCornerShape(12.dp)
                             ) {

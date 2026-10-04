@@ -122,9 +122,13 @@ fun SemesterTransitionDialog(
     }
 
     StudentGlassModalSheet(
+        title = "شروع نیم‌سال جدید",
+        subtitle = "ثبت سوابق و آماده‌سازی ترم بعد",
         onDismiss = onDismiss,
         maxWidth = 640.dp
     ) {
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
+
         Column(
             modifier = modifier
                 .fillMaxWidth()
@@ -132,41 +136,7 @@ fun SemesterTransitionDialog(
                 .testTag("semester_transition_dialog")
         ) {
             // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "بستن فرآیند انتقال ترم")
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "فرآیند آغاز و انتقال ترم تحصیلی",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "مرحله $step از ۴",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Default.School,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
+
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -251,7 +221,7 @@ fun SemesterTransitionDialog(
                         Text("مرحله قبل")
                     }
                 } else {
-                    TextButton(onClick = onDismiss) {
+                    TextButton(onClick = dismissModal) {
                         Text("انصراف")
                     }
                 }
@@ -274,7 +244,7 @@ fun SemesterTransitionDialog(
                         onClick = {
                             val termNum = newTermNumberStr.toIntOrNull() ?: nextTermNum
                             onExecuteTransition(newTermTitle, newAcademicYear, termNum, newCourses.toList())
-                            onDismiss()
+                            dismissModal()
                         },
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Emerald600),

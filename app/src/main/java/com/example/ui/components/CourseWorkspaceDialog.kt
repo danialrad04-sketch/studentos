@@ -89,7 +89,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.datepicker.JalaliDatePickerField
-import androidx.compose.ui.window.Dialog
+import com.example.ui.components.StudentDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.local.entity.AttendanceEntity
 import com.example.data.local.entity.CourseEntity
@@ -157,6 +157,8 @@ fun CourseWorkspaceDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
+        val dismissWindow = LocalStudentModalDismiss.current ?: onDismiss
+
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
@@ -277,7 +279,7 @@ fun CourseWorkspaceDialog(
                         }
 
                         IconButton(
-                            onClick = onDismiss,
+                            onClick = dismissWindow,
                             modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
@@ -1015,7 +1017,7 @@ fun CourseWorkspaceDialog(
                         Button(
                             onClick = {
                                 onStartFocus()
-                                onDismiss()
+                                dismissWindow()
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1058,7 +1060,7 @@ fun CourseWorkspaceDialog(
                         Spacer(modifier = Modifier.width(1.dp))
                     }
 
-                    TextButton(onClick = onDismiss) {
+                    TextButton(onClick = dismissWindow) {
                         Text(text = "بستن کارپوشه", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
@@ -1102,7 +1104,7 @@ fun CourseWorkspaceDialog(
                     onClick = {
                         showDeleteConfirm = false
                         onDeleteCourse(course.id)
-                        onDismiss()
+                        dismissWindow()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.studentColors.attendanceCritical),
                     shape = RoundedCornerShape(10.dp)

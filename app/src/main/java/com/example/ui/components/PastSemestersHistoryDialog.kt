@@ -132,53 +132,19 @@ fun PastSemestersHistoryDialog(
     var overallDirectGpa by remember { mutableStateOf(String.format(Locale.US, "%.2f", profile.declaredGpa ?: 16.5)) }
 
     StudentGlassModalSheet(
+        title = "سوابق نیم‌سال‌ها",
+        subtitle = "مرور نتیجه و پیشرفت ترم‌های گذشته",
         onDismiss = onDismiss,
         maxWidth = 600.dp
     ) {
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
+
         Column(
             modifier = modifier
                 .fillMaxWidth()
         ) {
             // Top bar
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(BrandIndigo600.copy(alpha = 0.12f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.History,
-                                contentDescription = null,
-                                tint = BrandIndigo600,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = "تنظیم ترم و سوابق گذشته",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "پشتیبانی از دانشجویان ترم ۱ تا ۸ و ورودی‌های مختلف",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
 
-                    IconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "بستن پنجره سوابق تحصیلی")
-                    }
-                }
 
                 Spacer(modifier = Modifier.height(14.dp))
 
@@ -425,7 +391,7 @@ fun PastSemestersHistoryDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onDismiss) {
+                    TextButton(onClick = dismissModal) {
                         Text("انصراف", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
 

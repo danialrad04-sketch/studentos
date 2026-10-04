@@ -54,66 +54,19 @@ fun NotificationDialog(
     onClearAll: () -> Unit
 ) {
     StudentGlassModalSheet(
+        title = "اعلان‌ها",
+        subtitle = "کلاس‌ها، موعدها و یادآورها",
         onDismiss = onDismiss,
         maxWidth = 540.dp
     ) {
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
+
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(StudentOsColors.AmberGlow.copy(alpha = 0.16f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.NotificationsActive,
-                            contentDescription = null,
-                            tint = StudentOsColors.AmberGlow,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
 
-                    Column {
-                        Text(
-                            text = "مرکز اعلان‌ها و هشدارها",
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 15.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "پایش هوشمند کلاس‌ها، ددلاین‌ها و سقف غیبت",
-                            fontSize = 10.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = StudentOsColors.AmberGlow.copy(alpha = 0.14f)
-                ) {
-                    Text(
-                        text = "${notifications.size} پیام",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = StudentOsColors.AmberGlow,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                    )
-                }
-            }
 
             // Notification Items List
             if (notifications.isEmpty()) {
@@ -200,14 +153,14 @@ fun NotificationDialog(
                                         )
                                         Text(
                                             text = notif.time,
-                                            fontSize = 10.sp,
+                                            fontSize = 14.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(3.dp))
                                     Text(
                                         text = notif.description,
-                                        fontSize = 11.sp,
+                                        fontSize = 14.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         lineHeight = 16.sp,
                                         maxLines = 3,
@@ -228,7 +181,7 @@ fun NotificationDialog(
             ) {
                 Text(
                     text = "📱 ارسال اعلان آزمایشی به نوار وضعیت گوشی",
-                    fontSize = 11.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -246,7 +199,7 @@ fun NotificationDialog(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "تست صدا", fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                    Text(text = "تست صدا", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -261,11 +214,11 @@ fun NotificationDialog(
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = "پاکسازی", fontSize = 11.5.sp)
+                            Text(text = "پاکسازی", fontSize = 14.sp)
                         }
                     }
                     Button(
-                        onClick = onDismiss,
+                        onClick = dismissModal,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.ElectricBlue)
                     ) {

@@ -60,7 +60,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
+import com.example.ui.components.StudentDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.local.entity.AttendanceEntity
 import com.example.data.local.entity.CourseEntity
@@ -112,6 +112,8 @@ fun CourseWorkspaceDialogV2(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
+        val dismissWindow = LocalStudentModalDismiss.current ?: onDismiss
+
         Surface(
             modifier = modifier
                 .fillMaxSize()
@@ -164,7 +166,7 @@ fun CourseWorkspaceDialogV2(
                             )
                         }
                     }
-                    IconButton(onClick = onDismiss, modifier = Modifier.minimumInteractiveComponentSize()) {
+                    IconButton(onClick = dismissWindow, modifier = Modifier.minimumInteractiveComponentSize()) {
                         Icon(Icons.Default.ArrowBack, "بستن")
                     }
                 }

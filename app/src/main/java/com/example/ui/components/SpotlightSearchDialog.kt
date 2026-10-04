@@ -121,67 +121,20 @@ fun SpotlightSearchDialog(
     }
 
     StudentGlassModalSheet(
+        title = "جست‌وجوی سریع",
+        subtitle = "درس، تکلیف یا یادداشت را پیدا کن",
         onDismiss = onDismiss,
         maxWidth = 620.dp
     ) {
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
+
         Column(
             modifier = modifier
                 .fillMaxWidth()
                 .heightIn(max = 600.dp)
         ) {
             // Top Header Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Surface(
-                            shape = StudentShapeTokens.Compact,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                        Column {
-                            Text(
-                                text = "جستجوی اسپات‌لایت سراسری",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "جستجو میان دروس، چارت سرفصل‌ها، تکالیف، امتحانات و فرمول‌ها",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
 
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "بستن جستجو",
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
 
                 Spacer(modifier = Modifier.height(14.dp))
 
@@ -264,7 +217,7 @@ fun SpotlightSearchDialog(
                             Button(
                                 onClick = {
                                     onExecuteCommand(resolvedCommand)
-                                    onDismiss()
+                                    dismissModal()
                                 },
                                 modifier = Modifier.heightIn(min = 48.dp),
                                 shape = StudentShapeTokens.Compact
@@ -387,19 +340,19 @@ fun SpotlightSearchDialog(
                                     when (result) {
                                         is GlobalSearchResult.CourseItem -> {
                                             onSelectCourse(result.courseId)
-                                            onDismiss()
+                                            dismissModal()
                                         }
                                         is GlobalSearchResult.TaskItem -> {
                                             onNavigateToTasks()
-                                            onDismiss()
+                                            dismissModal()
                                         }
                                         is GlobalSearchResult.ExamItem -> {
                                             onNavigateToExams()
-                                            onDismiss()
+                                            dismissModal()
                                         }
                                         is GlobalSearchResult.NoteFormulaItem -> {
                                             onNavigateToNotes()
-                                            onDismiss()
+                                            dismissModal()
                                         }
                                     }
                                 }
