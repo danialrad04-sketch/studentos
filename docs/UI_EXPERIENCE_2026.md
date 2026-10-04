@@ -28,7 +28,7 @@ Implementation review: 2026-10-04. Brand direction is the user's latest olive ac
 
 ## Verification
 
-New Robolectric tests cover compact light/dark settings, 150% text, radio semantics, destructive confirmation, actual build identity, guest reuse, sync failure/retry, task validation/current date, a short window, profile/course forms, drawer destinations and tablet rail. Images are written to build output, not to existing golden references. Device instrumentation additionally exercises settings return and task save with an open keyboard. Existing navigation, domain/data, backend, lint and release identity/signing/16KB gates also run.
+New Robolectric tests cover compact light/dark settings, 150% text, radio semantics, destructive confirmation, actual build identity, guest reuse, successful sign-in return, sync failure/retry, task validation/current date, a short window, profile/course forms, drawer destinations and tablet rail. The short landscape rail scrolls so More remains reachable, and its module hub is rendered in that window. Images are written to build output, not to existing golden references. Device instrumentation additionally exercises settings return and task save with an open keyboard. Existing navigation, domain/data, backend, lint and release identity/signing/16KB gates also run.
 
 Local Gradle execution is blocked by this execution environment's network access to the Gradle distribution. GitHub Android CI is the build/test authority. CI results and screenshots must be reviewed before merge.
 

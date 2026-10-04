@@ -179,7 +179,7 @@ fun BackupRestoreDialog(
                             .fillMaxWidth()
                             .heightIn(min = 48.dp),
                         shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary, contentColor = MaterialTheme.colorScheme.onSecondary)
                     ) {
                         Icon(Icons.Rounded.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
@@ -215,13 +215,13 @@ fun BackupRestoreDialog(
                             },
                             enabled = !isCloudRestoring && !isRestoring,
                             shape = StudentShapeTokens.Compact,
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary, contentColor = MaterialTheme.colorScheme.onSecondary),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 48.dp)
                         ) {
                             if (isCloudRestoring) {
-                                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White)
+                                CircularProgressIndicator(modifier = Modifier.size(18.dp), color = MaterialTheme.colorScheme.onSecondary)
                             } else {
                                 Icon(Icons.Rounded.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -300,7 +300,7 @@ fun BackupRestoreDialog(
                             .heightIn(min = 48.dp)
                     ) {
                         if (isRestoring) {
-                            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White)
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), color = MaterialTheme.colorScheme.onPrimary)
                         } else {
                             Icon(Icons.Rounded.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))

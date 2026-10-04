@@ -188,4 +188,12 @@ class SettingsExperienceTest {
         rule.onNodeWithTag("rail_more").assertHasClickAction()
         rule.onRoot().captureRoboImage("build/outputs/visual-review/tablet-navigation.png")
     }
+    @Test @Config(qualifiers = "w840dp-h360dp-xxhdpi", sdk = [35])
+    fun shortLandscapeRailKeepsModuleHubReachable() {
+        rule.setContent { StudentOsTheme(darkTheme = false) { StudentAppScaffold(AppTab.DASHBOARD, {}) { Text("محتوای صفحه") } } }
+        rule.onNodeWithTag("rail_more").performScrollTo().assertIsDisplayed()
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/landscape-navigation.png")
+        rule.onNodeWithTag("rail_more").performClick()
+        rule.onNodeWithTag("student_modal").assertIsDisplayed().captureRoboImage("build/outputs/visual-review/landscape-module-hub.png")
+    }
 }
