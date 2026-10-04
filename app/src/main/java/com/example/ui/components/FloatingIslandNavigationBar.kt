@@ -32,7 +32,8 @@ private data class NavItem(
 fun FloatingIslandNavigationBar(
     selectedTab: AppTab,
     onTabSelected: (AppTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenMore: (() -> Unit)? = null
 ) {
     var showAllModulesSheet by remember { mutableStateOf(false) }
     val items = remember {
@@ -57,7 +58,7 @@ fun FloatingIslandNavigationBar(
             NavigationBarItem(
                 selected = selected,
                 onClick = {
-                    item.tab?.let(onTabSelected) ?: run { showAllModulesSheet = true }
+                    item.tab?.let(onTabSelected) ?: run { onOpenMore?.invoke() ?: run { showAllModulesSheet = true } }
                 },
                 icon = {
                     Icon(if (selected) item.selectedIcon else item.outlineIcon, contentDescription = null, modifier = Modifier.size(23.dp))

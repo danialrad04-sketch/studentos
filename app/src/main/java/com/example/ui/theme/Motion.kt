@@ -1,8 +1,11 @@
 package com.example.ui.theme
 
 import android.provider.Settings
+import android.database.ContentObserver
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 
 /**
@@ -17,13 +20,20 @@ fun shouldReduceMotion(animatorDurationScale: Float): Boolean =
 @Composable
 fun rememberReducedMotion(): Boolean {
     val context = LocalContext.current
-    return remember {
-        runCatching {
+    fun readScale(): Float = runCatching {
             Settings.Global.getFloat(
                 context.contentResolver,
                 Settings.Global.ANIMATOR_DURATION_SCALE,
                 1f
             )
         }.getOrDefault(1f)
-    }.let(::shouldReduceMotion)
+    var scale by remember(context) { mutableFloatStateOf(readScale()) }
+    DisposableEffect(context) {
+        val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) { scale = readScale() }
+        }
+        context.contentResolver.registerContentObserver(Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE), false, observer)
+        onDispose { context.contentResolver.unregisterContentObserver(observer) }
+    }
+    return shouldReduceMotion(scale)
 }

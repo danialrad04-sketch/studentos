@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -50,9 +51,13 @@ fun AndroidApkDialog(
     var selectedTab by remember { mutableIntStateOf(1) } // Default to Bazaar guide
 
     StudentGlassModalSheet(
+        title = "اطلاعات برنامه",
+        subtitle = "نسخه و راهنمای فایل نصب",
         onDismiss = onDismiss,
         maxWidth = 580.dp
     ) {
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -60,39 +65,7 @@ fun AndroidApkDialog(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Header
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(StudentOsColors.EmeraldNeon.copy(alpha = 0.16f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Storefront,
-                        contentDescription = null,
-                        tint = StudentOsColors.EmeraldNeon,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                Column {
-                    Text(
-                        text = "انتشار رسمی در کافه بازار و مارکت‌ها",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "راهنمای رفع خطای امضای دیباگ و تولید Release Key",
-                        fontSize = 10.5.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+
 
             TabRow(
                 selectedTabIndex = selectedTab,
@@ -102,12 +75,12 @@ fun AndroidApkDialog(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("مشخصات نسخه", fontSize = 11.5.sp, fontWeight = FontWeight.Bold) }
+                    text = { Text("مشخصات نسخه", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("حل خطای کافه بازار", fontSize = 11.5.sp, fontWeight = FontWeight.Bold) }
+                    text = { Text("حل خطای کافه بازار", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                 )
             }
 
@@ -157,7 +130,7 @@ fun AndroidApkDialog(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "فایل base.apk خروجی تست/دیباگ بوده و با کلید پیش‌فرض تست اندروید امضا شده است. کافه بازار و تمام مارکت‌ها برای امنیت، فقط بسته‌های امضاشده با کلید اختصاصی انتشار (Release Keystore) را می‌پذیرند.",
-                            fontSize = 11.sp,
+                            fontSize = 14.sp,
                             lineHeight = 16.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -188,7 +161,7 @@ fun AndroidApkDialog(
                         StepHeader("روش امضا با ترمینال / keytool:")
                         Text(
                             text = "keytool -genkey -v -keystore release.jks -alias studentos -keyalg RSA -keysize 2048 -validity 10000",
-                            fontSize = 9.5.sp,
+                            fontSize = 14.sp,
                             fontFamily = FontFamily.Monospace,
                             color = StudentOsColors.ElectricBlue,
                             modifier = Modifier
@@ -198,7 +171,7 @@ fun AndroidApkDialog(
                         )
                         Text(
                             text = "apksigner sign --ks release.jks --out app-release.apk base.apk",
-                            fontSize = 9.5.sp,
+                            fontSize = 14.sp,
                             fontFamily = FontFamily.Monospace,
                             color = StudentOsColors.ElectricBlue,
                             modifier = Modifier
@@ -217,10 +190,10 @@ fun AndroidApkDialog(
                 horizontalArrangement = Arrangement.End
             ) {
                 Button(
-                    onClick = onDismiss,
+                    onClick = dismissModal,
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.ElectricBlue),
-                    modifier = Modifier.height(44.dp)
+                    modifier = Modifier.heightIn(min = 48.dp)
                 ) {
                     Text("متوجه شدم", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
@@ -241,7 +214,7 @@ private fun StepHeader(title: String) {
         Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = title,
-            fontSize = 11.5.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -252,7 +225,7 @@ private fun StepHeader(title: String) {
 private fun StepItem(text: String) {
     Text(
         text = text,
-        fontSize = 10.5.sp,
+        fontSize = 14.sp,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         lineHeight = 15.sp,
         modifier = Modifier.padding(start = 6.dp)
@@ -266,8 +239,8 @@ private fun SpecRow(label: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(text = value, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+        Text(text = label, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = value, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 
@@ -281,6 +254,6 @@ private fun FeatureRow(text: String) {
             modifier = Modifier.size(16.dp)
         )
         Spacer(modifier = Modifier.width(6.dp))
-        Text(text = text, fontSize = 11.5.sp, color = MaterialTheme.colorScheme.onSurface)
+        Text(text = text, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
     }
 }

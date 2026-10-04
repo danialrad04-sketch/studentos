@@ -35,7 +35,8 @@ import com.example.ui.theme.StudentSpacing
 fun StudentAdaptiveNavigationRail(
     selectedTab: AppTab,
     onTabSelected: (AppTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOpenMore: (() -> Unit)? = null
 ) {
     var showAllModulesSheet by remember { mutableStateOf(false) }
 
@@ -71,7 +72,7 @@ fun StudentAdaptiveNavigationRail(
 
             NavigationRailItem(
                 selected = isSecondaryTab,
-                onClick = { showAllModulesSheet = true },
+                onClick = { onOpenMore?.invoke() ?: run { showAllModulesSheet = true } },
                 icon = { Icon(Icons.Default.MoreHoriz, contentDescription = "بیشتر") },
                 label = { Text("بیشتر") }
             )

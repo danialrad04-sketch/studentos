@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -93,9 +94,13 @@ fun BackupRestoreDialog(
     }
 
     StudentGlassModalSheet(
+        title = "پشتیبان و بازیابی",
+        subtitle = "یک نسخه از اطلاعاتت نگه دار",
         onDismiss = onDismiss,
         maxWidth = 580.dp
     ) {
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -103,39 +108,7 @@ fun BackupRestoreDialog(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Header
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(StudentShapeTokens.Compact)
-                        .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.16f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Security,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                Column {
-                    Text(
-                        text = "پشتیبان‌گیری و بازیابی داده‌ها",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "محافظت کامل از سوابق تحصیلی و جدول دروس",
-                        fontSize = 10.5.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+
 
             TabRow(
                 selectedTabIndex = selectedTab,
@@ -145,12 +118,12 @@ fun BackupRestoreDialog(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("پشتیبان‌گیری (Export)", fontSize = 11.5.sp, fontWeight = FontWeight.Bold) }
+                    text = { Text("پشتیبان‌گیری (Export)", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("بازیابی (Restore)", fontSize = 11.5.sp, fontWeight = FontWeight.Bold) }
+                    text = { Text("بازیابی (Restore)", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                 )
             }
 
@@ -171,7 +144,7 @@ fun BackupRestoreDialog(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             "شامل تمام ترم‌ها، دروس، نمرات، سوابق تحصیلی، تکالیف و تقویم امتحانات به صورت فایل ساخت‌یافته استاندارد.",
-                            fontSize = 11.sp,
+                            fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 16.sp
                         )
@@ -187,12 +160,12 @@ fun BackupRestoreDialog(
                         value = exportedJsonText,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("متن نسخه پشتیبان (JSON)", fontSize = 11.sp) },
+                        label = { Text("متن نسخه پشتیبان (JSON)", fontSize = 14.sp) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(130.dp),
                         shape = RoundedCornerShape(14.dp),
-                        textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, fontSize = 10.sp)
+                        textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, fontSize = 14.sp)
                     )
 
                     Button(
@@ -204,7 +177,7 @@ fun BackupRestoreDialog(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(46.dp),
+                            .heightIn(min = 48.dp),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                     ) {
@@ -231,7 +204,7 @@ fun BackupRestoreDialog(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             "در صورت داشتن حساب کاربری، می‌توانید تمامی اطلاعات و دروس ذخیره‌شده را مستقیماً از فضای ابری بازگردانی کنید.",
-                            fontSize = 11.sp,
+                            fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(10.dp))
@@ -245,7 +218,7 @@ fun BackupRestoreDialog(
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(44.dp)
+                                .heightIn(min = 48.dp)
                         ) {
                             if (isCloudRestoring) {
                                 CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White)
@@ -271,7 +244,7 @@ fun BackupRestoreDialog(
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             "متن پشتیبان قبلی را در کادر زیر جای‌گذاری کنید تا تمامی دروس و نمرات فوراً بازگردانی شوند.",
-                            fontSize = 11.sp,
+                            fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -280,13 +253,13 @@ fun BackupRestoreDialog(
                 OutlinedTextField(
                     value = jsonInputToRestore,
                     onValueChange = { jsonInputToRestore = it },
-                    label = { Text("محتوای فایل JSON پشتیبان", fontSize = 11.sp) },
-                    placeholder = { Text("{\"version\":1, \"profile\": ...}", fontSize = 10.sp) },
+                    label = { Text("محتوای فایل JSON پشتیبان", fontSize = 14.sp) },
+                    placeholder = { Text("{\"version\":1, \"profile\": ...}", fontSize = 14.sp) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(130.dp),
                     shape = RoundedCornerShape(14.dp),
-                    textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, fontSize = 10.sp)
+                    textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, fontSize = 14.sp)
                 )
 
                 Row(
@@ -305,11 +278,11 @@ fun BackupRestoreDialog(
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier
                             .weight(1f)
-                            .height(46.dp)
+                            .heightIn(min = 48.dp)
                     ) {
                         Icon(Icons.Rounded.ContentPaste, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("جای‌گذاری", fontSize = 11.5.sp)
+                        Text("جای‌گذاری", fontSize = 14.sp)
                     }
 
                     Button(
@@ -324,7 +297,7 @@ fun BackupRestoreDialog(
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier
                             .weight(1.3f)
-                            .height(46.dp)
+                            .heightIn(min = 48.dp)
                     ) {
                         if (isRestoring) {
                             CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White)
@@ -340,7 +313,7 @@ fun BackupRestoreDialog(
                     Text(
                         text = msg,
                         color = MaterialTheme.colorScheme.primary,
-                        fontSize = 11.5.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -370,7 +343,7 @@ fun BackupRestoreDialog(
                                             restoreStatusMessage = msg
                                             if (success) {
                                                 Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                                                onDismiss()
+                                                dismissModal()
                                             }
                                         }
                                     }
@@ -381,7 +354,7 @@ fun BackupRestoreDialog(
                                             restoreStatusMessage = msg
                                             if (success) {
                                                 Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                                                onDismiss()
+                                                dismissModal()
                                             }
                                         }
                                     }
@@ -408,7 +381,7 @@ fun BackupRestoreDialog(
                 horizontalArrangement = Arrangement.End
             ) {
                 OutlinedButton(
-                    onClick = onDismiss,
+                    onClick = dismissModal,
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.height(42.dp)
                 ) {

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.AccountCircle
@@ -82,6 +83,7 @@ fun HeaderSection(
     onOpenSettingsAndRoadmap: () -> Unit = {},
     onLoadDemoData: () -> Unit = {},
     onClearToFreshSlate: () -> Unit = {},
+    onOpenMenu: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -101,6 +103,11 @@ fun HeaderSection(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (onOpenMenu != null) {
+            IconButton(onClick = onOpenMenu) {
+                Icon(Icons.Default.Menu, contentDescription = "باز کردن منوی برنامه")
+            }
+        }
         // Left Actions: Bell + Leaf (Theme) buttons
         Row(
             verticalAlignment = Alignment.CenterVertically,

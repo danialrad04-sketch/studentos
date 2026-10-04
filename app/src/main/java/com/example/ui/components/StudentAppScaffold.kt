@@ -13,17 +13,24 @@ fun StudentAppScaffold(
     onTabSelected: (AppTab) -> Unit,
     modifier: Modifier = Modifier,
     snackbarHost: @Composable () -> Unit = {},
+    onOpenMore: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
+    BoxWithConstraints(modifier.fillMaxSize()) {
+    val useRail = maxWidth >= androidx.compose.ui.unit.Dp(600f)
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = snackbarHost,
-        bottomBar = { FloatingIslandNavigationBar(selectedTab, onTabSelected) }
+        bottomBar = { if (!useRail) FloatingIslandNavigationBar(selectedTab, onTabSelected, onOpenMore = onOpenMore) }
     ) { insets ->
+        Row(Modifier.fillMaxSize().padding(insets).consumeWindowInsets(insets)) {
+        if (useRail) StudentAdaptiveNavigationRail(selectedTab, onTabSelected, onOpenMore = onOpenMore)
         Box(
-            Modifier.fillMaxSize().padding(insets).consumeWindowInsets(insets),
+            Modifier.weight(1f).fillMaxHeight(),
             content = content
         )
+        }
+    }
     }
 }

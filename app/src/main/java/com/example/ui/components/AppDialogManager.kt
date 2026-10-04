@@ -5,7 +5,8 @@ import android.widget.Toast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import com.example.ui.theme.MyApplicationTheme
@@ -48,7 +49,22 @@ fun AppDialogManager(
     onSendDeviceTestNotif: () -> Unit,
     onRequestNotificationPermission: () -> Unit = {}
 ) {
-    val dismiss = { onUpdateDialogState(AppDialogState.None) }
+    var parents by remember { mutableStateOf<List<AppDialogState>>(emptyList()) }
+    var settingsSection by rememberSaveable { mutableStateOf("home") }
+    LaunchedEffect(dialogState) {
+        if (dialogState == AppDialogState.None) { parents = emptyList(); settingsSection = "home" }
+    }
+    val dismiss = {
+        val parent = parents.lastOrNull() ?: AppDialogState.None
+        parents = parents.dropLast(1)
+        onUpdateDialogState(parent)
+    }
+    fun openChild(state: AppDialogState) {
+        parents = parents + dialogState
+        onUpdateDialogState(state)
+    }
+    fun closeAll() { parents = emptyList(); onUpdateDialogState(AppDialogState.None) }
+
 
     val systemDark = isSystemInDarkTheme()
     val isDark = when (themeMode) {
@@ -63,16 +79,18 @@ fun AppDialogManager(
         is AppDialogState.SettingsAndRoadmap -> {
             SettingsAndRoadmapDialog(
                 profile = profile,
+                initialSection = settingsSection,
+                onSectionChanged = { settingsSection = it },
                 themeMode = themeMode,
                 onSelectThemeMode = { studentViewModel.setThemeMode(it) },
                 notificationsEnabled = notificationsEnabled,
                 onToggleNotifications = { studentViewModel.setNotificationsEnabled(it) },
-                onOpenEditProfile = { onUpdateDialogState(AppDialogState.Profile) },
+                onOpenEditProfile = { openChild(AppDialogState.Profile) },
                 onDismiss = dismiss,
                 userAccount = userAccount,
-                onOpenAuth = { onUpdateDialogState(AppDialogState.Auth) },
-                onOpenUpgrade = { onUpdateDialogState(AppDialogState.Upgrade) },
-                onOpenBackupRestore = { onUpdateDialogState(AppDialogState.BackupRestore) },
+                onOpenAuth = { openChild(AppDialogState.Auth) },
+                onOpenUpgrade = { openChild(AppDialogState.Upgrade) },
+                onOpenBackupRestore = { openChild(AppDialogState.BackupRestore) },
                 onLoadDemoData = {
                     studentViewModel.loadDemoData()
                     dismiss()
@@ -88,14 +106,14 @@ fun AppDialogManager(
                     onOpenOnboardingWizard()
                 },
                 onOpenPastSemesters = {
-                    onUpdateDialogState(AppDialogState.PastSemesters)
+                    openChild(AppDialogState.PastSemesters)
                 },
                 onOpenApkInfo = {
-                    onUpdateDialogState(AppDialogState.ApkInfo)
+                    openChild(AppDialogState.ApkInfo)
                 },
                 onTestNotification = onSendDeviceTestNotif,
-                onOpenPrivacyPolicy = { onUpdateDialogState(AppDialogState.PrivacyPolicy) },
-                onOpenSupportTickets = { onUpdateDialogState(AppDialogState.SupportTickets) },
+                onOpenPrivacyPolicy = { openChild(AppDialogState.PrivacyPolicy) },
+                onOpenSupportTickets = { openChild(AppDialogState.SupportTickets) },
                 onDeleteAccount = {
                     studentViewModel.deleteUserAccount {
                         Toast.makeText(context, "حساب و داده‌ها حذف شدند.", Toast.LENGTH_SHORT).show()
@@ -107,65 +125,20 @@ fun AppDialogManager(
         is AppDialogState.Auth -> {
             AuthAccountDialog(
                 userAccount = userAccount,
-                onSignInEmail = { email, password ->
-                    studentViewModel.signInWithBackend(email, password) { ok, msg ->
-                        if (ok) {
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                            dismiss()
-                        } else {
-                            studentViewModel.signInWithEmail(email, password) { okFb, msgFb ->
-                                Toast.makeText(context, if (okFb) msgFb else msg, Toast.LENGTH_SHORT).show()
-                                if (okFb) dismiss()
-                            }
-                        }
-                    }
-                },
-                onSignUpEmail = { name, email, password ->
-                    studentViewModel.signUpWithBackend(name, email, password) { ok, msg ->
-                        if (ok) {
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                            dismiss()
-                        } else {
-                            studentViewModel.signUpWithEmail(name, email, password) { okFb, msgFb ->
-                                Toast.makeText(context, if (okFb) msgFb else msg, Toast.LENGTH_SHORT).show()
-                                if (okFb) dismiss()
-                            }
-                        }
-                    }
-                },
-                onGoogleSignIn = {
-                    studentViewModel.signInWithGoogle(activityContext = context) { ok, msg ->
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                        if (ok) dismiss()
-                    }
-                },
+                onSignInEmail = { email, password, result -> studentViewModel.signInWithEmail(email, password, result) },
+                onSignUpEmail = { name, email, password, result -> studentViewModel.signUpWithEmail(name, email, password, result) },
+                onGoogleSignIn = { result -> studentViewModel.signInWithGoogle(activityContext = context, onResult = result) },
                 onForgotPassword = { email ->
-                    if (email.isBlank() || !email.contains("@")) {
-                        Toast.makeText(context, "لطفاً ابتدا ایمیل معتبر خود را در کادر مربوطه وارد نمایید.", Toast.LENGTH_LONG).show()
-                    } else {
-                        studentViewModel.sendPasswordResetEmail(email) { ok, msg ->
-                            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                        }
-                    }
+                    studentViewModel.sendPasswordResetEmail(email) { _, message -> Toast.makeText(context, message, Toast.LENGTH_LONG).show() }
                 },
-                onSignOut = {
-                    studentViewModel.signOutUser()
-                    Toast.makeText(context, "از حساب کاربری خارج شدید.", Toast.LENGTH_SHORT).show()
-                },
-                onDeleteAccount = {
-                    studentViewModel.deleteUserAccount {
-                        Toast.makeText(context, "حساب و داده‌ها حذف شدند.", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                onOpenUpgrade = {
-                    onUpdateDialogState(AppDialogState.Upgrade)
-                },
-                onSyncNow = {
-                    studentViewModel.triggerManualCloudSync { _, _ -> }
-                    studentViewModel.syncWithBackendNow { ok, msg ->
-                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                    }
-                },
+                onSignOut = { studentViewModel.signOutUser(); closeAll() },
+                onDeleteAccount = { studentViewModel.deleteUserAccount { closeAll() } },
+                onOpenUpgrade = { openChild(AppDialogState.Upgrade) },
+                onOpenProfile = { openChild(AppDialogState.Profile) },
+                onOpenBackupRestore = { openChild(AppDialogState.BackupRestore) },
+                onOpenPrivacyPolicy = { openChild(AppDialogState.PrivacyPolicy) },
+                onOpenSupport = { openChild(AppDialogState.SupportTickets) },
+                onSyncNow = { result -> studentViewModel.triggerManualCloudSync(result) },
                 onDismiss = dismiss
             )
         }

@@ -166,9 +166,13 @@ fun OcrScheduleImportDialog(
     }
 
     StudentGlassModalSheet(
+        title = "ورود برنامه از تصویر",
+        subtitle = "عکس را انتخاب و نتیجه را بازبینی کن",
         onDismiss = onDismiss,
         maxWidth = 620.dp
     ) {
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
+
         Column(
             modifier = modifier
                 .fillMaxWidth()
@@ -176,47 +180,7 @@ fun OcrScheduleImportDialog(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Dialog Header
-                Row(
-                    modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 76.dp, max = 126.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(
-                            shape = CircleShape,
-                            color = BrandIndigo600.copy(alpha = 0.15f),
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.AutoAwesome,
-                                    contentDescription = null,
-                                    tint = BrandIndigo600,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = "ورود گروهی و هوشمند دروس",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "پردازش متن طبیعی فارسی یا اسکن تصویر با اعتبارسنجی پیش از ثبت",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
 
-                    IconButton(onClick = onDismiss) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "بستن", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
 
                 // Tabs: OCR vs Bulk Text
                 TabRow(
@@ -487,11 +451,11 @@ fun OcrScheduleImportDialog(
                     Button(
                         onClick = {
                             onConfirmImport(extractedDrafts.toList())
-                            onDismiss()
+                            dismissModal()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(46.dp)
+                            .heightIn(min = 48.dp)
                             .testTag("confirm_bulk_import_button"),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Emerald600)

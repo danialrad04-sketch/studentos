@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -85,9 +86,13 @@ fun EditProfileDialog(
     var studentIdError by remember { mutableStateOf(false) }
 
     StudentGlassModalSheet(
+        title = "پروفایل دانشجویی",
+        subtitle = "مشخصات دانشگاه و نیم‌سال تحصیلی",
         onDismiss = onDismiss,
         maxWidth = 580.dp
     ) {
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -95,60 +100,7 @@ fun EditProfileDialog(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(StudentOsColors.ElectricBlue.copy(alpha = 0.16f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Person,
-                            contentDescription = null,
-                            tint = StudentOsColors.ElectricBlue,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
 
-                    Column {
-                        Text(
-                            text = "ویرایش مشخصات دانشجویی",
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 15.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "پایگاه داده محلی امن بدون اتلاف داده (Zero Data Loss)",
-                            fontSize = 10.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = "بستن",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
 
             // Name Field
             OutlinedTextField(
@@ -159,9 +111,9 @@ fun EditProfileDialog(
                 },
                 isError = nameError,
                 supportingText = if (nameError) {
-                    { Text("نام دانشجو نمی‌تواند خالی باشد", color = MaterialTheme.colorScheme.error, fontSize = 10.sp) }
+                    { Text("نام دانشجو نمی‌تواند خالی باشد", color = MaterialTheme.colorScheme.error, fontSize = 14.sp) }
                 } else null,
-                label = { Text("نام و نام خانوادگی دانشجو *", fontSize = 11.5.sp) },
+                label = { Text("نام و نام خانوادگی دانشجو *", fontSize = 14.sp) },
                 leadingIcon = { Icon(Icons.Rounded.Person, contentDescription = null, modifier = Modifier.size(18.dp)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -185,9 +137,9 @@ fun EditProfileDialog(
                     },
                     isError = studentIdError,
                     supportingText = if (studentIdError) {
-                        { Text("شماره دانشجویی الزامی است", color = MaterialTheme.colorScheme.error, fontSize = 9.5.sp) }
+                        { Text("شماره دانشجویی الزامی است", color = MaterialTheme.colorScheme.error, fontSize = 14.sp) }
                     } else null,
-                    label = { Text("شماره دانشجویی *", fontSize = 11.sp) },
+                    label = { Text("شماره دانشجویی *", fontSize = 14.sp) },
                     leadingIcon = { Icon(Icons.Rounded.Badge, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.weight(1.2f),
                     shape = RoundedCornerShape(14.dp),
@@ -201,7 +153,7 @@ fun EditProfileDialog(
                 OutlinedTextField(
                     value = semesterInput,
                     onValueChange = { semesterInput = it },
-                    label = { Text("ترم جاری", fontSize = 11.sp) },
+                    label = { Text("ترم جاری", fontSize = 14.sp) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(0.8f),
                     shape = RoundedCornerShape(14.dp),
@@ -221,7 +173,7 @@ fun EditProfileDialog(
                 OutlinedTextField(
                     value = university,
                     onValueChange = { university = it },
-                    label = { Text("دانشگاه", fontSize = 11.sp) },
+                    label = { Text("دانشگاه", fontSize = 14.sp) },
                     leadingIcon = { Icon(Icons.Rounded.School, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(14.dp),
@@ -235,7 +187,7 @@ fun EditProfileDialog(
                 OutlinedTextField(
                     value = major,
                     onValueChange = { major = it },
-                    label = { Text("رشته تحصیلی", fontSize = 11.sp) },
+                    label = { Text("رشته تحصیلی", fontSize = 14.sp) },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(14.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -254,7 +206,7 @@ fun EditProfileDialog(
                 OutlinedTextField(
                     value = passedUnitsInput,
                     onValueChange = { passedUnitsInput = it },
-                    label = { Text("واحدهای پاس‌شده", fontSize = 10.5.sp) },
+                    label = { Text("واحدهای پاس‌شده", fontSize = 14.sp) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(14.dp),
@@ -268,7 +220,7 @@ fun EditProfileDialog(
                 OutlinedTextField(
                     value = activeUnitsInput,
                     onValueChange = { activeUnitsInput = it },
-                    label = { Text("واحدهای ترم جاری", fontSize = 10.5.sp) },
+                    label = { Text("واحدهای ترم جاری", fontSize = 14.sp) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(14.dp),
@@ -282,7 +234,7 @@ fun EditProfileDialog(
                 OutlinedTextField(
                     value = entryYearInput,
                     onValueChange = { entryYearInput = it },
-                    label = { Text("سال ورود", fontSize = 10.5.sp) },
+                    label = { Text("سال ورود", fontSize = 14.sp) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(14.dp),
@@ -297,7 +249,7 @@ fun EditProfileDialog(
             // Shortcuts
             OutlinedButton(
                 onClick = {
-                    onDismiss()
+                    dismissModal()
                     onOpenPastSemesters()
                 },
                 shape = RoundedCornerShape(14.dp),
@@ -305,12 +257,12 @@ fun EditProfileDialog(
             ) {
                 Icon(Icons.Rounded.HistoryEdu, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("تنظیم سوابق گذرانده ترم‌های قبل (۱ تا ۸)", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                Text("تنظیم سوابق گذرانده ترم‌های قبل (۱ تا ۸)", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
 
             OutlinedButton(
                 onClick = {
-                    onDismiss()
+                    dismissModal()
                     onReopenOnboarding()
                 },
                 shape = RoundedCornerShape(14.dp),
@@ -318,7 +270,7 @@ fun EditProfileDialog(
             ) {
                 Icon(Icons.Rounded.Speed, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("اجرای مجدد راه‌اندازی سریع (Zero-Setup Wizard)", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                Text("اجرای مجدد راه‌اندازی سریع (Zero-Setup Wizard)", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             }
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -330,11 +282,11 @@ fun EditProfileDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedButton(
-                    onClick = onDismiss,
+                    onClick = dismissModal,
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .weight(1f)
-                        .height(46.dp)
+                        .heightIn(min = 48.dp)
                 ) {
                     Text("انصراف", fontSize = 12.sp)
                 }
@@ -364,7 +316,7 @@ fun EditProfileDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.ElectricBlue),
                     modifier = Modifier
                         .weight(1.4f)
-                        .height(46.dp)
+                        .heightIn(min = 48.dp)
                 ) {
                     Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))

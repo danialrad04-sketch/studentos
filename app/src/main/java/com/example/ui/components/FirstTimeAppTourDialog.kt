@@ -73,7 +73,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.window.Dialog
+import com.example.ui.components.StudentDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.local.entity.StudentProfileEntity
 
@@ -191,6 +191,8 @@ fun FirstTimeAppTourDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
+        val dismissWindow = LocalStudentModalDismiss.current ?: onDismiss
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -233,7 +235,7 @@ fun FirstTimeAppTourDialog(
                         }
 
                         IconButton(
-                            onClick = onDismiss,
+                            onClick = dismissWindow,
                             modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
@@ -470,7 +472,7 @@ fun FirstTimeAppTourDialog(
                                 Text(text = "قبلی", fontSize = 11.5.sp, color = TourTextSecondary)
                             }
                         } else {
-                            TextButton(onClick = onDismiss) {
+                            TextButton(onClick = dismissWindow) {
                                 Text(text = "رد کردن راهنما", fontSize = 11.5.sp, color = TourTextSecondary)
                             }
                         }
@@ -490,7 +492,7 @@ fun FirstTimeAppTourDialog(
                                 if (currentStepIndex < tourSteps.size - 1) {
                                     currentStepIndex++
                                 } else {
-                                    onDismiss()
+                                    dismissWindow()
                                 }
                             },
                             shape = RoundedCornerShape(14.dp),

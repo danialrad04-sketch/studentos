@@ -122,9 +122,13 @@ fun AcademicCopilotDialog(
     val scope = androidx.compose.runtime.rememberCoroutineScope()
 
     StudentGlassModalSheet(
+        title = "دستیار تحصیلی",
+        subtitle = "گفت‌وگو بر اساس وضعیت درس‌هایت",
         onDismiss = onDismiss,
         maxWidth = 620.dp
     ) {
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
+
         Column(
             modifier = modifier
                 .fillMaxWidth()
@@ -132,51 +136,7 @@ fun AcademicCopilotDialog(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // Header with Glowing AI Icon
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        shape = CircleShape,
-                        color = primaryTeal.copy(alpha = 0.15f),
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = null,
-                                tint = primaryTeal,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text(
-                            text = "دستیار تحصیلی هوشمند (Academic Copilot)",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "تحلیل مبتنی بر داده‌های واقعی محلی و موتورهای قطعی OS",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
 
-                IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "بستن",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
 
             // Student Academic Snapshot Pill Row
             Row(
@@ -343,7 +303,7 @@ fun AcademicCopilotDialog(
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = if (copied) "کپی شد" else "کپی پاسخ",
-                                    fontSize = 10.sp,
+                                    fontSize = 14.sp,
                                     color = if (copied) primaryTeal else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -497,7 +457,7 @@ fun AcademicCopilotDialog(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onDismiss) {
+                TextButton(onClick = dismissModal) {
                     Text(
                         text = "بستن کوپایلوت",
                         style = MaterialTheme.typography.labelMedium,

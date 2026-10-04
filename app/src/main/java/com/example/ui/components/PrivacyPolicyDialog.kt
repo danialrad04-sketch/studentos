@@ -52,9 +52,13 @@ fun PrivacyPolicyDialog(
     onDismiss: () -> Unit
 ) {
     StudentGlassModalSheet(
+        title = "حریم خصوصی",
+        subtitle = "نحوهٔ نگهداری و استفاده از اطلاعات",
         onDismiss = onDismiss,
         maxWidth = 580.dp
     ) {
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -62,39 +66,7 @@ fun PrivacyPolicyDialog(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Policy,
-                        contentDescription = "سیاست حفظ حریم خصوصی",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = "سیاست حفظ حریم خصوصی و امنیت داده‌ها",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "شفافیت در نگهداری، حفاظت و حق پاکسازی داده‌های دانشجویی",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+
 
             // Section 1: Collected Data
             PrivacySectionCard(
@@ -152,7 +124,7 @@ fun PrivacyPolicyDialog(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "شما می‌توانید از داخل حساب کاربری درخواست حذف کنید. در این فرایند، حذف داده‌های ابری تا زمانی موفق تلقی نمی‌شود که سرویس مربوطه نتیجه موفقیت‌آمیز برگرداند؛ سپس داده‌های محلی حساب نیز پاکسازی می‌شوند.",
-                            fontSize = 11.5.sp,
+                            fontSize = 14.sp,
                             lineHeight = 18.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -163,7 +135,7 @@ fun PrivacyPolicyDialog(
             Spacer(modifier = Modifier.height(4.dp))
 
             Button(
-                onClick = onDismiss,
+                onClick = dismissModal,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("privacy_policy_dismiss_button"),
@@ -213,7 +185,7 @@ private fun PrivacySectionCard(
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = description,
-                    fontSize = 11.sp,
+                    fontSize = 14.sp,
                     lineHeight = 17.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

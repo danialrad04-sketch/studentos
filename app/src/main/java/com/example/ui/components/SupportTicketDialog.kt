@@ -93,9 +93,12 @@ fun SupportTicketDialog(
     val tickets by ticketsFlow.collectAsState(initial = emptyList())
 
     StudentGlassModalSheet(
+        showCloseButton = false,
         onDismiss = onDismiss,
         maxWidth = 620.dp
     ) {
+        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
+
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -144,7 +147,7 @@ fun SupportTicketDialog(
                         if (selectedTicket != null) {
                             selectedTicket = null
                         } else {
-                            onDismiss()
+                            dismissModal()
                         }
                     }
                 ) {

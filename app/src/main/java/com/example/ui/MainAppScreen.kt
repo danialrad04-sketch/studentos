@@ -121,6 +121,7 @@ fun MainAppScreen(
     var dialogState by remember { mutableStateOf<AppDialogState>(AppDialogState.None) }
     var showOnboardingWizard by remember { mutableStateOf(false) }
     var showAppTourGuide by remember { mutableStateOf(false) }
+    var showAppMenu by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
@@ -368,6 +369,17 @@ fun MainAppScreen(
                         }
                     )
                 } else {
+                    com.example.ui.components.StudentNavigationDrawer(
+                        open = showAppMenu,
+                        onOpenChanged = { showAppMenu = it },
+                        selectedTab = selectedTab,
+                        profile = profile,
+                        user = currentUser,
+                        onSelectTab = { studentViewModel.selectTab(it) },
+                        onOpenAccount = { dialogState = AppDialogState.Auth },
+                        onOpenSettings = { dialogState = AppDialogState.SettingsAndRoadmap },
+                        onOpenSupport = { dialogState = AppDialogState.SupportTickets }
+                    ) {
                     com.example.ui.components.StudentAppScaffold(
                         modifier = modifier.fillMaxSize(),
                         selectedTab = selectedTab,
@@ -375,7 +387,8 @@ fun MainAppScreen(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             studentViewModel.selectTab(it)
                         },
-                        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+                        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+                        onOpenMore = { showAppMenu = true }
                     ) {
                     Box(
                         modifier = Modifier
@@ -413,6 +426,7 @@ fun MainAppScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 HeaderSection(
+                                    onOpenMenu = { showAppMenu = true },
                                     profile = profile,
                                     courseCount = courses.map { it.name }.distinct().size,
                                     gpa = gpaFormatted,
@@ -449,6 +463,7 @@ fun MainAppScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
                             } else {
                                 SubScreenHeaderSection(
+                                    onOpenMenu = { showAppMenu = true },
                                     currentTab = selectedTab,
                                     onBackToDashboard = {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -536,13 +551,12 @@ fun MainAppScreen(
                                 onRequestNotificationPermission = { checkAndRequestNotificationPermission { } }
                             )
                         }
-
-
-                    }
-                }
-            }
-        }
-    }
+                        } // scrolling destination column
+                    } // destination content box
+                    } // StudentAppScaffold
+                    } // StudentNavigationDrawer
+                } // configured student experience
+            } // initialized account experience
 
             // Persian Notification Permission Rationale Dialog
             if (showNotificationRationaleDialog) {

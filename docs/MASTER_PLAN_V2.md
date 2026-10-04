@@ -1,3 +1,5 @@
+> Settings/dialog modernization (2.2.0): [UI_EXPERIENCE_2026.md](UI_EXPERIENCE_2026.md).
+
 > Current implementation and remaining scope: [V2_1_VERIFICATION.md](V2_1_VERIFICATION.md). Checkmarks below describe historical implementation, not completed live/device verification.
 
 # Student OS — Master Plan v2
@@ -60,7 +62,7 @@ Core rule:
 **Answer:** Consistency, hierarchy, restraint, speed, recoverability, responsive layouts and predictable interactions—not decoration.
 
 ## Q4. What visual language should define the brand?
-**Answer:** Academic premium: deep petrol/navy foundation, soft violet accent, quiet surfaces, strong typography, restrained elevation, limited gradients and minimal visual noise.
+**Answer:** Academic premium: deep petrol/navy foundation, restrained olive accent, quiet surfaces, strong typography, restrained elevation, limited gradients and minimal visual noise.
 
 ## Q5. What should be removed from the experience?
 **Answer:** Duplicate controls, decorative cards without information value, overly nested dialogs, redundant labels, unnecessary animations, and settings that belong in advanced areas.
