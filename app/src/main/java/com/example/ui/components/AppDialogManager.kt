@@ -185,13 +185,6 @@ fun AppDialogManager(
                     studentViewModel.updateFullProfile(name, stdId, uni, maj, year, sem, passed, active)
                     dismiss()
                     Toast.makeText(context, "مشخصات دانشجویی با موفقیت ذخیره شد ✨", Toast.LENGTH_SHORT).show()
-                },
-                onReopenOnboarding = {
-                    dismiss()
-                    onOpenOnboardingWizard()
-                },
-                onOpenPastSemesters = {
-                    onUpdateDialogState(AppDialogState.PastSemesters)
                 }
             )
         }
@@ -414,4 +407,3 @@ fun AppDialogManager(
 }
 }
 }
-

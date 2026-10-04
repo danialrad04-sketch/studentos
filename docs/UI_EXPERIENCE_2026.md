@@ -15,7 +15,7 @@ Implementation review: 2026-10-04. Brand direction is the user's latest olive ac
 
 | Area | Result |
 | --- | --- |
-| Navigation | Persian modal drawer with identity, account, settings, all academic destinations and support. The home menu and bottom/rail More control open the same drawer. Tablets use the existing rail based on available window width. |
+| Navigation | Persian modal drawer with identity, account, settings, all academic destinations and support. The home menu and bottom/rail More control open the same drawer. The compact header keeps menu, search, notifications and account controls reachable with large text. The fallback module hub uses native icons and an adaptive grid. Tablets use the existing rail based on available window width. |
 | Settings | Dedicated full-page destination with appearance, reminders, data/recovery and about/support categories. Long content scrolls below a fixed back/title bar. Version is read from BuildConfig. No fake roadmap completion or hard-coded version card. About provides copyable build identity for support instead of APK/keystore developer instructions. |
 | Account | Dedicated guest/connected account destination; academic profile, subscription status, backup, privacy and support. Guest sign-in reuses AccountGateV2, the production startup form. Sign-in actions use the same Firebase handlers as startup. |
 | Sync | One provider-aware ViewModel sync action, an in-progress disabled button, actual success/error feedback and retry. The displayed timestamp updates on successful manual sync. Previously the account dialog issued both cloud and backend requests. |

@@ -426,38 +426,12 @@ fun MainAppScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 HeaderSection(
-                                    onOpenMenu = { showAppMenu = true },
                                     profile = profile,
-                                    courseCount = courses.map { it.name }.distinct().size,
-                                    gpa = gpaFormatted,
-                                    passedUnits = profile.passedUnits,
-                                    totalRequiredCredits = totalCurriculumUnits,
                                     notifCount = notifications.size,
-                                    isDarkTheme = isDarkTheme,
-                                    themeMode = themeMode,
-                                    onToggleTheme = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        studentViewModel.toggleThemeQuickly()
-                                    },
-                                    onOpenProfile = { dialogState = AppDialogState.Profile },
-                                    onOpenNotifications = { dialogState = AppDialogState.Notifications },
-                                    onOpenAndroidInfo = { dialogState = AppDialogState.ApkInfo },
-                                    onResetDefaults = {
-                                        studentViewModel.resetToDefaults()
-                                        Toast.makeText(context, "اطلاعات به حالت اولیه ریست شد", Toast.LENGTH_SHORT).show()
-                                    },
-                                    onOpenCommandCenter = { dialogState = AppDialogState.CommandCenter },
-                                    onOpenCopilot = { dialogState = AppDialogState.Copilot },
-                                    onOpenOcrImport = { dialogState = AppDialogState.OcrImport },
-                                    onOpenSettingsAndRoadmap = { dialogState = AppDialogState.SettingsAndRoadmap },
-                                    onLoadDemoData = {
-                                        studentViewModel.loadDemoData()
-                                        Toast.makeText(context, "حالت دمو با داده‌های نمونه فعال شد 🎓", Toast.LENGTH_LONG).show()
-                                    },
-                                    onClearToFreshSlate = {
-                                        studentViewModel.clearToFreshSlate()
-                                        Toast.makeText(context, "سیستم‌عامل پاکسازی شد و آماده ورود اطلاعات شماست ✨", Toast.LENGTH_LONG).show()
-                                    }
+                                    onOpenMenu = { showAppMenu = true },
+                                    onOpenAccount = { dialogState = AppDialogState.Auth },
+                                    onOpenSearch = { dialogState = AppDialogState.CommandCenter },
+                                    onOpenNotifications = { dialogState = AppDialogState.Notifications }
                                 )
 
                                 Spacer(modifier = Modifier.height(8.dp))

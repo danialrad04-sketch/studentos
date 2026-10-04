@@ -160,6 +160,17 @@ class SettingsExperienceTest {
         rule.waitForIdle()
         assertTrue(account)
     }
+    @Test fun compactHeaderWithLargeTextKeepsMenuAndAccountAccessible() {
+        rule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, 1.5f)) {
+                StudentOsTheme(darkTheme = false) { HeaderSection(profile, 3, {}, {}, {}, {}) }
+            }
+        }
+        rule.onNodeWithContentDescription("باز کردن منوی برنامه").assertIsDisplayed()
+        rule.onNodeWithContentDescription("حساب کاربری").assertIsDisplayed()
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/header-compact-large-text.png")
+    }
     @Test @Config(qualifiers = "w840dp-h900dp-xxhdpi", sdk = [35])
     fun tabletUsesRailInsteadOfPhoneNavigation() {
         rule.setContent { StudentOsTheme(darkTheme = false) { StudentAppScaffold(AppTab.DASHBOARD, {}) { Text("محتوای صفحه") } } }

@@ -66,6 +66,11 @@ fun StudentNavigationDrawer(
                                 label = { Text(tab.title, style = MaterialTheme.typography.bodyLarge) },
                                 icon = { Icon(studentDestinationIcon(tab), null) },
                                 selected = selectedTab == tab,
+                                colors = NavigationDrawerItemDefaults.colors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                ),
                                 onClick = { select { onSelectTab(tab) } }
                             )
                         }
@@ -80,7 +85,7 @@ fun StudentNavigationDrawer(
     }
 }
 
-private fun studentDestinationIcon(tab: AppTab) = when (tab) {
+internal fun studentDestinationIcon(tab: AppTab) = when (tab) {
     AppTab.DASHBOARD -> Icons.Rounded.Home
     AppTab.SCHEDULE -> Icons.Rounded.CalendarMonth
     AppTab.TASKS -> Icons.Rounded.CheckCircle

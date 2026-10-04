@@ -48,15 +48,4 @@ fun rememberStudentAdaptiveMetrics(): StudentAdaptiveMetrics =
 
 
 @Composable
-fun rememberStudentReduceMotion(): Boolean {
-    val context = LocalContext.current
-    return remember {
-        runCatching {
-            Settings.Global.getFloat(
-                context.contentResolver,
-                Settings.Global.ANIMATOR_DURATION_SCALE,
-                1f
-            ) == 0f
-        }.getOrDefault(false)
-    }
-}
+fun rememberStudentReduceMotion(): Boolean = rememberReducedMotion()
