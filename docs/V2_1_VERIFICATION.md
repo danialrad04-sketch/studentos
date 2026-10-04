@@ -1,3 +1,5 @@
+> 2.1.1 follow-up: physical-device feedback exposed bottom navigation overlap. The production shell now uses StudentAppScaffold with measured insets. Task chips scroll horizontally, secondary header actions use overflow, and olive replaces violet at the user's request. Compact and large-text captures now exercise the shared production shell. See PR #13 for final CI evidence. Historical 2.1.0 results below remain attributed to their original commits.
+
 # Student OS 2.1 verification ledger
 
 Audit date: 2026-10-03. Branch: `feat/v2-release-polish`.

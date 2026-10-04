@@ -4,7 +4,7 @@
 
 Primary brand identity:
 - Petrol / Navy Blue
-- Soft Violet (light accent #7352B5, dark accent #CBB9F2)
+- Restrained Olive (light accent #7352B5, dark accent #CBB9F2)
 
 Visual direction:
 - Academic Premium

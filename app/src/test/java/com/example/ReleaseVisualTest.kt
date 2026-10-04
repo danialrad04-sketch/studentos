@@ -94,8 +94,8 @@ class ReleaseVisualTest {
         val navigationBounds = rule.onNodeWithTag("primary_navigation").fetchSemanticsNode().boundsInRoot
         assertTrue("The primary action must remain above navigation", buttonBounds.bottom <= navigationBounds.top)
         rule.onRoot().captureRoboImage("build/outputs/visual-review/tasks-bottom-${if (dark) "dark" else "light"}-$scale.png")
-        rule.onNodeWithText("عقب‌افتاده").performScrollTo().assertIsDisplayed()
-        val chip = rule.onNodeWithText("عقب‌افتاده").fetchSemanticsNode().boundsInRoot
+        rule.onNode(hasText("عقب‌افتاده") and hasClickAction()).performScrollTo().assertIsDisplayed()
+        val chip = rule.onNode(hasText("عقب‌افتاده") and hasClickAction()).fetchSemanticsNode().boundsInRoot
         val viewport = rule.onRoot().fetchSemanticsNode().boundsInRoot
         assertTrue("Every filter must scroll into the viewport", chip.left >= viewport.left && chip.right <= viewport.right)
     }
