@@ -142,8 +142,8 @@ fun AppDialogManager(
                 userAccount = userAccount,
                 onUpgradeTier = { tier ->
                     studentViewModel.upgradeSubscriptionTier(tier) { success, msg ->
+                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                         if (success) {
-                            Toast.makeText(context, "اشتراک شما به ${tier.titleFa} ارتقا یافت! ★", Toast.LENGTH_LONG).show()
                             dismiss()
                         }
                     }
