@@ -156,8 +156,8 @@ enum class ExportThemePreset(
     ROYAL_INDIGO(
         title = "نیلی سلطنتی 🔮",
         primaryColor = Color(0xFFC7D2FE),
-        accentColor = Color(0xFFF472B6),
-        backgroundColors = listOf(Color(0xFF312E81), Color(0xFF4338CA), Color(0xFF1E1B4B)),
+        accentColor = Color(0xFFC0CD8C),
+        backgroundColors = listOf(Color(0xFF3D4821), Color(0xFF59652F), Color(0xFF3D4821)),
         textColor = Color(0xFFFFFFFF),
         isDark = true
     ),
@@ -172,7 +172,7 @@ enum class ExportThemePreset(
     CLEAN_MINIMAL(
         title = "مدرک رسمی 📜",
         primaryColor = Color(0xFF1E293B),
-        accentColor = Color(0xFF4F46E5),
+        accentColor = Color(0xFF59652F),
         backgroundColors = listOf(Color(0xFFFAFAFA), Color(0xFFF1F5F9), Color(0xFFE2E8F0)),
         textColor = Color(0xFF0F172A),
         isDark = false

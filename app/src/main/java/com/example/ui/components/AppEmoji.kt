@@ -84,7 +84,7 @@ fun AppEmoji(
             }
         )
         AppEmojiType.BOOK -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFF818CF8), Color(0xFF4F46E5))),
+            Brush.verticalGradient(listOf(Color(0xFF818CF8), Color(0xFF59652F))),
             @Composable {
                 Text("📖", fontSize = (size.value * 0.55f).sp)
             }
@@ -110,7 +110,7 @@ fun AppEmoji(
             }
         )
         AppEmojiType.COPILOT -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFFA78BFA), Color(0xFF06B6D4))),
+            Brush.verticalGradient(listOf(Color(0xFFC0CD8C), Color(0xFF06B6D4))),
             @Composable {
                 Text("🤖", fontSize = (size.value * 0.55f).sp)
             }
@@ -134,13 +134,13 @@ fun AppEmoji(
             }
         )
         AppEmojiType.POMODORO -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFFA78BFA), Color(0xFF7C3AED))),
+            Brush.verticalGradient(listOf(Color(0xFFC0CD8C), Color(0xFF59652F))),
             @Composable {
                 Text("⏱️", fontSize = (size.value * 0.55f).sp)
             }
         )
         AppEmojiType.SPARKLE -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFFC084FC), Color(0xFF9333EA))),
+            Brush.verticalGradient(listOf(Color(0xFFC0CD8C), Color(0xFF59652F))),
             @Composable {
                 Text("✨", fontSize = (size.value * 0.55f).sp)
             }

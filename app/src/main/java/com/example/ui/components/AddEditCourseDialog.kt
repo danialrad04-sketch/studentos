@@ -77,8 +77,8 @@ private val PALETTE_COLORS = listOf(
     "#0D9488" to "فیروزه‌ای دژ‌پیکر",
     "#06B6D4" to "فیروزه‌ای نئونی",
     "#10B981" to "سبز زمردی",
-    "#6366F1" to "نیلی مدرن",
-    "#8B5CF6" to "بنفش نئونی",
+    "#C0CD8C" to "نیلی مدرن",
+    "#C0CD8C" to "بنفش نئونی",
     "#D97757" to "مسی گرم",
     "#F59E0B" to "کهربایی آذرخش",
     "#EF4444" to "سرخ مرجانی"
@@ -605,7 +605,7 @@ fun AddEditCourseDialog(
                             val c = try {
                                 Color(android.graphics.Color.parseColor(hex))
                             } catch (_: Exception) {
-                                Color(0xFF6366F1)
+                                Color(0xFFC0CD8C)
                             }
                             val isSelected = selectedColorHex.equals(hex, ignoreCase = true)
                             Box(

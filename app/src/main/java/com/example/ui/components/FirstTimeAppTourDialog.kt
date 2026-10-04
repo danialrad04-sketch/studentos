@@ -97,7 +97,7 @@ fun FirstTimeAppTourDialog(
     val DarkOverlayBg = if (isDark) Color(0xFF0F172A) else Color(0xFFF8FAFC)
     val TourCardBg = if (isDark) Color(0xFF1E293B) else Color(0xFFFFFFFF)
     val TourBorder = if (isDark) Color(0xFF334155) else Color(0xFFE2E8F0)
-    val TourAccentPrimary = if (isDark) Color(0xFF6366F1) else Color(0xFF4F46E5)
+    val TourAccentPrimary = if (isDark) Color(0xFFC0CD8C) else Color(0xFF59652F)
     val TourAccentSecondary = if (isDark) Color(0xFF38BDF8) else Color(0xFF0284C7)
     val TourAccentSuccess = if (isDark) Color(0xFF10B981) else Color(0xFF059669)
     val TourAccentWarning = if (isDark) Color(0xFFF59E0B) else Color(0xFFD97706)

@@ -5,6 +5,9 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -161,11 +164,11 @@ fun TasksScreen(
         Spacer(modifier = Modifier.height(StudentSpacing.Md))
 
         // Filter chips
-        Row(horizontalArrangement = Arrangement.spacedBy(StudentSpacing.Sm)) {
+        Row(modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(StudentSpacing.Sm)) {
             FilterChip(
                 selected = selectedFilter == "all",
                 onClick = { selectedFilter = "all" },
-                label = { Text("همه (${tasks.size})", style = MaterialTheme.typography.labelMedium) },
+                label = { Text("همه (${tasks.size})", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false) },
                 shape = StudentShapeTokens.Compact,
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -176,7 +179,7 @@ fun TasksScreen(
             FilterChip(
                 selected = selectedFilter == "pending",
                 onClick = { selectedFilter = "pending" },
-                label = { Text("در انتظار (${tasks.count { !it.isCompleted }})", style = MaterialTheme.typography.labelMedium) },
+                label = { Text("در انتظار (${tasks.count { !it.isCompleted }})", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false) },
                 shape = MaterialTheme.shapes.small,
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -187,31 +190,31 @@ fun TasksScreen(
             FilterChip(
                 selected = selectedFilter == "today",
                 onClick = { selectedFilter = "today" },
-                label = { Text("امروز", style = MaterialTheme.typography.labelMedium) },
+                label = { Text("امروز", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false) },
                 shape = StudentShapeTokens.Compact
             )
             FilterChip(
                 selected = selectedFilter == "priority",
                 onClick = { selectedFilter = "priority" },
-                label = { Text("اولویت", style = MaterialTheme.typography.labelMedium) },
+                label = { Text("اولویت", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false) },
                 shape = StudentShapeTokens.Compact
             )
             FilterChip(
                 selected = selectedFilter == "overdue",
                 onClick = { selectedFilter = "overdue" },
-                label = { Text("عقب‌افتاده", style = MaterialTheme.typography.labelMedium) },
+                label = { Text("عقب‌افتاده", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false) },
                 shape = StudentShapeTokens.Compact
             )
             FilterChip(
                 selected = selectedFilter == "exam",
                 onClick = { selectedFilter = "exam" },
-                label = { Text("مرتبط با امتحان", style = MaterialTheme.typography.labelMedium) },
+                label = { Text("مرتبط با امتحان", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false) },
                 shape = StudentShapeTokens.Compact
             )
                         FilterChip(
                 selected = selectedFilter == "completed",
                 onClick = { selectedFilter = "completed" },
-                label = { Text("انجام شده (${tasks.count { it.isCompleted }})", style = MaterialTheme.typography.labelMedium) },
+                label = { Text("انجام شده (${tasks.count { it.isCompleted }})", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false) },
                 shape = MaterialTheme.shapes.small,
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,

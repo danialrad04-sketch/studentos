@@ -592,7 +592,7 @@ private fun Step3AddCourses(
                                         CourseEntity(
                                             name = manualName.trim(),
                                             units = manualUnits.toIntOrNull() ?: 3,
-                                            colorHex = "#6366F1"
+                                            colorHex = "#C0CD8C"
                                         )
                                     )
                                     manualName = ""

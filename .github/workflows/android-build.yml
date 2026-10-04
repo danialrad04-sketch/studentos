@@ -173,7 +173,7 @@ jobs:
           test -s "$AAB"
           "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner" verify --verbose "$APK"
           BADGING="$("$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/aapt" dump badging "$APK")"
-          echo "$BADGING" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='2006' versionName='2.1.0'"
+          echo "$BADGING" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='2007' versionName='2.1.1'"
           EXPECTED_SHA256="a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950"
           EXPECTED_SHA1="b25fe31884ec18a96ae09e6fc0070fd20717a766"
           KEY_SHA256="$(keytool -list -v -keystore "$KEYSTORE_PATH" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" | awk -F': ' '/SHA256:/{print $2; exit}' | tr -d ':' | tr '[:upper:]' '[:lower:]')"
