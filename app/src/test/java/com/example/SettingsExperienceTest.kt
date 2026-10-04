@@ -116,12 +116,40 @@ class SettingsExperienceTest {
     }
     @Test fun profileFormKeepsSaveReachable() {
         rule.setContent { StudentOsTheme(darkTheme = false) { EditProfileDialog(profile, {}, { _, _, _, _, _, _, _, _ -> }) } }
-        rule.onNodeWithTag("student_modal").captureRoboImage("build/outputs/visual-review/profile-form.png")
-        rule.onNodeWithText("ذخیره مشخصات", substring = true).performScrollTo().assertIsDisplayed()
+        rule.onNodeWithTag("profile_editor").captureRoboImage("build/outputs/visual-review/profile-form.png")
+        rule.onNodeWithTag("save_profile").assertIsDisplayed()
     }
     @Test fun courseFormRenders() {
         rule.setContent { StudentOsTheme(darkTheme = true) { AddEditCourseDialog(initialCourse = null, onDismiss = {}) } }
         rule.onNodeWithTag("student_modal").captureRoboImage("build/outputs/visual-review/course-form-dark.png")
+    }
+    @Test fun profileAcceptsPersianNumbersAndRejectsInvalidInput() {
+        var passed: Int? = null
+        rule.setContent { StudentOsTheme(darkTheme = false) { EditProfileDialog(profile, {}, { _, _, _, _, _, _, units, _ -> passed = units }) } }
+        val field = rule.onNode(hasText("واحدهای گذرانده") and hasSetTextAction())
+        field.performScrollTo().performTextClearance()
+        field.performTextInput("-۱")
+        rule.onNodeWithTag("save_profile").assertIsNotEnabled()
+        field.performTextClearance()
+        field.performTextInput("۳۴")
+        rule.onNodeWithTag("save_profile").assertIsEnabled().performClick()
+        assertEquals(34, passed)
+    }
+    @Test fun privacySheetRendersAndDismisses() {
+        var dismissed = false
+        rule.setContent { StudentOsTheme(darkTheme = false) { PrivacyPolicyDialog { dismissed = true } } }
+        rule.onNodeWithTag("student_modal").captureRoboImage("build/outputs/visual-review/privacy-sheet.png")
+        rule.onNodeWithContentDescription("بستن پنجره").performClick()
+        rule.waitForIdle()
+        assertTrue(dismissed)
+    }
+    @Test fun backupSheetRenders() {
+        rule.setContent { StudentOsTheme(darkTheme = true) { BackupRestoreDialog(0L, { "{}" }, { _, _ -> }, onDismiss = {}) } }
+        rule.onNodeWithTag("student_modal").captureRoboImage("build/outputs/visual-review/backup-sheet-dark.png")
+    }
+    @Test fun gradeSheetRenders() {
+        rule.setContent { StudentOsTheme(darkTheme = false) { EditGradeDialog(com.example.data.local.entity.GradeEntity(courseName = "ترمودینامیک مهندسی شیمی"), {}, { _, _ -> }) } }
+        rule.onNodeWithTag("student_modal").captureRoboImage("build/outputs/visual-review/grade-sheet.png")
     }
     @Test fun drawerExposesSettingsAndAccount() {
         var account = false
@@ -136,7 +164,8 @@ class SettingsExperienceTest {
     fun tabletUsesRailInsteadOfPhoneNavigation() {
         rule.setContent { StudentOsTheme(darkTheme = false) { StudentAppScaffold(AppTab.DASHBOARD, {}) { Text("محتوای صفحه") } } }
         rule.onNodeWithTag("primary_navigation").assertDoesNotExist()
-        rule.onNodeWithContentDescription("بیشتر").assertExists()
+        rule.onNodeWithTag("navigation_rail").assertExists()
+        rule.onNodeWithTag("rail_more").assertHasClickAction()
         rule.onRoot().captureRoboImage("build/outputs/visual-review/tablet-navigation.png")
     }
 }

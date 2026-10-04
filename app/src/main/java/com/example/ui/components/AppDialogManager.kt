@@ -84,12 +84,11 @@ fun AppDialogManager(
                 themeMode = themeMode,
                 onSelectThemeMode = { studentViewModel.setThemeMode(it) },
                 notificationsEnabled = notificationsEnabled,
-                onToggleNotifications = { studentViewModel.setNotificationsEnabled(it) },
+                onToggleNotifications = { studentViewModel.setNotificationsEnabled(it); if (it) onRequestNotificationPermission() },
                 onOpenEditProfile = { openChild(AppDialogState.Profile) },
                 onDismiss = dismiss,
                 userAccount = userAccount,
                 onOpenAuth = { openChild(AppDialogState.Auth) },
-                onOpenUpgrade = { openChild(AppDialogState.Upgrade) },
                 onOpenBackupRestore = { openChild(AppDialogState.BackupRestore) },
                 onLoadDemoData = {
                     studentViewModel.loadDemoData()
@@ -113,12 +112,7 @@ fun AppDialogManager(
                 },
                 onTestNotification = onSendDeviceTestNotif,
                 onOpenPrivacyPolicy = { openChild(AppDialogState.PrivacyPolicy) },
-                onOpenSupportTickets = { openChild(AppDialogState.SupportTickets) },
-                onDeleteAccount = {
-                    studentViewModel.deleteUserAccount {
-                        Toast.makeText(context, "حساب و داده‌ها حذف شدند.", Toast.LENGTH_SHORT).show()
-                    }
-                }
+                onOpenSupportTickets = { openChild(AppDialogState.SupportTickets) }
             )
         }
 

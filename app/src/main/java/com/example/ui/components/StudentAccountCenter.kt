@@ -62,6 +62,7 @@ fun AuthAccountDialog(
                 onSignIn = { showLogin = true }, onOpenProfile = onOpenProfile,
                 onOpenBackupRestore = onOpenBackupRestore, onOpenPrivacyPolicy = onOpenPrivacyPolicy,
                 onOpenSupport = onOpenSupport, onOpenUpgrade = onOpenUpgrade,
+                onResetPassword = { userAccount.email?.let(onForgotPassword) },
                 onSignOut = { confirmation = "logout" }, onDeleteAccount = { confirmation = "delete" },
                 onSyncNow = {
                     if (syncState != SyncUiState.Syncing) {
@@ -96,7 +97,8 @@ fun StudentAccountContent(
     onOpenUpgrade: () -> Unit,
     onSyncNow: () -> Unit,
     onSignOut: () -> Unit,
-    onDeleteAccount: () -> Unit
+    onDeleteAccount: () -> Unit,
+    onResetPassword: () -> Unit = {}
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp).testTag("account_center"), verticalArrangement = Arrangement.spacedBy(24.dp)) {
         Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.primaryContainer) {
@@ -113,7 +115,8 @@ fun StudentAccountContent(
         }
         StudentSettingsGroup("اطلاعات و همگام‌سازی") {
             if (!userAccount.isGuest) {
-                val lastSync = if (userAccount.lastSyncAt > 0) DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale("fa")).format(Date(userAccount.lastSyncAt)) else "هنوز همگام‌سازی ثبت نشده"
+                val lastSyncAt = (syncState as? SyncUiState.Success)?.completedAt ?: userAccount.lastSyncAt
+                val lastSync = if (lastSyncAt > 0) DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale("fa")).format(Date(lastSyncAt)) else "هنوز همگام‌سازی ثبت نشده"
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("آخرین همگام‌سازی: $lastSync", style = MaterialTheme.typography.bodyMedium)
                     Button(onClick = onSyncNow, enabled = syncState != SyncUiState.Syncing, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
@@ -133,6 +136,7 @@ fun StudentAccountContent(
             StudentSettingsRow("پشتیبانی", "ثبت و پیگیری درخواست", Icons.AutoMirrored.Rounded.HelpOutline, onOpenSupport)
         }
         if (!userAccount.isGuest) StudentSettingsGroup("مدیریت حساب") {
+            if (!userAccount.email.isNullOrBlank()) StudentSettingsRow("بازیابی رمز عبور", "ارسال لینک بازیابی به ایمیل حساب", Icons.Rounded.LockReset, onResetPassword)
             StudentSettingsRow("خروج از حساب", "بستن نشست و پاکسازی اطلاعات محلی حساب", Icons.AutoMirrored.Rounded.ExitToApp, onSignOut)
             StudentSettingsRow("حذف دائمی حساب", "حذف حساب و اطلاعات وابسته؛ غیرقابل برگشت", Icons.Rounded.DeleteForever, onDeleteAccount, destructive = true)
         }

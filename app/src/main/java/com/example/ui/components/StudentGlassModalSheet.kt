@@ -60,7 +60,7 @@ fun StudentGlassModalSheet(
                         .padding(horizontal = 20.dp)
                         .padding(bottom = 20.dp)
                         .testTag("student_modal")
-                        .semantics { paneTitle = "پنجرهٔ Student OS" }
+                        .semantics { paneTitle = title.ifBlank { "پنجرهٔ Student OS" } }
                 ) {
                     Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {

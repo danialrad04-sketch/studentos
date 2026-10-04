@@ -22,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.ui.models.AppTab
 import com.example.ui.theme.StudentSpacing
@@ -50,7 +51,7 @@ fun StudentAdaptiveNavigationRail(
     val isSecondaryTab = destinations.none { it.first == selectedTab }
 
     NavigationRail(
-        modifier = modifier.fillMaxHeight(),
+        modifier = modifier.fillMaxHeight().testTag("navigation_rail"),
         containerColor = MaterialTheme.colorScheme.surface,
         header = {
             Text(
@@ -71,6 +72,7 @@ fun StudentAdaptiveNavigationRail(
             }
 
             NavigationRailItem(
+                modifier = Modifier.testTag("rail_more"),
                 selected = isSecondaryTab,
                 onClick = { onOpenMore?.invoke() ?: run { showAllModulesSheet = true } },
                 icon = { Icon(Icons.Default.MoreHoriz, contentDescription = "بیشتر") },

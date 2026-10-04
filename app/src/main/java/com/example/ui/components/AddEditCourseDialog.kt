@@ -134,7 +134,7 @@ fun AddEditCourseDialog(
     var courseCode by remember { mutableStateOf(initialCourse?.courseCode ?: "") }
     var professor by remember { mutableStateOf(initialCourse?.professor ?: "") }
     var units by remember { mutableIntStateOf(initialCourse?.units ?: 3) }
-    var selectedColorHex by remember { mutableStateOf(initialCourse?.colorHex ?: "#0D9488") }
+    var selectedColorHex by remember { mutableStateOf(initialCourse?.colorHex ?: "#59652F") }
     var examDate by remember { mutableStateOf(initialCourse?.examDate ?: "") }
     var examTime by remember { mutableStateOf(initialCourse?.examTime ?: "09:00") }
     var examLocation by remember { mutableStateOf(initialCourse?.examLocation ?: "") }

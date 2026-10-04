@@ -38,10 +38,8 @@ fun SettingsAndRoadmapDialog(
     onTestNotification: () -> Unit,
     userAccount: UserAccount? = null,
     onOpenAuth: () -> Unit = {},
-    onOpenUpgrade: () -> Unit = {},
     onOpenBackupRestore: () -> Unit = {},
     onOpenPrivacyPolicy: () -> Unit = {},
-    onDeleteAccount: () -> Unit = {},
     onOpenSupportTickets: () -> Unit = {},
     initialSection: String = "home",
     onSectionChanged: (String) -> Unit = {}
