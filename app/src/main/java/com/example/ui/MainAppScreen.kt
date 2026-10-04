@@ -368,27 +368,19 @@ fun MainAppScreen(
                         }
                     )
                 } else {
-                    Scaffold(
-                    modifier = modifier.fillMaxSize(),
-                    containerColor = MaterialTheme.colorScheme.background,
-                    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-                    bottomBar = {
-                        FloatingIslandNavigationBar(
-                            selectedTab = selectedTab,
-                            onTabSelected = {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                studentViewModel.selectTab(it)
-                            }
-                        )
-                    }
-                ) { innerPadding ->
+                    com.example.ui.components.StudentAppScaffold(
+                        modifier = modifier.fillMaxSize(),
+                        selectedTab = selectedTab,
+                        onTabSelected = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            studentViewModel.selectTab(it)
+                        },
+                        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+                    ) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.background)
-                            // Keep content edge-to-edge behind the bottom navigation.
-                            // Only the top system inset is reserved here.
-                            .padding(top = innerPadding.calculateTopPadding()),
+                            .background(MaterialTheme.colorScheme.background),
                         contentAlignment = Alignment.TopCenter
                     ) {
                         Column(
@@ -545,8 +537,7 @@ fun MainAppScreen(
                             )
                         }
 
-                        // Generous bottom clearance padding to guarantee zero tile-overlap with floating dock
-                        Spacer(modifier = Modifier.height(112.dp))
+
                     }
                 }
             }

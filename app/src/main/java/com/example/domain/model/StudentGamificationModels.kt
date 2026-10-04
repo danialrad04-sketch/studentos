@@ -10,7 +10,7 @@ enum class BadgeTier(val title: String, val colorHex: Long) {
     SILVER("نقره‌ای", 0xFFC0C0C0),
     GOLD("طلایی", 0xFFFFD700),
     PLATINUM("پلاتینیوم", 0xFF00E5FF),
-    DIAMOND("الماس", 0xFF7C4DFF)
+    DIAMOND("الماس", 0xFF59652F)
 }
 
 enum class BadgeCategory(val title: String, val icon: String) {

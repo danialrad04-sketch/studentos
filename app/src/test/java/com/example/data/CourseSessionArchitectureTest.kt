@@ -536,6 +536,32 @@ class CourseSessionArchitectureTest {
         assertTrue(allSessions.isEmpty())
     }
 
+    @Test
+    fun failedSessionReplacement_preservesPreviousCourseAndSessions() = runBlocking {
+        val original = CourseEntity(id = "atomic_course", name = "درس قبلی", units = 3)
+        val originalSession = CourseSessionEntity(
+            id = "atomic_session", courseId = original.id, day = 1, start = "08:00", end = "10:00"
+        )
+        repository.saveCourse(original, listOf(originalSession))
+        db.openHelper.writableDatabase.execSQL(
+            """CREATE TRIGGER fail_session_replacement BEFORE INSERT ON course_sessions
+                BEGIN SELECT RAISE(ABORT, 'Injected session write failure'); END"""
+        )
+        var failure: Exception? = null
+        try {
+            repository.saveCourse(original.copy(name = "ویرایش ناقص"), listOf(originalSession.copy(day = 3)))
+        } catch (e: Exception) {
+            failure = e
+        } finally {
+            db.openHelper.writableDatabase.execSQL("DROP TRIGGER fail_session_replacement")
+        }
+        assertNotNull("The injected write failure must reach the caller", failure)
+        val restored = db.studentDao().getCourseWithSessionsById(original.id)
+        assertNotNull(restored)
+        assertEquals(original.name, restored!!.course.name)
+        assertEquals(listOf(originalSession), restored.sessions)
+    }
+
     /**
      * 6. StudentViewModel Flow Emission Test:
      * Confirms that after calling saveCourse(course, sessions) with 2 sessions,

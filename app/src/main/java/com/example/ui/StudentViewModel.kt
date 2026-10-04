@@ -1175,7 +1175,7 @@ class StudentViewModel @JvmOverloads constructor(
                     val course = CourseEntity(
                         id = newCourseId,
                         name = payload.courseName,
-                        colorHex = "#4F46E5",
+                        colorHex = "#59652F",
                         units = payload.units
                     )
                     val session = CourseSessionEntity(

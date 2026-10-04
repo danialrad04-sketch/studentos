@@ -1,6 +1,11 @@
 package com.example.ui.components
 
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
@@ -39,8 +44,10 @@ fun FloatingIslandNavigationBar(
             NavItem(null, Icons.Outlined.GridView, Icons.Rounded.GridView, "بیشتر")
         )
     }
+    Surface(color = MaterialTheme.colorScheme.background) {
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
     NavigationBar(
-        modifier = modifier.widthIn(max = 600.dp).fillMaxWidth(),
+        modifier = modifier.widthIn(max = 600.dp).fillMaxWidth().testTag("primary_navigation"),
         containerColor = Color.Transparent,
         tonalElevation = 0.dp
     ) {
@@ -53,10 +60,10 @@ fun FloatingIslandNavigationBar(
                     item.tab?.let(onTabSelected) ?: run { showAllModulesSheet = true }
                 },
                 icon = {
-                    Icon(if (selected) item.selectedIcon else item.outlineIcon, contentDescription = null)
+                    Icon(if (selected) item.selectedIcon else item.outlineIcon, contentDescription = null, modifier = Modifier.size(23.dp))
                 },
                 label = {
-                    Text(item.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(item.label, style = MaterialTheme.typography.labelMedium, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MaterialTheme.colorScheme.primary,
@@ -67,6 +74,8 @@ fun FloatingIslandNavigationBar(
                 )
             )
         }
+    }
+    }
     }
     if (showAllModulesSheet) {
         StudentModuleHubSheet(

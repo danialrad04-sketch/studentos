@@ -139,7 +139,7 @@ fun SubscriptionUpgradeDialog(
                     .clip(RoundedCornerShape(20.dp))
                     .background(
                         Brush.horizontalGradient(
-                            listOf(Color(0xFF4F46E5), Color(0xFF7C3AED), Color(0xFFDB2777))
+                            listOf(Color(0xFF59652F), Color(0xFF59652F), Color(0xFFDB2777))
                         )
                     )
                     .padding(18.dp)

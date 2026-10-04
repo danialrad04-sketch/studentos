@@ -9,7 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.*
+import org.junit.Assert.assertTrue
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.example.data.local.entity.CourseEntity
@@ -18,6 +19,9 @@ import com.example.data.local.relation.CourseWithSessions
 import com.example.ui.components.FloatingIslandNavigationBar
 import com.example.ui.components.ModernBentoDashboard
 import com.example.ui.components.AccountGateV2
+import com.example.ui.components.StudentAppScaffold
+import com.example.ui.components.SubScreenHeaderSection
+import com.example.ui.components.TasksScreen
 import com.example.ui.models.AppTab
 import com.example.ui.theme.StudentOsTheme
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -43,7 +47,7 @@ class ReleaseVisualTest {
             CompositionLocalProvider(LocalDensity provides Density(density.density, scale)) {
                 StudentOsTheme(darkTheme = dark) {
                     Surface(color = MaterialTheme.colorScheme.background) {
-                        Column(Modifier.fillMaxSize()) {
+                        StudentAppScaffold(AppTab.DASHBOARD, {}) {
                             ModernBentoDashboard(
                                 courses = courses,
                                 coursesWithSessions = courses.mapIndexed { i, course ->
@@ -53,9 +57,8 @@ class ReleaseVisualTest {
                                 gpa = "۱۷٫۸۵", passedUnits = 34, totalRequiredCredits = 140,
                                 pomodoroSeconds = 1500, isPomodoroRunning = false,
                                 onTogglePomodoro = {}, onNavigateTab = {},
-                                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)
+                                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)
                             )
-                            FloatingIslandNavigationBar(AppTab.DASHBOARD,{})
                         }
                     }
                 }
@@ -67,6 +70,41 @@ class ReleaseVisualTest {
     @Test fun dashboardLight() = dashboard(false)
     @Test fun dashboardDark() = dashboard(true)
     @Test fun dashboardLargeText() = dashboard(false, 1.5f)
+    private fun tasks(dark: Boolean, scale: Float) {
+        rule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, scale)) {
+                StudentOsTheme(darkTheme = dark) {
+                    StudentAppScaffold(AppTab.TASKS, {}) {
+                        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
+                            SubScreenHeaderSection(
+                                currentTab = AppTab.TASKS, onBackToDashboard = {}, onOpenSearch = {},
+                                onOpenNotifications = {}, notifCount = 1, isDarkTheme = dark, onToggleTheme = {}
+                            )
+                            TasksScreen(tasks = emptyList(), onAddTask = {}, onToggleTask = {}, onDeleteTask = {})
+                        }
+                    }
+                }
+            }
+        }
+        rule.waitForIdle()
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/tasks-${if (dark) "dark" else "light"}-$scale.png")
+        val add = rule.onNodeWithText("ثبت اولین تکلیف").performScrollTo().assertIsDisplayed()
+        val buttonBounds = add.fetchSemanticsNode().boundsInRoot
+        val navigationBounds = rule.onNodeWithTag("primary_navigation").fetchSemanticsNode().boundsInRoot
+        assertTrue("The primary action must remain above navigation", buttonBounds.bottom <= navigationBounds.top)
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/tasks-bottom-${if (dark) "dark" else "light"}-$scale.png")
+        rule.onNode(hasText("عقب‌افتاده") and hasClickAction()).performScrollTo().assertIsDisplayed()
+        val chip = rule.onNode(hasText("عقب‌افتاده") and hasClickAction()).fetchSemanticsNode().boundsInRoot
+        val viewport = rule.onRoot().fetchSemanticsNode().boundsInRoot
+        assertTrue("Every filter must scroll into the viewport", chip.left >= viewport.left && chip.right <= viewport.right)
+    }
+    @Test @Config(qualifiers = "w360dp-h800dp-xxhdpi", sdk = [35])
+    fun compactTasks() = tasks(false, 1f)
+    @Test @Config(qualifiers = "w360dp-h800dp-xxhdpi", sdk = [35])
+    fun compactTasksLargeText() = tasks(false, 1.5f)
+    @Test @Config(qualifiers = "w360dp-h800dp-xxhdpi", sdk = [35])
+    fun compactTasksDark() = tasks(true, 1f)
     @Test fun accountEntry() {
         rule.setContent {
             StudentOsTheme(darkTheme=false) {

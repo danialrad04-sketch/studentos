@@ -182,58 +182,66 @@ class StudentRepository(
         course: CourseEntity,
         sessions: List<CourseSessionEntity> = emptyList()
     ) = withContext(Dispatchers.IO) {
-        val courseId = if (course.id.isNotBlank()) course.id else "c_${UUID.randomUUID().toString().take(8)}"
-        val entity = course.copy(id = courseId)
-        dao.insertCourse(entity)
+        val persistCourse = suspend {
+            val courseId = if (course.id.isNotBlank()) course.id else "c_${UUID.randomUUID().toString().take(8)}"
+            val entity = course.copy(id = courseId)
+            dao.insertCourse(entity)
 
-        // Sync course sessions
-        dao.deleteSessionsByCourseId(courseId)
-        if (sessions.isNotEmpty()) {
-            val sessionsToInsert = sessions.mapIndexed { idx, s ->
-                s.copy(
-                    id = if (s.id.isNotBlank()) s.id else "sess_${courseId.take(8)}_$idx",
-                    courseId = courseId
+            // Sync course sessions
+            dao.deleteSessionsByCourseId(courseId)
+            if (sessions.isNotEmpty()) {
+                val sessionsToInsert = sessions.mapIndexed { idx, s ->
+                    s.copy(
+                        id = if (s.id.isNotBlank()) s.id else "sess_${courseId.take(8)}_$idx",
+                        courseId = courseId
+                    )
+                }
+                dao.insertCourseSessions(sessionsToInsert)
+            }
+
+            // Ensure Attendance record with courseId as primary key
+            val existingAtt = dao.getAttendanceByCourseId(courseId)
+            if (existingAtt == null) {
+                dao.insertAttendance(
+                    AttendanceEntity(
+                        courseId = courseId,
+                        courseName = entity.name,
+                        absentCount = 0,
+                        maxAllowed = if (entity.name.contains("آزمایشگاه") || entity.name.contains("کارگاه")) 2 else 3
+                    )
+                )
+            } else if (existingAtt.courseName != entity.name) {
+                dao.updateAttendance(existingAtt.copy(courseName = entity.name))
+            }
+
+            // Existing grades are updated when present; a new course does not receive
+            // a fabricated zero grade. A grade record is created only when the user
+            // actually records a score.
+            dao.getGradeByCourseId(courseId)?.let { existingGrade ->
+                if (existingGrade.courseName != entity.name || existingGrade.units != entity.units) {
+                    dao.updateGrade(existingGrade.copy(courseName = entity.name, units = entity.units))
+                }
+            }
+
+            // Sync Exam record if exam details are provided
+            if (entity.examDate.isNotBlank() || entity.examTime.isNotBlank()) {
+                dao.insertExam(
+                    ExamEntity(
+                        id = "exam_$courseId",
+                        courseId = courseId,
+                        courseName = entity.name,
+                        date = entity.examDate,
+                        time = entity.examTime,
+                        location = entity.examLocation
+                    )
                 )
             }
-            dao.insertCourseSessions(sessionsToInsert)
         }
-
-        // Ensure Attendance record with courseId as primary key
-        val existingAtt = dao.getAttendanceByCourseId(courseId)
-        if (existingAtt == null) {
-            dao.insertAttendance(
-                AttendanceEntity(
-                    courseId = courseId,
-                    courseName = entity.name,
-                    absentCount = 0,
-                    maxAllowed = if (entity.name.contains("آزمایشگاه") || entity.name.contains("کارگاه")) 2 else 3
-                )
-            )
-        } else if (existingAtt.courseName != entity.name) {
-            dao.updateAttendance(existingAtt.copy(courseName = entity.name))
-        }
-
-        // Existing grades are updated when present; a new course does not receive
-        // a fabricated zero grade. A grade record is created only when the user
-        // actually records a score.
-        dao.getGradeByCourseId(courseId)?.let { existingGrade ->
-            if (existingGrade.courseName != entity.name || existingGrade.units != entity.units) {
-                dao.updateGrade(existingGrade.copy(courseName = entity.name, units = entity.units))
-            }
-        }
-
-        // Sync Exam record if exam details are provided
-        if (entity.examDate.isNotBlank() || entity.examTime.isNotBlank()) {
-            dao.insertExam(
-                ExamEntity(
-                    id = "exam_$courseId",
-                    courseId = courseId,
-                    courseName = entity.name,
-                    date = entity.examDate,
-                    time = entity.examTime,
-                    location = entity.examLocation
-                )
-            )
+        // Readers must see the complete course and session set, including on updates.
+        if (database != null) {
+            database.withTransaction { persistCourse() }
+        } else {
+            persistCourse()
         }
     }
 
@@ -446,7 +454,7 @@ class StudentRepository(
                 dao.clearExams()
             }
 
-            val colors = listOf("#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#8B5CF6", "#0EA5E9", "#6366F1")
+            val colors = listOf("#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#C0CD8C", "#0EA5E9", "#C0CD8C")
 
             // Group drafts by logical course identity to prevent duplicate course rows for multi-session classes
             val draftGroups = drafts.groupBy { draft ->
@@ -673,7 +681,7 @@ class StudentRepository(
             dao.clearExams()
 
             if (selectedCourses.isNotEmpty()) {
-                val colors = listOf("#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#8B5CF6", "#0EA5E9", "#6366F1")
+                val colors = listOf("#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#C0CD8C", "#0EA5E9", "#C0CD8C")
                 selectedCourses.forEachIndexed { index, cc ->
                     val courseId = UUID.randomUUID().toString()
 
@@ -779,9 +787,9 @@ class StudentRepository(
                 CourseEntity(id = "c3", name = "ترمودینامیک مهندسی شیمی ۱", colorHex = "#F59E0B", units = 3, semesterId = "sem_demo_3", courseCode = "CE103", professor = "دکتر رضایی", examDate = "1403/10/26", examTime = "10:45", examLocation = "کلاس 108 فنی"),
                 CourseEntity(id = "c4", name = "فیزیک ۲", colorHex = "#EF4444", units = 3, semesterId = "sem_demo_3", courseCode = "CE104", professor = "دکتر محمدی", examDate = "1403/10/19", examTime = "08:30", examLocation = "کلاس 107 فنی"),
                 CourseEntity(id = "c6", name = "آزمایشگاه شیمی عمومی", colorHex = "#14B8A6", units = 1, semesterId = "sem_demo_3", courseCode = "CE105", professor = "مهندس کریمی", examDate = "1403/10/15", examTime = "14:00", examLocation = "آزمایشگاه"),
-                CourseEntity(id = "c7", name = "تفسیر موضوعی قرآن", colorHex = "#8B5CF6", units = 2, semesterId = "sem_demo_3", courseCode = "CE106", professor = "استاد تقوی", examDate = "1403/11/02", examTime = "14:00", examLocation = "کلاس 118"),
+                CourseEntity(id = "c7", name = "تفسیر موضوعی قرآن", colorHex = "#C0CD8C", units = 2, semesterId = "sem_demo_3", courseCode = "CE106", professor = "استاد تقوی", examDate = "1403/11/02", examTime = "14:00", examLocation = "کلاس 118"),
                 CourseEntity(id = "c8", name = "نقشه کشی صنعتی", colorHex = "#0EA5E9", units = 2, semesterId = "sem_demo_3", courseCode = "CE107", professor = "مهندس عباسی", examDate = "1403/10/18", examTime = "10:00", examLocation = "آتلیه 2"),
-                CourseEntity(id = "c9", name = "مکانیک سیالات ۱", colorHex = "#6366F1", units = 3, semesterId = "sem_demo_3", courseCode = "CE108", professor = "دکتر اکبری", examDate = "1403/10/21", examTime = "10:45", examLocation = "کلاس 111 فنی")
+                CourseEntity(id = "c9", name = "مکانیک سیالات ۱", colorHex = "#C0CD8C", units = 3, semesterId = "sem_demo_3", courseCode = "CE108", professor = "دکتر اکبری", examDate = "1403/10/21", examTime = "10:45", examLocation = "کلاس 111 فنی")
             )
             dao.insertCourses(demoCourses)
 

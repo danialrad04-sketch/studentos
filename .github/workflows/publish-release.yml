@@ -9,15 +9,15 @@ on:
       tag:
         description: "Release tag matching version_name"
         required: true
-        default: "v2.1.0"
+        default: "v2.1.1"
       version_code:
         description: "Must exceed every previously distributed build"
         required: true
-        default: "2006"
+        default: "2007"
       version_name:
         description: "Android version name"
         required: true
-        default: "2.1.0"
+        default: "2.1.1"
 
 permissions:
   contents: write
