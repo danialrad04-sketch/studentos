@@ -1,0 +1,79 @@
+package com.example
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import com.example.data.local.entity.CourseEntity
+import com.example.data.local.entity.CourseSessionEntity
+import com.example.data.local.relation.CourseWithSessions
+import com.example.ui.components.FloatingIslandNavigationBar
+import com.example.ui.components.ModernBentoDashboard
+import com.example.ui.components.AccountGateV2
+import com.example.ui.models.AppTab
+import com.example.ui.theme.StudentOsTheme
+import com.github.takahirom.roborazzi.captureRoboImage
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(qualifiers = "w393dp-h852dp-xxhdpi", sdk = [35])
+class ReleaseVisualTest {
+    @get:Rule val rule = createComposeRule()
+    private val courses = listOf(
+        CourseEntity(id="thermo", name="ترمودینامیک مهندسی شیمی", professor="دکتر کریمی"),
+        CourseEntity(id="math", name="ریاضی مهندسی", professor="دکتر صیفاری")
+    )
+    private fun dashboard(dark: Boolean, scale: Float = 1f) {
+        rule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, scale)) {
+                StudentOsTheme(darkTheme = dark) {
+                    Surface(color = MaterialTheme.colorScheme.background) {
+                        Column(Modifier.fillMaxSize()) {
+                            ModernBentoDashboard(
+                                courses = courses,
+                                coursesWithSessions = courses.mapIndexed { i, course ->
+                                    CourseWithSessions(course,listOf(CourseSessionEntity(courseId=course.id, day=0, start="${10+i*2}:00", end="${12+i*2}:00", location="دانشکده فنی، کلاس ۱۰۸")))
+                                },
+                                attendanceList = emptyList(), tasks = emptyList(), grades = emptyList(),
+                                gpa = "۱۷٫۸۵", passedUnits = 34, totalRequiredCredits = 140,
+                                pomodoroSeconds = 1500, isPomodoroRunning = false,
+                                onTogglePomodoro = {}, onNavigateTab = {},
+                                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)
+                            )
+                            FloatingIslandNavigationBar(AppTab.DASHBOARD,{})
+                        }
+                    }
+                }
+            }
+        }
+        rule.waitForIdle()
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/dashboard-${if(dark) "dark" else "light"}-$scale.png")
+    }
+    @Test fun dashboardLight() = dashboard(false)
+    @Test fun dashboardDark() = dashboard(true)
+    @Test fun dashboardLargeText() = dashboard(false, 1.5f)
+    @Test fun accountEntry() {
+        rule.setContent {
+            StudentOsTheme(darkTheme=false) {
+                AccountGateV2(onSignIn={_,_,_->},onSignUp={_,_,_,_->},onForgotPassword={},onGoogleSignIn={},onContinueAsGuest={})
+            }
+        }
+        rule.waitForIdle()
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/account-light.png")
+    }
+}

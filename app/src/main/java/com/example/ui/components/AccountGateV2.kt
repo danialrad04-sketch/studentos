@@ -112,6 +112,21 @@ fun AccountGateV2(
                 )
                 Spacer(Modifier.height(18.dp))
 
+                OutlinedButton(
+                    onClick = onContinueAsGuest,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("primary_guest_entry"),
+                    shape = RoundedCornerShape(13.dp)
+                ) {
+                    Icon(Icons.Rounded.School, contentDescription = null)
+                    Spacer(Modifier.width(7.dp))
+                    Text("ادامه بدون حساب — دسترسی آفلاین", fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(Modifier.height(8.dp))
+
                 Surface(
                     Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
@@ -185,11 +200,11 @@ fun AccountGateV2(
                         )
 
                         message?.let {
-                            Text(
-                                it,
+                            StudentCardBody(
+                                text = it,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.error,
-                                textAlign = TextAlign.Center,
+                                maxLines = 3,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }

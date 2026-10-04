@@ -86,6 +86,27 @@ object AcademicRiskEngine {
             }
         }
 
+        // 3. Planning Collisions (Task ↔ Exam and same-day task clusters)
+        AcademicPlanningCollisionEngine.detect(
+            tasks = tasks,
+            exams = exams
+        ).forEach { collision ->
+            risks.add(
+                AcademicRisk(
+                    id = "planning_" + collision.id,
+                    title = collision.title,
+                    description = collision.description,
+                    severity = if (collision.severity == com.example.domain.model.AcademicPlanningCollisionSeverity.HIGH) {
+                        RiskSeverity.HIGH
+                    } else {
+                        RiskSeverity.MEDIUM
+                    },
+                    riskType = AcademicRiskType.UPCOMING_DEADLINE,
+                    recommendedAction = "یکی از فعالیت‌ها را زودتر انجام بده یا موعدها را جابه‌جا کن تا فشار روز موردنظر کاهش یابد."
+                )
+            )
+        }
+
         // 3. Pending Overdue Tasks
         val overdueTasks = tasks.filter { !it.isCompleted && it.dueDate.isNotBlank() }
         if (overdueTasks.size >= 3) {
@@ -226,23 +247,26 @@ object SemesterPlannerEngine {
 object StudyPlannerEngine {
 
     /**
-     * Generates a deterministic study prioritization plan based on the actual
-     * upcoming exam dates and pending tasks. Duplicate recommendations are removed.
+     * Backward-compatible planner entry point.
+     * Uses deterministic date urgency without requiring additional repository data.
      */
     fun generateStudyPlan(
         exams: List<ExamItem>,
         tasks: List<TaskEntity>
     ): List<StudySessionRecommendation> {
+        // Keep the original two-argument contract deterministic and independent
+        // of the current calendar. The v2 overload below is date-aware.
         val examRecommendations = exams
-            .filter { it.courseName.isNotBlank() && it.solarDate.isNotBlank() }
+            .filter { it.courseName.isNotBlank() }
             .distinctBy { it.id }
-            .sortedWith(compareBy<ExamItem>({ it.solarDate.trim() }, { it.time.trim() }, { it.courseName.trim() }))
+            .sortedWith(compareBy<ExamItem>({ normalizeDate(it.solarDate) }, { it.time.trim() }, { it.courseName.trim() }))
+            .take(4)
             .map { exam ->
                 StudySessionRecommendation(
-                    id = "study_exam_${exam.id}",
+                    id = "study_exam_" + exam.id,
                     courseName = exam.courseName.trim(),
                     recommendedDurationMinutes = 60,
-                    priorityReason = "آمادگی آزمون مورخ ${exam.solarDate.trim()}",
+                    priorityReason = "آمادگی آزمون مورخ " + exam.solarDate.trim(),
                     targetType = "آمادگی آزمون"
                 )
             }
@@ -250,22 +274,162 @@ object StudyPlannerEngine {
         val taskRecommendations = tasks
             .filter { !it.isCompleted && it.courseName.isNotBlank() && it.title.isNotBlank() }
             .distinctBy { it.id }
-            .take(5)
+            .sortedWith(compareBy<TaskEntity>({ normalizeDate(it.dueDate) }, { it.courseName.trim() }, { it.title.trim() }))
+            .take(8)
             .map { task ->
                 StudySessionRecommendation(
-                    id = "study_task_${task.id}",
+                    id = "study_task_" + task.id,
                     courseName = task.courseName.trim(),
-                    recommendedDurationMinutes = 45,
-                    priorityReason = "انجام تکلیف «${task.title.trim()}»",
+                    recommendedDurationMinutes = 30,
+                    priorityReason = "انجام کار: " + task.title.trim(),
                     targetType = "تکمیل تکلیف"
                 )
             }
 
-        return (examRecommendations + taskRecommendations)
+        return (examRecommendations + taskRecommendations).take(8)
+    }
+
+    /**
+     * v2 planner:
+     * - overdue tasks get the highest task urgency
+     * - tasks due today outrank ordinary open tasks
+     * - tasks linked to an exam are promoted
+     * - nearest known exam is promoted
+     * - output is stable and deterministic
+     */
+    fun generateStudyPlan(
+        exams: List<ExamItem>,
+        tasks: List<TaskEntity>,
+        attendanceList: List<AttendanceEntity>,
+        todayDate: String
+    ): List<StudySessionRecommendation> {
+        val today = normalizeDate(todayDate)
+
+        val upcomingExams = exams
+            .filter {
+                it.courseName.isNotBlank() &&
+                    normalizeDate(it.solarDate).isNotBlank() &&
+                    normalizeDate(it.solarDate) >= today
+            }
+            .distinctBy { it.id }
+            .sortedWith(
+                compareBy<ExamItem>({ normalizeDate(it.solarDate) }, { it.time.trim() }, { it.courseName.trim() })
+            )
+
+        val examNames = upcomingExams
+            .map { it.courseName.trim().lowercase() }
+            .toSet()
+
+        val recommendations = mutableListOf<Pair<Int, StudySessionRecommendation>>()
+
+        upcomingExams.take(4).forEachIndexed { index, exam ->
+            val date = normalizeDate(exam.solarDate)
+            val score = when {
+                date == today -> 100
+                index == 0 -> 88
+                index == 1 -> 78
+                else -> 68
+            }
+            val minutes = when {
+                date == today -> 75
+                index == 0 -> 60
+                index == 1 -> 50
+                else -> 40
+            }
+            recommendations += score to StudySessionRecommendation(
+                id = "study_exam_" + exam.id,
+                courseName = exam.courseName.trim(),
+                recommendedDurationMinutes = minutes,
+                priorityReason = "آمادگی آزمون مورخ " + exam.solarDate.trim(),
+                targetType = "آمادگی آزمون"
+            )
+        }
+
+        tasks
+            .filter { !it.isCompleted && it.courseName.isNotBlank() && it.title.isNotBlank() }
+            .distinctBy { it.id }
+            .forEach { task ->
+                val due = normalizeDate(task.dueDate)
+                val linkedToExam = examNames.contains(task.courseName.trim().lowercase())
+                val overdue = due.isNotBlank() && due < today
+                val dueToday = due.isNotBlank() && due == today
+
+                val score = when {
+                    overdue && linkedToExam -> 110
+                    overdue -> 102
+                    dueToday && linkedToExam -> 96
+                    dueToday -> 91
+                    linkedToExam -> 84
+                    else -> 62
+                }
+
+                val minutes = when {
+                    overdue && linkedToExam -> 60
+                    overdue -> 50
+                    dueToday -> 45
+                    linkedToExam -> 45
+                    else -> 30
+                }
+
+                val reason = when {
+                    overdue && linkedToExam -> "کار عقب‌افتاده و مرتبط با امتحان " + task.courseName.trim()
+                    overdue -> "کار عقب‌افتاده: " + task.title.trim()
+                    dueToday && linkedToExam -> "موعد امروز و مرتبط با امتحان " + task.courseName.trim()
+                    dueToday -> "موعد امروز: " + task.title.trim()
+                    linkedToExam -> "کار مرتبط با امتحان درس " + task.courseName.trim()
+                    else -> "انجام کار: " + task.title.trim()
+                }
+
+                recommendations += score to StudySessionRecommendation(
+                    id = "study_task_" + task.id,
+                    courseName = task.courseName.trim(),
+                    recommendedDurationMinutes = minutes,
+                    priorityReason = reason,
+                    targetType = "تکمیل تکلیف"
+                )
+            }
+
+        val criticalAttendanceCourses = attendanceList
+            .filter { it.maxAllowed > 0 && it.absentCount >= it.maxAllowed }
+            .map { it.courseName.trim().lowercase() }
+            .toSet()
+
+        val adjusted = recommendations.map { (score, recommendation) ->
+            if (criticalAttendanceCourses.contains(recommendation.courseName.trim().lowercase())) {
+                (score + 6).coerceAtMost(120) to recommendation.copy(
+                    priorityReason = recommendation.priorityReason + " · این درس در رادار غیبت هم نیازمند توجه است."
+                )
+            } else {
+                score to recommendation
+            }
+        }
+
+        return adjusted
+            .sortedWith(
+                compareByDescending<Pair<Int, StudySessionRecommendation>> { it.first }
+                    .thenBy { it.second.courseName }
+                    .thenBy { it.second.id }
+            )
+            .map { it.second }
             .distinctBy { it.id }
             .take(8)
     }
+
+    private fun normalizeDate(value: String): String {
+        val raw = value
+            .trim()
+            .replace('-', '/')
+            .replace('۰','0').replace('۱','1').replace('۲','2').replace('۳','3')
+            .replace('۴','4').replace('۵','5').replace('۶','6').replace('۷','7')
+            .replace('۸','8').replace('۹','9')
+        val parts = raw.split('/')
+        if (parts.size != 3) return ""
+        return parts[0].padStart(4, '0') +
+            parts[1].padStart(2, '0') +
+            parts[2].padStart(2, '0')
+    }
 }
+
 object GlobalSearchEngine {
 
     /**

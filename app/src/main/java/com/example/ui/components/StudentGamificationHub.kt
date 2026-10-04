@@ -470,7 +470,7 @@ private fun AcademicBadgeCard(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
+                        StudentCardTitle(
                             text = badge.title,
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             color = if (badge.isUnlocked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
@@ -480,7 +480,7 @@ private fun AcademicBadgeCard(
                             shape = RoundedCornerShape(6.dp),
                             color = tierColor.copy(alpha = 0.15f)
                         ) {
-                            Text(
+                            StudentCardMeta(
                                 text = badge.tier.title,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold),
                                 color = tierColor,
@@ -490,10 +490,11 @@ private fun AcademicBadgeCard(
                     }
 
                     Spacer(modifier = Modifier.height(2.dp))
-                    Text(
+                    StudentCardBody(
                         text = badge.description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (badge.isUnlocked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = if (badge.isUnlocked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        maxLines = 2
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
@@ -513,7 +514,7 @@ private fun AcademicBadgeCard(
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                             strokeCap = StrokeCap.Round
                         )
-                        Text(
+                        StudentCardMeta(
                             text = badge.progressText,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                             color = MaterialTheme.colorScheme.onSurfaceVariant

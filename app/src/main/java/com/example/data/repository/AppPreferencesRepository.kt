@@ -61,6 +61,9 @@ class AppPreferencesRepository(context: Context) {
     private val _guestModeEnabled = MutableStateFlow(readGuestModeEnabled())
     val guestModeEnabled: StateFlow<Boolean> = _guestModeEnabled.asStateFlow()
 
+    private val _acceptedStudyPlanIds = MutableStateFlow(readAcceptedStudyPlanIds())
+    val acceptedStudyPlanIds: StateFlow<Set<String>> = _acceptedStudyPlanIds.asStateFlow()
+
     private fun readStoredThemeMode(): ThemeMode {
         val stored = prefs.getString(KEY_THEME_MODE, ThemeMode.SYSTEM.name) ?: ThemeMode.SYSTEM.name
         return try {
@@ -102,8 +105,30 @@ class AppPreferencesRepository(context: Context) {
         return prefs.getString(KEY_CUSTOM_GEMINI_API_KEY, "") ?: ""
     }
 
+    private fun readAcceptedStudyPlanIds(): Set<String> {
+        return prefs.getStringSet(KEY_ACCEPTED_STUDY_PLAN_IDS, emptySet())?.toSet() ?: emptySet()
+    }
+
     private fun readGuestModeEnabled(): Boolean {
-        return prefs.getBoolean(KEY_GUEST_MODE_ENABLED, false)
+        // Fresh installs must remain usable without network authentication.
+        // Existing users keep their explicit sign-out choice because sign-out writes this key.
+        return prefs.getBoolean(
+            KEY_GUEST_MODE_ENABLED,
+            !prefs.getBoolean(KEY_FIRST_LAUNCH_COMPLETED, false)
+        )
+    }
+
+    fun acceptStudyRecommendation(id: String) {
+        val cleanId = id.trim()
+        if (cleanId.isBlank()) return
+        val next = _acceptedStudyPlanIds.value + cleanId
+        prefs.edit().putStringSet(KEY_ACCEPTED_STUDY_PLAN_IDS, next).commit()
+        _acceptedStudyPlanIds.value = next
+    }
+
+    fun clearAcceptedStudyPlan() {
+        prefs.edit().remove(KEY_ACCEPTED_STUDY_PLAN_IDS).commit()
+        _acceptedStudyPlanIds.value = emptySet()
     }
 
     fun setGuestModeEnabled(enabled: Boolean) {
@@ -222,6 +247,7 @@ class AppPreferencesRepository(context: Context) {
         private const val KEY_DATA_LOSS_WARNING_DISMISSED = "key_data_loss_warning_dismissed"
         private const val KEY_CUSTOM_GEMINI_API_KEY = "key_custom_gemini_api_key"
         private const val KEY_GUEST_MODE_ENABLED = "key_guest_mode_enabled_v1"
+        private const val KEY_ACCEPTED_STUDY_PLAN_IDS = "key_accepted_study_plan_ids_v2"
 
         private const val KEY_IDENTITY_MIGRATED_TO_ROOM = "key_identity_migrated_to_room_v1"
         private const val KEY_LEGACY_STUDENT_NAME = "key_student_name"

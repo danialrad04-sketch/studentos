@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -81,12 +82,7 @@ fun CurriculumScreen(
             "اطلاعات چارت پس از تکمیل مشخصات تحصیلی نمایش داده می‌شود"
         }
         Column {
-            Text(
-                text = chartTitle,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            StudentCardTitle(text = chartTitle, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
             Text(
                 text = "وضعیت زنده دروس و زنجیره پیش‌نیازها · $totalUnits",
                 fontSize = 11.sp,
@@ -181,7 +177,7 @@ fun CurriculumScreen(
                     ) {
                         Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = Rose600, modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(text = "چارت معتبر یافت نشد: ${matchState.explanation}", style = MaterialTheme.typography.bodySmall, color = Rose600)
+                        StudentCardBody(text = "چارت معتبر یافت نشد: ${matchState.explanation}", style = MaterialTheme.typography.bodySmall, color = Rose600, maxLines = 3)
                     }
                 }
             }
@@ -433,14 +429,20 @@ private fun EvaluatedCourseRow(course: EvaluatedCurriculumCourse) {
                     text = course.name,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
                 if (course.courseType.isNotEmpty()) {
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "· ${course.courseType}",
+                        text = "· " + course.courseType,
                         fontSize = 10.sp,
-                        color = onSurfaceVariant
+                        color = onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = 100.dp)
                     )
                 }
             }
@@ -487,7 +489,9 @@ private fun EvaluatedCourseRow(course: EvaluatedCurriculumCourse) {
                             text = reason.explanation,
                             fontSize = 10.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            lineHeight = 14.sp
+                            lineHeight = 14.sp,
+                            maxLines = 3,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
                 }

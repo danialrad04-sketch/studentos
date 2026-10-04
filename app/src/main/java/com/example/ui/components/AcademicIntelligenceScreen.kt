@@ -32,8 +32,6 @@ import com.example.data.local.entity.TaskEntity
 import com.example.domain.model.AcademicRisk
 import com.example.domain.model.RiskSeverity
 import com.example.ui.models.AppTab
-import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.StudentShapeTokens
 import com.example.ui.theme.StudentSpacing
 
@@ -68,18 +66,18 @@ fun AcademicIntelligenceScreen(
         AcademicCard {
             Column(modifier = Modifier.padding(StudentSpacing.Xxl)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(shape = StudentShapeTokens.Compact, color = AcademicNavy.copy(alpha = 0.10f)) {
+                    Surface(shape = StudentShapeTokens.Compact, color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.10f)) {
                         Icon(
                             Icons.Outlined.Analytics,
                             contentDescription = null,
-                            tint = AcademicNavy,
+                            tint = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.padding(StudentSpacing.Sm).size(20.dp)
                         )
                     }
                     Spacer(Modifier.size(StudentSpacing.Md))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("وضعیت کلی تحصیلی", style = MaterialTheme.typography.headlineSmall)
-                        Text(status, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        StudentCardTitle("وضعیت کلی تحصیلی", style = MaterialTheme.typography.headlineSmall)
+                        StudentCardBody(status, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
                     }
                 }
 
@@ -100,7 +98,7 @@ fun AcademicIntelligenceScreen(
                 LinearProgressIndicator(
                     progress = { completion },
                     modifier = Modifier.fillMaxWidth(),
-                    color = AcademicOlive
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(Modifier.height(StudentSpacing.Xs))
                 Text(
@@ -119,13 +117,14 @@ fun AcademicIntelligenceScreen(
         if (risks.isEmpty()) {
             AcademicCard {
                 Column(modifier = Modifier.padding(StudentSpacing.Xxl)) {
-                    Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = AcademicOlive)
+                    Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(StudentSpacing.Md))
                     Text("مورد مهمی شناسایی نشد", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "بر اساس داده‌های فعلی، موتور ارزیابی مورد قابل توجهی گزارش نکرده است.",
+                    StudentCardBody(
+                        text = "بر اساس داده‌های فعلی، موتور ارزیابی مورد قابل توجهی گزارش نکرده است.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 3
                     )
                 }
             }
@@ -141,16 +140,29 @@ fun AcademicIntelligenceScreen(
                                 tint = if (critical) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                             )
                             Spacer(Modifier.size(StudentSpacing.Sm))
-                            Text(risk.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(
+                                risk.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
                         }
                         Spacer(Modifier.height(StudentSpacing.Sm))
                         Text(
                             risk.description,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 3,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                         Spacer(Modifier.height(StudentSpacing.Md))
-                        Text("پیشنهاد: ${risk.recommendedAction}", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            "پیشنهاد: " + risk.recommendedAction,
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 2,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
                     }
                 }
             }
@@ -165,11 +177,12 @@ fun AcademicIntelligenceScreen(
                 Spacer(Modifier.size(StudentSpacing.Md))
                 Column(modifier = Modifier.weight(1f)) {
                     Text("گام پیشنهادی", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(
-                        if (tasks.count { !it.isCompleted } > 0) "تکالیف باز را مرور و بر اساس موعد مرتب کنید."
-                        else "برای حفظ روند فعلی، یک هدف مطالعه مشخص کنید.",
+                    StudentCardBody(
+                        text = if (tasks.count { !it.isCompleted } > 0) "تکالیف باز را مرور و بر اساس موعد مرتب کنید."
+                            else "برای حفظ روند فعلی، یک هدف مطالعه مشخص کنید.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2
                     )
                 }
             }

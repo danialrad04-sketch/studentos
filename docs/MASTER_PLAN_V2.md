@@ -1,3 +1,5 @@
+> Current implementation and remaining scope: [V2_1_VERIFICATION.md](V2_1_VERIFICATION.md). Checkmarks below describe historical implementation, not completed live/device verification.
+
 # Student OS — Master Plan v2
 ## Product-grade UX/UI + Capability Evolution
 
@@ -58,7 +60,7 @@ Core rule:
 **Answer:** Consistency, hierarchy, restraint, speed, recoverability, responsive layouts and predictable interactions—not decoration.
 
 ## Q4. What visual language should define the brand?
-**Answer:** Academic premium: deep petrol/navy foundation, olive accent, quiet surfaces, strong typography, restrained elevation, limited gradients and minimal visual noise.
+**Answer:** Academic premium: deep petrol/navy foundation, soft violet accent, quiet surfaces, strong typography, restrained elevation, limited gradients and minimal visual noise.
 
 ## Q5. What should be removed from the experience?
 **Answer:** Duplicate controls, decorative cards without information value, overly nested dialogs, redundant labels, unnecessary animations, and settings that belong in advanced areas.
@@ -229,11 +231,22 @@ Build:
 - dark/light parity
 
 Visual principles:
-- deep petrol/navy + olive brand
+- soft violet light + petrol/navy dark brand
 - neutral surfaces
 - limited color accents
 - no generic neon/glass SaaS treatment
 - information first
+
+
+### Card Sizing Standard (mandatory)
+- Compact information cards must have bounded dynamic text.
+- Titles: max 1 line + ellipsis.
+- Descriptions: max 2–3 lines + ellipsis.
+- Metadata/chips: max 1 line + ellipsis.
+- Compact cards must use an explicit height band when their content is structurally fixed.
+- Detail/workspace surfaces may show full text only inside a bounded scrolling region.
+- No user-provided string may be allowed to determine the unbounded height of a reusable card.
+- Every new card component must include a long-content regression case before merge.
 
 ## Phase A2 — App Shell 2.0
 Improve:
@@ -605,27 +618,34 @@ The order intentionally front-loads UX consistency and shared context before add
 The first implementation sprint after this plan is intentionally small:
 
 ### Sprint 1
-- audit all main screens and shared components
-- create UX inventory
-- identify duplicate UI patterns
-- define v2 component conventions
-- establish Dashboard/Schedule/Course information hierarchy
-- add tests around newly shared context relationships
+- audit all main screens and shared components ✅
+- create UX inventory ✅
+- identify duplicate UI patterns ✅
+- define v2 component conventions ✅
+- establish Dashboard/Schedule/Course information hierarchy ✅
+- add tests around newly shared context relationships ✅
+- enforce card sizing/long-text standards across core screens ✅
 - no backend/schema migration
 
 ### Sprint 2
 - implement shell 2.0
-- implement Dashboard 2.0
-- implement Schedule 2.0
+- implement Dashboard 2.0 ✅ first contextual layer
+- implement Schedule 2.0 ✅ first contextual layer
+- unify bounded-card behavior across core academic surfaces ✅
+- Command Center/OCR/Support/Copilot bounded surfaces ✅
 
 ### Sprint 3
-- Course Workspace 3.0
-- Task / Exam unified UX
+- Course Workspace 3.0 ✅ bounded context foundation from v1.3/v2
+- Task / Exam unified UX ✅ context summaries
+- shared Academic Context + Priority engines ✅
 
 ### Sprint 4
-- Academic Context Graph
-- Copilot command layer
-- planning intelligence
+- Academic Context Graph ✅ explicit model + builder + regression test
+- Copilot command layer ✅ deterministic priority command
+- planning intelligence ✅ urgency-aware study planner
+- deadline collision engine ✅ task/exam + same-day task detection
+- risk integration ✅ planning collisions flow into Academic Intelligence
+- study-plan preview/accept flow
 
 ### Sprint 5
 - import/recovery/notifications
@@ -635,6 +655,83 @@ The first implementation sprint after this plan is intentionally small:
 - regression + release candidate
 
 ---
+
+
+# 12. Distribution & Network Resilience
+
+Student OS must remain reviewable and usable on restricted networks common to the target market.
+
+## D1 — Authentication resilience
+- Firebase remains the primary identity provider.
+- Email sign-in/sign-up uses Firebase for this release. Do not silently create accounts with another provider.
+- Invalid credentials must never trigger fallback.
+- Google sign-in continues through Credential Manager + Firebase; the production signing certificate must remain unchanged.
+
+## D2 — Release configuration safety
+- A dedicated backend is optional for the guest/Firebase release. Backend flows require explicit configuration.
+- Placeholder endpoints such as example.com are forbidden in release artifacts.
+- Guest and Firebase core operation must not be blocked by an absent VPS endpoint.
+
+## D3 — Marketplace review mode
+- Guest mode must reach the core product without cloud authentication.
+- Review instructions must clearly explain Guest access and any required test credentials.
+- Public privacy-policy and account-deletion pages must be available before store submission.
+
+## D4 — Release hardening
+- Android API 36 target.
+- 16 KB page-size compatibility check.
+- AAB as primary store artifact.
+- APK for direct QA/reviewer testing.
+- Immutable versionCode progression.
+- Signing certificate continuity verification.
+
+# 13. Context Graph v2 — Next Capability Layer
+
+The shared academic context becomes the common read model for:
+- Dashboard
+- Schedule
+- Course Workspace
+- Task Center
+- Exam Center
+- Copilot
+- Planning
+
+New capability work should prefer deriving views from the graph instead of creating duplicated feature-specific state.
+
+# 14. Copilot Command Layer
+
+Phase C1:
+- deterministic intents for read-only queries
+- explicit action preview
+- confirmation for mutations
+- undo after safe mutations
+- context-aware suggested commands
+- offline fallback for deterministic queries
+
+Never allow the LLM to directly write Room/cloud state.
+
+# 15. Planning Intelligence
+
+Phase P1:
+- deadline collision detection
+- exam preparation windows
+- workload balancing
+- focus-session suggestions
+- explainable priority reasons
+- user override
+- preview-before-commit
+
+# 16. Layout Safety Contract
+
+Every information card has an explicit text policy:
+- title: 1 line
+- metadata: 1 line
+- body: 2 lines by default
+- expandable content: only when the user explicitly opens it
+- no dynamic string may define an uncontrolled card height
+- long text belongs in a scrollable detail surface, not a dashboard card
+
+Any new card that violates this contract requires a UI test or a documented exception.
 
 # 11. Success Criteria
 

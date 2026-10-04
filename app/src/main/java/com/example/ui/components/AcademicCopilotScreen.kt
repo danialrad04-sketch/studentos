@@ -17,15 +17,18 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -77,6 +80,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.StudentOsColors
@@ -124,6 +128,8 @@ fun AcademicCopilotScreen(
     exams: List<ExamItem>,
     coursesWithSessions: List<com.example.data.local.relation.CourseWithSessions> = emptyList(),
     curriculumCourses: List<com.example.data.local.entity.CurriculumCourseEntity> = emptyList(),
+    primaryPriority: com.example.domain.model.AcademicPriorityItem? = null,
+    planningCollisions: List<com.example.domain.model.AcademicPlanningCollision> = emptyList(),
     onNavigateTab: (AppTab) -> Unit,
     onExecuteAction: (CopilotPayload) -> Unit,
     onOpenPastSemestersDialog: () -> Unit,
@@ -297,7 +303,12 @@ fun AcademicCopilotScreen(
             onOpenApiKeyDialog = { showApiKeyDialog = true }
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        CopilotContextRibbonV2(
+            primaryPriority = primaryPriority,
+            collisions = planningCollisions,
+            onOpenTab = onNavigateTab,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
 
         // 2. Chat Conversation List
         LazyColumn(
@@ -687,6 +698,8 @@ private fun CopilotMessageItem(
 
             Box(
                 modifier = Modifier
+                    .heightIn(max = if (isUser) 260.dp else 340.dp)
+                    .verticalScroll(rememberScrollState())
                     .clip(
                         RoundedCornerShape(
                             topStart = 20.dp,
@@ -749,7 +762,9 @@ private fun CopilotMessageItem(
                                 text = message.confidenceBadge,
                                 fontSize = 9.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = badgeColor
+                                color = badgeColor,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
@@ -869,6 +884,7 @@ private fun CopilotActionProposalCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = 112.dp, max = 236.dp)
             .padding(start = 40.dp, top = 4.dp, bottom = 4.dp),
         shape = StudentShapeTokens.Card,
         colors = CardDefaults.cardColors(
@@ -898,7 +914,9 @@ private fun CopilotActionProposalCard(
                         text = proposal.title,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
 
@@ -932,7 +950,9 @@ private fun CopilotActionProposalCard(
             Text(
                 text = proposal.description,
                 fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 3,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
 
             Spacer(modifier = Modifier.height(StudentSpacing.Md))

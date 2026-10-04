@@ -79,4 +79,34 @@ class AcademicContextEngineTest {
         assertNotNull(snapshot.nextCourseId)
         assertEquals("physics", snapshot.nextCourseId)
     }
+
+    @Test
+    fun completedClassesAreNotPresentedAsNextOrUrgent() {
+        val course = CourseEntity(id = "past", name = "ریاضی")
+        val relation = CourseWithSessions(course, listOf(
+            CourseSessionEntity(id = "past-session", courseId = course.id, day = 0, start = "08:00", end = "10:00")
+        ))
+        val snapshot = AcademicContextEngine.buildSnapshot(
+            listOf(course), listOf(relation), emptyList(), emptyList(), emptyList(),
+            todayWeekdayIndex = 0, todayDate = "1405/07/11", minuteOfDay = 600
+        )
+        assertEquals(1, snapshot.todaySessionCount)
+        org.junit.Assert.assertNull(snapshot.nextCourseId)
+        org.junit.Assert.assertNull(snapshot.topPriority)
+    }
+
+    @Test
+    fun currentSessionWinsOverAnEarlierCompletedClass() {
+        val course = CourseEntity(id = "current", name = "فیزیک")
+        val relation = CourseWithSessions(course, listOf(
+            CourseSessionEntity(id = "early", courseId = course.id, day = 0, start = "08:00", end = "09:00"),
+            CourseSessionEntity(id = "live", courseId = course.id, day = 0, start = "۱۰:۰۰", end = "۱۱:۰۰")
+        ))
+        val snapshot = AcademicContextEngine.buildSnapshot(
+            listOf(course), listOf(relation), emptyList(), emptyList(), emptyList(),
+            todayWeekdayIndex = 0, todayDate = "1405/07/11", minuteOfDay = 630
+        )
+        assertEquals("۱۰:۰۰", snapshot.nextCourseStart)
+        assertEquals("next-class:live", snapshot.topPriority?.id)
+    }
 }

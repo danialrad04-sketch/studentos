@@ -15,9 +15,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -150,7 +152,9 @@ fun AttendanceRadarScreen(
                 Text(
                     text = "مدیریت استرس غیبت و محافظت از کارت حضور در جلسه امتحانات",
                     fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
 
@@ -355,11 +359,11 @@ fun AttendanceRadarScreen(
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
+                    StudentCardBody(
                         text = "درس: $courseName\nمی‌توانید هر تعداد جلسه غیبت را تایپ کرده یا از گزینه‌های سریع انتخاب کنید:",
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp
+                        maxLines = 3
                     )
 
                     OutlinedTextField(
@@ -449,7 +453,9 @@ private fun AttendanceSemesterConcentricGauge(
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 150.dp, max = 222.dp),
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, if (isDark) MaterialTheme.colorScheme.outline.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outline),
@@ -622,7 +628,10 @@ fun AttendanceCard(
                             text = courseName,
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 13.5.sp,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            modifier = Modifier.widthIn(max = 220.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Surface(

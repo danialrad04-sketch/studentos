@@ -6,6 +6,7 @@ import android.media.ToneGenerator
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.backup.LocalDataBackupManager
+import com.example.data.cloud.SyncStatusStore
 import com.example.data.local.AppDatabase
 import com.example.data.local.entity.AttendanceEntity
 import com.example.data.local.entity.CourseEntity
@@ -25,12 +26,18 @@ import com.example.ui.util.NotificationHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import com.example.domain.engine.AcademicGamificationEngine
+import com.example.domain.engine.AcademicContextGraphBuilder
+import com.example.domain.engine.AcademicPriorityEngine
+import com.example.domain.engine.AcademicPlanningCollisionEngine
 import com.example.domain.engine.AcademicRiskEngine
 import com.example.domain.engine.GlobalSearchEngine
 import com.example.domain.engine.SemesterPlannerEngine
 import com.example.domain.engine.StudyPlannerEngine
 import com.example.domain.engine.WorkloadEngine
 import com.example.domain.model.AcademicBadge
+import com.example.domain.model.AcademicContextGraph
+import com.example.domain.model.AcademicPlanningCollision
+import com.example.domain.model.AcademicPriorityItem
 import com.example.domain.model.AcademicRisk
 import com.example.domain.model.GlobalSearchResult
 import com.example.domain.model.SemesterPlan
@@ -68,6 +75,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -105,19 +113,15 @@ class StudentViewModel @JvmOverloads constructor(
     val currentUser: StateFlow<com.example.domain.model.UserAccount> = authManager.currentUser
     val isAuthInitialized: StateFlow<Boolean> = authManager.isInitialized
     val guestModeEnabled: StateFlow<Boolean> = preferencesRepository.guestModeEnabled
+    val syncStatus: StateFlow<com.example.domain.model.SyncStatusSnapshot> = SyncStatusStore.status
+    val acceptedStudyPlanIds: StateFlow<Set<String>> = preferencesRepository.acceptedStudyPlanIds
 
     fun continueAsGuest() {
         preferencesRepository.setGuestModeEnabled(true)
     }
 
-    /**
-     * Guest-first entry while the dedicated backend is not yet connected.
-     * Cloud authentication remains available from the account area.
-     */
-    private fun ensureGuestFirstEntry() {
-        if (!preferencesRepository.guestModeEnabled.value && currentUser.value.isGuest) {
-            preferencesRepository.setGuestModeEnabled(true)
-        }
+    fun acceptStudyRecommendation(recommendation: StudySessionRecommendation) {
+        preferencesRepository.acceptStudyRecommendation(recommendation.id)
     }
 
     private val _databaseRecoveryWarning = MutableStateFlow(false)
@@ -127,8 +131,7 @@ class StudentViewModel @JvmOverloads constructor(
     val userMessage: SharedFlow<String> = _userMessage.asSharedFlow()
 
     init {
-        ensureGuestFirstEntry()
-
+        SyncStatusStore.initialize(application)
         try {
             NotificationHelper.initNotificationChannel(application)
         } catch (_: Throwable) {
@@ -467,10 +470,75 @@ class StudentViewModel @JvmOverloads constructor(
     // Study Planner Recommendations (Phase 28)
     val studyRecommendations: StateFlow<List<StudySessionRecommendation>> = combine(
         exams,
-        tasks
-    ) { currentExams, tasksList ->
-        StudyPlannerEngine.generateStudyPlan(currentExams, tasksList)
+        tasks,
+        attendance
+    ) { currentExams, tasksList, attendanceList ->
+        StudyPlannerEngine.generateStudyPlan(
+            exams = currentExams,
+            tasks = tasksList,
+            attendanceList = attendanceList,
+            todayDate = com.example.domain.util.JalaliCalendarUtil.today().format("/")
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Shared Academic Context Graph (v2)
+    val academicContextGraph: StateFlow<AcademicContextGraph> = combine(
+        courses,
+        coursesWithSessions,
+        attendance,
+        tasks,
+        exams
+    ) { coursesList, sessionsList, attendanceList, tasksList, examsList ->
+        AcademicContextGraphBuilder.build(
+            courses = coursesList,
+            coursesWithSessions = sessionsList,
+            attendance = attendanceList,
+            tasks = tasksList,
+            exams = examsList
+        )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        AcademicContextGraph(emptyList(), emptyList(), emptyList())
+    )
+
+    // Shared academic priorities (single source for Dashboard / future Copilot)
+    val academicPriorities: StateFlow<List<AcademicPriorityItem>> = combine(
+        courses,
+        coursesWithSessions,
+        attendance,
+        tasks,
+        exams
+    ) { coursesList, sessionsList, attendanceList, tasksList, examsList ->
+        AcademicPriorityEngine.rank(
+            courses = coursesList,
+            coursesWithSessions = sessionsList,
+            attendance = attendanceList,
+            tasks = tasksList,
+            exams = examsList,
+            todayWeekdayIndex = com.example.domain.util.JalaliCalendarUtil.getTodayWeekdayIndex(),
+            todayDate = com.example.domain.util.JalaliCalendarUtil.today().format("/")
+        )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        emptyList()
+    )
+
+    // Planning collisions derived from canonical tasks/exams
+    val planningCollisions: StateFlow<List<AcademicPlanningCollision>> = combine(
+        tasks,
+        exams
+    ) { tasksList, examsList ->
+        AcademicPlanningCollisionEngine.detect(
+            tasks = tasksList,
+            exams = examsList
+        )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        emptyList()
+    )
 
     // Student Gamification & Academic Badges Profile (Phase v5)
     val gamificationProfile: StateFlow<StudentGamificationProfile> = combine(
@@ -586,6 +654,15 @@ class StudentViewModel @JvmOverloads constructor(
     private val _isPomodoroRunning = MutableStateFlow(false)
     val isPomodoroRunning: StateFlow<Boolean> = _isPomodoroRunning.asStateFlow()
 
+    fun startStudyRecommendation(recommendation: StudySessionRecommendation) {
+        if (!_isPomodoroRunning.value) {
+            _pomodoroSeconds.value = recommendation.recommendedDurationMinutes.coerceIn(5, 120) * 60
+            togglePomodoro()
+        }
+        preferencesRepository.acceptStudyRecommendation(recommendation.id)
+        selectTab(AppTab.POMODORO)
+    }
+
     fun togglePomodoro() {
         if (_isPomodoroRunning.value) {
             pomodoroJob?.cancel()
@@ -601,7 +678,7 @@ class StudentViewModel @JvmOverloads constructor(
                     _isPomodoroRunning.value = false
                     addNotification(
                         "پایان تایم مطالعه پومودورو",
-                        "25 دقیقه تمرکز به پایان رسید! 5 دقیقه استراحت چشمی داشته باشید.",
+                        "جلسه تمرکز به پایان رسید؛ چند دقیقه استراحت کنید.",
                         isDanger = false
                     )
                 }
@@ -1293,15 +1370,17 @@ class StudentViewModel @JvmOverloads constructor(
     fun syncWithBackendNow(onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             try {
-                com.example.data.cloud.worker.BackendSyncWorker.triggerImmediateSync(application, pullOnly = false)
-                val pullRes = com.example.data.cloud.BackendSyncManager.pullAllData(application)
-                if (pullRes.isSuccess) {
-                    _userMessage.emit("همگام‌سازی با سرور اختصاصی با موفقیت انجام شد.")
-                    onResult(true, "اطلاعات با سرور همگام شد.")
-                } else {
-                    onResult(false, "برخی داده‌ها در همگام‌سازی دریافت نشدند.")
+                if (currentUser.value.isGuest || !com.example.data.api.backend.BackendConfig.isConfigured) {
+                    onResult(false, "برای همگام‌سازی سرور، یک حساب سرور متصل لازم است.")
+                    return@launch
                 }
+                SyncStatusStore.markSyncing(application)
+                com.example.data.cloud.BackendSyncManager.pushAllData(application).getOrThrow()
+                com.example.data.cloud.BackendSyncManager.pullAllData(application).getOrThrow()
+                SyncStatusStore.markSynced(application)
+                onResult(true, "اطلاعات با سرور همگام شد.")
             } catch (e: Exception) {
+                SyncStatusStore.markNeedsAttention(application)
                 onResult(false, "خطا در همگام‌سازی: ${e.message}")
             }
         }
@@ -1353,16 +1432,21 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun upgradeSubscriptionTier(tier: com.example.domain.model.SubscriptionTier, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            authManager.upgradeSubscriptionTier(tier)
-            addNotification("ارتقای حساب", "طرح ${tier.titleFa} فعال گردید.")
-            _userMessage.emit("اشتراک شما ارتقا یافت.")
-            onResult(true, "طرح ${tier.titleFa} فعال شد.")
+            val result = authManager.upgradeSubscriptionTier(tier)
+            if (result.isSuccess) {
+                _userMessage.emit("اشتراک شما ارتقا یافت.")
+                onResult(true, "طرح ${result.getOrThrow().titleFa} فعال شد.")
+            } else {
+                onResult(false, result.exceptionOrNull()?.localizedMessage ?: "ارتقای اشتراک انجام نشد.")
+            }
         }
     }
 
     fun signOutUser() {
         viewModelScope.launch {
-            preferencesRepository.setGuestModeEnabled(false)
+            preferencesRepository.setGuestModeEnabled(true)
+            preferencesRepository.clearAcceptedStudyPlan()
+            SyncStatusStore.markLocal(application)
             authManager.signOutUser()
             // Clear onboarding preferences
             preferencesRepository.setOnboardingCompleted(false)
@@ -1370,7 +1454,7 @@ class StudentViewModel @JvmOverloads constructor(
             _optimisticProfile.value = null
             
             // Clear the local cache to prevent previous user data residue
-            repository.clearToFreshSlate("دانشجو", "۴۰۳۰۰۰۰۱", "دانشگاه سراسری", "مهندسی", 1403, 1)
+            repository.clearToFreshSlate("دانشجو", "", "", "", 1403, 1)
             
             addNotification("خروج از حساب", "از حساب کاربری خارج شدید و به حالت مهمان تغییر کردید.")
         }
@@ -1378,9 +1462,16 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun deleteUserAccount(onCompleted: () -> Unit) {
         viewModelScope.launch {
-            authManager.deleteUserAccount()
-            repository.clearToFreshSlate("دانشجوی جدید", "۴۰۳۰۰۰۰۱", "دانشگاه سراسری", "مهندسی", 1403, 1)
-            addNotification("حذف حساب", "حساب کاربری و اطلاعات به طور کامل حذف و پاکسازی شد.", isDanger = true)
+            val result = authManager.deleteUserAccount()
+            if (result.isFailure) {
+                _userMessage.emit(result.exceptionOrNull()?.localizedMessage ?: "حذف حساب انجام نشد؛ دوباره وارد حساب شوید و تلاش کنید.")
+                return@launch
+            }
+            preferencesRepository.clearAcceptedStudyPlan()
+            SyncStatusStore.markLocal(application)
+            preferencesRepository.setGuestModeEnabled(true)
+            repository.clearToFreshSlate("دانشجوی جدید", "", "", "", 1403, 1)
+            _userMessage.emit("حساب کاربری حذف شد.")
             onCompleted()
         }
     }
@@ -1392,8 +1483,14 @@ class StudentViewModel @JvmOverloads constructor(
             return
         }
 
+        if (!authManager.usesFirebaseAccount) {
+            syncWithBackendNow(onResult)
+            return
+        }
+
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
+                SyncStatusStore.markSyncing(application)
                 val db = AppDatabase.getDatabase(application)
                 val dao = db.studentDao()
                 val profile = dao.getProfileSync()
@@ -1423,15 +1520,18 @@ class StudentViewModel @JvmOverloads constructor(
                     curriculumDao = db.curriculumDao()
                 )
 
-                if (pushResult.isSuccess || pullResult.isSuccess) {
-                    onResult(true, "همگام‌سازی دوطرفه ابری با موفقیت کامل شد. ✨")
+                if (pushResult.isSuccess && pullResult.isSuccess) {
+                    SyncStatusStore.markSynced(application)
+                    withContext(kotlinx.coroutines.Dispatchers.Main) { onResult(true, "همگام‌سازی دوطرفه ابری با موفقیت کامل شد. ✨") }
                 } else {
                     val errMsg = pushResult.exceptionOrNull()?.message ?: pullResult.exceptionOrNull()?.message ?: "خطای ناشناخته شبکه"
-                    onResult(false, "خطا در همگام‌سازی: $errMsg")
+                    SyncStatusStore.markNeedsAttention(application)
+                    withContext(kotlinx.coroutines.Dispatchers.Main) { onResult(false, "خطا در همگام‌سازی: $errMsg") }
                 }
             } catch (e: Exception) {
                 android.util.Log.e("StudentViewModel", "Manual cloud sync failed: ${e.message}", e)
-                onResult(false, "خطا در اتصال به سرور: ${e.localizedMessage}")
+                SyncStatusStore.markNeedsAttention(application)
+                withContext(kotlinx.coroutines.Dispatchers.Main) { onResult(false, "خطا در اتصال به سرور: ${e.localizedMessage}") }
             }
         }
     }

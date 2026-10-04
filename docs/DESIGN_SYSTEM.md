@@ -4,7 +4,7 @@
 
 Primary brand identity:
 - Petrol / Navy Blue
-- Olive Green
+- Soft Violet (light accent #7352B5, dark accent #CBB9F2)
 
 Visual direction:
 - Academic Premium
@@ -71,3 +71,5 @@ Motion should communicate state and hierarchy. Prefer fast, purposeful transitio
 ## Surface strategy
 
 Surfaces may establish hierarchy, but cards are not mandatory for every piece of content. Use flat sections when a card adds no information value.
+
+Cards bound dynamic text by line count; the height budget scales with the user font setting. Navigation has one entry per destination and uses Material selection semantics. Semantic green is reserved for success/attendance, not the page background.

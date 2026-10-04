@@ -186,11 +186,10 @@ private fun PassportHeaderCard(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text(
+                        StudentCardTitle(
                             text = profile.name.ifEmpty { "دانشجوی گرامی" },
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.onSurface
+                            fontWeight = FontWeight.Black
                         )
                         Text(
                             text = "شماره دانشجویی: ${profile.studentId.ifEmpty { "وارد نشده" }}",
@@ -239,11 +238,11 @@ private fun PassportHeaderCard(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
+                    StudentCardBody(
                         text = curriculumTitle,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium
+                        maxLines = 2
                     )
                 }
             }
@@ -399,7 +398,7 @@ private fun MetricTile(
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(
+            StudentCardTitle(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Black,
@@ -606,11 +605,11 @@ private fun GpaAndConfidenceCard(progress: AcademicProgress) {
                             color = confColor
                         )
                         Spacer(modifier = Modifier.height(2.dp))
-                        Text(
+                        StudentCardBody(
                             text = confDesc,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            lineHeight = 16.sp
+                            maxLines = 2
                         )
                     }
                 }
@@ -707,11 +706,12 @@ private fun CourseReadinessCard(
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(
+                        StudentCardTitle(
                             text = course.name,
                             style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface
+                            modifier = Modifier.weight(1f)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
@@ -781,7 +781,7 @@ private fun EmptyStateCard(message: String) {
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
+            StudentCardBody(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
