@@ -1,10 +1,7 @@
 package com.example.ui.theme
 
 import androidx.compose.runtime.Composable
-import android.provider.Settings
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 

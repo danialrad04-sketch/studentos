@@ -608,14 +608,6 @@ fun EditGradeDialog(
                 .verticalScroll(rememberScrollState())
                 .padding(vertical = 4.dp)
         ) {
-            Text(
-                text = "تنظیم نمرات: ${grade.courseName}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
             // Midterm Stepper (out of 6)
             Text(
                 text = "میان‌ترم (از ۶ نمره):",

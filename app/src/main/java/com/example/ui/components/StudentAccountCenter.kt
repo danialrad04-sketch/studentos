@@ -46,6 +46,7 @@ fun AuthAccountDialog(
     var showLogin by rememberSaveable { mutableStateOf(false) }
     var confirmation by rememberSaveable { mutableStateOf<String?>(null) }
     var syncState by remember { mutableStateOf<SyncUiState>(SyncUiState.Idle) }
+    LaunchedEffect(userAccount.isGuest) { if (!userAccount.isGuest) showLogin = false }
     val back = { if (showLogin) showLogin = false else onDismiss() }
     StudentSettingsPage(if (showLogin) "ورود یا ساخت حساب" else "حساب کاربری", back) {
         if (showLogin && userAccount.isGuest) {

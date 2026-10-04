@@ -118,14 +118,14 @@ fun PrivacyPolicyDialog(
                         Text(
                             text = "۴. حق حذف کامل حساب کاربری و تمامی داده‌ها",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp,
+                            fontSize = 14.sp,
                             color = StudentOsColors.CrimsonRose
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "شما می‌توانید از داخل حساب کاربری درخواست حذف کنید. در این فرایند، حذف داده‌های ابری تا زمانی موفق تلقی نمی‌شود که سرویس مربوطه نتیجه موفقیت‌آمیز برگرداند؛ سپس داده‌های محلی حساب نیز پاکسازی می‌شوند.",
                             fontSize = 14.sp,
-                            lineHeight = 18.sp,
+                            lineHeight = 22.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -143,7 +143,7 @@ fun PrivacyPolicyDialog(
             ) {
                 Icon(Icons.Rounded.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("متوجه شدم", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                Text("متوجه شدم", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             }
         }
     }
@@ -179,14 +179,14 @@ private fun PrivacySectionCard(
                 Text(
                     text = title,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 12.5.sp,
+                    fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = description,
                     fontSize = 14.sp,
-                    lineHeight = 17.sp,
+                    lineHeight = 22.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

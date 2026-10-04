@@ -93,6 +93,15 @@ class SettingsExperienceTest {
         rule.onNodeWithText("ورود یا ساخت حساب").performClick()
         rule.onNodeWithTag("primary_guest_entry").assertExists()
     }
+    @Test fun successfulSignInReturnsToAccountCenter() {
+        var user by mutableStateOf(UserAccount())
+        rule.setContent { StudentOsTheme(darkTheme = false) { AuthAccountDialog(user, { _, _, _ -> }, { _, _, _, _ -> }, {}, {}, {}, {}, {}, {}, {}) } }
+        rule.onNodeWithText("ورود یا ساخت حساب").performClick()
+        rule.onNodeWithTag("primary_guest_entry").assertExists()
+        rule.runOnIdle { user = UserAccount(isGuest = false, displayName = "دانیال", email = "student@example.com") }
+        rule.onNodeWithText("ورود یا ساخت حساب").assertDoesNotExist()
+        rule.onNodeWithTag("account_center").assertIsDisplayed()
+    }
     @Test fun taskFormValidatesAndSavesTodayInsteadOfFixedDate() {
         var saved: List<String>? = null
         rule.setContent { StudentOsTheme(darkTheme = false) { AddTaskDialog(listOf("ترمودینامیک مهندسی شیمی", "ریاضی مهندسی"), {}, { title, course, date -> saved = listOf(title, course, date) }) } }

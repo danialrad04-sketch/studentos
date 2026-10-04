@@ -57,7 +57,7 @@ private val DarkColorScheme = darkColorScheme(
     surfaceContainerHighest = Color(0xFF2B4453),
     inverseSurface = Color(0xFFE2E8F0),
     inverseOnSurface = Color(0xFF0F172A),
-    inversePrimary = Color(0xFF2563EB),
+    inversePrimary = StudentPrimaryLight,
     scrim = Color(0xCC000000)
 )
 
@@ -94,7 +94,7 @@ private val LightColorScheme = lightColorScheme(
     surfaceContainerHighest = Color(0xFFE2E5D9),
     inverseSurface = Color(0xFF0F172A),
     inverseOnSurface = Color(0xFFF8FAFC),
-    inversePrimary = Color(0xFF818CF8),
+    inversePrimary = StudentPrimaryDark,
     scrim = Color(0x99000000)
 )
 
@@ -257,5 +257,4 @@ val MaterialTheme.cardElevation: CardElevation
             hoveredElevation = if (isDark) 1.dp else 2.dp
         )
     }
-
 

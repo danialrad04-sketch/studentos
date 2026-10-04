@@ -41,7 +41,7 @@ fun HeaderSection(
                 Icon(Icons.Rounded.NotificationsNone, "اعلان‌ها")
             }
         }
-        FilledTonalIconButton(onClick = onOpenAccount, shape = CircleShape, modifier = Modifier.semantics { contentDescription = "حساب کاربری" }) {
+        FilledTonalIconButton(onClick = onOpenAccount, shape = CircleShape, colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer), modifier = Modifier.semantics { contentDescription = "حساب کاربری" }) {
             Text(profile.name.trim().firstOrNull()?.toString() ?: "د", style = MaterialTheme.typography.titleMedium)
         }
     }

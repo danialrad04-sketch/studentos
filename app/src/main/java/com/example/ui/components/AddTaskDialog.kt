@@ -34,7 +34,7 @@ fun AddTaskDialog(courseNames: List<String>, onDismiss: () -> Unit, onSave: (Str
             )
             Text("درس مرتبط", style = MaterialTheme.typography.titleSmall)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(courses) { name -> FilterChip(selected = course == name, onClick = { course = name }, label = { Text(name) }) }
+                items(courses) { name -> FilterChip(selected = course == name, onClick = { course = name }, label = { Text(name) }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.primaryContainer, selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer)) }
             }
             JalaliDatePickerField(value = dueDate, onValueChange = { dueDate = it }, label = "موعد تحویل", placeholder = "تاریخ را انتخاب کن", modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(4.dp))

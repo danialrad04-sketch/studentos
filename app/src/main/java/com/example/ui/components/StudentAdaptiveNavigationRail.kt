@@ -15,6 +15,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -49,6 +50,11 @@ fun StudentAdaptiveNavigationRail(
         AppTab.COPILOT to Icons.Default.SmartToy
     )
     val isSecondaryTab = destinations.none { it.first == selectedTab }
+    val itemColors = NavigationRailItemDefaults.colors(
+        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+        selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        selectedTextColor = MaterialTheme.colorScheme.primary
+    )
 
     NavigationRail(
         modifier = modifier.fillMaxHeight().testTag("navigation_rail"),
@@ -64,6 +70,7 @@ fun StudentAdaptiveNavigationRail(
         Column(verticalArrangement = Arrangement.spacedBy(StudentSpacing.Xs)) {
             destinations.forEach { (tab, icon) ->
                 NavigationRailItem(
+                    colors = itemColors,
                     selected = selectedTab == tab,
                     onClick = { onTabSelected(tab) },
                     icon = { Icon(icon, contentDescription = tab.title) },
@@ -72,6 +79,7 @@ fun StudentAdaptiveNavigationRail(
             }
 
             NavigationRailItem(
+                colors = itemColors,
                 modifier = Modifier.testTag("rail_more"),
                 selected = isSecondaryTab,
                 onClick = { onOpenMore?.invoke() ?: run { showAllModulesSheet = true } },

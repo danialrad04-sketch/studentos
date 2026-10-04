@@ -118,12 +118,12 @@ fun BackupRestoreDialog(
                 Tab(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 },
-                    text = { Text("پشتیبان‌گیری (Export)", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                    text = { Text("پشتیبان‌گیری", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                 )
                 Tab(
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 },
-                    text = { Text("بازیابی (Restore)", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                    text = { Text("بازیابی", fontSize = 14.sp, fontWeight = FontWeight.Bold) }
                 )
             }
 
@@ -139,14 +139,14 @@ fun BackupRestoreDialog(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Rounded.Security, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("پایگاه داده کامل و امن (Zero Data Loss)", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
+                            Text("نسخهٔ اطلاعات تحصیلی", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             "شامل تمام ترم‌ها، دروس، نمرات، سوابق تحصیلی، تکالیف و تقویم امتحانات به صورت فایل ساخت‌یافته استاندارد.",
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            lineHeight = 16.sp
+                            lineHeight = 22.sp
                         )
                     }
                 }
@@ -183,7 +183,7 @@ fun BackupRestoreDialog(
                     ) {
                         Icon(Icons.Rounded.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("کپی متن کامل در کلیپ‌بورد", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text("کپی متن کامل در کلیپ‌بورد", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                 }
             } else {
@@ -199,7 +199,7 @@ fun BackupRestoreDialog(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Rounded.CloudDownload, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("بازیابی مستقیم از فضای ابری (Cloud Sync)", fontWeight = FontWeight.Bold, fontSize = 12.5.sp, color = MaterialTheme.colorScheme.onSurface)
+                            Text("بازیابی از فضای ابری", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -225,7 +225,7 @@ fun BackupRestoreDialog(
                             } else {
                                 Icon(Icons.Rounded.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("بازیابی اطلاعات از سرور ابری", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("بازیابی اطلاعات از سرور ابری", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -240,7 +240,7 @@ fun BackupRestoreDialog(
                     border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f))
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
-                        Text("بازیابی از متن پشتیبان JSON", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
+                        Text("بازیابی از متن پشتیبان JSON", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             "متن پشتیبان قبلی را در کادر زیر جای‌گذاری کنید تا تمامی دروس و نمرات فوراً بازگردانی شوند.",
@@ -304,7 +304,7 @@ fun BackupRestoreDialog(
                         } else {
                             Icon(Icons.Rounded.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("تأیید و بازیابی", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("تأیید و بازیابی", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -385,7 +385,7 @@ fun BackupRestoreDialog(
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.height(42.dp)
                 ) {
-                    Text("بستن", fontSize = 12.sp)
+                    Text("بستن", fontSize = 14.sp)
                 }
             }
         }
