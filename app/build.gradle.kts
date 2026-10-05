@@ -71,6 +71,7 @@ android {
       }
     }
   }
+  sourceSets.getByName("test").resources.srcDir("schemas")
   dependenciesInfo {
     includeInApk = false
     includeInBundle = true

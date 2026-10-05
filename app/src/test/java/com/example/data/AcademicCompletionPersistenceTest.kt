@@ -105,6 +105,38 @@ class AcademicCompletionPersistenceTest {
         raw.query("SELECT isRecorded FROM grades ORDER BY id").use { cursor -> assertTrue(cursor.moveToFirst()); assertEquals(1, cursor.getInt(0)); assertTrue(cursor.moveToNext()); assertEquals(0, cursor.getInt(0)) }
         helper.close()
     }
+    @Test fun productionSchemaNineUpgradesThroughRoomValidationAndRetainsRecords() = runBlocking {
+        val name = "upgrade-${java.util.UUID.randomUUID()}.db"
+        val schema = javaClass.classLoader!!.getResourceAsStream("com.example.data.local.AppDatabase/9.json")!!.bufferedReader().use { org.json.JSONObject(it.readText()).getJSONObject("database") }
+        val helper = FrameworkSQLiteOpenHelperFactory().create(SupportSQLiteOpenHelper.Configuration.builder(context).name(name)
+            .callback(object : SupportSQLiteOpenHelper.Callback(9) {
+                override fun onCreate(raw: SupportSQLiteDatabase) {
+                    val entities = schema.getJSONArray("entities")
+                    for (i in 0 until entities.length()) {
+                        val entity = entities.getJSONObject(i)
+                        val table = entity.getString("tableName")
+                        raw.execSQL(entity.getString("createSql").replace("\${TABLE_NAME}", table))
+                        val indices = entity.getJSONArray("indices")
+                        for (j in 0 until indices.length()) raw.execSQL(indices.getJSONObject(j).getString("createSql").replace("\${TABLE_NAME}", table))
+                    }
+                    val setup = schema.getJSONArray("setupQueries")
+                    for (i in 0 until setup.length()) raw.execSQL(setup.getString(i))
+                    raw.execSQL("INSERT INTO grades (id, courseName, units, midtermGrade, finalGrade, courseId) VALUES (1, 'ریاضی', 3, 6, 12, 'math'), (2, 'فیزیک', 2, 0, 0, 'physics')")
+                }
+                override fun onUpgrade(raw: SupportSQLiteDatabase, old: Int, new: Int) {}
+            }).build())
+        helper.writableDatabase
+        helper.close()
+        val upgraded = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(AppDatabase.MIGRATION_9_10).allowMainThreadQueries().build()
+        try {
+            val grades = upgraded.studentDao().getAllGradesSync().sortedBy { it.id }
+            assertEquals(2, grades.size)
+            assertEquals("math", grades.first().courseId)
+            assertTrue(grades.first().isRecorded)
+            assertFalse(grades.last().isRecorded)
+            assertEquals(18.0, grades.first().midtermGrade + grades.first().finalGrade, 0.0)
+        } finally { upgraded.close(); context.deleteDatabase(name) }
+    }
     @Test fun personalCurriculumAndItsReferenceIdentitySurviveCompleteBackup() = runBlocking {
         db.studentDao().insertProfile(StudentProfileEntity(name = "دانشجوی کامپیوتر", notes = "یادداشت مهم"))
         repo.savePersonalCurriculum("دانشگاه من", "مهندسی کامپیوتر", 1405, 140, "M1 | ریاضی ۱ | ۳ | ۱\nM2 | ریاضی ۲ | ۳ | ۲ | M1")
