@@ -114,6 +114,17 @@ jobs:
           cd release-output
           sha256sum ./*.apk ./*.aab > SHA256SUMS.txt
 
+      - name: Generate and verify Cafe Bazaar BIN
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/studentos-release.jks
+          STORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+        run: |
+          bash scripts/generate_bazaar_bin.sh "release-output/StudentOS-$VERSION_NAME.aab" "release-output/StudentOS-$VERSION_NAME.bin"
+          cd release-output
+          sha256sum ./*.apk ./*.aab ./*.bin > SHA256SUMS.txt
+
       - name: Create reviewable draft release
         env:
           GH_TOKEN: ${{ github.token }}

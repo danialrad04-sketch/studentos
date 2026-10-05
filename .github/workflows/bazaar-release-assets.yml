@@ -1,0 +1,135 @@
+name: Add Cafe Bazaar Signing Assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag (original APK and AAB stay unchanged)
+        required: true
+        default: v2.2.0
+      ref:
+        description: Full 40-character commit SHA of that release with successful Android CI
+        required: true
+        default: ad2d02191e57e4c4ea393a88a563a0031e299936
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: studentos-production-release
+  cancel-in-progress: false
+
+jobs:
+  bazaar-signing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      RELEASE_REF: ${{ inputs.ref }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Verify existing release, immutable assets and all quality gates
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$RELEASE_REF" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$RELEASE_REF"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > /tmp/release-before.json
+          export VERSION_NAME="${RELEASE_TAG#v}"
+          python3 - <<'PY'
+          import json, os
+          release = json.load(open('/tmp/release-before.json'))
+          assert not release['draft'] and not release['prerelease']
+          names = {a['name'] for a in release['assets']}
+          for ext in ['apk', 'aab']:
+              assert f"StudentOS-{os.environ['VERSION_NAME']}.{ext}" in names
+          assert not any(n.endswith('.bin') or n.startswith('CafeBazaar-') for n in names), 'Bazaar assets already exist; refusing overwrite'
+          PY
+          gh run list --workflow android-build.yml --commit "$RELEASE_REF" --limit 20 \
+            --json databaseId,status,conclusion > /tmp/ci-runs.json
+          RUN_ID=$(python3 -c 'import json; print(next(r["databaseId"] for r in json.load(open("/tmp/ci-runs.json")) if r["status"]=="completed" and r["conclusion"]=="success"))')
+          gh run view "$RUN_ID" --json jobs > /tmp/ci-jobs.json
+          python3 - <<'PY'
+          import json
+          jobs = {j['name']: j['conclusion'] for j in json.load(open('/tmp/ci-jobs.json'))['jobs']}
+          for name in ['android-quality', 'backend-quality', 'instrumented-smoke', 'release-artifact-validation']:
+              assert jobs.get(name) == 'success', name
+          PY
+          mkdir -p bazaar-output
+          gh release download "$RELEASE_TAG" --pattern "StudentOS-$VERSION_NAME.aab" --pattern "StudentOS-$VERSION_NAME.apk" \
+            --pattern SHA256SUMS.txt --dir bazaar-output
+          (cd bazaar-output && sha256sum --check SHA256SUMS.txt)
+          python3 - <<'PY'
+          import hashlib, json, pathlib
+          for asset in json.load(open('/tmp/release-before.json'))['assets']:
+              f = pathlib.Path('bazaar-output') / asset['name']
+              if f.is_file():
+                  assert asset['digest'] == 'sha256:' + hashlib.sha256(f.read_bytes()).hexdigest(), asset['name']
+          PY
+
+      - name: Verify signing certificate continuity from 1.0.2
+        run: |
+          mkdir -p "$RUNNER_TEMP/studentos-legacy"
+          gh release download v1.0.2-production --pattern app-release.aab --dir "$RUNNER_TEMP/studentos-legacy"
+          echo "81b21a60062b0c1775d044b88d300a2818e5f5af1165112fa5c8b290536bfec9  $RUNNER_TEMP/studentos-legacy/app-release.aab" | sha256sum --check
+          keytool -printcert -jarfile "$RUNNER_TEMP/studentos-legacy/app-release.aab" > "$RUNNER_TEMP/studentos-legacy/certificate.txt"
+          tr -d ':' < "$RUNNER_TEMP/studentos-legacy/certificate.txt" | tr '[:upper:]' '[:lower:]' | \
+            grep -F a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950 >/dev/null
+
+      - name: Decode existing production key
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          umask 077
+          test -n "$RELEASE_KEYSTORE_BASE64"
+          printf '%s' "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/studentos-release.jks"
+
+      - name: Generate and verify BIN for the exact published AAB
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/studentos-release.jks
+          STORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+        run: |
+          VERSION_NAME="${RELEASE_TAG#v}"
+          bash scripts/generate_bazaar_bin.sh "bazaar-output/StudentOS-$VERSION_NAME.aab" "bazaar-output/StudentOS-$VERSION_NAME.bin"
+          cp docs/CAFE_BAZAAR_SIGNING.md bazaar-output/CafeBazaar-README.txt
+          cd bazaar-output
+          sha256sum "StudentOS-$VERSION_NAME.aab" "StudentOS-$VERSION_NAME.bin" > CafeBazaar-SHA256SUMS.txt
+          zip "CafeBazaar-$VERSION_NAME.zip" "StudentOS-$VERSION_NAME.aab" "StudentOS-$VERSION_NAME.bin" CafeBazaar-README.txt CafeBazaar-SHA256SUMS.txt
+          unzip -t "CafeBazaar-$VERSION_NAME.zip"
+
+      - name: Append Bazaar assets without replacing the published app
+        run: |
+          VERSION_NAME="${RELEASE_TAG#v}"
+          gh release upload "$RELEASE_TAG" "bazaar-output/StudentOS-$VERSION_NAME.bin" \
+            bazaar-output/CafeBazaar-SHA256SUMS.txt bazaar-output/CafeBazaar-README.txt "bazaar-output/CafeBazaar-$VERSION_NAME.zip"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > /tmp/release-after.json
+          python3 - <<'PY'
+          import json
+          before = json.load(open('/tmp/release-before.json'))
+          after = json.load(open('/tmp/release-after.json'))
+          assert before['id'] == after['id'] and before['tag_name'] == after['tag_name']
+          assets = {a['name']: a for a in after['assets']}
+          for original in before['assets']:
+              assert assets[original['name']]['id'] == original['id']
+              assert assets[original['name']]['digest'] == original['digest']
+          print('Original APK, AAB and checksums unchanged; Cafe Bazaar signing assets added.')
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: studentos-cafe-bazaar
+          path: bazaar-output/CafeBazaar-*.zip
+          if-no-files-found: error
+      - name: Remove signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/studentos-release.jks"
