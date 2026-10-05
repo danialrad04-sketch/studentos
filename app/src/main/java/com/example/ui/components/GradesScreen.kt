@@ -83,6 +83,9 @@ import java.util.Locale
 @Composable
 fun GradesScreen(
     grades: List<GradeEntity>,
+    courses: List<com.example.data.local.entity.CourseEntity> = emptyList(),
+    onRecordGrade: ((String) -> Unit)? = null,
+    onAddCourse: (() -> Unit)? = null,
     onUpdateGrade: (GradeEntity, Double, Double) -> Unit,
     onOpenExport: (() -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -91,7 +94,7 @@ fun GradesScreen(
     var editingGrade by remember { mutableStateOf<GradeEntity?>(null) }
 
     // Weighted GPA calculation: evaluate based on graded courses so un-entered grades don't penalize the student
-    val evaluatedGrades = grades.filter { (it.midtermGrade + it.finalGrade) > 0.0 }
+    val evaluatedGrades = grades.filter { it.hasRecordedScore() }
     val totalUnits = grades.sumOf { it.units }
     val evaluatedUnits = evaluatedGrades.sumOf { it.units }
     val totalWeightedScore = evaluatedGrades.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
@@ -111,7 +114,7 @@ fun GradesScreen(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "کارنامه و شبیه‌ساز سقف ترم ۴",
+                    text = "کارنامه و شبیه‌ساز معدل",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onSurface
@@ -204,9 +207,10 @@ fun GradesScreen(
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = when {
-                                        isHonors -> "مهر اصالت: دانشجوی ممتاز الف ✨"
-                                        isNormal -> "مهر اصالت: وضعیت عادی تحصیلی 📘"
-                                        else -> "مهر اصالت: در خطر مشروطی آموزش ⚠️"
+                                        evaluatedGrades.isEmpty() -> "هنوز نمره‌ای ثبت نشده"
+                                        isHonors -> "عملکرد عالی در نمره‌های ثبت‌شده"
+                                        isNormal -> "عملکرد متعادل در نمره‌های ثبت‌شده"
+                                        else -> "نمره‌ها نیاز به توجه دارند"
                                     },
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
@@ -223,11 +227,7 @@ fun GradesScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = when {
-                            isHonors -> "معدل شما بالای ۱۷ است. مجاز به اخذ سقف حداکثری ۲۴ واحد در ترم بعدی هستید."
-                            isNormal -> "معدل بین ۱۲ تا ۱۶.۹۹ است. سقف انتخاب واحد استاندارد ۲۰ واحد مجاز می‌باشد."
-                            else -> "معدل کمتر از ۱۲ است. طبق آیین‌نامه، سقف انتخاب واحد ترم بعدی ۱۴ واحد خواهد بود."
-                        },
+                        text = if (evaluatedGrades.isEmpty()) "با ثبت نمره، معدل واقعی ترم محاسبه می‌شود." else "معدل بر پایه نمره‌های ثبت‌شده است؛ سقف انتخاب واحد را با مقررات دانشگاه بررسی کنید.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 18.sp
@@ -304,13 +304,9 @@ fun GradesScreen(
 
         // 2. TARGET WHAT-IF SIMULATOR CARD (پیش‌بینی معدل الف ۱۷ به بالا)
         GradeWhatIfSimulatorCard(
-            grades = grades,
-            totalUnits = totalUnits,
-            onApplySimulation = { simulatedPairs ->
-                simulatedPairs.forEach { (g, mid, fin) ->
-                    onUpdateGrade(g, mid, fin)
-                }
-            }
+            grades = if (courses.isEmpty()) grades else courses.map { course -> grades.find { it.courseId == course.id } ?: GradeEntity(courseId = course.id, courseName = course.name, units = course.units) },
+            totalUnits = courses.sumOf { it.units }.takeIf { it > 0 } ?: totalUnits,
+            onApplySimulation = {}
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -336,6 +332,16 @@ fun GradesScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        val ungradedCourses = courses.filter { course -> grades.none { it.hasRecordedScore() && (it.courseId == course.id || (it.courseId.isBlank() && it.courseName == course.name)) } }
+        if (ungradedCourses.isNotEmpty() && onRecordGrade != null) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("ثبت اولین نمره", style = MaterialTheme.typography.titleMedium)
+                ungradedCourses.forEach { course ->
+                    OutlinedButton(onClick = { onRecordGrade(course.id) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("first_grade_${course.id}")) { Text("ثبت نمره · ${course.name}") }
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+        }
         if (grades.isEmpty()) {
             Surface(
                 modifier = Modifier
@@ -380,12 +386,13 @@ fun GradesScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
+                    if (courses.isEmpty() && onAddCourse != null) Button(onClick = onAddCourse, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("افزودن اولین درس") }
                 }
             }
         } else {
             // 3. INDIVIDUAL COURSE GRADE CARDS
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                grades.forEach { grade ->
+                evaluatedGrades.forEach { grade ->
                     val totalScore = grade.midtermGrade + grade.finalGrade
                     val isPassed = totalScore >= 10.0
 
@@ -395,7 +402,7 @@ fun GradesScreen(
                         isPassed = isPassed,
                         onEdit = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            editingGrade = grade
+                            if (onRecordGrade != null && grade.courseId.isNotBlank()) onRecordGrade(grade.courseId) else editingGrade = grade
                         }
                     )
                 }
@@ -777,192 +784,27 @@ fun EditGradeDialog(
  */
 @Composable
 fun GradeWhatIfSimulatorCard(
-    grades: List<GradeEntity>,
-    totalUnits: Int,
+    grades: List<GradeEntity>, totalUnits: Int,
     onApplySimulation: (List<Triple<GradeEntity, Double, Double>>) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var targetGpa by remember { mutableStateOf(17.0f) }
-
-    val earnedMidtermPoints = grades.sumOf { it.midtermGrade * it.units }
-    val targetTotalPoints = targetGpa * totalUnits
-    val neededFinalPoints = targetTotalPoints - earnedMidtermPoints
-    val requiredFinalAverage = if (totalUnits > 0) neededFinalPoints / totalUnits else 0.0
-
-    val isFeasible = requiredFinalAverage <= 14.0
-    val isAlreadyPassed = requiredFinalAverage <= 0.0
-
-    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = StudentShapeTokens.Card,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        border = BorderStroke(1.dp, if (isDark) Color(0x33FFFFFF) else Color(0xFFCBD5E1)),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 1.5.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Calculate,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "شبیه‌ساز سناریوهای نمره (What-If)",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                ) {
-                    Text(
-                        text = "هدف: ${String.format(Locale.US, "%.1f", targetGpa)}",
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Black,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
+    var target by remember { mutableStateOf(17f) }
+    val units = grades.sumOf { it.units }
+    val midAverage = if (units > 0) grades.sumOf { it.midtermGrade * it.units } / units else 0.0
+    Card(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("شبیه‌ساز هدف معدل", style = MaterialTheme.typography.titleMedium)
+            Text("هدف: ${String.format(Locale.US, "%.1f", target)} از ۲۰", style = MaterialTheme.typography.bodyLarge)
+            Slider(value = target, onValueChange = { target = it }, valueRange = 10f..20f, steps = 19)
+            if (units == 0) Text("ابتدا یک درس ثبت کنید تا پیش‌بینی وزن‌دار در دسترس باشد.", style = MaterialTheme.typography.bodyMedium)
+            else {
+                Text("برای هدف انتخاب‌شده، میانگین بخش باقی‌مانده حدود ${String.format(Locale.US, "%.2f", (target - midAverage).coerceAtLeast(0.0))} نمره لازم است.", style = MaterialTheme.typography.bodyMedium)
+                grades.forEach { grade ->
+                    Text("${grade.courseName}: حدود ${String.format(Locale.US, "%.1f", (target - grade.midtermGrade).coerceIn(0.0, 20.0 - grade.midtermGrade.coerceIn(0.0, 20.0)))} نمره پس از میان‌ترم", style = MaterialTheme.typography.bodySmall)
                 }
             }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = "اسلایدر را تغییر دهید تا مشخص شود برای رسیدن به این معدل، پایان‌ترم دروس را میانگین چند باید بگیرید:",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = 16.sp
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Target Slider
-            Slider(
-                value = targetGpa,
-                onValueChange = { targetGpa = it },
-                valueRange = 12.0f..19.5f,
-                steps = 74, // 0.1 step increments
-                colors = SliderDefaults.colors(
-                    thumbColor = MaterialTheme.colorScheme.primary,
-                    activeTrackColor = MaterialTheme.colorScheme.primary
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = "۱۲.۰ (حداقل قبولی)", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(text = "۱۷.۰ (شرط الف / ۲۴ واحد)", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                Text(text = "۱۹.۵ (سقف عالی)", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Result Callout Box
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                color = when {
-                    isAlreadyPassed -> Emerald600.copy(alpha = 0.12f)
-                    requiredFinalAverage in 0.0..14.0 -> Emerald600.copy(alpha = 0.12f)
-                    requiredFinalAverage in 10.0..12.5 -> Sky600.copy(alpha = 0.12f)
-                    requiredFinalAverage in 12.5..14.0 -> Amber500.copy(alpha = 0.12f)
-                    else -> Rose600.copy(alpha = 0.12f)
-                }
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = when {
-                                isAlreadyPassed -> "🎉 قبلاً حاصل شده است!"
-                                requiredFinalAverage in 0.0..14.0 -> "🟢 هدف کاملاً در دسترس و آسان"
-                                requiredFinalAverage in 14.0..17.5 -> "🟡 نیازمند تسلط و مطالعه منظم"
-                                requiredFinalAverage in 17.5..20.0 -> "🟠 چالش‌برانگیز - نیازمند نمرات بسیار بالا"
-                                else -> "🔴 غیرممکن ریاضی در این ترم"
-                            },
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = when {
-                                isAlreadyPassed || requiredFinalAverage in 0.0..10.0 -> Emerald600
-                                requiredFinalAverage in 14.0..17.5 -> Sky600
-                                requiredFinalAverage in 17.5..20.0 -> Amber500
-                                else -> Rose600
-                            }
-                        )
-
-                        Text(
-                            text = if (isFeasible) {
-                                "میانگین پایان‌ترم: ${String.format(Locale.US, "%.1f", requiredFinalAverage.coerceAtLeast(0.0))}"
-                            } else {
-                                "نیاز به > ۲۰.۰"
-                            },
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Black,
-                            color = when {
-                                isAlreadyPassed || requiredFinalAverage in 0.0..14.0 -> Emerald600
-                                requiredFinalAverage in 14.0..17.5 -> Sky600
-                                requiredFinalAverage in 17.5..20.0 -> Amber500
-                                else -> Rose600
-                            }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = if (isFeasible) {
-                            "اگر میانگین نمرات پایان‌ترم شما به ${String.format(Locale.US, "%.1f", requiredFinalAverage.coerceAtLeast(0.0))} از ۱۴ نمره باقی‌مانده برسد، معدل کل ترم شما دقیقاً ${String.format(Locale.US, "%.1f", targetGpa)} خواهد شد."
-                        } else {
-                            "مجموع نمرات میان‌ترم کسب‌شده برای این ترم به گونه‌ای است که حتی با نمره ۲۰ در تمامی امتحانات پایان‌ترم، دستیابی به این معدل امکان‌پذیر نیست."
-                        },
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 15.sp
-                    )
-                }
-            }
-
-            if (isFeasible) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Button(
-                    onClick = {
-                        val simulated = grades.map { g ->
-                            val simulatedFinal = requiredFinalAverage.coerceIn(0.0, 14.0)
-                            Triple(g, g.midtermGrade, simulatedFinal)
-                        }
-                        onApplySimulation(simulated)
-                    },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "اعمال آزمایشی این سناریو در جدول کارنامه",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-            }
+            Text("این یک سناریوی فرضی است و نمره‌های ثبت‌شده را تغییر نمی‌دهد. بارم هر درس را با استاد تطبیق دهید.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

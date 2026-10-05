@@ -1,253 +1,62 @@
 package com.example.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Alarm
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
 import com.example.ui.models.ExamItem
 import com.example.data.local.entity.TaskEntity
-import com.example.ui.theme.StudentShapeTokens
+import com.example.domain.util.AcademicInputValidator
 
 @Composable
-fun ExamsScreen(
-    exams: List<ExamItem>,
-    tasks: List<TaskEntity> = emptyList(),
-    onSetReminder: (ExamItem) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        // Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                StudentCardTitle(
-                    text = "امتحانات پایان‌ترم",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Black
-                )
-                Text(
-                    text = "برنامه امتحانات پایان‌ترم با ساعت، تاریخ و سالن آزمون",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                )
-            }
-
-            val totalExamUnits = exams.sumOf { it.units }
-            Surface(
-                shape = StudentShapeTokens.Compact,
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-            ) {
-                Text(
-                    text = "${exams.size} آزمون · $totalExamUnits واحد",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Grid / List of Exams
-        if (exams.isEmpty()) {
-            ActionableEmptyState(
-                icon = Icons.Default.Alarm,
-                title = "برنامه امتحانی ثبت نشده است",
-                description = "هنوز آزمونی در جدول امتحانات ترم جاری قرار نگرفته است."
-            )
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                exams.forEachIndexed { index, exam ->
-                    ExamCard(
-                        exam = exam,
-                        index = index + 1,
-                        relatedTasks = tasks.filter { it.courseName == exam.courseName },
-                        onSetReminder = { onSetReminder(exam) }
-                    )
-                }
-            }
+fun ExamsScreen(exams: List<ExamItem>, tasks: List<TaskEntity> = emptyList(), onSetReminder: (ExamItem) -> Unit,
+    modifier: Modifier = Modifier, onAddExam: (() -> Unit)? = null, onEditExam: ((ExamItem) -> Unit)? = null,
+    onScheduleReminder: ((ExamItem, Int) -> Unit)? = null, reminderIds: Set<String> = emptySet(), onCancelReminder: ((String) -> Unit)? = null) {
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text("برنامه امتحانات", style = MaterialTheme.typography.titleLarge)
+        Text("${exams.size} آزمون · تاریخ، ساعت و یادآور قابل مدیریت", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        onAddExam?.let { action -> Button(onClick = action, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("add_exam")) { Text("ثبت برنامه امتحان") } }
+        if (exams.isEmpty()) ActionableEmptyState(icon = Icons.Default.Alarm, title = "امتحانی ثبت نشده",
+            description = "زمان آزمون را برای یکی از درس‌ها ثبت کنید تا برنامه و یادآور در دسترس باشد.",
+            primaryActionTitle = if (onAddExam != null) "ثبت اولین امتحان" else null, onPrimaryAction = onAddExam)
+        else exams.sortedBy { AcademicInputValidator.examTimestamp(it.solarDate, it.time) ?: Long.MAX_VALUE }.forEachIndexed { index, exam ->
+            ExamCard(exam, index + 1, tasks.filter { it.courseId == exam.id.removePrefix("exam_") || (it.courseId.isBlank() && it.courseName == exam.courseName) },
+                { onSetReminder(exam) }, onEdit = onEditExam?.let { { it(exam) } },
+                onSchedule = onScheduleReminder?.let { { minutes -> it(exam, minutes) } },
+                reminderEnabled = exam.id in reminderIds, onCancel = onCancelReminder?.let { { it(exam.id) } })
         }
     }
 }
 
 @Composable
-fun ExamCard(
-    exam: ExamItem,
-    index: Int,
-    relatedTasks: List<TaskEntity> = emptyList(),
-    onSetReminder: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 132.dp, max = 248.dp)
-            .tactileClickable { onSetReminder() },
-        shape = StudentShapeTokens.Card,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-        )
-    ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .width(4.dp)
-                            .height(20.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(MaterialTheme.colorScheme.primary)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = exam.courseName,
-                        style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        modifier = Modifier.widthIn(max = 220.dp),
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+fun ExamCard(exam: ExamItem, index: Int, relatedTasks: List<TaskEntity> = emptyList(), onSetReminder: () -> Unit,
+    modifier: Modifier = Modifier, onEdit: (() -> Unit)? = null, onSchedule: ((Int) -> Unit)? = null,
+    reminderEnabled: Boolean = false, onCancel: (() -> Unit)? = null) {
+    var reminderMenu by remember { mutableStateOf(false) }
+    Card(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(exam.courseName, style = MaterialTheme.typography.titleMedium)
+            Text("${exam.solarDate} · ساعت ${exam.time}", style = MaterialTheme.typography.bodyLarge)
+            Text("محل: ${exam.location}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            ExamPreparationIndicator(relatedTasks)
+            onEdit?.let { action -> OutlinedButton(onClick = action, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("ویرایش برنامه امتحان") } }
+            Box(Modifier.fillMaxWidth()) {
+                FilledTonalButton(onClick = { if (reminderEnabled && onCancel != null) onCancel() else if (onSchedule != null) reminderMenu = true else onSetReminder() },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                    Text(if (reminderEnabled) "یادآور فعال · لغو یادآور" else "تنظیم یادآور")
                 }
-
-                Surface(
-                    shape = StudentShapeTokens.Compact,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh
-                ) {
-                    Text(
-                        text = "${exam.units} واحد",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CalendarMonth,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(15.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "تاریخ: ${exam.solarDate}  |  ساعت: ${exam.time}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                )
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(15.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                StudentCardMeta(
-                    text = "محل آزمون: ${exam.location}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            ExamPreparationIndicator(
-                relatedTasks = relatedTasks
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-                ) {
-                    Text(
-                        text = "⏳ آزمون شماره #$index",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
-
-                androidx.compose.material3.FilledTonalButton(
-                    onClick = onSetReminder,
-                    shape = RoundedCornerShape(10.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                    modifier = Modifier.height(40.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Alarm,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp).padding(end = 4.dp)
-                    )
-                    Text(
-                        text = "کوک یادآور",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                DropdownMenu(expanded = reminderMenu, onDismissRequest = { reminderMenu = false }) {
+                    listOf(15 to "۱۵ دقیقه قبل", 60 to "یک ساعت قبل", 1440 to "یک روز قبل").forEach { (minutes, title) ->
+                        DropdownMenuItem(text = { Text(title) }, onClick = { reminderMenu = false; onSchedule?.invoke(minutes) })
+                    }
                 }
             }
         }
@@ -271,11 +80,7 @@ private fun ExamPreparationIndicator(
             Modifier.padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     "آمادگی بر اساس کارهای مرتبط",
                     style = MaterialTheme.typography.labelMedium,

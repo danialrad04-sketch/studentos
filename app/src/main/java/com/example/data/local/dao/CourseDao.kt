@@ -167,6 +167,9 @@ interface CourseDao {
     // ==========================================
     // Student Course Attempts
     // ==========================================
+    @Query("DELETE FROM student_course_attempts WHERE profileId = :profileId AND semesterIndex = :semesterIndex AND courseId IS NULL AND courseName LIKE 'مجموع دروس گذرانده ترم%' AND source IN ('QUICK_SETUP', 'USER_DECLARED')")
+    suspend fun deleteLegacySemesterSummaries(profileId: Int, semesterIndex: Int)
+
     @Query("SELECT * FROM student_course_attempts WHERE profileId = :profileId ORDER BY semesterIndex ASC, attemptNumber ASC")
     fun getStudentAttempts(profileId: Int = 1): Flow<List<StudentCourseAttemptEntity>>
 

@@ -218,12 +218,12 @@ object AcademicExportManager {
             typeface = Typeface.DEFAULT
             textAlign = Paint.Align.CENTER
         }
-        canvas.drawText("سامانه مدیریت آموزش عالی و کارنامه تحصیلی هوشمند (Student OS 2026)", width / 2f, 72f, subHeaderPaint)
+        canvas.drawText("گزارش شخصی تحصیلی (Student OS 2026)", width / 2f, 72f, subHeaderPaint)
 
         // Profile Details Card
         val (profile, subtitle) = when (payload) {
             is ExportSourcePayload.Passport -> Pair(payload.profile, "شناسنامه جامع پیشرفت تحصیلی")
-            is ExportSourcePayload.Grades -> Pair(payload.profile, "کارنامه رسمی نمرات ترمیک")
+            is ExportSourcePayload.Grades -> Pair(payload.profile, "گزارش شخصی نمرات ترم")
         }
 
         var curY = 115f
@@ -271,18 +271,18 @@ object AcademicExportManager {
         }
 
         canvas.drawText("دانشگاه: ", width - 55f, curY + 48f, fieldPaint)
-        canvas.drawText(profile.university.ifBlank { "دانشگاه سراسری" }, width - 150f, curY + 48f, valPaint)
+        canvas.drawText(profile.university.ifBlank { "وارد نشده" }, width - 150f, curY + 48f, valPaint)
 
         canvas.drawText("رشته تحصیلی: ", 220f, curY + 48f, fieldPaint)
-        canvas.drawText(profile.major.ifBlank { "مهندسی" }, 120f, curY + 48f, valPaint)
+        canvas.drawText(profile.major.ifBlank { "وارد نشده" }, 120f, curY + 48f, valPaint)
 
         canvas.drawText("نیمسال تحصیلی: ", width - 55f, curY + 70f, fieldPaint)
-        canvas.drawText(profile.term.ifBlank { "ترم ۶" }, width - 150f, curY + 70f, valPaint)
+        canvas.drawText(profile.term.ifBlank { "وارد نشده" }, width - 150f, curY + 70f, valPaint)
 
         if (showGpa) {
             val gpaText = when (payload) {
-                is ExportSourcePayload.Passport -> String.format(Locale.US, "%.2f", payload.profile.declaredGpa ?: 0.0)
-                is ExportSourcePayload.Grades -> String.format(Locale.US, "%.2f", payload.termGpa)
+                is ExportSourcePayload.Passport -> academicGpaText(payload)
+                is ExportSourcePayload.Grades -> academicGpaText(payload)
             }
             canvas.drawText("معدل ثبت‌شده: ", 220f, curY + 70f, fieldPaint)
             canvas.drawText(gpaText, 120f, curY + 70f, valPaint)
@@ -352,10 +352,10 @@ object AcademicExportManager {
             canvas.drawText("${item.units}", 210f, y + 16f, rowPaint)
 
             val score = item.midtermGrade + item.finalGrade
-            val gradeStr = if (showGpa) String.format(Locale.US, "%.1f", score) else "—"
+            val gradeStr = if (showGpa && item.hasRecordedScore()) String.format(Locale.US, "%.1f", score) else "—"
             canvas.drawText(gradeStr, 150f, y + 16f, rowPaint)
 
-            val statusText = if (score >= 10.0) "قبول" else "مردود"
+            val statusText = if (!item.hasRecordedScore()) "وارد نشده" else if (score >= 10.0) "قبول" else "مردود"
             canvas.drawText(statusText, 90f, y + 16f, rowPaint)
 
             y += 22f
@@ -392,9 +392,9 @@ object AcademicExportManager {
             textAlign = Paint.Align.RIGHT
         }
 
-        canvas.drawText("واحدهای گذرانده‌شده: ${progress?.passedCredits ?: 85} واحد", width - 60f, y + 60f, bodyText)
-        canvas.drawText("واحدهای باقیمانده: ${progress?.remainingCredits ?: 55} واحد", width - 60f, y + 85f, bodyText)
-        canvas.drawText("درصد فارغ‌التحصیلی: ${progress?.progressPercentage?.toInt() ?: 60}٪", width - 60f, y + 110f, bodyText)
+        canvas.drawText("واحدهای گذرانده‌شده: ${progress?.passedCredits ?: "—"} واحد", width - 60f, y + 60f, bodyText)
+        canvas.drawText("واحدهای باقیمانده: ${progress?.remainingCredits ?: "—"} واحد", width - 60f, y + 85f, bodyText)
+        canvas.drawText("درصد فارغ‌التحصیلی: ${progress?.progressPercentage?.toInt() ?: "—"}٪", width - 60f, y + 110f, bodyText)
     }
 
     private fun drawOfficialStampAndSignature(
@@ -421,35 +421,13 @@ object AcademicExportManager {
                 typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                 textAlign = Paint.Align.CENTER
             }
-            canvas.drawText("معاونت آموزشی", 110f, y + 25f, stampText)
-            canvas.drawText("تأیید مدارک دیجیتال", 110f, y + 37f, stampText)
+            canvas.drawText("Student OS", 110f, y + 25f, stampText)
+            canvas.drawText("گزارش شخصی", 110f, y + 37f, stampText)
             canvas.drawText("STUDENT OS", 110f, y + 49f, stampText)
         }
 
         // Right side: QR / Verification Hash
-        if (showQr) {
-            val qrBox = Paint().apply {
-                color = AndroidColor.rgb(241, 245, 249)
-                style = Paint.Style.FILL
-            }
-            val qrBorder = Paint().apply {
-                color = AndroidColor.rgb(203, 213, 225)
-                style = Paint.Style.STROKE
-                strokeWidth = 1f
-            }
-            canvas.drawRoundRect(RectF(width - 160f, y + 5f, width - 50f, y + 65f), 6f, 6f, qrBox)
-            canvas.drawRoundRect(RectF(width - 160f, y + 5f, width - 50f, y + 65f), 6f, 6f, qrBorder)
 
-            val hashText = Paint().apply {
-                color = AndroidColor.rgb(71, 85, 105)
-                textSize = 7f
-                typeface = Typeface.MONOSPACE
-                textAlign = Paint.Align.CENTER
-            }
-            canvas.drawText("کد اصالت‌سنجی:", width - 105f, y + 25f, hashText)
-            canvas.drawText("SOS-2026-X9A71", width - 105f, y + 40f, hashText)
-            canvas.drawText("verif.studentos.ir", width - 105f, y + 53f, hashText)
-        }
     }
 
     /**
@@ -481,7 +459,7 @@ object AcademicExportManager {
 
         // Card Border
         val cardBorder = Paint().apply {
-            color = AndroidColor.argb(90, 129, 140, 248)
+            color = AndroidColor.argb(90, 192, 205, 140)
             style = Paint.Style.STROKE
             strokeWidth = 4f
         }
@@ -489,7 +467,7 @@ object AcademicExportManager {
 
         // Header Brand
         val brandPaint = Paint().apply {
-            color = AndroidColor.rgb(129, 140, 248)
+            color = AndroidColor.rgb(192, 205, 140)
             textSize = 34f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textAlign = Paint.Align.CENTER
@@ -498,11 +476,11 @@ object AcademicExportManager {
 
         // Avatar Circle
         val avatarPaint = Paint().apply {
-            color = AndroidColor.argb(60, 129, 140, 248)
+            color = AndroidColor.argb(60, 192, 205, 140)
             style = Paint.Style.FILL
         }
         val avatarBorder = Paint().apply {
-            color = AndroidColor.rgb(129, 140, 248)
+            color = AndroidColor.rgb(192, 205, 140)
             style = Paint.Style.STROKE
             strokeWidth = 6f
         }
@@ -511,7 +489,7 @@ object AcademicExportManager {
 
         val (profile, badgeSubtitle) = when (payload) {
             is ExportSourcePayload.Passport -> Pair(payload.profile, "شناسنامه جامع تحصیلی")
-            is ExportSourcePayload.Grades -> Pair(payload.profile, "کارنامه رسمی نمرات")
+            is ExportSourcePayload.Grades -> Pair(payload.profile, "گزارش شخصی نمرات")
         }
 
         val initialPaint = Paint().apply {
@@ -548,8 +526,8 @@ object AcademicExportManager {
             canvas.drawRoundRect(RectF(width / 2f - 220f, 660f, width / 2f + 220f, 800f), 40f, 40f, gpaBoxPaint)
 
             val gpaVal = when (payload) {
-                is ExportSourcePayload.Passport -> String.format(Locale.US, "%.2f", profile.declaredGpa ?: 0.0)
-                is ExportSourcePayload.Grades -> String.format(Locale.US, "%.2f", payload.termGpa)
+                is ExportSourcePayload.Passport -> academicGpaText(payload)
+                is ExportSourcePayload.Grades -> academicGpaText(payload)
             }
             val gpaNumberPaint = Paint().apply {
                 color = AndroidColor.WHITE
@@ -588,7 +566,7 @@ object AcademicExportManager {
             textAlign = Paint.Align.RIGHT
         }
         val itemValPaint = Paint().apply {
-            color = AndroidColor.rgb(129, 140, 248)
+            color = AndroidColor.rgb(192, 205, 140)
             textSize = 34f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textAlign = Paint.Align.LEFT
@@ -602,18 +580,18 @@ object AcademicExportManager {
         }
 
         canvas.drawText("نیمسال تحصیلی", width - 130f, yPos, itemTextPaint)
-        canvas.drawText(profile.term.ifBlank { "ترم ۶" }, 130f, yPos, itemValPaint)
+        canvas.drawText(profile.term.ifBlank { "وارد نشده" }, 130f, yPos, itemValPaint)
         yPos += 90f
 
         when (payload) {
             is ExportSourcePayload.Passport -> {
                 val p = payload.progress
                 canvas.drawText("واحدهای گذرانده", width - 130f, yPos, itemTextPaint)
-                canvas.drawText("${p?.passedCredits ?: 85} واحد", 130f, yPos, itemValPaint)
+                canvas.drawText("${p?.passedCredits ?: "—"} واحد", 130f, yPos, itemValPaint)
                 yPos += 90f
 
                 canvas.drawText("درصد پیشرفت", width - 130f, yPos, itemTextPaint)
-                canvas.drawText("${p?.progressPercentage?.toInt() ?: 60}٪", 130f, yPos, itemValPaint)
+                canvas.drawText("${p?.progressPercentage?.toInt() ?: "—"}٪", 130f, yPos, itemValPaint)
             }
             is ExportSourcePayload.Grades -> {
                 canvas.drawText("تعداد کل واحدها", width - 130f, yPos, itemTextPaint)
@@ -640,19 +618,11 @@ object AcademicExportManager {
                 typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                 textAlign = Paint.Align.CENTER
             }
-            canvas.drawText("تأییدیه دانشگاه", 220f, 1670f, stampTxt)
+            canvas.drawText("گزارش دانشجو", 220f, 1670f, stampTxt)
             canvas.drawText("STUDENT OS", 220f, 1700f, stampTxt)
         }
 
-        if (showQr) {
-            val qrTxt = Paint().apply {
-                color = AndroidColor.rgb(148, 163, 184)
-                textSize = 20f
-                typeface = Typeface.MONOSPACE
-                textAlign = Paint.Align.CENTER
-            }
-            canvas.drawText("VERIFIED #SOS-2026-X9A71", width - 260f, 1690f, qrTxt)
-        }
+
 
         return bitmap
     }

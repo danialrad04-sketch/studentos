@@ -90,7 +90,8 @@ data class TourStepData(
 fun FirstTimeAppTourDialog(
     currentProfile: StudentProfileEntity,
     onSaveProfileEssentials: (name: String, studentId: String, targetGpa: Double, notes: String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    initialTargetGpa: Double? = null
 ) {
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
 
@@ -112,7 +113,7 @@ fun FirstTimeAppTourDialog(
     }
     var studentNumber by remember(currentProfile.studentId) { mutableStateOf(currentProfile.studentId) }
     var targetGpaInput by remember {
-        mutableStateOf(currentProfile.declaredGpa?.let { String.format("%.2f", it) } ?: "17.50")
+        mutableStateOf(initialTargetGpa?.let { String.format(java.util.Locale.US, "%.2f", it) } ?: "17.50")
     }
     var academicNotes by remember(currentProfile.notes) { mutableStateOf(currentProfile.notes) }
 
@@ -478,9 +479,10 @@ fun FirstTimeAppTourDialog(
                         }
 
                         Button(
+                            enabled = currentStepIndex != 1 || com.example.data.local.util.DateTimeNormalizer.normalizeDigits(targetGpaInput).replace('٫', '.').toDoubleOrNull()?.let { it.isFinite() && it in 0.0..20.0 } == true,
                             onClick = {
                                 if (currentStepIndex == 1) {
-                                    val gpa = targetGpaInput.toDoubleOrNull() ?: 17.5
+                                    val gpa = com.example.data.local.util.DateTimeNormalizer.normalizeDigits(targetGpaInput).replace('٫', '.').toDouble()
                                     onSaveProfileEssentials(
                                         if (studentName.isBlank()) "دانشجو" else studentName.trim(),
                                         studentNumber.trim(),

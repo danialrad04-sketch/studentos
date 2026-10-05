@@ -2,6 +2,8 @@ package com.example.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -69,10 +71,12 @@ fun SemesterPlannerScreen(
     matchState: CurriculumMatchUiState,
     candidatePlans: List<SemesterPlan>,
     onPlanSelected: (SemesterPlan) -> Unit,
+    savedPlan: SemesterPlan? = null,
+    onOpenProfile: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    var selectedPlanId by remember(candidatePlans) {
-        mutableStateOf(candidatePlans.firstOrNull()?.id ?: "")
+    var selectedPlanId by remember(candidatePlans, savedPlan?.id) {
+        mutableStateOf(savedPlan?.id ?: candidatePlans.firstOrNull()?.id ?: "")
     }
     var showComparison by remember { mutableStateOf(false) }
 
@@ -92,9 +96,9 @@ fun SemesterPlannerScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(Modifier.weight(1f)) {
                     Text(
-                        text = "برنامه‌ریز ترم تحصیلی (Build My Semester)",
+                        text = "برنامه‌ریز ترم",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onBackground
@@ -137,6 +141,21 @@ fun SemesterPlannerScreen(
             }
         }
 
+        if (savedPlan != null) item {
+            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("برنامه هدف ذخیره‌شده · ${savedPlan.name}", style = MaterialTheme.typography.titleSmall)
+                    Text("${savedPlan.totalCredits} واحد · ${savedPlan.courses.joinToString("، ") { it.name }}", style = MaterialTheme.typography.bodyMedium)
+                    Text("این انتخاب در برنامه ذخیره شده است؛ ثبت‌نام دانشگاه را تأیید نمی‌کند.", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+        if (candidatePlans.isEmpty()) item {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(if (matchState is CurriculumMatchUiState.NotFound) matchState.explanation else "برای پیشنهاد ترم، چارت معتبر و سوابق درس‌ها لازم است.", style = MaterialTheme.typography.bodyMedium)
+                onOpenProfile?.let { action -> Button(onClick = action, modifier = Modifier.fillMaxWidth()) { Text("بررسی مشخصات تحصیلی") } }
+            }
+        }
         // Comparison Banner if enabled
         if (showComparison && candidatePlans.size >= 2) {
             item {
@@ -189,7 +208,7 @@ fun SemesterPlannerScreen(
         if (candidatePlans.isNotEmpty()) {
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(StudentOsSpacing.sm)
                 ) {
                     candidatePlans.forEach { plan ->
@@ -349,7 +368,7 @@ fun SemesterPlannerScreen(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "تایید و ثبت به عنوان برنامه هدف ترم",
+                                text = if (savedPlan?.id == activePlan.id) "به‌روزرسانی برنامه هدف" else "ذخیره برنامه هدف ترم",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold
                             )

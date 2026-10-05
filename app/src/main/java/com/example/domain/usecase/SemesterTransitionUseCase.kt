@@ -59,8 +59,8 @@ class SemesterTransitionUseCase(
                     var gradedUnits = 0
                     for (c in currentCourses) {
                         val g = dao.getGradeByCourseId(c.id)
-                        if (g != null && g.finalGrade > 0) {
-                            totalPoints += g.finalGrade * c.units
+                        if (g != null && g.hasRecordedScore()) {
+                            totalPoints += (g.midtermGrade + g.finalGrade) * c.units
                             gradedUnits += c.units
                         }
                     }

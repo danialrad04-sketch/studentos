@@ -25,6 +25,18 @@ async function safe(action) {
     throw new functions.https.HttpsError('unavailable', 'سرویس موقتاً در دسترس نیست؛ دوباره تلاش کنید.');
   }
 }
+const { SupportService } = require('./lib/support-service');
+const support = new SupportService(db);
+const supportFunctions = functions.runWith({ enforceAppCheck: true, timeoutSeconds: 30, maxInstances: 10 });
+exports.submitSupportTicket = supportFunctions.https.onCall((data, context) => { const uid = member(context); return safe(() => support.create(uid, data)); });
+exports.replySupportTicket = supportFunctions.https.onCall((data, context) => { const uid = member(context); return safe(() => support.reply(uid, data)); });
+exports.closeSupportTicket = supportFunctions.https.onCall((data, context) => { const uid = member(context); return safe(() => support.close(uid, data)); });
+exports.respondSupportTicket = supportFunctions.https.onCall((data, context) => {
+  const uid = member(context);
+  if (context.auth.token.supportStaff !== true) throw new functions.https.HttpsError('permission-denied', 'این عملیات فقط برای پشتیبانی مجاز است.');
+  return safe(() => support.respond(uid, data));
+});
+
 exports.getPremiumCatalog = secured.https.onCall(async (_data, context) => {
   const uid = member(context);
   return safe(async () => ({ plans: premiumCore.plans(process.env), salesEnabled: premiumCore.ready(process.env, uid), rsaPublicKey: process.env.BAZAAR_RSA_PUBLIC_KEY || '', aiEnabled: !!process.env.GEMINI_SERVER_API_KEY, ...await premium.status(uid) }));

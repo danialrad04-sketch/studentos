@@ -98,6 +98,7 @@ fun AcademicPassportScreen(
         // 1. Header: Student Identity & Accredited Curriculum Version
         PassportHeaderCard(profile = profile, matchState = matchState, onOpenExport = onOpenExport)
 
+        if (profile.majorId?.startsWith("USER_") == true) Text("مبنای این شناسنامه، چارت شخصی واردشده توسط شماست؛ تأیید دانشگاه نیست.", style = MaterialTheme.typography.bodyMedium)
         // Loading & Error states
         when (progressState) {
             is AcademicProgressUiState.Loading -> {
@@ -362,7 +363,7 @@ private fun KeyMetricsRow(progress: AcademicProgress) {
             modifier = Modifier.weight(1f)
         )
         MetricTile(
-            title = "کل مصوب",
+            title = "کل واحد چارت",
             value = "${progress.totalRequiredCredits}",
             sub = "چارت",
             accentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -462,7 +463,7 @@ private fun ProgressCard(progress: AcademicProgress) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "${progress.passedCredits} واحد گذرانده از ${progress.totalRequiredCredits} واحد مصوب",
+                    text = "${progress.passedCredits} واحد گذرانده از ${progress.totalRequiredCredits} واحد در چارت",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

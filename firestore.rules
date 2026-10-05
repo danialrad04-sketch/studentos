@@ -32,9 +32,11 @@ service cloud.firestore {
 
       // Sub-collections: courses, attendance, grades, tasks, profile
       match /{subcollection}/{document=**} {
-        allow read, write: if isOwner(userId) && subcollection != 'redemptions';
+        allow read, write: if isOwner(userId) && !['redemptions', 'tickets'].hasAny([subcollection]);
       }
     }
+    match /users/{userId}/tickets/{id} { allow read: if isOwner(userId); allow write: if false; }
+    match /support_tickets/{id} { allow read: if request.auth != null && request.auth.token.supportStaff == true; allow write: if false; }
     match /bazaarReceipts/{id} { allow read, write: if false; }
     match /aiUsage/{id} { allow read, write: if false; }
     match /aiRequests/{id} { allow read, write: if false; }

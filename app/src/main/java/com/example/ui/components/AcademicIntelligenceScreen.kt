@@ -46,7 +46,8 @@ fun AcademicIntelligenceScreen(
     grades: List<GradeEntity>,
     risks: List<AcademicRisk>,
     onOpenTab: (AppTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    semesterHistory: List<com.example.data.local.entity.SemesterEntity> = emptyList()
 ) {
     val completion = if (totalRequiredCredits > 0) {
         (passedUnits.toFloat() / totalRequiredCredits.toFloat()).coerceIn(0f, 1f)
@@ -63,6 +64,7 @@ fun AcademicIntelligenceScreen(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(StudentSpacing.Lg)
     ) {
+        SemesterTrendCard(semesterHistory)
         AcademicCard {
             Column(modifier = Modifier.padding(StudentSpacing.Xxl)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -87,7 +89,7 @@ fun AcademicIntelligenceScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(StudentSpacing.Md)
                 ) {
-                    IntelligenceMetric("معدل", if (grades.isEmpty()) "—" else String.format("%.2f", gpa), Modifier.weight(1f))
+                    IntelligenceMetric("معدل", if (grades.none { it.hasRecordedScore() }) "—" else String.format("%.2f", gpa), Modifier.weight(1f))
                     IntelligenceMetric("واحد", "$passedUnits/$totalRequiredCredits", Modifier.weight(1f))
                     IntelligenceMetric("درس فعال", courses.distinctBy { it.id }.size.toString(), Modifier.weight(1f))
                 }

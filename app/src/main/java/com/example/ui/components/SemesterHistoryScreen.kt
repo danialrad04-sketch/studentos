@@ -105,6 +105,7 @@ fun SemesterHistoryScreen(
                 .testTag("semester_history_screen"),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item { SemesterTrendCard(allSemesters) }
             // Header Banner & Summary
             item {
                 Spacer(modifier = Modifier.height(8.dp))

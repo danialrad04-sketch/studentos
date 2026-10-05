@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -80,7 +81,8 @@ import java.util.Locale
 fun SupportTicketDialog(
     userAccount: UserAccount,
     onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSignIn: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -91,6 +93,8 @@ fun SupportTicketDialog(
         SupportTicketManager.observeUserTickets(userAccount.uid)
     }
     val tickets by ticketsFlow.collectAsState(initial = emptyList())
+    val currentTicket = tickets.find { it.id == selectedTicket?.id } ?: selectedTicket
+    val observationError by SupportTicketManager.observationError.collectAsState()
 
     StudentGlassModalSheet(
         showCloseButton = false,
@@ -102,6 +106,8 @@ fun SupportTicketDialog(
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
+            observationError?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium) }
+            if (userAccount.isGuest && onSignIn != null) Button(onClick = onSignIn, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("ورود برای ارتباط با پشتیبانی") }
             // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -164,7 +170,7 @@ fun SupportTicketDialog(
             if (selectedTicket != null) {
                 // Ticket Detail & Conversation View
                 TicketDetailView(
-                    ticket = selectedTicket!!,
+                    ticket = currentTicket!!,
                     currentUserId = userAccount.uid,
                     currentUserName = userAccount.displayName,
                     onReplySent = {
@@ -172,9 +178,9 @@ fun SupportTicketDialog(
                     },
                     onCloseTicket = {
                         coroutineScope.launch {
-                            SupportTicketManager.closeTicket(selectedTicket!!.id, userAccount.uid)
-                            selectedTicket = null
-                            Toast.makeText(context, "تیکت بسته شد", Toast.LENGTH_SHORT).show()
+                            val result = SupportTicketManager.closeTicket(selectedTicket!!.id, userAccount.uid)
+                            if (result.isSuccess) { selectedTicket = null; Toast.makeText(context, "تیکت بسته شد", Toast.LENGTH_SHORT).show() }
+                            else Toast.makeText(context, result.exceptionOrNull()?.message ?: "تیکت بسته نشد.", Toast.LENGTH_LONG).show()
                         }
                     }
                 )
@@ -374,6 +380,8 @@ private fun NewTicketForm(
     var selectedCategory by remember { mutableStateOf(TicketCategory.ACADEMIC_COPILOT) }
     var selectedPriority by remember { mutableStateOf(TicketPriority.MEDIUM) }
     var isSubmitting by remember { mutableStateOf(false) }
+    var submitError by remember { mutableStateOf<String?>(null) }
+    val requestId = androidx.compose.runtime.saveable.rememberSaveable { java.util.UUID.randomUUID().toString() }
 
     Column(
         modifier = Modifier
@@ -421,22 +429,25 @@ private fun NewTicketForm(
             shape = RoundedCornerShape(12.dp)
         )
 
+        submitError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
         Button(
             onClick = {
                 if (subject.isNotBlank() && initialMessage.isNotBlank() && !isSubmitting) {
                     isSubmitting = true
                     coroutineScope.launch {
-                        SupportTicketManager.createTicket(
+                        val result = SupportTicketManager.createTicket(
                             userId = userAccount.uid,
                             userEmail = userAccount.email,
                             studentName = userAccount.displayName,
                             subject = subject,
                             category = selectedCategory,
                             priority = selectedPriority,
-                            initialMessage = initialMessage
+                            initialMessage = initialMessage,
+                            requestId = requestId
                         )
                         isSubmitting = false
-                        onSubmitted()
+                        if (result.isSuccess) { submitError = null; onSubmitted() }
+                        else submitError = result.exceptionOrNull()?.message ?: "درخواست ارسال نشد؛ متن شما حفظ شده است."
                     }
                 }
             },
@@ -466,6 +477,7 @@ private fun TicketDetailView(
     onReplySent: () -> Unit,
     onCloseTicket: () -> Unit
 ) {
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var replyText by remember { mutableStateOf("") }
     var isSendingReply by remember { mutableStateOf(false) }
@@ -582,15 +594,15 @@ private fun TicketDetailView(
                         if (replyText.isNotBlank() && !isSendingReply) {
                             isSendingReply = true
                             coroutineScope.launch {
-                                SupportTicketManager.addReply(
+                                val result = SupportTicketManager.addReply(
                                     ticketId = ticket.id,
                                     userId = currentUserId,
                                     senderName = currentUserName,
                                     replyText = replyText
                                 )
-                                replyText = ""
                                 isSendingReply = false
-                                onReplySent()
+                                if (result.isSuccess) { replyText = ""; onReplySent() }
+                                else Toast.makeText(context, result.exceptionOrNull()?.message ?: "پاسخ ارسال نشد.", Toast.LENGTH_LONG).show()
                             }
                         }
                     },

@@ -39,7 +39,10 @@ data class StudentOSBackupPayload(
     val exams: List<ExamEntity> = emptyList(),
     val notes: List<NoteEntity> = emptyList(),
     val attempts: List<StudentCourseAttemptEntity> = emptyList(),
-    val curriculumCourses: List<CurriculumCourseEntity> = emptyList()
+    val curriculumCourses: List<CurriculumCourseEntity> = emptyList(),
+    val universities: List<com.example.data.local.entity.UniversityEntity> = emptyList(),
+    val majors: List<com.example.data.local.entity.MajorEntity> = emptyList(),
+    val curriculumVersions: List<com.example.data.local.entity.CurriculumVersionEntity> = emptyList()
 )
 
 /**
@@ -79,7 +82,10 @@ object LocalDataBackupManager {
             exams = dao.getAllExamsSync(),
             notes = dao.getAllNotesSync(),
             attempts = dao.getStudentAttemptsSync(),
-            curriculumCourses = curriculumDao?.getAllCurriculumCoursesSync() ?: emptyList()
+            curriculumCourses = curriculumDao?.getAllCurriculumCoursesSync() ?: emptyList(),
+            universities = curriculumDao?.getAllUniversitiesSync().orEmpty(),
+            majors = curriculumDao?.getAllMajorsSync().orEmpty(),
+            curriculumVersions = curriculumDao?.getAllCurriculumVersionsSync().orEmpty()
         )
         payloadAdapter.indent("  ").toJson(payload)
     }
@@ -93,6 +99,11 @@ object LocalDataBackupManager {
             val payload = payloadAdapter.fromJson(jsonString)
                 ?: return@withContext Result.failure(IllegalArgumentException("Invalid JSON payload format"))
 
+            curriculumDao?.let { catalog ->
+                catalog.insertUniversities(payload.universities)
+                catalog.insertMajors(payload.majors)
+                payload.curriculumVersions.forEach { catalog.upsertPersonalCurriculumVersion(it) }
+            }
             payload.profile?.let { dao.insertProfile(it.copy(updatedAt = System.currentTimeMillis())) }
             if (payload.semesters.isNotEmpty()) dao.insertSemesters(payload.semesters)
             if (payload.courses.isNotEmpty()) dao.insertCourses(payload.courses)

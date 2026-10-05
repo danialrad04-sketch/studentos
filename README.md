@@ -1,3 +1,5 @@
+> Current functional completion work: [2.4 audit](docs/PRODUCT_COMPLETENESS_2_4.md) · [Persian changes](docs/release-notes/2.4.0-fa.md). Live AI and Bazaar sales still require production configuration.
+
 <div align="center">
 
 # Student OS

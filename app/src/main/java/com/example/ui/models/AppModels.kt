@@ -23,7 +23,7 @@ enum class AppTab(
     EXAMS("امتحانات پایان‌ترم", "🎯"),
     GRADES("کارنامه و شبیه‌ساز", "📈"),
     SEMESTER_PLANNER("برنامه‌ریز ترم", "🧭"),
-    CURRICULUM("چارت مهندسی شیمی", "🗺️"),
+    CURRICULUM("چارت تحصیلی", "🗺️"),
     POMODORO("تمرکز", "⏱️"),
     GAMIFICATION("مدال‌ها و دستاوردها", "🏆"),
     HISTORY("سوابق ترم‌ها", "📚")

@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -66,6 +67,7 @@ fun TasksScreen(
     exams: List<ExamItem> = emptyList(),
     planningCollisions: List<com.example.domain.model.AcademicPlanningCollision> = emptyList(),
     onAddTask: () -> Unit,
+    onEditTask: ((TaskEntity) -> Unit)? = null,
     onToggleTask: (TaskEntity) -> Unit,
     onDeleteTask: (TaskEntity) -> Unit,
     onOpenCourseWorkspace: ((CourseEntity) -> Unit)? = null,
@@ -256,11 +258,12 @@ fun TasksScreen(
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 filteredTasks.forEach { task ->
-                    val matchedCourse = courses.find { it.name == task.courseName }
+                    val matchedCourse = courses.find { it.id == task.courseId || (task.courseId.isBlank() && it.name == task.courseName) }
                     TaskCard(
                         task = task,
                         onToggle = { onToggleTask(task) },
                         onDelete = { onDeleteTask(task) },
+                        onEdit = onEditTask?.let { { it(task) } },
                         onOpenWorkspace = if (matchedCourse != null && onOpenCourseWorkspace != null) {
                             { onOpenCourseWorkspace(matchedCourse) }
                         } else null
@@ -277,8 +280,10 @@ fun TaskCard(
     onToggle: () -> Unit,
     onDelete: () -> Unit,
     onOpenWorkspace: (() -> Unit)? = null,
+    onEdit: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    var deleting by remember { mutableStateOf(false) }
     val containerColor = if (task.isCompleted) {
         MaterialTheme.colorScheme.surfaceContainerLow
     } else {
@@ -290,7 +295,7 @@ fun TaskCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 72.dp, max = 112.dp)
+            .heightIn(min = 88.dp)
             .tactileClickable { onToggle() },
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = containerColor),
@@ -378,8 +383,13 @@ fun TaskCard(
                 }
             }
 
+            onEdit?.let { action ->
+                IconButton(onClick = action, modifier = Modifier.minimumInteractiveComponentSize()) {
+                    Icon(androidx.compose.material.icons.Icons.Default.Edit, contentDescription = "ویرایش تکلیف")
+                }
+            }
             IconButton(
-                onClick = onDelete,
+                onClick = { deleting = true },
                 modifier = Modifier.minimumInteractiveComponentSize()
             ) {
                 Icon(
@@ -391,6 +401,11 @@ fun TaskCard(
             }
         }
     }
+    if (deleting) androidx.compose.material3.AlertDialog(onDismissRequest = { deleting = false },
+        title = { Text("حذف تکلیف؟") }, text = { Text(task.title) },
+        confirmButton = { androidx.compose.material3.TextButton(onClick = { onDelete(); deleting = false }) { Text("حذف") } },
+        dismissButton = { androidx.compose.material3.TextButton(onClick = { deleting = false }) { Text("انصراف") } })
+
 }
 
 @Preview(name = "TasksScreen Light", showBackground = true)

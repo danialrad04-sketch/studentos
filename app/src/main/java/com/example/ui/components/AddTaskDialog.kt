@@ -17,13 +17,13 @@ import com.example.ui.components.datepicker.JalaliCalendarUtil
 import com.example.ui.components.datepicker.JalaliDatePickerField
 
 @Composable
-fun AddTaskDialog(courseNames: List<String>, onDismiss: () -> Unit, onSave: (String, String, String) -> Unit) {
+fun AddTaskDialog(courseNames: List<String>, onDismiss: () -> Unit, onSave: (String, String, String) -> Unit, initialTask: com.example.data.local.entity.TaskEntity? = null, isSaving: Boolean = false) {
     val courses = courseNames.filter { it.isNotBlank() }.distinct().ifEmpty { listOf("عمومی", "پروژه", "امتحان") }
-    var title by rememberSaveable { mutableStateOf("") }
-    var course by rememberSaveable { mutableStateOf(courses.first()) }
-    var dueDate by rememberSaveable { mutableStateOf(JalaliCalendarUtil.today().format()) }
+    var title by rememberSaveable { mutableStateOf(initialTask?.title.orEmpty()) }
+    var course by rememberSaveable { mutableStateOf(initialTask?.courseName ?: courses.first()) }
+    var dueDate by rememberSaveable { mutableStateOf(initialTask?.dueDate ?: JalaliCalendarUtil.today().format()) }
     val valid = title.isNotBlank() && JalaliCalendarUtil.parse(dueDate) != null
-    StudentGlassModalSheet(onDismiss = onDismiss, title = "افزودن تکلیف", subtitle = "یک کار روشن با موعد مشخص", maxWidth = 560.dp) {
+    StudentGlassModalSheet(onDismiss = onDismiss, title = if (initialTask == null) "افزودن تکلیف" else "ویرایش تکلیف", subtitle = "یک کار روشن با موعد مشخص", maxWidth = 560.dp) {
         val dismiss = LocalStudentModalDismiss.current ?: onDismiss
         Column(Modifier.weight(1f, fill = false).fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
             OutlinedTextField(
@@ -42,10 +42,10 @@ fun AddTaskDialog(courseNames: List<String>, onDismiss: () -> Unit, onSave: (Str
         Spacer(Modifier.height(16.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedButton(onClick = dismiss, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("انصراف") }
-            Button(onClick = { onSave(title.trim(), course, dueDate.trim()) }, enabled = valid, modifier = Modifier.weight(1.3f).heightIn(min = 48.dp).testTag("save_task")) {
+            Button(onClick = { onSave(title.trim(), course, dueDate.trim()) }, enabled = valid && !isSaving, modifier = Modifier.weight(1.3f).heightIn(min = 48.dp).testTag("save_task")) {
                 Icon(Icons.Rounded.Check, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("ثبت تکلیف")
+                Text(if (isSaving) "در حال ذخیره…" else if (initialTask == null) "ثبت تکلیف" else "ذخیره تغییرات")
             }
         }
     }

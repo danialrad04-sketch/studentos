@@ -49,8 +49,31 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
     assert.equal(queries.filter(r => r.status === 'fulfilled').length, 1);
     assert.equal((await service.status('ai-user')).dailyAiQuotaUsed, 1);
   });
+  test('support submission is atomic/idempotent, account isolated, and cannot be forged by clients', async () => {
+    const { SupportService } = require('../lib/support-service');
+    const service = new SupportService(db);
+    const data = { subject: 'Test ticket', message: 'Test only', category: 'BUG_REPORT', priority: 'LOW', studentName: 'Test', requestId: crypto.randomUUID() };
+    const [first, duplicate] = await Promise.all([service.create('ticket-owner', data), service.create('ticket-owner', data)]);
+    assert.equal(first.id, duplicate.id);
+    await service.reply('ticket-owner', { ticketId: first.id, message: 'Follow-up', senderRole: 'SUPPORT', userId: 'forged' });
+    const saved = (await db.collection('users').doc('ticket-owner').collection('tickets').doc(first.id).get()).data();
+    assert.equal(saved.messages.length, 2); assert.equal(saved.messages[1].senderRole, 'STUDENT'); assert.equal(saved.messages[1].senderId, 'ticket-owner');
+    await assert.rejects(service.reply('other-account', { ticketId: first.id, message: 'steal' }), /متعلق/);
+    const client = environment.authenticatedContext('ticket-owner').firestore();
+    await assertSucceeds(getDoc(doc(client, 'users/ticket-owner/tickets/' + first.id)));
+    await assertFails(setDoc(doc(client, 'users/ticket-owner/tickets/' + first.id), { status: 'RESOLVED', messages: [] }));
+    await assertFails(getDoc(doc(client, 'support_tickets/' + first.id)));
+    const staff = environment.authenticatedContext('trusted-staff', { supportStaff: true }).firestore();
+    await assertSucceeds(getDoc(doc(staff, 'support_tickets/' + first.id)));
+    await service.respond('trusted-staff', { userId: 'ticket-owner', ticketId: first.id, message: 'Support answer' });
+    await service.close('ticket-owner', { ticketId: first.id });
+    await assert.rejects(service.reply('ticket-owner', { ticketId: first.id, message: 'reopen silently' }), /بسته/);
+    const mirrored = (await db.collection('support_tickets').doc(first.id).get()).data();
+    assert.equal(mirrored.status, 'CLOSED'); assert.equal(mirrored.messages.length, 3); assert.equal(mirrored.messages[2].senderRole, "SUPPORT");
+    for (const invalid of [null, {}, { ...data, message: 'x'.repeat(4001) }, { ...data, category: 'fake' }]) await assert.rejects(service.create('ticket-owner', invalid));
+  });
   test('callable exports load under the installed Firebase Functions SDK', () => {
     const functions = require('../index');
-    for (const name of ['getPremiumCatalog', 'verifyBazaarSubscription', 'generateAcademicAdvice']) assert.equal(typeof functions[name], 'function');
+    for (const name of ['getPremiumCatalog', 'verifyBazaarSubscription', 'generateAcademicAdvice', 'submitSupportTicket', 'replySupportTicket', 'closeSupportTicket', 'respondSupportTicket']) assert.equal(typeof functions[name], 'function');
   });
 }

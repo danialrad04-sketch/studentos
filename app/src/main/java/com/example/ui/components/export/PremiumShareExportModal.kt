@@ -146,16 +146,16 @@ enum class ExportThemePreset(
     val isDark: Boolean
 ) {
     OBSIDIAN_NEON(
-        title = "آبسیدین نئون 🌌",
-        primaryColor = Color(0xFF818CF8),
+        title = "زیتونی تیره",
+        primaryColor = Color(0xFFC0CD8C),
         accentColor = Color(0xFF38BDF8),
         backgroundColors = listOf(Color(0xFF090D16), Color(0xFF131A2B), Color(0xFF090D16)),
         textColor = Color(0xFFF8FAFC),
         isDark = true
     ),
     ROYAL_INDIGO(
-        title = "نیلی سلطنتی 🔮",
-        primaryColor = Color(0xFFC7D2FE),
+        title = "زیتونی کلاسیک",
+        primaryColor = Color(0xFFDEE6C4),
         accentColor = Color(0xFFC0CD8C),
         backgroundColors = listOf(Color(0xFF3D4821), Color(0xFF59652F), Color(0xFF3D4821)),
         textColor = Color(0xFFFFFFFF),
@@ -170,7 +170,7 @@ enum class ExportThemePreset(
         isDark = true
     ),
     CLEAN_MINIMAL(
-        title = "مدرک رسمی 📜",
+        title = "گزارش مینیمال",
         primaryColor = Color(0xFF1E293B),
         accentColor = Color(0xFF59652F),
         backgroundColors = listOf(Color(0xFFFAFAFA), Color(0xFFF1F5F9), Color(0xFFE2E8F0)),
@@ -181,7 +181,7 @@ enum class ExportThemePreset(
 
 enum class ExportFormatMode(val title: String, val icon: ImageVector) {
     STORY_CARD_9_16("کارت استوری (۹:۱۶)", Icons.Default.Image),
-    OFFICIAL_DOC_A4("مدرک رسمی (A4 PDF)", Icons.Default.PictureAsPdf)
+    OFFICIAL_DOC_A4("گزارش شخصی (A4 PDF)", Icons.Default.PictureAsPdf)
 }
 
 sealed class ExportSourcePayload {
@@ -221,7 +221,7 @@ fun PremiumShareExportModal(
     var showStudentId by remember { mutableStateOf(true) }
     var showGpa by remember { mutableStateOf(true) }
     var showOfficialStamp by remember { mutableStateOf(true) }
-    var showQrVerification by remember { mutableStateOf(true) }
+    val showQrVerification = false
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -265,7 +265,7 @@ fun PremiumShareExportModal(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "خروجی Story-ready اینستاگرام و گواهی رسمی آکادمیک",
+                            text = "کارت اشتراک‌گذاری و گزارش شخصی تحصیلی",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -379,19 +379,12 @@ fun PremiumShareExportModal(
                 FilterChip(
                     selected = showOfficialStamp,
                     onClick = { showOfficialStamp = !showOfficialStamp },
-                    label = { Text("مهر و اصالت", fontSize = 11.sp) },
+                    label = { Text("نشان Student OS", fontSize = 11.sp) },
                     leadingIcon = {
                         if (showOfficialStamp) Icon(Icons.Default.Check, null, modifier = Modifier.size(14.dp))
                     }
                 )
-                FilterChip(
-                    selected = showQrVerification,
-                    onClick = { showQrVerification = !showQrVerification },
-                    label = { Text("کیوآر کد هوشمند", fontSize = 11.sp) },
-                    leadingIcon = {
-                        if (showQrVerification) Icon(Icons.Default.Check, null, modifier = Modifier.size(14.dp))
-                    }
-                )
+
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -596,7 +589,7 @@ private fun StoryCardVisualCanvas(
                             )
                             Spacer(modifier = Modifier.width(3.dp))
                             Text(
-                                text = "تأییدشده",
+                                text = "گزارش شخصی",
                                 fontSize = 8.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = theme.accentColor
@@ -640,7 +633,7 @@ private fun StoryCardVisualCanvas(
 
                         if (showStudentId) {
                             Text(
-                                text = "کد دانشجویی: ${profile.studentId.ifEmpty { "۴۰۲۱۱۰۰۱" }}",
+                                text = "کد دانشجویی: ${profile.studentId.ifEmpty { "وارد نشده" }}",
                                 fontSize = 10.sp,
                                 color = theme.textColor.copy(alpha = 0.7f)
                             )
@@ -709,17 +702,17 @@ private fun StoryCardVisualCanvas(
                                 ) {
                                     StatStoryItem(
                                         label = "واحدهای پاس‌شده",
-                                        value = "${progress?.passedCredits ?: 48} واحد",
+                                        value = "${progress?.passedCredits ?: "—"} واحد",
                                         color = theme.textColor
                                     )
                                     StatStoryItem(
                                         label = "واحدهای مانده",
-                                        value = "${progress?.remainingCredits ?: 92} واحد",
+                                        value = "${progress?.remainingCredits ?: "—"} واحد",
                                         color = theme.textColor
                                     )
                                     StatStoryItem(
                                         label = "پیشرفت",
-                                        value = "${progress?.progressPercentage?.toInt() ?: 35}٪",
+                                        value = "${progress?.progressPercentage?.toInt() ?: "—"}٪",
                                         color = theme.primaryColor
                                     )
                                 }
@@ -728,7 +721,7 @@ private fun StoryCardVisualCanvas(
                     }
                     is ExportSourcePayload.Grades -> {
                         val profile = payload.profile
-                        val gpaFormatted = String.format(Locale.US, "%.2f", payload.termGpa)
+                        val gpaFormatted = academicGpaText(payload)
                         val isHonors = payload.termGpa >= 17.0
 
                         Surface(
@@ -750,14 +743,14 @@ private fun StoryCardVisualCanvas(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = profile.name.ifEmpty { "دانشجوی ممتاز" },
+                            text = profile.name.ifEmpty { "دانشجو" },
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Black,
                             color = theme.textColor
                         )
 
                         Text(
-                            text = "کارنامه شبیه‌ساز ترم ۳",
+                            text = "کارنامه ترم جاری",
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = theme.primaryColor
@@ -790,7 +783,7 @@ private fun StoryCardVisualCanvas(
                                         color = if (isHonors) Amber500.copy(alpha = 0.15f) else Emerald500.copy(alpha = 0.15f)
                                     ) {
                                         Text(
-                                            text = if (isHonors) "🏆 وضعیت: ممتاز (سقف ۲۴ واحد ترم ۴)" else "✅ وضعیت: عادی (سقف ۲۰ واحد)",
+                                            text = if (isHonors) "نمره‌های ثبت‌شده: عملکرد عالی" else "براساس نمره‌های ثبت‌شده",
                                             fontSize = 9.5.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = if (isHonors) Amber500 else Emerald500,
@@ -847,7 +840,7 @@ private fun StoryCardVisualCanvas(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "اصالت سنجش",
+                                    text = "Student OS",
                                     fontSize = 8.5.sp,
                                     fontWeight = FontWeight.Black,
                                     color = theme.accentColor
@@ -858,22 +851,7 @@ private fun StoryCardVisualCanvas(
                         Spacer(modifier = Modifier.width(1.dp))
                     }
 
-                    if (showQr) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color.White,
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.QrCode2,
-                                    contentDescription = "کد استعلام",
-                                    tint = Color.Black,
-                                    modifier = Modifier.size(26.dp)
-                                )
-                            }
-                        }
-                    }
+
                 }
             }
         }
@@ -951,8 +929,8 @@ private fun OfficialDocumentVisualCanvas(
                 is ExportSourcePayload.Grades -> payload.profile.name.ifEmpty { "دانشجوی گرامی" }
             }
             val studentId = when (payload) {
-                is ExportSourcePayload.Passport -> payload.profile.studentId.ifEmpty { "۴۰۲۱۱۰۰۱" }
-                is ExportSourcePayload.Grades -> payload.profile.studentId.ifEmpty { "۴۰۲۱۱۰۰۱" }
+                is ExportSourcePayload.Passport -> payload.profile.studentId.ifEmpty { "وارد نشده" }
+                is ExportSourcePayload.Grades -> payload.profile.studentId.ifEmpty { "وارد نشده" }
             }
             val fieldMajor = "مهندسی شیمی - مقطع کارشناسی پیوسته"
 
@@ -983,29 +961,29 @@ private fun OfficialDocumentVisualCanvas(
                 is ExportSourcePayload.Passport -> {
                     val progress = payload.progress
                     Text(
-                        text = "خلاصه ماتریس پیشرفت تحصیلی و انطباق سرفصل مصوب:",
+                        text = "پیشرفت بر پایه چارت و سوابق ثبت‌شده:",
                         fontSize = 9.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1F2937)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    DocTableRow("مجموع کل واحدهای سرفصل مصوب", "${progress?.totalRequiredCredits ?: 140} واحد")
-                    DocTableRow("واحدهای گذرانده‌شده قطعی", "${progress?.passedCredits ?: 48} واحد")
-                    DocTableRow("واحدهای در حال گذراندن (ترم جاری)", "${progress?.currentCredits ?: 20} واحد")
-                    DocTableRow("واحدهای باقیمانده تا فراغت", "${progress?.remainingCredits ?: 72} واحد")
+                    DocTableRow("کل واحدهای چارت", "${progress?.totalRequiredCredits ?: "—"} واحد")
+                    DocTableRow("واحدهای گذرانده‌شده ثبت‌شده", "${progress?.passedCredits ?: "—"} واحد")
+                    DocTableRow("واحدهای در حال گذراندن (ترم جاری)", "${progress?.currentCredits ?: "—"} واحد")
+                    DocTableRow("واحدهای باقیمانده تا فراغت", "${progress?.remainingCredits ?: "—"} واحد")
                     if (showGpa && progress != null) {
                         val gpaVal = when (val state = progress.gpaState) {
                             is GpaState.Known -> String.format(Locale.US, "%.2f", state.value)
                             is GpaState.PartiallyCalculated -> String.format(Locale.US, "%.2f", state.currentSemesterGpa)
                             GpaState.Unknown -> "—"
                         }
-                        DocTableRow("معدل کل تجمیعی", "$gpaVal (ممتاز)", isHighlight = true)
+                        DocTableRow("معدل کل تجمیعی", gpaVal, isHighlight = true)
                     }
                 }
                 is ExportSourcePayload.Grades -> {
                     Text(
-                        text = "ریز نمرات و شبیه‌ساز ارزشیابی ترم جاری:",
+                        text = "ریز نمرات ثبت‌شده ترم جاری:",
                         fontSize = 9.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1F2937)
@@ -1016,7 +994,7 @@ private fun OfficialDocumentVisualCanvas(
                         val total = g.midtermGrade + g.finalGrade
                         DocTableRow(
                             title = "${g.courseName} (${g.units} واحد)",
-                            value = "${String.format(Locale.US, "%.1f", total)} از ۲۰",
+                            value = if (g.hasRecordedScore()) "${String.format(Locale.US, "%.1f", total)} از ۲۰" else "وارد نشده",
                             isHighlight = total >= 17.0
                         )
                     }
@@ -1024,7 +1002,7 @@ private fun OfficialDocumentVisualCanvas(
                     if (showGpa) {
                         DocTableRow(
                             title = "معدل وزنی ترم",
-                            value = "${String.format(Locale.US, "%.2f", payload.termGpa)} (${if (payload.termGpa >= 17.0) "الف" else "عادی"})",
+                            value = "${academicGpaText(payload)}",
                             isHighlight = true
                         )
                     }
@@ -1039,17 +1017,7 @@ private fun OfficialDocumentVisualCanvas(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
-                if (showQr) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.QrCode2,
-                            contentDescription = "کیوآر کد استعلام اصالت",
-                            tint = Color(0xFF1E293B),
-                            modifier = Modifier.size(36.dp)
-                        )
-                        Text(text = "کد رهگیری: ST-2026-X89", fontSize = 7.5.sp, color = Color(0xFF6B7280))
-                    }
-                }
+
 
                 if (showStamp) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -1061,13 +1029,13 @@ private fun OfficialDocumentVisualCanvas(
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(text = "مهر تأیید", fontSize = 7.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E40AF))
-                                    Text(text = "آموزش کل", fontSize = 6.5.sp, color = Color(0xFF1E40AF))
+                                    Text(text = "Student OS", fontSize = 7.5.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1E40AF))
+                                    Text(text = "گزارش شخصی", fontSize = 6.5.sp, color = Color(0xFF1E40AF))
                                 }
                             }
                         }
                         Spacer(modifier = Modifier.height(2.dp))
-                        Text(text = "معاونت آموزشی و امور دانشجویی", fontSize = 7.5.sp, color = Color(0xFF4B5563))
+                        Text(text = "گزارش تهیه‌شده توسط دانشجو", fontSize = 7.5.sp, color = Color(0xFF4B5563))
                     }
                 }
             }
@@ -1135,8 +1103,8 @@ private fun executeShareAction(
                 appendLine("دانشجو: ${payload.profile.name.ifEmpty { "دانشجو" }}")
                 appendLine("📚 واحدهای ثبت‌شده: ${payload.totalUnits} واحد")
                 if (showGpa) {
-                    appendLine("⭐️ معدل شبیه‌ساز: ${String.format(Locale.US, "%.2f", payload.termGpa)}")
-                    appendLine("🎯 سقف انتخابی ترم آینده: ${if (payload.termGpa >= 17.0) "۲۴ واحد (ممتاز)" else "۲۰ واحد"}")
+                    appendLine("⭐️ معدل نمره‌های ثبت‌شده: ${academicGpaText(payload)}")
+                    appendLine("این گزارش شخصی براساس اطلاعات ثبت‌شده دانشجو است.")
                 }
             }
         }
@@ -1159,10 +1127,10 @@ private fun executeCopyTextSummary(context: Context, payload: ExportSourcePayloa
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val text = when (payload) {
         is ExportSourcePayload.Passport -> {
-            "شناسنامه تحصیلی ${payload.profile.name} - پیشرفت: ${payload.progress?.progressPercentage?.toInt() ?: 0}٪ - گذرانده: ${payload.progress?.passedCredits ?: 0} واحد"
+            "شناسنامه تحصیلی ${payload.profile.name} - پیشرفت: ${payload.progress?.progressPercentage?.toInt() ?: "—"}٪ - گذرانده: ${payload.progress?.passedCredits ?: "—"} واحد"
         }
         is ExportSourcePayload.Grades -> {
-            "کارنامه تحصیلی ${payload.profile.name} - معدل ترم: ${String.format(Locale.US, "%.2f", payload.termGpa)} - تعداد واحد: ${payload.totalUnits}"
+            "کارنامه تحصیلی ${payload.profile.name} - معدل ترم: ${academicGpaText(payload)} - تعداد واحد: ${payload.totalUnits}"
         }
     }
     val clip = ClipData.newPlainText("Academic Summary", text)
@@ -1219,7 +1187,7 @@ private fun executeSaveFileReal(
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         context,
-                        "کارنامه رسمی PDF در پوشه دانلودها ذخیره شد (Downloads/StudentOS) 📄",
+                        "گزارش شخصی PDF در پوشه دانلودها ذخیره شد (Downloads/StudentOS) 📄",
                         Toast.LENGTH_LONG
                     ).show()
                 }

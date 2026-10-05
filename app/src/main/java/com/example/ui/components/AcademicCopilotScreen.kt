@@ -549,7 +549,7 @@ private fun CopilotContextHudHeader(
                                 )
                                 Spacer(modifier = Modifier.width(3.dp))
                                 Text(
-                                    text = "کلید AI",
+                                    text = "دسترسی آنلاین",
                                     fontSize = 9.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
