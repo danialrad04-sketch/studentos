@@ -66,7 +66,9 @@ test('successful HTTP status is insufficient for an expired or unknown subscript
   for (const overrides of [{ validUntilTimestampMsec: now }, { validUntilTimestampMsec: 'NaN' }, { sku: 'untrusted' }, { linkedSubscriptionToken: '' }]) {
     assert.equal(await core.bazaarSubscription('token', env, async () => response(active(overrides)), now), null);
   }
-  assert.equal(await core.bazaarSubscription('token', env, async () => response({}, 404), now), null);
+  assert.equal(await core.bazaarSubscription('token', env, async () => response({ error: 'not_found' }, 404), now), null);
+  await assert.rejects(core.bazaarSubscription('token', env, async () => response({ error: 'invalid_value' }, 404), now), /پیکربندی/);
+  await assert.rejects(core.bazaarSubscription('token', env, async () => response({}, 404), now), /پیکربندی/);
   await assert.rejects(core.bazaarSubscription('token', env, async () => response({}, 401), now), /اعتبارسنجی/);
 });
 test('server dates determine entitlements; autoRenewing does not create access', () => {

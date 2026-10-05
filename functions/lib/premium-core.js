@@ -68,7 +68,13 @@ async function bazaarSubscription(token, env, fetcher = fetch, now = Date.now())
   let response;
   try { response = await fetcher(url, { headers: { 'CAFEBAZAAR-PISHKHAN-API-SECRET': env.BAZAAR_API_SECRET }, signal: AbortSignal.timeout(12000), redirect: 'error' }); }
   catch (_) { fail('unavailable', 'ارتباط با بازار انجام نشد؛ خرید را دوباره بازیابی کنید.'); }
-  if (response.status === 404) return null;
+  if (response.status === 404) {
+    let error;
+    try { error = await response.json(); } catch (_) { fail('unavailable', 'پاسخ بازار معتبر نیست.'); }
+    if (error?.error === 'not_found') return null;
+    // A wrong package is also a 404; it must not revoke a recorded purchase.
+    fail('unavailable', 'پیکربندی اعتبارسنجی بازار نیاز به بررسی دارد.');
+  }
   if (!response.ok) fail('unavailable', 'اعتبارسنجی بازار موقتاً در دسترس نیست.');
   const body = await response.json();
   if (!Array.isArray(body.subscriptions)) fail('unavailable', 'پاسخ بازار معتبر نیست.');
