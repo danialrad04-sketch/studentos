@@ -1,3 +1,5 @@
+> Audit of functional gaps and current scope: [PRODUCT_COMPLETENESS_2_4.md](PRODUCT_COMPLETENESS_2_4.md).
+
 > Settings/dialog modernization (2.2.0): [UI_EXPERIENCE_2026.md](UI_EXPERIENCE_2026.md).
 
 > Current implementation and remaining scope: [V2_1_VERIFICATION.md](V2_1_VERIFICATION.md). Checkmarks below describe historical implementation, not completed live/device verification.

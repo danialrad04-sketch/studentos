@@ -17,6 +17,9 @@ sealed interface AppDialogState {
     data object ApkInfo : AppDialogState
     data object AddCourse : AppDialogState
     data class EditCourse(val course: CourseEntity) : AppDialogState
+    data class EditTask(val task: com.example.data.local.entity.TaskEntity) : AppDialogState
+    data class ExamEditor(val courseId: String? = null) : AppDialogState
+    data class GradeEditor(val courseId: String) : AppDialogState
     data object AddTask : AppDialogState
     data object CommandCenter : AppDialogState
     data object Copilot : AppDialogState

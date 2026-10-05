@@ -62,6 +62,11 @@ fun MainTabContent(
     onOpenCourseWorkspace: (CourseEntity) -> Unit,
     onOpenCommandCenter: () -> Unit,
     onOpenAddTask: () -> Unit,
+    onEditTask: ((TaskEntity) -> Unit)? = null,
+    onOpenExamEditor: ((String?) -> Unit)? = null,
+    onOpenGradeEditor: ((String) -> Unit)? = null,
+    onScheduleExamReminder: ((ExamItem, Int) -> Unit)? = null,
+    onOpenProfile: (() -> Unit)? = null,
     onOpenAddCourse: () -> Unit,
     onEditCourse: (CourseEntity) -> Unit,
     onOpenOcrImport: () -> Unit,
@@ -243,6 +248,7 @@ fun MainTabContent(
                     exams = exams,
                     planningCollisions = planningCollisions,
                     onAddTask = onOpenAddTask,
+                    onEditTask = onEditTask,
                     onToggleTask = {
                         studentViewModel.toggleTask(it)
                     },
@@ -251,23 +257,19 @@ fun MainTabContent(
                 )
             }
             AppTab.EXAMS -> {
-                ExamsScreen(
-                    exams = exams,
-                    tasks = tasks,
-                    onSetReminder = { exam ->
-                        onRequestNotificationPermission()
-                        studentViewModel.addNotification(
-                            "🎯 یادآور امتحان ${exam.courseName}",
-                            "آزمون در تاریخ ${exam.solarDate} ساعت ${exam.time} در ${exam.location} برگزار خواهد شد."
-                        )
-                        studentViewModel.playNotificationTone(false)
-                        Toast.makeText(context, "یادآور آزمون ${exam.courseName} کوک شد", Toast.LENGTH_SHORT).show()
-                    }
-                )
+                val reminders by studentViewModel.examReminderIds.collectAsStateWithLifecycle()
+                ExamsScreen(exams = exams, tasks = tasks, onSetReminder = { studentViewModel.scheduleExamReminder(it) },
+                    onAddExam = { if (courses.isEmpty()) onOpenAddCourse() else onOpenExamEditor?.invoke(null) },
+                    onEditExam = { onOpenExamEditor?.invoke(it.id.removePrefix("exam_")) },
+                    onScheduleReminder = onScheduleExamReminder, reminderIds = reminders,
+                    onCancelReminder = studentViewModel::cancelExamReminder)
             }
             AppTab.GRADES -> {
                 GradesScreen(
                     grades = grades,
+                    courses = courses,
+                    onRecordGrade = onOpenGradeEditor,
+                    onAddCourse = onOpenAddCourse,
                     onUpdateGrade = { target, mid, fin ->
                         studentViewModel.updateGrade(target, mid, fin)
                     },
@@ -284,22 +286,29 @@ fun MainTabContent(
                 )
             }
             AppTab.SEMESTER_PLANNER -> {
+                val savedPlan by studentViewModel.selectedSemesterPlan.collectAsStateWithLifecycle()
                 SemesterPlannerScreen(
                     matchState = curriculumMatchState,
                     candidatePlans = candidateSemesterPlans,
-                    onPlanSelected = { plan ->
-                        Toast.makeText(context, "سناریوی ${plan.name} انتخاب شد", Toast.LENGTH_SHORT).show()
-                    }
+                    savedPlan = savedPlan,
+                    onOpenProfile = onOpenProfile,
+                    onPlanSelected = studentViewModel::selectSemesterPlan
                 )
             }
             AppTab.CURRICULUM -> {
                 CurriculumScreen(
-                    matchState = curriculumMatchState
+                    matchState = curriculumMatchState,
+                    onOpenProfile = onOpenProfile
                 )
             }
             AppTab.POMODORO -> {
+                val session by studentViewModel.focusSession.collectAsStateWithLifecycle()
                 PomodoroAndNotesScreen(
                     secondsRemaining = pomodoroSeconds,
+                    durationSeconds = session.durationSeconds,
+                    focusLabel = session.label,
+                    onDurationSelected = { studentViewModel.setFocusDuration(it) },
+                    studyRecommendations = studyRecommendations,
                     isRunning = isPomodoroRunning,
                     onTogglePomodoro = {
                         studentViewModel.togglePomodoro()

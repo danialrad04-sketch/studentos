@@ -62,6 +62,7 @@ import com.example.ui.theme.Rose600
 @Composable
 fun CurriculumScreen(
     matchState: CurriculumMatchUiState? = null,
+    onOpenProfile: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -92,6 +93,10 @@ fun CurriculumScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        if (matchState is CurriculumMatchUiState.NotFound || matchState is CurriculumMatchUiState.Empty) {
+            onOpenProfile?.let { action -> androidx.compose.material3.OutlinedButton(onClick = action, modifier = Modifier.fillMaxWidth()) { Text("بررسی دانشگاه، رشته و سال ورود") } }
+            Spacer(Modifier.height(12.dp))
+        }
         // Status Symbol Legend
         CurriculumStatusLegend()
 

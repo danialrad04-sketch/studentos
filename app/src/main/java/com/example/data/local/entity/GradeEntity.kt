@@ -20,5 +20,8 @@ data class GradeEntity(
     val units: Int = 3,
     val midtermGrade: Double = 0.0,
     val finalGrade: Double = 0.0,
-    val courseId: String = ""
-)
+    val courseId: String = "",
+    @androidx.room.ColumnInfo(defaultValue = "0") val isRecorded: Boolean = false
+) {
+    fun hasRecordedScore(): Boolean = isRecorded || midtermGrade + finalGrade > 0.0
+}

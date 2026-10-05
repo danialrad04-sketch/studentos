@@ -54,6 +54,7 @@ fun AppDialogManager(
     LaunchedEffect(dialogState) {
         if (dialogState == AppDialogState.None) { parents = emptyList(); settingsSection = "home" }
     }
+    val isSaving by studentViewModel.isSavingRecord.collectAsStateWithLifecycle()
     val dismiss = {
         val parent = parents.lastOrNull() ?: AppDialogState.None
         parents = parents.dropLast(1)
@@ -215,12 +216,10 @@ fun AppDialogManager(
                 existingCourses = courses,
                 onDismiss = dismiss,
                 onSave = { newCourse ->
-                    studentViewModel.saveCourse(newCourse)
-                    dismiss()
+                    studentViewModel.saveCourse(newCourse, onSaved = dismiss)
                 },
                 onSaveWithSessions = { course, sessions ->
-                    studentViewModel.saveCourse(course, sessions)
-                    dismiss()
+                    studentViewModel.saveCourse(course, sessions, onSaved = dismiss)
                 }
             )
         }
@@ -234,12 +233,10 @@ fun AppDialogManager(
                 existingCourses = courses,
                 onDismiss = dismiss,
                 onSave = { updated ->
-                    studentViewModel.saveCourse(updated)
-                    dismiss()
+                    studentViewModel.saveCourse(updated, onSaved = dismiss)
                 },
                 onSaveWithSessions = { course, sessions ->
-                    studentViewModel.saveCourse(course, sessions)
-                    dismiss()
+                    studentViewModel.saveCourse(course, sessions, onSaved = dismiss)
                 },
                 onDelete = { id ->
                     studentViewModel.deleteCourse(id)
@@ -249,16 +246,31 @@ fun AppDialogManager(
         }
 
         is AppDialogState.AddTask -> {
-            val availableCourseNames = courses.map { it.name }.distinct().ifEmpty { listOf("عمومی") }
+            val availableCourseNames = (listOf("عمومی") + courses.map { it.name }).distinct()
             AddTaskDialog(
                 courseNames = availableCourseNames,
+                isSaving = isSaving,
                 onDismiss = dismiss,
                 onSave = { title, cName, date ->
                     onRequestNotificationPermission()
-                    studentViewModel.saveTask(title, cName, date)
-                    dismiss()
+                    studentViewModel.saveTask(title, cName, date, onSaved = dismiss)
                 }
             )
+        }
+
+        is AppDialogState.EditTask -> {
+            AddTaskDialog(courseNames = (listOf("عمومی") + courses.map { it.name } + dialogState.task.courseName).distinct(),
+                initialTask = dialogState.task, isSaving = isSaving, onDismiss = dismiss,
+                onSave = { title, name, date -> studentViewModel.editTask(dialogState.task, title, name, date, dismiss) })
+        }
+        is AppDialogState.ExamEditor -> {
+            ExamEditorDialog(courses, dialogState.courseId, dismiss,
+                { course, date, time, location -> studentViewModel.saveExamDetails(course, date, time, location, dismiss) }, isSaving)
+        }
+        is AppDialogState.GradeEditor -> {
+            val course = courses.find { it.id == dialogState.courseId }
+            if (course != null) RecordGradeDialog(course, grades.find { it.courseId == course.id }, dismiss,
+                { grade, mid, fin -> studentViewModel.updateGrade(grade, mid, fin, dismiss) }, isSaving)
         }
 
         is AppDialogState.CommandCenter -> {
@@ -311,12 +323,14 @@ fun AppDialogManager(
         }
 
         is AppDialogState.OcrImport -> {
+            val scheduledCourses by studentViewModel.coursesWithSessions.collectAsStateWithLifecycle()
             OcrScheduleImportDialog(
+                existingCourses = scheduledCourses,
+                isSaving = isSaving,
+                dismissOnConfirm = false,
                 onDismiss = dismiss,
                 onConfirmImport = { drafts ->
-                    studentViewModel.importParsedCourses(drafts, clearExisting = false)
-                    dismiss()
-                    Toast.makeText(context, "${drafts.size} درس جدید با موفقیت به برنامه هفتگی اضافه شد 🚀", Toast.LENGTH_LONG).show()
+                    studentViewModel.importParsedCourses(drafts, clearExisting = false, onSaved = dismiss)
                 }
             )
         }
@@ -327,9 +341,9 @@ fun AppDialogManager(
             if (activeCourse != null) {
                 val allCoursesWithSessions by studentViewModel.coursesWithSessions.collectAsStateWithLifecycle()
                 val courseSessions = allCoursesWithSessions.firstOrNull { it.course.id == activeCourse.id }?.sessions ?: emptyList()
-                val courseAttendance = attendance.find { it.courseName == activeCourse.name }
-                val courseGrade = grades.find { it.courseName == activeCourse.name }
-                val courseTasks = tasks.filter { it.courseName == activeCourse.name }
+                val courseAttendance = attendance.find { it.courseId == activeCourse.id || (it.courseId.isBlank() && it.courseName == activeCourse.name) }
+                val courseGrade = grades.find { it.courseId == activeCourse.id || (it.courseId.isBlank() && it.courseName == activeCourse.name) }
+                val courseTasks = tasks.filter { it.courseId == activeCourse.id || (it.courseId.isBlank() && it.courseName == activeCourse.name) }
                 val courseExam = exams.find { it.courseName == activeCourse.name }
 
                 CourseWorkspaceDialogV2(
@@ -341,7 +355,7 @@ fun AppDialogManager(
                     exam = courseExam,
                     onDismiss = dismiss,
                     onEditCourse = { updated ->
-                        studentViewModel.saveCourse(updated)
+                        openChild(AppDialogState.EditCourse(updated))
                     },
                     onDeleteCourse = { id ->
                         studentViewModel.deleteCourse(id)
@@ -360,7 +374,13 @@ fun AppDialogManager(
                     onDeleteTask = { task ->
                         studentViewModel.deleteTask(task)
                     },
+                    onRecordGrade = { openChild(AppDialogState.GradeEditor(activeCourse.id)) },
+                    onEditExam = { openChild(AppDialogState.ExamEditor(activeCourse.id)) },
                     onStartFocus = {
+                        if (!studentViewModel.focusSession.value.isRunning) {
+                            studentViewModel.setFocusDuration(25, activeCourse.name)
+                            studentViewModel.togglePomodoro()
+                        }
                         studentViewModel.selectTab(AppTab.POMODORO)
                         dismiss()
                     }

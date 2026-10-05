@@ -184,7 +184,8 @@ class StudentRepository(
     ) = withContext(Dispatchers.IO) {
         val persistCourse = suspend {
             val courseId = if (course.id.isNotBlank()) course.id else "c_${UUID.randomUUID().toString().take(8)}"
-            val entity = course.copy(id = courseId)
+            val activeSemester = dao.getCurrentSemesterSync()
+            val entity = course.copy(id = courseId, semesterId = if (course.semesterId.isBlank() || course.semesterId == "current") activeSemester?.id ?: "current" else course.semesterId)
             dao.insertCourse(entity)
 
             // Sync course sessions
@@ -223,7 +224,8 @@ class StudentRepository(
                 }
             }
 
-            // Sync Exam record if exam details are provided
+            // Removing exam fields must also remove the previously persisted exam.
+            if (entity.examDate.isBlank() && entity.examTime.isBlank()) dao.deleteExamByCourseId(courseId)
             if (entity.examDate.isNotBlank() || entity.examTime.isNotBlank()) {
                 dao.insertExam(
                     ExamEntity(
@@ -283,7 +285,12 @@ class StudentRepository(
     }
 
     suspend fun updateGrade(grade: GradeEntity) = withContext(Dispatchers.IO) {
-        dao.updateGrade(grade)
+        require(grade.midtermGrade.isFinite() && grade.finalGrade.isFinite() && grade.midtermGrade >= 0 && grade.finalGrade >= 0 && grade.midtermGrade + grade.finalGrade <= 20) { "مجموع نمره باید بین صفر و ۲۰ باشد." }
+        val persist = suspend {
+            val existing = dao.getGradeByCourseId(grade.courseId)
+            dao.insertGrade(grade.copy(id = existing?.id ?: grade.id, isRecorded = true))
+        }
+        if (database != null) database.withTransaction { persist() } else persist()
     }
 
     // ==========================================
@@ -291,6 +298,11 @@ class StudentRepository(
     // ==========================================
     suspend fun saveTask(task: TaskEntity) = withContext(Dispatchers.IO) {
         dao.insertTask(task)
+    }
+
+    suspend fun updateTask(task: TaskEntity) = withContext(Dispatchers.IO) {
+        require(task.id > 0 && task.title.isNotBlank() && com.example.domain.util.JalaliCalendarUtil.parse(task.dueDate) != null)
+        dao.updateTask(task)
     }
 
     suspend fun toggleTaskCompletion(task: TaskEntity) = withContext(Dispatchers.IO) {
@@ -412,6 +424,7 @@ class StudentRepository(
     ) {
         val performImport = suspend {
             val currentProfile = dao.getProfileSync()
+            val activeSemester = dao.getCurrentSemesterSync()
             val resolvedSemNum = currentSemester.takeIf { it > 0 }
                 ?: currentProfile?.currentSemester?.takeIf { it > 0 }
                 ?: 0
@@ -419,7 +432,7 @@ class StudentRepository(
             val activeSemId = if (semesterId.isNotBlank() && semesterId != "current") {
                 semesterId
             } else {
-                "sem_current"
+                activeSemester?.id ?: "sem_current"
             }
             val baseEntryYear = entryYear.takeIf { it > 0 }
                 ?: currentProfile?.entryYear?.takeIf { it > 0 }
@@ -433,7 +446,7 @@ class StudentRepository(
             // Ensure active current semester exists in database
             dao.clearCurrentSemesterFlag()
             dao.insertSemester(
-                SemesterEntity(
+                (activeSemester?.takeIf { it.id == activeSemId } ?: SemesterEntity(
                     id = activeSemId,
                     title = "ترم $resolvedSemNum ($resolvedMajor)",
                     year = calculatedAcademicYear,
@@ -443,7 +456,7 @@ class StudentRepository(
                     isCurrent = true,
                     isArchived = false,
                     totalUnits = drafts.sumOf { it.units }
-                )
+                )).copy(isCurrent = true, isArchived = false)
             )
 
             if (clearExisting) {
@@ -460,7 +473,7 @@ class StudentRepository(
             val draftGroups = drafts.groupBy { draft ->
                 val code = draft.courseCode.trim()
                 val name = draft.name.trim().lowercase()
-                val targetSem = if (draft.targetSemester > 0) "sem_${draft.targetSemester}" else activeSemId
+                val targetSem = if (draft.targetSemester > 0 && draft.targetSemester != resolvedSemNum) "sem_${draft.targetSemester}" else activeSemId
                 if (code.isNotBlank()) "code_${code}_sem_${targetSem}"
                 else "name_${name}_sem_${targetSem}"
             }
@@ -477,7 +490,7 @@ class StudentRepository(
                 ) ?: groupDrafts.first()
 
                 val courseId = UUID.randomUUID().toString()
-                val itemSemId = if (primaryDraft.targetSemester > 0) "sem_${primaryDraft.targetSemester}" else activeSemId
+                val itemSemId = if (primaryDraft.targetSemester > 0 && primaryDraft.targetSemester != resolvedSemNum) "sem_${primaryDraft.targetSemester}" else activeSemId
                 val bestProf = groupDrafts.firstOrNull { it.instructor.isNotBlank() }?.instructor ?: primaryDraft.instructor
                 val bestExamDate = groupDrafts.firstOrNull { it.examDate.isNotBlank() }?.examDate ?: primaryDraft.examDate
                 val bestExamTime = groupDrafts.firstOrNull { it.examTime.isNotBlank() }?.examTime ?: primaryDraft.examTime
@@ -570,7 +583,8 @@ class StudentRepository(
             }
 
             val current = currentProfile
-            val totalUnits = insertedCourses.sumOf { it.units }
+            val totalUnits = dao.getCoursesBySemesterSync(activeSemId).filter { !it.isArchived }.sumOf { it.units }
+            dao.getSemesterById(activeSemId)?.let { dao.updateSemester(it.copy(totalUnits = totalUnits, updatedAt = System.currentTimeMillis())) }
             val resolvedProfileMajor = major.ifBlank { current?.major.orEmpty() }
             val resolvedUniversity = university.ifBlank { current?.university.orEmpty() }
             val resolvedEntryYear = entryYear.takeIf { it > 0 } ?: current?.entryYear ?: 0

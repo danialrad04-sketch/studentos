@@ -64,6 +64,55 @@ class AppPreferencesRepository(context: Context) {
     private val _acceptedStudyPlanIds = MutableStateFlow(readAcceptedStudyPlanIds())
     val acceptedStudyPlanIds: StateFlow<Set<String>> = _acceptedStudyPlanIds.asStateFlow()
 
+    private val _focusSession = MutableStateFlow(readFocusSession())
+    val focusSession: StateFlow<com.example.domain.model.FocusSession> = _focusSession.asStateFlow()
+    private val _selectedSemesterPlan = MutableStateFlow(readSemesterPlan())
+    val selectedSemesterPlan: StateFlow<com.example.domain.model.SemesterPlan?> = _selectedSemesterPlan.asStateFlow()
+    private val _examReminderIds = MutableStateFlow(prefs.getStringSet("exam_reminder_ids", emptySet())?.toSet().orEmpty())
+    val examReminderIds: StateFlow<Set<String>> = _examReminderIds.asStateFlow()
+
+    private fun readFocusSession(): com.example.domain.model.FocusSession = runCatching {
+        com.google.gson.Gson().fromJson(prefs.getString("focus_session_v1", ""), com.example.domain.model.FocusSession::class.java)
+            ?.takeIf { it.durationSeconds in 300..7200 && it.pausedSeconds in 0..it.durationSeconds && it.endsAtMillis >= 0 }
+    }.getOrNull() ?: com.example.domain.model.FocusSession()
+
+    @Synchronized
+    fun saveFocusSession(session: com.example.domain.model.FocusSession) {
+        check(prefs.edit().putString("focus_session_v1", com.google.gson.Gson().toJson(session)).commit())
+        _focusSession.value = session
+    }
+
+    @Synchronized
+    fun completeFocusSession(now: Long): Boolean {
+        val session = _focusSession.value
+        if (!session.isRunning || session.remainingSeconds(now) != 0) return false
+        saveFocusSession(session.copy(pausedSeconds = 0, endsAtMillis = 0))
+        return true
+    }
+
+    private fun readSemesterPlan(): com.example.domain.model.SemesterPlan? = runCatching {
+        com.google.gson.Gson().fromJson(prefs.getString("semester_plan_v1", ""), com.example.domain.model.SemesterPlan::class.java)
+    }.getOrNull()
+
+    fun saveSemesterPlan(plan: com.example.domain.model.SemesterPlan?) {
+        check(prefs.edit().putString("semester_plan_v1", plan?.let { com.google.gson.Gson().toJson(it) }).commit())
+        _selectedSemesterPlan.value = plan
+    }
+
+    fun setExamReminder(id: String, enabled: Boolean) {
+        val next = if (enabled) _examReminderIds.value + id else _examReminderIds.value - id
+        check(prefs.edit().putStringSet("exam_reminder_ids", next).commit())
+        _examReminderIds.value = next
+    }
+
+    fun clearAcademicChoices() {
+        clearAcceptedStudyPlan()
+        saveSemesterPlan(null)
+        saveFocusSession(com.example.domain.model.FocusSession())
+        check(prefs.edit().remove("exam_reminder_ids").commit())
+        _examReminderIds.value = emptySet()
+    }
+
     private fun readStoredThemeMode(): ThemeMode {
         val stored = prefs.getString(KEY_THEME_MODE, ThemeMode.SYSTEM.name) ?: ThemeMode.SYSTEM.name
         return try {

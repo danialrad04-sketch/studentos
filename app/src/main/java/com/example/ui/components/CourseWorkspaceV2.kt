@@ -89,6 +89,8 @@ fun CourseWorkspaceDialogV2(
     onAddTask: (title: String, dueDate: String) -> Unit,
     onDeleteTask: ((TaskEntity) -> Unit)? = null,
     onStartFocus: () -> Unit,
+    onRecordGrade: (() -> Unit)? = null,
+    onEditExam: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var showAddTask by remember { mutableStateOf(false) }
@@ -343,7 +345,13 @@ fun CourseWorkspaceDialogV2(
                         }
                     }
 
-                    item { WorkspaceSectionTitleV2("نمرات", Icons.Default.CheckCircle) }
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            onEditExam?.let { action -> OutlinedButton(onClick = action, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("ثبت یا ویرایش برنامه امتحان") } }
+                            WorkspaceSectionTitleV2("نمرات", Icons.Default.CheckCircle)
+                            onRecordGrade?.let { action -> FilledTonalButton(onClick = action, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(if (grade == null) "ثبت اولین نمره" else "ویرایش نمره") } }
+                        }
+                    }
                     item {
                         Surface(
                             Modifier.fillMaxWidth(),
@@ -384,40 +392,7 @@ fun CourseWorkspaceDialogV2(
     }
 
     if (showAddTask) {
-        AlertDialog(
-            onDismissRequest = { showAddTask = false },
-            title = { Text("کار جدید برای " + course.name) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = taskTitle,
-                        onValueChange = { taskTitle = it },
-                        label = { Text("عنوان کار") },
-                        singleLine = true
-                    )
-                    OutlinedTextField(
-                        value = taskDate,
-                        onValueChange = { taskDate = it },
-                        label = { Text("تاریخ سررسید") },
-                        supportingText = { Text("مثلاً ۱۴۰۵/۰۷/۱۵") },
-                        singleLine = true
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (taskTitle.isNotBlank()) {
-                            onAddTask(taskTitle.trim(), taskDate.trim())
-                            taskTitle = ""
-                            taskDate = ""
-                            showAddTask = false
-                        }
-                    }
-                ) { Text("ثبت") }
-            },
-            dismissButton = { TextButton(onClick = { showAddTask = false }) { Text("انصراف") } }
-        )
+        AddTaskDialog(listOf(course.name), { showAddTask = false }, { title, _, date -> onAddTask(title, date); showAddTask = false })
     }
 
     if (showDeleteConfirm && onDeleteCourse != null) {

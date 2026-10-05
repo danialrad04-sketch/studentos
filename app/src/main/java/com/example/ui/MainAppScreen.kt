@@ -125,6 +125,9 @@ fun MainAppScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    androidx.compose.runtime.LaunchedEffect(studentViewModel) {
+        studentViewModel.userMessage.collect { message -> snackbarHostState.showSnackbar(message) }
+    }
     var hasPromptedNotificationInSession by remember { mutableStateOf(false) }
     var showNotificationRationaleDialog by remember { mutableStateOf(false) }
     var postPermissionAction by remember { mutableStateOf<(() -> Unit)?>(null) }
@@ -237,12 +240,12 @@ fun MainAppScreen(
     val acceptedStudyPlanIds by studentViewModel.acceptedStudyPlanIds.collectAsStateWithLifecycle()
 
     // Dynamic weighted GPA: calculates accurately from evaluated grades, or falls back to declared GPA from setup
-    val evaluatedGrades = grades.filter { (it.midtermGrade + it.finalGrade) > 0.0 }
+    val evaluatedGrades = grades.filter { it.hasRecordedScore() }
     val totalUnits = grades.sumOf { it.units }.coerceAtLeast(courses.sumOf { it.units })
     val evaluatedUnits = evaluatedGrades.sumOf { it.units }
     val totalWeightedScore = evaluatedGrades.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
     val calculatedGpa = if (evaluatedUnits > 0) totalWeightedScore / evaluatedUnits else 0.0
-    val effectiveGpa = if (calculatedGpa > 0.0) {
+    val effectiveGpa = if (evaluatedUnits > 0) {
         calculatedGpa
     } else if ((profile.declaredGpa ?: 0.0) > 0.0) {
         profile.declaredGpa ?: 0.0
@@ -515,6 +518,11 @@ fun MainAppScreen(
                                 },
                                 onOpenCommandCenter = { dialogState = AppDialogState.CommandCenter },
                                 onOpenAddTask = { dialogState = AppDialogState.AddTask },
+                                onEditTask = { dialogState = AppDialogState.EditTask(it) },
+                                onOpenExamEditor = { dialogState = AppDialogState.ExamEditor(it) },
+                                onOpenGradeEditor = { dialogState = AppDialogState.GradeEditor(it) },
+                                onOpenProfile = { dialogState = AppDialogState.Profile },
+                                onScheduleExamReminder = { exam, minutes -> checkAndRequestNotificationPermission { studentViewModel.scheduleExamReminder(exam, minutes) } },
                                 onOpenAddCourse = { dialogState = AppDialogState.AddCourse },
                                 onEditCourse = { dialogState = AppDialogState.EditCourse(it) },
                                 onOpenOcrImport = { dialogState = AppDialogState.OcrImport },

@@ -127,6 +127,9 @@ class StudentViewModel @JvmOverloads constructor(
     private val _databaseRecoveryWarning = MutableStateFlow(false)
     val databaseRecoveryWarning: StateFlow<Boolean> = _databaseRecoveryWarning.asStateFlow()
 
+    private val _isSavingRecord = MutableStateFlow(false)
+    val isSavingRecord = _isSavingRecord.asStateFlow()
+
     private val _userMessage = MutableSharedFlow<String>(extraBufferCapacity = 5)
     val userMessage: SharedFlow<String> = _userMessage.asSharedFlow()
 
@@ -233,7 +236,7 @@ class StudentViewModel @JvmOverloads constructor(
             .mapNotNull { c ->
                 val date = c.examDate.trim()
                 val time = c.examTime.trim()
-                val loc = c.examLocation.trim().ifBlank { "سالن امتحانات" }
+                val loc = c.examLocation.trim().ifBlank { "هنوز مشخص نشده" }
                 if (date.isNotBlank() || time.isNotBlank()) {
                     ExamItem(
                         id = "exam_${c.id}",
@@ -254,13 +257,22 @@ class StudentViewModel @JvmOverloads constructor(
     val curriculumCourses: StateFlow<List<com.example.data.local.entity.CurriculumCourseEntity>> = (repository.curriculumCourses ?: kotlinx.coroutines.flow.flowOf(com.example.data.seed.CurriculumSeedData.chemicalEngineeringCourses))
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.example.data.seed.CurriculumSeedData.chemicalEngineeringCourses)
 
-    val attendance: StateFlow<List<AttendanceEntity>> = repository.attendance
+    val attendance: StateFlow<List<AttendanceEntity>> = combine(repository.attendance, courses) { records, current ->
+        records.filter { item -> current.any { it.id == item.courseId || (item.courseId.isBlank() && it.name == item.courseName) } }
+    }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val grades: StateFlow<List<GradeEntity>> = repository.grades
+    val grades: StateFlow<List<GradeEntity>> = combine(repository.grades, courses) { records, current ->
+        records.filter { item -> current.any { it.id == item.courseId || (item.courseId.isBlank() && it.name == item.courseName) } }
+    }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val tasks: StateFlow<List<TaskEntity>> = repository.tasks
+    val tasks: StateFlow<List<TaskEntity>> = combine(repository.tasks, courses, repository.currentSemester) { records, current, semester ->
+        records.filter { item ->
+            (item.semesterId == null || item.semesterId == semester?.id) &&
+                (item.courseId.isBlank() || current.any { it.id == item.courseId })
+        }
+    }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _isOnboardingCompleted = MutableStateFlow(preferencesRepository.isOnboardingCompleted.value)
@@ -294,33 +306,16 @@ class StudentViewModel @JvmOverloads constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Phase 4 Academic Foundations Engine Flows
+    private val referenceCatalog = combine(repository.curriculumUniversities, repository.curriculumMajors, repository.curriculumVersions) { universities, majors, versions -> Triple(universities, majors, versions) }
     val curriculumMatchUiState: StateFlow<CurriculumMatchUiState> = combine(
-        profile,
-        courses,
-        curriculumCourses,
-        repository.studentAttempts
-    ) { p, currentCoursesList, currCoursesList, attemptsList ->
-        val universityId = p.universityId ?: "UNI_AUT"
-        val majorId = p.majorId ?: "MAJ_AUT_CHEM_ENG"
-        val entryYear = 1401
-
-        val universities = listOf(
-            ResolvedUniversity("UNI_AUT", "دانشگاه صنعتی امیرکبیر", "پلی‌تکنیک تهران")
-        )
-        val majors = listOf(
-            ResolvedMajor("MAJ_AUT_CHEM_ENG", "UNI_AUT", "FAC_AUT_CHEM_OIL", "مهندسی شیمی")
-        )
-        val versions = listOf(
-            ResolvedCurriculumVersion(
-                id = "CURR_AUT_CE_1401",
-                majorId = "MAJ_AUT_CHEM_ENG",
-                title = "چارت کارشناسی مهندسی شیمی ورودی‌های 1401 تا 1404",
-                entryYearMin = 1401,
-                entryYearMax = 1404,
-                totalCreditsRequired = 140
-            )
-        )
-
+        profile, courses, curriculumCourses, repository.studentAttempts, referenceCatalog
+    ) { p, currentCoursesList, currCoursesList, attemptsList, catalog ->
+        val universityId = p.universityId.orEmpty()
+        val majorId = p.majorId.orEmpty()
+        val entryYear = p.entryYear
+        val universities = catalog.first.map { ResolvedUniversity(it.id, it.displayNameFa, it.shortName) }
+        val majors = catalog.second.map { ResolvedMajor(it.id, it.universityId, it.facultyId, it.majorDisplayNameFa) }
+        val versions = catalog.third.map { ResolvedCurriculumVersion(it.id, it.majorId, it.title, it.entryYearMin, it.entryYearMax, it.totalCreditsRequired) }
         val resolver = CurriculumResolver(universities, majors, versions)
         when (val res = resolver.resolve(universityId, majorId, entryYear)) {
             is CurriculumResolutionResult.NotFound -> {
@@ -337,7 +332,7 @@ class StudentViewModel @JvmOverloads constructor(
             is CurriculumResolutionResult.ExplicitRangeMatch -> {
                 val resolvedVersion = if (res is CurriculumResolutionResult.ExactMatch) res.version else (res as CurriculumResolutionResult.ExplicitRangeMatch).version
 
-                val resolvableCourses = currCoursesList.map { cc ->
+                val resolvableCourses = currCoursesList.filter { it.majorId == majorId || (majorId == "MAJ_AUT_CHEM_ENG" && it.majorId == "CHEM_ENG") }.map { cc ->
                     val prereqList = cc.prerequisites.split("،", ",").map { it.trim() }.filter { it.isNotEmpty() }
                     val conditions = prereqList.map { pName ->
                         val matchingCourse = currCoursesList.find { CourseIdentityNormalizer.normalize(it.name) == CourseIdentityNormalizer.normalize(pName) }
@@ -647,49 +642,94 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    // Pomodoro
-    private val _pomodoroSeconds = MutableStateFlow(25 * 60)
+    val focusSession = preferencesRepository.focusSession
+    val selectedSemesterPlan = preferencesRepository.selectedSemesterPlan
+    val examReminderIds = preferencesRepository.examReminderIds
+    private val _pomodoroSeconds = MutableStateFlow(focusSession.value.remainingSeconds(System.currentTimeMillis()))
     val pomodoroSeconds: StateFlow<Int> = _pomodoroSeconds.asStateFlow()
-
-    private val _isPomodoroRunning = MutableStateFlow(false)
+    private val _isPomodoroRunning = MutableStateFlow(focusSession.value.isRunning)
     val isPomodoroRunning: StateFlow<Boolean> = _isPomodoroRunning.asStateFlow()
 
+    init {
+        pomodoroJob = viewModelScope.launch {
+            while (true) {
+                val state = focusSession.value
+                _pomodoroSeconds.value = state.remainingSeconds(System.currentTimeMillis())
+                _isPomodoroRunning.value = state.isRunning && _pomodoroSeconds.value > 0
+                if (preferencesRepository.completeFocusSession(System.currentTimeMillis())) {
+                    addNotification("جلسه تمرکز تمام شد", "چند دقیقه استراحت کنید؛ سپس سراغ کار بعدی بروید.")
+                }
+                delay(500)
+            }
+        }
+    }
+
     fun startStudyRecommendation(recommendation: StudySessionRecommendation) {
-        if (!_isPomodoroRunning.value) {
-            _pomodoroSeconds.value = recommendation.recommendedDurationMinutes.coerceIn(5, 120) * 60
+        if (!focusSession.value.isRunning) {
+            setFocusDuration(recommendation.recommendedDurationMinutes.coerceIn(5, 120), recommendation.courseName)
             togglePomodoro()
         }
         preferencesRepository.acceptStudyRecommendation(recommendation.id)
         selectTab(AppTab.POMODORO)
     }
 
+    fun setFocusDuration(minutes: Int, label: String = "تمرکز آزاد") {
+        if (focusSession.value.isRunning) return
+        val duration = minutes.coerceIn(5, 120) * 60
+        preferencesRepository.saveFocusSession(com.example.domain.model.FocusSession(duration, duration, label = label))
+        _pomodoroSeconds.value = duration
+        com.example.data.local.AcademicReminderWorker.cancelFocus(getApplication())
+    }
+
     fun togglePomodoro() {
-        if (_isPomodoroRunning.value) {
-            pomodoroJob?.cancel()
-            _isPomodoroRunning.value = false
-        } else {
-            _isPomodoroRunning.value = true
-            pomodoroJob = viewModelScope.launch {
-                while (_pomodoroSeconds.value > 0 && _isPomodoroRunning.value) {
-                    delay(1000)
-                    _pomodoroSeconds.value -= 1
-                }
-                if (_pomodoroSeconds.value == 0) {
-                    _isPomodoroRunning.value = false
-                    addNotification(
-                        "پایان تایم مطالعه پومودورو",
-                        "جلسه تمرکز به پایان رسید؛ چند دقیقه استراحت کنید.",
-                        isDanger = false
-                    )
-                }
-            }
-        }
+        val state = focusSession.value
+        val next = if (state.isRunning) state.pause(System.currentTimeMillis()) else state.start(System.currentTimeMillis())
+        preferencesRepository.saveFocusSession(next)
+        _pomodoroSeconds.value = next.remainingSeconds(System.currentTimeMillis())
+        _isPomodoroRunning.value = next.isRunning
+        if (next.isRunning) com.example.data.local.AcademicReminderWorker.scheduleFocus(getApplication(), next.endsAtMillis)
+        else com.example.data.local.AcademicReminderWorker.cancelFocus(getApplication())
     }
 
     fun resetPomodoro() {
-        pomodoroJob?.cancel()
+        preferencesRepository.saveFocusSession(focusSession.value.copy(pausedSeconds = focusSession.value.durationSeconds, endsAtMillis = 0))
         _isPomodoroRunning.value = false
-        _pomodoroSeconds.value = 25 * 60
+        _pomodoroSeconds.value = focusSession.value.durationSeconds
+        com.example.data.local.AcademicReminderWorker.cancelFocus(getApplication())
+    }
+
+    fun selectSemesterPlan(plan: SemesterPlan) {
+        preferencesRepository.saveSemesterPlan(plan.copy(isDraft = false, isActive = true))
+        _userMessage.tryEmit("برنامه هدف ذخیره شد؛ ثبت‌نام دانشگاه باید جداگانه انجام شود.")
+    }
+
+    fun cancelExamReminder(examId: String) {
+        androidx.work.WorkManager.getInstance(getApplication()).cancelUniqueWork("reminder_$examId")
+        preferencesRepository.setExamReminder(examId, false)
+    }
+
+    fun scheduleExamReminder(exam: ExamItem, minutesBefore: Int = 60) {
+        viewModelScope.launch {
+            try {
+                require(notificationsEnabled.value) { "ابتدا اعلان‌ها را در تنظیمات برنامه فعال کنید." }
+                require(androidx.core.app.NotificationManagerCompat.from(getApplication()).areNotificationsEnabled()) { "مجوز اعلان گوشی فعال نیست؛ آن را در تنظیمات فعال کنید." }
+                val date = com.example.domain.util.AcademicInputValidator.examTimestamp(exam.solarDate, exam.time)
+                    ?: error("برای یادآور، تاریخ و ساعت معتبر امتحان را ثبت کنید.")
+                val trigger = date - minutesBefore.coerceIn(15, 1440) * 60_000L
+                require(trigger > System.currentTimeMillis()) { "زمان این یادآور گذشته است؛ زمان نزدیک‌تری انتخاب کنید." }
+                val courseId = exam.id.removePrefix("exam_")
+                val request = androidx.work.OneTimeWorkRequestBuilder<com.example.data.local.AcademicReminderWorker>()
+                    .setInitialDelay(trigger - System.currentTimeMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
+                    .setInputData(androidx.work.workDataOf("kind" to "exam", "courseId" to courseId, "date" to exam.solarDate, "time" to exam.time))
+                    .addTag(com.example.data.local.AcademicReminderWorker.TAG).build()
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    androidx.work.WorkManager.getInstance(getApplication()).enqueueUniqueWork("reminder_${exam.id}", androidx.work.ExistingWorkPolicy.REPLACE, request).result.get()
+                }
+                preferencesRepository.setExamReminder(exam.id, true)
+                _userMessage.emit("یادآور $minutesBefore دقیقه قبل ثبت شد؛ زمان ارسال تابع محدودیت باتری گوشی است.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "یادآور ثبت نشد؛ دوباره تلاش کنید.") }
+        }
     }
 
     // 8 Semester Curriculum Map for Chemical Engineering
@@ -705,17 +745,26 @@ class StudentViewModel @JvmOverloads constructor(
     )
 
     // Actions
-    fun saveCourse(course: CourseEntity, sessions: List<com.example.data.local.entity.CourseSessionEntity> = emptyList()) {
+    fun saveCourse(course: CourseEntity, sessions: List<CourseSessionEntity> = emptyList(), onSaved: () -> Unit = {}) {
+        if (_isSavingRecord.value) return
+        _isSavingRecord.value = true
         viewModelScope.launch {
-            repository.saveCourse(course, sessions)
-            addNotification("ثبت درس", "درس ${course.name} در برنامه هفتگی ذخیره شد.")
-            triggerCloudSync()
+            try {
+                repository.saveCourse(course, sessions)
+                cancelExamReminder("exam_${course.id}")
+                triggerCloudSync()
+                onSaved()
+                _userMessage.emit("درس ${course.name} ذخیره شد.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit("درس ذخیره نشد؛ ورودی‌ها را بررسی و دوباره تلاش کنید.") }
+            finally { _isSavingRecord.value = false }
         }
     }
 
     fun deleteCourse(courseId: String) {
         viewModelScope.launch {
             repository.deleteCourse(courseId)
+            cancelExamReminder("exam_$courseId")
             addNotification("حذف درس", "درس با موفقیت از جدول کلاسی حذف شد.", isDanger = true)
             triggerCloudSync()
         }
@@ -781,24 +830,49 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    fun saveTask(title: String, courseName: String, dueDate: String, courseId: String? = null) {
+    fun saveTask(title: String, courseName: String, dueDate: String, courseId: String? = null, onSaved: () -> Unit = {}) {
+        if (_isSavingRecord.value) return
+        _isSavingRecord.value = true
         viewModelScope.launch {
-            val resolvedCourse = courses.value.find { it.name == courseName || it.id == courseId }
-            val resolvedCourseId = courseId ?: resolvedCourse?.id ?: ""
-            val currentSem = repository.getCurrentSemesterSync()
-            repository.saveTask(
-                TaskEntity(
-                    title = title,
-                    courseName = courseName,
-                    dueDate = dueDate,
-                    isCompleted = false,
-                    courseId = resolvedCourseId,
-                    semesterId = currentSem?.id
-                )
-            )
-            addNotification("تکلیف جدید", "تکلیف «$title» به لیست افزوده شد.")
-            triggerCloudSync()
+            try {
+                val date = com.example.domain.util.JalaliCalendarUtil.parse(dueDate) ?: error("تاریخ تحویل معتبر نیست.")
+                require(title.isNotBlank()) { "عنوان تکلیف را وارد کنید." }
+                val resolvedCourse = courses.value.find { if (!courseId.isNullOrBlank()) it.id == courseId else it.name == courseName }
+                val currentSem = repository.getCurrentSemesterSync()
+                repository.saveTask(TaskEntity(title = title.trim(), courseName = resolvedCourse?.name ?: courseName,
+                    dueDate = date.format(), courseId = resolvedCourse?.id.orEmpty(), semesterId = currentSem?.id))
+                triggerCloudSync()
+                onSaved()
+                _userMessage.emit("تکلیف ذخیره شد.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "تکلیف ذخیره نشد؛ دوباره تلاش کنید.") }
+            finally { _isSavingRecord.value = false }
         }
+    }
+
+    fun editTask(task: TaskEntity, title: String, courseName: String, dueDate: String, onSaved: () -> Unit = {}) {
+        if (_isSavingRecord.value) return
+        _isSavingRecord.value = true
+        viewModelScope.launch {
+            try {
+                val date = com.example.domain.util.JalaliCalendarUtil.parse(dueDate) ?: error("تاریخ تحویل معتبر نیست.")
+                val course = courses.value.find { it.name == courseName }
+                repository.updateTask(task.copy(title = title.trim(), courseName = courseName, dueDate = date.format(), courseId = course?.id.orEmpty()))
+                triggerCloudSync()
+                onSaved()
+                _userMessage.emit("تغییرات تکلیف ذخیره شد.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "تکلیف ذخیره نشد.") }
+            finally { _isSavingRecord.value = false }
+        }
+    }
+
+    fun saveExamDetails(course: CourseEntity, date: String, time: String, location: String, onSaved: () -> Unit) {
+        val dateValue = if (date.isBlank() && time.isBlank()) "" else com.example.domain.util.JalaliCalendarUtil.parse(date)?.format()
+        val timeValue = if (date.isBlank() && time.isBlank()) "" else com.example.domain.util.AcademicInputValidator.time(time)
+        if (dateValue == null || timeValue == null) { _userMessage.tryEmit("تاریخ و ساعت امتحان معتبر نیست."); return }
+        val sessions = coursesWithSessions.value.find { it.course.id == course.id }?.sessions.orEmpty()
+        saveCourse(course.copy(examDate = dateValue, examTime = timeValue, examLocation = location.trim()), sessions, onSaved)
     }
 
     fun startNewSemester(
@@ -819,6 +893,8 @@ class StudentViewModel @JvmOverloads constructor(
                     finalRecordedGpa = finalRecordedGpa
                 )
             )
+            preferencesRepository.clearAcademicChoices()
+            com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
             addNotification(
                 "آغاز ترم تحصیلی جدید",
                 "ترم «${result.createdSemester.title}» به عنوان ترم جاری فعال شد و اطلاعات ترم قبلی با موفقیت بایگانی گردید."
@@ -845,10 +921,18 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    fun updateGrade(grade: GradeEntity, newMid: Double, newFin: Double) {
+    fun updateGrade(grade: GradeEntity, newMid: Double, newFin: Double, onSaved: () -> Unit = {}) {
+        if (_isSavingRecord.value) return
+        _isSavingRecord.value = true
         viewModelScope.launch {
-            repository.updateGrade(grade.copy(midtermGrade = newMid, finalGrade = newFin))
-            triggerCloudSync()
+            try {
+                repository.updateGrade(grade.copy(midtermGrade = newMid, finalGrade = newFin))
+                triggerCloudSync()
+                onSaved()
+                _userMessage.emit("نمره ذخیره شد.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "نمره ذخیره نشد.") }
+            finally { _isSavingRecord.value = false }
         }
     }
 
@@ -983,59 +1067,27 @@ class StudentViewModel @JvmOverloads constructor(
     }
 
     fun importParsedCourses(
-        drafts: List<com.example.data.parser.ParsedCourseDraft>,
-        clearExisting: Boolean = false,
-        studentName: String = "",
-        studentId: String = "",
-        university: String = "",
-        major: String = "",
-        entryYear: Int = 1403,
-        currentSemester: Int = 1
+        drafts: List<com.example.data.parser.ParsedCourseDraft>, clearExisting: Boolean = false,
+        studentName: String = "", studentId: String = "", university: String = "", major: String = "",
+        entryYear: Int = 0, currentSemester: Int = 0, onSaved: () -> Unit = {}
     ) {
-        val resolvedName = studentName.ifBlank { "دانشجو" }
-        val totalUnits = drafts.sumOf { it.units }
-
-        preferencesRepository.setOnboardingCompleted(true)
-        preferencesRepository.recordSuccessfulSave()
-        _isOnboardingCompleted.value = true
-
-        val opt = StudentProfileEntity(
-            id = 1,
-            name = resolvedName,
-            studentId = studentId.trim(),
-            university = university,
-            major = major,
-            entryYear = entryYear,
-            currentSemester = currentSemester,
-            activeUnits = totalUnits,
-            term = "ترم $currentSemester $major",
-            faculty = "دانشکده $major · $totalUnits واحد فعال",
-            isOnboardingCompleted = true
-        )
-        _optimisticProfile.value = opt
-
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        if (_isSavingRecord.value) return
+        _isSavingRecord.value = true
+        viewModelScope.launch {
             try {
-                repository.importParsedCourses(
-                    drafts = drafts,
-                    semesterId = "current",
-                    clearExisting = clearExisting,
-                    studentName = resolvedName,
-                    studentId = studentId,
-                    university = university,
-                    major = major,
-                    entryYear = entryYear,
-                    currentSemester = currentSemester
-                )
-                try {
-                    val snapshot = repository.exportFullBackupJson()
-                    LocalDataBackupManager.saveLocalSnapshot(application, snapshot)
-                } catch (_: Throwable) {}
-                addNotification("واردسازی برنامه", "${drafts.size} درس جدید از متن انتخاب واحد استخراج و ثبت شد.")
-            } catch (e: Throwable) {
-                e.printStackTrace()
-                _userMessage.emit("خطا در ثبت دروس: ${e.message}")
-            }
+                require(drafts.isNotEmpty()) { "حداقل یک درس انتخاب کنید." }
+                repository.importParsedCourses(drafts, clearExisting = clearExisting, studentName = studentName,
+                    studentId = studentId, university = university, major = major, entryYear = entryYear, currentSemester = currentSemester)
+                _optimisticProfile.value = null
+                preferencesRepository.setOnboardingCompleted(true)
+                preferencesRepository.recordSuccessfulSave()
+                _isOnboardingCompleted.value = true
+                triggerCloudSync()
+                onSaved()
+                _userMessage.emit("${drafts.size} جلسه درس ثبت شد؛ مشخصات و سوابق پیشین حفظ شد.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit("واردسازی انجام نشد؛ داده‌های پیشین حفظ شد. دوباره تلاش کنید.") }
+            finally { _isSavingRecord.value = false }
         }
     }
 
@@ -1437,7 +1489,8 @@ class StudentViewModel @JvmOverloads constructor(
     fun signOutUser() {
         viewModelScope.launch {
             preferencesRepository.setGuestModeEnabled(true)
-            preferencesRepository.clearAcceptedStudyPlan()
+            preferencesRepository.clearAcademicChoices()
+            com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
             SyncStatusStore.markLocal(application)
             authManager.signOutUser()
             // Clear onboarding preferences
@@ -1459,7 +1512,8 @@ class StudentViewModel @JvmOverloads constructor(
                 _userMessage.emit(result.exceptionOrNull()?.localizedMessage ?: "حذف حساب انجام نشد؛ دوباره وارد حساب شوید و تلاش کنید.")
                 return@launch
             }
-            preferencesRepository.clearAcceptedStudyPlan()
+            preferencesRepository.clearAcademicChoices()
+            com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
             SyncStatusStore.markLocal(application)
             preferencesRepository.setGuestModeEnabled(true)
             repository.clearToFreshSlate("دانشجوی جدید", "", "", "", 1403, 1)

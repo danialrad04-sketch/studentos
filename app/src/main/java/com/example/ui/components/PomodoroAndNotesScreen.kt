@@ -66,6 +66,9 @@ import java.util.Locale
 @Composable
 fun PomodoroAndNotesScreen(
     secondsRemaining: Int,
+    durationSeconds: Int = 1500,
+    focusLabel: String = "تمرکز آزاد",
+    onDurationSelected: ((Int) -> Unit)? = null,
     isRunning: Boolean,
     onTogglePomodoro: () -> Unit,
     onResetPomodoro: () -> Unit,
@@ -77,7 +80,7 @@ fun PomodoroAndNotesScreen(
     val minutes = secondsRemaining / 60
     val seconds = secondsRemaining % 60
     val timeFormatted = String.format(Locale.US, "%02d:%02d", minutes, seconds)
-    val totalSeconds = 1500f
+    val totalSeconds = durationSeconds.coerceAtLeast(1).toFloat()
     val progress = ((totalSeconds - secondsRemaining) / totalSeconds).coerceIn(0f, 1f)
 
     var localNotes by remember(notes) { mutableStateOf(notes) }
@@ -137,7 +140,7 @@ fun PomodoroAndNotesScreen(
                                 modifier = Modifier.size(15.dp)
                             )
                             Text(
-                                text = if (isRunning) "دستیار هوشمند تمرکز عمیق فعال است" else "حالت تمرکز مطالعه · ۲۵ دقیقه",
+                                text = if (isRunning) "جلسه تمرکز فعال است" else "مدت تمرکز · ${durationSeconds / 60} دقیقه",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -151,7 +154,7 @@ fun PomodoroAndNotesScreen(
                         color = MaterialTheme.colorScheme.secondaryContainer
                     ) {
                         Text(
-                            text = "جلسه تمرکز",
+                            text = focusLabel,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -192,6 +195,16 @@ fun PomodoroAndNotesScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
+                onDurationSelected?.let { select ->
+                    androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(4) { index ->
+                            val minutes = listOf(15, 25, 45, 60)[index]
+                            FilterChip(selected = durationSeconds == minutes * 60, onClick = { select(minutes) }, enabled = !isRunning, label = { Text("$minutes دقیقه") })
+                        }
+                    }
+                    Text("وضعیت جلسه با بسته‌شدن برنامه حفظ می‌شود.", style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.height(12.dp))
+                }
                 // Progress Bar
                 LinearProgressIndicator(
                     progress = { progress },

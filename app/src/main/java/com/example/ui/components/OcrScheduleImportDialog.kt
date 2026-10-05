@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PhotoLibrary
@@ -98,7 +99,10 @@ import kotlinx.coroutines.withContext
 fun OcrScheduleImportDialog(
     onDismiss: () -> Unit,
     onConfirmImport: (List<ParsedCourseDraft>) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    existingCourses: List<com.example.data.local.relation.CourseWithSessions> = emptyList(),
+    isSaving: Boolean = false,
+    dismissOnConfirm: Boolean = true
 ) {
     var selectedTab by remember { mutableIntStateOf(1) } // Default to Bulk Text (0: OCR Image, 1: Bulk Text)
 
@@ -113,6 +117,10 @@ fun OcrScheduleImportDialog(
 
     // Extracted drafts
     val extractedDrafts = remember { mutableStateListOf<ParsedCourseDraft>() }
+    var editingDraft by remember { mutableStateOf<ParsedCourseDraft?>(null) }
+    var allowConflicts by remember { mutableStateOf(false) }
+    val invalidDrafts = extractedDrafts.filter { com.example.domain.util.AcademicInputValidator.draftIssues(it).isNotEmpty() }
+    val conflicts = com.example.domain.engine.ImportReviewEngine.conflicts(extractedDrafts, existingCourses)
 
     // Selected University System Preset
     var selectedPreset by remember { mutableStateOf(RegistrationTextParser.UniversitySystem.AUTO_DETECT) }
@@ -452,16 +460,26 @@ fun OcrScheduleImportDialog(
                         items(extractedDrafts) { draft ->
                             DraftCardItem(
                                 draft = draft,
-                                onRemove = { extractedDrafts.remove(draft) }
+                                onEdit = { editingDraft = draft },
+                                onRemove = { extractedDrafts.remove(draft); allowConflicts = false }
                             )
                         }
                     }
 
+                    if (invalidDrafts.isNotEmpty()) Text("${invalidDrafts.size} ردیف نیاز به اصلاح دارد؛ ساعت، نام یا واحد درس را بررسی کنید.", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                    if (conflicts.isNotEmpty()) {
+                        Text("تداخل زمانی: " + conflicts.joinToString("؛ "), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = allowConflicts, onCheckedChange = { allowConflicts = it })
+                            Text("تداخل‌ها را بررسی کرده‌ام و ثبت را تأیید می‌کنم.", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
                     // Confirm and Save Button
                     Button(
+                        enabled = !isSaving && invalidDrafts.isEmpty() && (conflicts.isEmpty() || allowConflicts),
                         onClick = {
                             onConfirmImport(extractedDrafts.toList())
-                            dismissModal()
+                            if (dismissOnConfirm) dismissModal()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -472,17 +490,27 @@ fun OcrScheduleImportDialog(
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("تأیید و ثبت کلاس‌ها", fontWeight = FontWeight.Bold)
+                        Text(if (isSaving) "در حال ذخیره…" else "تأیید و ثبت کلاس‌ها", fontWeight = FontWeight.Bold)
                     }
                 }
             }
     }
+    editingDraft?.let { original ->
+        ImportDraftEditor(original, { editingDraft = null }) { updated ->
+            val index = extractedDrafts.indexOfFirst { it.tempId == original.tempId }
+            if (index >= 0) extractedDrafts[index] = updated
+            allowConflicts = false
+            editingDraft = null
+        }
+    }
+
 }
 
 @Composable
 private fun DraftCardItem(
     draft: ParsedCourseDraft,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    onEdit: () -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -540,9 +568,12 @@ private fun DraftCardItem(
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "اصلاح ${draft.name}")
+                }
                 IconButton(
                     onClick = onRemove,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         Icons.Default.Delete,

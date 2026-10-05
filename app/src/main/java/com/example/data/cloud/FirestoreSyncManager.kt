@@ -229,6 +229,7 @@ object FirestoreSyncManager {
                     "units" to g.units,
                     "midtermGrade" to g.midtermGrade,
                     "finalGrade" to g.finalGrade,
+                    "isRecorded" to g.hasRecordedScore(),
                     "courseId" to g.courseId,
                     "updatedAt" to FieldValue.serverTimestamp()
                 )
@@ -545,6 +546,7 @@ object FirestoreSyncManager {
                         val units = doc.getLong("units")?.toInt() ?: 3
                         val mid = doc.getDouble("midtermGrade") ?: 0.0
                         val fin = doc.getDouble("finalGrade") ?: 0.0
+                        val recorded = doc.getBoolean("isRecorded") ?: (mid + fin > 0)
 
                         val existing = localGrades.find { (it.id > 0 && it.id == id) || (courseId.isNotBlank() && it.courseId == courseId) }
                         if (existing == null) {
@@ -555,15 +557,17 @@ object FirestoreSyncManager {
                                     units = units,
                                     midtermGrade = mid,
                                     finalGrade = fin,
-                                    courseId = courseId
+                                    courseId = courseId,
+                                    isRecorded = recorded
                                 )
                             )
                             restoredCount++
-                        } else if (existing.midtermGrade != mid || existing.finalGrade != fin) {
+                        } else if (existing.midtermGrade != mid || existing.finalGrade != fin || existing.isRecorded != recorded) {
                             dao.insertGrade(
                                 existing.copy(
                                     midtermGrade = mid,
-                                    finalGrade = fin
+                                    finalGrade = fin,
+                                    isRecorded = recorded
                                 )
                             )
                             restoredCount++

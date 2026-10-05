@@ -273,7 +273,7 @@ object JalaliCalendarUtil {
             val y = parts[0].toIntOrNull() ?: return null
             val m = parts[1].toIntOrNull() ?: return null
             val d = parts[2].toIntOrNull() ?: return null
-            if (y in 1300..1500 && m in 1..12 && d in 1..31) {
+            if (y in 1300..1500 && m in 1..12 && d in 1..getDaysInMonth(y, m)) {
                 return JalaliDate(y, m, d)
             }
         }
