@@ -60,8 +60,9 @@ fun StudentNavigationDrawer(
                         NavigationDrawerItem(label = { Text("حساب کاربری") }, icon = { Icon(Icons.Rounded.AccountCircle, null) }, selected = false, onClick = { select(onOpenAccount) })
                         NavigationDrawerItem(label = { Text("تنظیمات") }, icon = { Icon(Icons.Rounded.Settings, null) }, selected = false, onClick = { select(onOpenSettings) })
                         HorizontalDivider(Modifier.padding(vertical = 12.dp))
-                        Text("فضای تحصیلی", Modifier.padding(16.dp), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                        AppTab.entries.forEach { tab ->
+                        studentFeatureGroups.forEach { (section, tabs) ->
+                        Text(section, Modifier.padding(16.dp), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                        tabs.forEach { tab ->
                             NavigationDrawerItem(
                                 label = { Text(tab.title, style = MaterialTheme.typography.bodyLarge) },
                                 icon = { Icon(studentDestinationIcon(tab), null) },
@@ -73,6 +74,7 @@ fun StudentNavigationDrawer(
                                 ),
                                 onClick = { select { onSelectTab(tab) } }
                             )
+                        }
                         }
                         HorizontalDivider(Modifier.padding(vertical = 12.dp))
                         NavigationDrawerItem(label = { Text("پشتیبانی") }, icon = { Icon(Icons.AutoMirrored.Rounded.HelpOutline, null) }, selected = false, onClick = { select(onOpenSupport) })

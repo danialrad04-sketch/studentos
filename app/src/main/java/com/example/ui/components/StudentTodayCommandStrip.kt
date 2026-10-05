@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
@@ -167,30 +169,29 @@ fun StudentTodayCommandStrip(
                 }
             }
 
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = onStartFocus,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(11.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Icon(Icons.Default.PlayArrow, null, Modifier.size(17.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        recommendation?.let { "شروع " + it.recommendedDurationMinutes + " دقیقه" } ?: "شروع تمرکز"
-                    )
+            val focusButton: @Composable (Modifier) -> Unit = { actionModifier ->
+                Button(onClick = onStartFocus, modifier = actionModifier.heightIn(min = 52.dp), shape = RoundedCornerShape(12.dp)) {
+                    Icon(Icons.Default.PlayArrow, null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(recommendation?.let { "شروع " + it.recommendedDurationMinutes + " دقیقه" } ?: "شروع تمرکز")
                 }
-                OutlinedButton(
-                    onClick = { onNavigateTab(AppTab.TASKS) },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(11.dp)
-                ) {
-                    Icon(Icons.Default.CheckCircle, null, Modifier.size(17.dp))
-                    Spacer(Modifier.width(6.dp))
+            }
+            val tasksButton: @Composable (Modifier) -> Unit = { actionModifier ->
+                OutlinedButton(onClick = { onNavigateTab(AppTab.TASKS) }, modifier = actionModifier.heightIn(min = 52.dp), shape = RoundedCornerShape(12.dp)) {
+                    Icon(Icons.Default.CheckCircle, null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text("کارها")
+                }
+            }
+            if (LocalDensity.current.fontScale >= 1.3f) {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    focusButton(Modifier.fillMaxWidth())
+                    tasksButton(Modifier.fillMaxWidth())
+                }
+            } else {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    focusButton(Modifier.weight(1f))
+                    tasksButton(Modifier.weight(1f))
                 }
             }
         }

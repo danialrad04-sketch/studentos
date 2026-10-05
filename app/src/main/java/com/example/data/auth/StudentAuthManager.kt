@@ -23,9 +23,13 @@ import com.google.firebase.auth.auth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -41,6 +45,7 @@ import kotlinx.coroutines.withContext
 class StudentAuthManager(private val context: Context) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var subscriptionObserver: Job? = null
     private val legacyPrefs: SharedPreferences = context.getSharedPreferences("student_os_auth_prefs", Context.MODE_PRIVATE)
 
     private val safeFirebaseAuth: FirebaseAuth?
@@ -73,6 +78,7 @@ class StudentAuthManager(private val context: Context) {
         // Attach real-time Firebase Auth state listener
         try {
             safeFirebaseAuth?.addAuthStateListener { auth ->
+                subscriptionObserver?.cancel()
                 val fbUser = auth.currentUser
                 if (fbUser != null) {
                     val mapped = buildUserFromFirebase(fbUser)
@@ -190,6 +196,7 @@ class StudentAuthManager(private val context: Context) {
                 }.getOrDefault(SubscriptionTier.FREE)
                 SubscriptionDetails(
                     tier = tier,
+                    expiresAt = entitlement.expiresAt,
                     maxDailyAiQuota = entitlement.maxDailyAiQuota,
                     isCloudSyncEnabled = entitlement.allowsCloudSync,
                     isUnlimitedExportEnabled = entitlement.allowsPdfExport,
@@ -234,31 +241,41 @@ class StudentAuthManager(private val context: Context) {
                 tier = SubscriptionTier.FREE, // Will be updated reactively from Firestore
                 dailyAiQuotaUsed = 0,
                 maxDailyAiQuota = 5,
-                isCloudSyncEnabled = !isAnonymous,
-                isUnlimitedExportEnabled = !isAnonymous,
-                isGpaPredictorUnlocked = !isAnonymous
+                isCloudSyncEnabled = false,
+                isUnlimitedExportEnabled = false,
+                isGpaPredictorUnlocked = false
             ),
             createdAt = fbUser.metadata?.creationTimestamp ?: System.currentTimeMillis()
         )
     }
 
     private fun observeSubscriptionFromCloud(userId: String) {
-        scope.launch {
+        subscriptionObserver?.cancel()
+        subscriptionObserver = scope.launch {
             try {
-                FirestoreSyncManager.observeUserSubscription(userId).collect { tier ->
+                FirestoreSyncManager.observeUserSubscription(userId).collectLatest { details ->
                     val current = _currentUser.value
                     if (current.uid == userId) {
                         _currentUser.value = current.copy(
-                            subscription = current.subscription.copy(
-                                tier = tier,
-                                isCloudSyncEnabled = tier != SubscriptionTier.FREE,
-                                isUnlimitedExportEnabled = tier != SubscriptionTier.FREE,
-                                isGpaPredictorUnlocked = tier != SubscriptionTier.FREE,
-                                maxDailyAiQuota = if (tier == SubscriptionTier.FREE) 5 else 999
+                            subscription = details.copy(
+                                dailyAiQuotaUsed = current.subscription.dailyAiQuotaUsed,
+                                dailyScanQuotaUsed = current.subscription.dailyScanQuotaUsed
                             )
                         )
+                        val expiry = details.expiresAt
+                        if (details.isProOrHigher && expiry != null) {
+                            delay((expiry - System.currentTimeMillis()).coerceAtLeast(0))
+                            val latest = _currentUser.value
+                            if (latest.uid == userId && latest.subscription.expiresAt == expiry) {
+                                _currentUser.value = latest.copy(subscription = SubscriptionDetails(
+                                    expiresAt = expiry, dailyAiQuotaUsed = latest.subscription.dailyAiQuotaUsed,
+                                    dailyScanQuotaUsed = latest.subscription.dailyScanQuotaUsed))
+                            }
+                        }
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Throwable) {
                 Log.w(TAG, "Failed observing cloud subscription: ${e.message}")
             }
@@ -618,23 +635,15 @@ class StudentAuthManager(private val context: Context) {
 
         // Server-side validation via FirestoreSyncManager
         val result = FirestoreSyncManager.redeemPromoCode(current.uid, code)
-        result.onSuccess { tier ->
-            _currentUser.value = current.copy(
-                subscription = current.subscription.copy(
-                    tier = tier,
-                    isCloudSyncEnabled = true,
-                    isUnlimitedExportEnabled = true,
-                    isGpaPredictorUnlocked = true,
-                    maxDailyAiQuota = 999
-                )
-            )
-        }
+        // The Firestore observer applies the full server entitlement, including expiry.
         result
     }
 
-    suspend fun upgradeSubscriptionTier(tier: SubscriptionTier): Result<SubscriptionTier> = withContext(Dispatchers.IO) {
-        // Entitlements must come from the server; a failed purchase never grants access.
-        applyPromoCode("UPGRADE_${tier.name}")
+    fun applyVerifiedSubscription(details: SubscriptionDetails) {
+        val current = _currentUser.value
+        if (com.example.data.api.PremiumApiClient.memberId() == current.uid && !current.isGuest) {
+            _currentUser.value = current.copy(subscription = details)
+        }
     }
 
     suspend fun signOutUser() = withContext(Dispatchers.IO) {

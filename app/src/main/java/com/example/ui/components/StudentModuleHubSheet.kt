@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,7 +22,9 @@ fun StudentModuleHubSheet(currentTab: AppTab, onSelectTab: (AppTab) -> Unit, onD
             modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
             horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(AppTab.entries, key = { it.name }) { tab ->
+            studentFeatureGroups.forEach { (section, tabs) ->
+            item(span = { GridItemSpan(maxLineSpan) }) { Text(section, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(vertical = 8.dp)) }
+            items(tabs, key = { it.name }) { tab ->
                 Card(
                     onClick = { onSelectTab(tab); dismiss() },
                     colors = CardDefaults.cardColors(containerColor = if (tab == currentTab) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh),
@@ -32,6 +35,7 @@ fun StudentModuleHubSheet(currentTab: AppTab, onSelectTab: (AppTab) -> Unit, onD
                         Text(tab.title, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                 }
+            }
             }
         }
     }

@@ -10,8 +10,9 @@ enum class SubscriptionTier(
 ) {
     FREE("طرح دانشجویی پایه", "رایگان", 5, 8, false, false),
     PRO("اشتراک ویژه پرو (Student Pro)", "پرو ★", 50, 25, true, true),
-    ULTRA("طرح طلایی نامحدود دانشگاهی", "طلایی ✦", 999, 99, true, true),
-    CAMPUS_UNLIMITED("طرح طلایی نامحدود دانشگاهی", "طلایی ✦", 999, 99, true, true)
+    // Keep legacy identifiers for existing accounts; all paid AI quotas are server bounded.
+    ULTRA("اشتراک دانشگاهی", "دانشگاهی", 50, 99, true, true),
+    CAMPUS_UNLIMITED("اشتراک دانشگاهی", "دانشگاهی", 50, 99, true, true)
 }
 
 data class SubscriptionDetails(
@@ -21,13 +22,17 @@ data class SubscriptionDetails(
     val maxDailyAiQuota: Int = 5,
     val isCloudSyncEnabled: Boolean = false,
     val isUnlimitedExportEnabled: Boolean = false,
-    val isGpaPredictorUnlocked: Boolean = false
+    val isGpaPredictorUnlocked: Boolean = false,
+    val dailyScanQuotaUsed: Int = 0,
+    val maxDailyScanQuota: Int = 1,
+    val autoRenewing: Boolean = false
 ) {
     val remainingAiQuota: Int
         get() = (maxDailyAiQuota - dailyAiQuotaUsed).coerceAtLeast(0)
 
     val isProOrHigher: Boolean
-        get() = tier == SubscriptionTier.PRO || tier == SubscriptionTier.ULTRA || tier == SubscriptionTier.CAMPUS_UNLIMITED
+        get() = (expiresAt == null || expiresAt > System.currentTimeMillis()) &&
+            (tier == SubscriptionTier.PRO || tier == SubscriptionTier.ULTRA || tier == SubscriptionTier.CAMPUS_UNLIMITED)
 }
 
 data class UserAccount(

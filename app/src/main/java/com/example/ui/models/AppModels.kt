@@ -13,18 +13,18 @@ enum class AppTab(
     val title: String,
     val iconEmoji: String
 ) {
-    DASHBOARD("داشبورد بنتو", "⚡"),
+    DASHBOARD("خانه", "⚡"),
     COPILOT("دستیار هوشمند", "🤖"),
     ACADEMIC_INTELLIGENCE("هوش تحصیلی", "🧠"),
     PASSPORT("شناسنامه تحصیلی", "📜"),
     SCHEDULE("برنامه کلاسی", "🗓️"),
-    ATTENDANCE("رادار غیبت‌ها", "🚨"),
+    ATTENDANCE("حضور و غیاب", "🚨"),
     TASKS("تکالیف و پروژه", "📋"),
     EXAMS("امتحانات پایان‌ترم", "🎯"),
     GRADES("کارنامه و شبیه‌ساز", "📈"),
     SEMESTER_PLANNER("برنامه‌ریز ترم", "🧭"),
     CURRICULUM("چارت مهندسی شیمی", "🗺️"),
-    POMODORO("تایمر تمرکز و فرمول", "⏱️"),
+    POMODORO("تمرکز", "⏱️"),
     GAMIFICATION("مدال‌ها و دستاوردها", "🏆"),
     HISTORY("سوابق ترم‌ها", "📚")
 }

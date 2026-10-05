@@ -136,7 +136,17 @@ fun OcrScheduleImportDialog(
             ocrErrorMessage = null
             try {
                 val bytes = withContext(Dispatchers.IO) {
-                    context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    context.contentResolver.openInputStream(uri)?.use { stream ->
+                        val output = java.io.ByteArrayOutputStream()
+                        val buffer = ByteArray(8192)
+                        while (true) {
+                            val count = stream.read(buffer)
+                            if (count < 0) break
+                            require(output.size() + count <= 2_000_000) { "تصویری کوچک‌تر از ۲ مگابایت انتخاب کنید." }
+                            output.write(buffer, 0, count)
+                        }
+                        output.toByteArray()
+                    }
                 }
                 if (bytes == null || bytes.isEmpty()) {
                     ocrErrorMessage = "خطا در خواندن فایل تصویر انتخابی."
@@ -155,7 +165,7 @@ fun OcrScheduleImportDialog(
                     }
                 } else {
                     ocrErrorMessage = result.exceptionOrNull()?.localizedMessage
-                        ?: "خطا در برقراری ارتباط با مدل هوش مصنوعی برای استخراج دروس. لطفاً اتصال اینترنت یا کلید API را بررسی فرمایید."
+                        ?: "خطا در برقراری ارتباط با مدل هوش مصنوعی برای استخراج دروس. لطفاً اتصال اینترنت و ورود به حساب را بررسی کنید."
                 }
             } catch (e: Exception) {
                 ocrErrorMessage = "خطای غیرمنتظره در پردازش تصویر: ${e.message}"
@@ -425,7 +435,7 @@ fun OcrScheduleImportDialog(
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = "پیش‌نمایش قبل از ثبت در Room",
+                                text = "بررسی پیش از ثبت",
                                 color = Emerald600,
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                             )
@@ -462,7 +472,7 @@ fun OcrScheduleImportDialog(
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("تأیید و ذخیره کلیه دروس در پایگاه‌داده", fontWeight = FontWeight.Bold)
+                        Text("تأیید و ثبت کلاس‌ها", fontWeight = FontWeight.Bold)
                     }
                 }
             }

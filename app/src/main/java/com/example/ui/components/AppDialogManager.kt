@@ -138,24 +138,10 @@ fun AppDialogManager(
         }
 
         is AppDialogState.Upgrade -> {
-            SubscriptionUpgradeDialog(
+            SubscriptionUpgradeRoute(
                 userAccount = userAccount,
-                onUpgradeTier = { tier ->
-                    studentViewModel.upgradeSubscriptionTier(tier) { success, msg ->
-                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                        if (success) {
-                            dismiss()
-                        }
-                    }
-                },
-                onApplyPromoCode = { code ->
-                    studentViewModel.applyPromoCode(code) { success, msg ->
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                        if (success) {
-                            dismiss()
-                        }
-                    }
-                },
+                onVerified = studentViewModel::applyVerifiedSubscription,
+                onSignIn = { openChild(AppDialogState.Auth) },
                 onDismiss = dismiss
             )
         }

@@ -20,3 +20,9 @@ debug.keystore
 release_build.log
 .build-outputs/
 *.zip
+
+functions/node_modules/
+functions/.env.*
+!functions/.env.example
+functions/.secret.local
+*-debug.log

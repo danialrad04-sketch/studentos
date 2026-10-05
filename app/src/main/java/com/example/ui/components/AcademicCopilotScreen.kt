@@ -133,8 +133,9 @@ fun AcademicCopilotScreen(
     onNavigateTab: (AppTab) -> Unit,
     onExecuteAction: (CopilotPayload) -> Unit,
     onOpenPastSemestersDialog: () -> Unit,
-    customApiKey: String = "",
-    onSaveCustomApiKey: (String) -> Unit = {},
+    userAccount: com.example.domain.model.UserAccount = com.example.domain.model.UserAccount(),
+    onOpenPremium: () -> Unit = {},
+    onSubscriptionLoaded: (com.example.domain.model.SubscriptionDetails) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
@@ -157,6 +158,16 @@ fun AcademicCopilotScreen(
 
     var inputText by remember { mutableStateOf("") }
     var isAiLoading by remember { mutableStateOf(false) }
+    var mode by remember { mutableStateOf("chat") }
+    var onlineStatus by remember { mutableStateOf<com.example.domain.model.PremiumStatus?>(null) }
+    var connectionMessage by remember { mutableStateOf<String?>(null) }
+    suspend fun refreshOnlineStatus() {
+        if (userAccount.isGuest) return
+        val result = com.example.data.api.PremiumApiClient.result { com.example.data.api.PremiumApiClient.catalog() }
+        result.onSuccess { onlineStatus = it; onSubscriptionLoaded(it.subscription); connectionMessage = null }
+            .onFailure { connectionMessage = it.message }
+    }
+    LaunchedEffect(userAccount.uid) { refreshOnlineStatus() }
 
     val sendMessage: (String) -> Unit = { query ->
         if (query.isNotBlank() && !isAiLoading) {
@@ -186,7 +197,7 @@ fun AcademicCopilotScreen(
                         coursesWithSessions = coursesWithSessions,
                         curriculumCourses = curriculumCourses,
                         conversationHistory = messages.toList(),
-                        customApiKey = customApiKey
+                        kind = mode
                     )
                     messages.add(responseMsg)
                 } catch (e: Throwable) {
@@ -204,6 +215,7 @@ fun AcademicCopilotScreen(
                     messages.add(fallback)
                 } finally {
                     isAiLoading = false
+                    refreshOnlineStatus()
                     try {
                         if (messages.isNotEmpty()) {
                             listState.animateScrollToItem(messages.size - 1)
@@ -214,78 +226,6 @@ fun AcademicCopilotScreen(
         }
     }
 
-    var showApiKeyDialog by remember { mutableStateOf(false) }
-    var keyInput by remember { mutableStateOf(customApiKey) }
-
-    if (showApiKeyDialog) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { showApiKeyDialog = false },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.AutoAwesome,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(28.dp)
-                )
-            },
-            title = {
-                Text(
-                    text = "تنظیم کلید اختصاصی Gemini",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        text = "برای فعال‌سازی چت و پاسخ زنده هوش مصنوعی کوپایلت، کلید API خود را از گوگل اِی‌آی استودیو دریافت کرده و در کادر زیر وارد کنید:",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp
-                    )
-
-                    OutlinedTextField(
-                        value = keyInput,
-                        onValueChange = { keyInput = it },
-                        placeholder = { Text("AIzaSy...", fontSize = 12.sp) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        )
-                    )
-
-                    Text(
-                        text = "💡 کلید شما به صورت محلی و کاملاً امن در دستگاه ذخیره می‌شود و مستقیماً برای ارسال درخواست‌ها استفاده می‌گردد.",
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.primary,
-                        lineHeight = 15.sp
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        onSaveCustomApiKey(keyInput)
-                        showApiKeyDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("ذخیره کلید", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showApiKeyDialog = false }) {
-                    Text("انصراف", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            },
-            shape = RoundedCornerShape(24.dp)
-        )
-    }
 
     Column(
         modifier = modifier
@@ -293,15 +233,34 @@ fun AcademicCopilotScreen(
             .testTag("academic_copilot_screen")
             .padding(horizontal = 14.dp, vertical = 6.dp)
     ) {
-        // 1. Context HUD Bar (Live Student State)
-        CopilotContextHudHeader(
-            profile = profile,
-            courses = courses,
-            attendanceList = attendanceList,
-            grades = grades,
-            onOpenPastSemesters = onOpenPastSemestersDialog,
-            onOpenApiKeyDialog = { showApiKeyDialog = true }
-        )
+        Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("دستیار تحصیلی", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            val quota = onlineStatus?.subscription ?: userAccount.subscription
+            Text(if (userAccount.isGuest) "تحلیل آفلاین آماده است؛ برای پاسخ آنلاین وارد حساب شوید."
+                else if (onlineStatus?.aiEnabled == true) "آنلاین · ${quota.remainingAiQuota} از ${quota.maxDailyAiQuota} پاسخ امروز باقی مانده"
+                else if (onlineStatus != null) "پاسخ آنلاین فعلاً در دسترس نیست؛ تحلیل آفلاین آماده است."
+                else connectionMessage ?: "در حال بررسی دسترسی آنلاین…", style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("ai_service_status"))
+            TextButton(onClick = onOpenPremium, modifier = Modifier.heightIn(min = 48.dp)) {
+                Text(if (userAccount.isGuest) "ورود و امکانات آنلاین" else if (quota.isProOrHigher) "مدیریت اشتراک پرو" else "مشاهدهٔ امکانات Student Pro")
+            }
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(listOf("chat" to "گفت‌وگو", "coach" to "مربی هفت‌روزه", "exam" to "مرور امتحان", "review" to "تحلیل پیشرفت")) { tool ->
+                    FilterChip(selected = mode == tool.first, onClick = {
+                        if (tool.first != "chat" && !quota.isProOrHigher) onOpenPremium()
+                        else {
+                            mode = tool.first
+                            inputText = when (mode) {
+                                "coach" -> "براساس کلاس‌ها، امتحان‌ها و تکالیف من، یک برنامهٔ مطالعهٔ قابل اجرا برای هفت روز آینده بساز."
+                                "exam" -> "برای نزدیک‌ترین امتحان من یک نقشهٔ مرور و روش سنجش یادگیری پیشنهاد بده."
+                                "review" -> "پیشرفت تحصیلی، نمره‌ها و تکالیف من را بررسی کن و سه اقدام عملی برای بهبود هفتهٔ آینده پیشنهاد بده."
+                                else -> ""
+                            }
+                        }
+                    }, label = { Text(tool.second, style = MaterialTheme.typography.labelLarge) }, modifier = Modifier.heightIn(min = 48.dp).testTag("ai_mode_${tool.first}"))
+                }
+            }
+        }
 
         CopilotContextRibbonV2(
             primaryPriority = primaryPriority,

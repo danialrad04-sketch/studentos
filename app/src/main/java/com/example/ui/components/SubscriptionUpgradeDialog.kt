@@ -1,274 +1,164 @@
 package com.example.ui.components
 
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.activity.ComponentActivity
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.CardGiftcard
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.LockOpen
-import androidx.compose.material.icons.rounded.Stars
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.domain.model.SubscriptionTier
-import com.example.domain.model.UserAccount
-import com.example.ui.theme.StudentOsColors
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.data.api.PremiumApiClient
+import com.example.data.billing.BazaarBillingClient
+import com.example.domain.model.*
+import kotlinx.coroutines.launch
+import java.text.NumberFormat
+import java.util.Locale
+
+@Composable
+fun SubscriptionUpgradeRoute(userAccount: UserAccount, onVerified: (SubscriptionDetails) -> Unit, onSignIn: () -> Unit, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var status by remember { mutableStateOf(PremiumStatus()) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var loading by remember { mutableStateOf(false) }
+    val verifiedCallback by rememberUpdatedState(onVerified)
+    val billing = remember(context, userAccount.uid) { BazaarBillingClient(context, scope) { details ->
+        status = status.copy(subscription = details)
+        verifiedCallback(details)
+    } }
+    val state by billing.state.collectAsStateWithLifecycle()
+    fun refresh() {
+        if (loading || state.busy || userAccount.isGuest) return
+        scope.launch {
+            loading = true; error = null
+            val result = PremiumApiClient.result { PremiumApiClient.catalog() }
+            result.onSuccess { status = it; onVerified(it.subscription); billing.connect(it) }
+                .onFailure { error = it.message }
+            loading = false
+        }
+    }
+    LaunchedEffect(userAccount.uid) { refresh() }
+    DisposableEffect(billing) { onDispose { billing.disconnect() } }
+    SubscriptionUpgradeDialog(userAccount, status, state.copy(busy = state.busy || loading, message = error ?: state.message),
+        onPurchase = { plan -> context.activity()?.let { billing.purchase(it, plan) } },
+        onRestore = billing::restore, onRefresh = { refresh() }, onSignIn = onSignIn, onDismiss = onDismiss)
+}
+private tailrec fun Context.activity(): ComponentActivity? = when (this) {
+    is ComponentActivity -> this
+    is ContextWrapper -> baseContext.activity()
+    else -> null
+}
+private fun amount(value: Long) = NumberFormat.getIntegerInstance(Locale("fa", "IR")).format(value)
 
 @Composable
 fun SubscriptionUpgradeDialog(
     userAccount: UserAccount,
-    onUpgradeTier: (SubscriptionTier) -> Unit,
-    onApplyPromoCode: (String) -> Unit,
+    status: PremiumStatus,
+    billing: BazaarBillingState,
+    onPurchase: (PremiumPlan) -> Unit,
+    onRestore: () -> Unit,
+    onRefresh: () -> Unit,
+    onSignIn: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    var promoCode by remember { mutableStateOf("") }
-    var selectedPlan by remember { mutableStateOf(SubscriptionTier.PRO) }
-
-    StudentGlassModalSheet(
-        title = "طرح حساب",
-        subtitle = "بررسی دسترسی‌ها و امکانات حساب",
-        onDismiss = onDismiss,
-        maxWidth = 580.dp
-    ) {
-        val dismissModal = LocalStudentModalDismiss.current ?: onDismiss
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            // Header
-
-
-            // Hero Banner
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(Color(0xFF59652F), Color(0xFF59652F), Color(0xFFDB2777))
-                        )
-                    )
-                    .padding(18.dp)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        Icons.Rounded.AutoAwesome,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "امکانات نامحدود دستیار تحصیلی هوش مصنوعی",
-                        color = Color.White,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 15.sp,
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = "دسترسی کامل به OCR جدول درسی و تحلیل معدل الف",
-                        color = Color.White.copy(alpha = 0.85f),
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center
-                    )
+    var selectedId by rememberSaveable { mutableStateOf("studentos_pro_monthly") }
+    val selected = status.plans.firstOrNull { it.productId == selectedId } ?: status.plans.firstOrNull()
+    val active = status.subscription.isProOrHigher || userAccount.isProOrHigher
+    val actualPrice = selected?.let { billing.prices[it.productId] }
+    val canBuy = !userAccount.isGuest && !active && status.salesEnabled && billing.connected && !billing.busy &&
+        selected != null && actualPrice != null && BazaarPrice.matches(actualPrice, selected.priceToman)
+    StudentSettingsPage("اشتراک Student Pro", onDismiss) {
+        Column(Modifier.fillMaxSize().testTag("premium_page")) {
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.primaryContainer) {
+                    Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(30.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Text("مطالعهٔ منظم‌تر با Student Pro", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Text("مربی مطالعه، مرور امتحان و تحلیل پیشرفت متناسب با برنامهٔ شما.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
                 }
-            }
-
-            // Features list
-            val features = listOf(
-                "دستیار هوش مصنوعی بدون محدودیت روزانه",
-                "پشتیبان‌گیری خودکار و همگام‌سازی بین‌دستگاهی",
-                "شبیه‌ساز پیشرفته شرطی‌نشدن و هدف‌گذاری معدل الف",
-                "اسکن تصویری نامحدود برنامه‌های کلاسی با OCR",
-                "خروجی کارنامه با استایل مدرن رسمی و استوری"
-            )
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                features.forEach { feat ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(20.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                Icons.Rounded.Check,
-                                contentDescription = null,
-                                tint = StudentOsColors.EmeraldNeon,
-                                modifier = Modifier.size(13.dp)
-                            )
+                if (active) {
+                    StudentSettingsGroup("اشتراک شما") {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Student Pro فعال است", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            val expiry = status.subscription.expiresAt ?: userAccount.subscription.expiresAt
+                            expiry?.let { Text("پایان دسترسی: ${expiryDate(it)}", style = MaterialTheme.typography.bodyLarge) }
+                            Text(if (status.subscription.autoRenewing) "تمدید خودکار فعال است؛ مدیریت آن در بخش اشتراک‌های بازار انجام می‌شود." else "وضعیت تمدید و خرید در بخش اشتراک‌های بازار قابل بررسی است.", style = MaterialTheme.typography.bodyMedium)
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = feat,
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
                     }
                 }
-            }
-
-            // Plan Selector Cards
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                // Pro Card
-                val isPro = selectedPlan == SubscriptionTier.PRO
-                val proBorder = if (isPro) StudentOsColors.CyberViolet else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
-                val proBg = if (isPro) StudentOsColors.CyberViolet.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(16.dp))
-                        .clickable { selectedPlan = SubscriptionTier.PRO },
-                    colors = CardDefaults.cardColors(containerColor = proBg),
-                    border = androidx.compose.foundation.BorderStroke(if (isPro) 2.dp else 1.dp, proBorder),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("طرح پرو", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text("یک‌ساله", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text("رایگان با کد هدیه", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = StudentOsColors.EmeraldNeon)
-                    }
-                }
-
-                // Campus Unlimited Card
-                val isGold = selectedPlan == SubscriptionTier.CAMPUS_UNLIMITED
-                val goldBorder = if (isGold) StudentOsColors.AmberGlow else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
-                val goldBg = if (isGold) StudentOsColors.AmberGlow.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(16.dp))
-                        .clickable { selectedPlan = SubscriptionTier.CAMPUS_UNLIMITED },
-                    colors = CardDefaults.cardColors(containerColor = goldBg),
-                    border = androidx.compose.foundation.BorderStroke(if (isGold) 2.dp else 1.dp, goldBorder),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("طرح طلایی", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text("دائمی و نامحدود", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text("دانشجوی برتر", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = StudentOsColors.AmberGlow)
-                    }
-                }
-            }
-
-            // Promo code section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = promoCode,
-                    onValueChange = { promoCode = it },
-                    label = { Text("کد هدیه یا معرف (مثلاً DANESHJOO)", fontSize = 14.sp) },
-                    leadingIcon = { Icon(Icons.Rounded.CardGiftcard, contentDescription = null, modifier = Modifier.size(18.dp)) },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = StudentOsColors.CyberViolet,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
-                    )
-                )
-
-                Button(
-                    onClick = {
-                        if (promoCode.isNotBlank()) {
-                            onApplyPromoCode(promoCode.trim())
-                            promoCode = ""
+                if (!active) {
+                    Text("انتخاب مدت اشتراک", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    status.plans.forEach { plan ->
+                        val isSelected = selected?.productId == plan.productId
+                        Surface(shape = RoundedCornerShape(20.dp), color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                            border = BorderStroke(if (isSelected) 2.dp else 1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+                            modifier = Modifier.fillMaxWidth().selectable(isSelected, role = Role.RadioButton, onClick = { selectedId = plan.productId }).testTag("plan_${plan.productId}")) {
+                            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                RadioButton(isSelected, onClick = null)
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text(plan.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                    Text("${amount(plan.priceToman)} تومان", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                    Text("مبلغ کل این دوره · پرداخت از طریق بازار", style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
                         }
-                    },
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.CyberViolet),
-                    modifier = Modifier.height(52.dp)
-                ) {
-                    Text("اعمال", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                    if (!status.salesEnabled && !billing.busy) Text(if (userAccount.isGuest) "برای مشاهدهٔ قیمت و خرید، وارد حساب خود شوید." else "خرید اشتراک فعلاً در دسترس نیست. پس از فعال‌شدن فروش، قیمت و طرح‌ها از بازار دریافت می‌شوند.", style = MaterialTheme.typography.bodyLarge)
+                    if (status.salesEnabled) Text("قیمت نهایی در صفحهٔ پرداخت بازار نمایش داده می‌شود. قبل از تأیید پرداخت، مبلغ و شرایط تمدید را بررسی کنید.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                StudentSettingsGroup("امکانات پرو") {
+                    PremiumFeature("مربی مطالعهٔ هفت‌روزه", "تنظیم اولویت‌ها و زمان مطالعه با توجه به برنامهٔ واقعی شما", Icons.Rounded.EventNote)
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    PremiumFeature("۵۰ پاسخ آنلاین در روز", "مشاورهٔ درسی، مرور امتحان و تحلیل پیشرفت با اطلاعات تحصیلی شما", Icons.Rounded.ChatBubbleOutline)
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    PremiumFeature("۱۰ اسکن برنامه در روز", "تبدیل عکس برنامهٔ کلاسی به جدول؛ پیش از ثبت، نتیجه را بررسی و تأیید کنید", Icons.Rounded.DocumentScanner)
+                }
+                Text("طرح رایگان: ۵ پاسخ آنلاین و یک اسکن روزانه پس از ورود. برنامهٔ کلاسی، تکالیف و اطلاعات ذخیره‌شدهٔ شما همچنان در دسترس‌اند.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                billing.message?.let { Text(it, Modifier.testTag("billing_message"), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface) }
+                OutlinedButton(onClick = onRestore, enabled = billing.connected && !billing.busy && !userAccount.isGuest, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("restore_purchase")) {
+                    Icon(Icons.Rounded.Restore, null); Spacer(Modifier.width(8.dp)); Text("بازیابی خرید قبلی")
+                }
+                Text("با همان حساب Student OS زمان خرید وارد شوید. حذف و نصب برنامه خرید را حذف نمی‌کند. برای وضعیت پرداخت و تمدید، بخش اشتراک‌های حساب بازار را بررسی کنید.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Button(
-                onClick = { onUpgradeTier(selectedPlan) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.ElectricBlue)
-            ) {
-                Icon(Icons.Rounded.LockOpen, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("فعال‌سازی آنی اشتراک ویژه", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            HorizontalDivider()
+            Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (billing.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+                if (userAccount.isGuest) Button(onClick = onSignIn, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("premium_sign_in")) { Text("ورود برای خرید اشتراک") }
+                else if (active) Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("ادامه با Student Pro") }
+                else Button(onClick = { selected?.let(onPurchase) }, enabled = canBuy, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("purchase_subscription")) { Text(if (canBuy) "خرید ${selected?.title} · ${amount(selected!!.priceToman)} تومان" else "خرید از بازار") }
+                if (!userAccount.isGuest && !billing.busy) TextButton(onClick = onRefresh, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("بررسی دوبارهٔ اتصال و قیمت") }
             }
         }
     }
+}
+@Composable
+private fun PremiumFeature(title: String, subtitle: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.Top) {
+        Icon(icon, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+private fun expiryDate(millis: Long): String {
+    val cal = java.util.Calendar.getInstance().apply { timeInMillis = millis }
+    return com.example.domain.util.JalaliCalendarUtil.gregorianToJalali(cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH) + 1, cal.get(java.util.Calendar.DAY_OF_MONTH)).toPersianDigits()
 }

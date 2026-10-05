@@ -9,15 +9,15 @@ on:
       tag:
         description: "Release tag matching version_name"
         required: true
-        default: "v2.2.0"
+        default: "v2.3.0"
       version_code:
         description: "Must exceed every previously distributed build"
         required: true
-        default: "2008"
+        default: "2009"
       version_name:
         description: "Android version name"
         required: true
-        default: "2.2.0"
+        default: "2.3.0"
 
 permissions:
   contents: write
@@ -65,6 +65,13 @@ jobs:
           jobs = {j['name']: j['conclusion'] for j in json.load(open('/tmp/jobs.json'))['jobs']}
           for name in ['android-quality', 'backend-quality', 'instrumented-smoke', 'release-artifact-validation']:
               assert jobs.get(name) == 'success', f'{name} did not pass'
+          PY
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow premium-functions.yml \
+            --commit "$RELEASE_REF" --limit 20 --json status,conclusion > /tmp/premium-runs.json
+          python3 - <<'PY'
+          import json
+          runs = json.load(open('/tmp/premium-runs.json'))
+          assert any(r['status'] == 'completed' and r['conclusion'] == 'success' for r in runs), 'No successful Firebase premium verification for release commit'
           PY
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Release already exists; refusing overwrite."
@@ -132,7 +139,7 @@ jobs:
           gh release create "$RELEASE_TAG" release-output/* \
             --repo "$GITHUB_REPOSITORY" --target "$RELEASE_REF" \
             --title "Student OS $VERSION_NAME" --draft \
-            --notes-file docs/RELEASE_NOTES_V2_2.md
+            --notes-file docs/RELEASE_NOTES_V2_3.md
 
       - name: Remove signing material
         if: always()

@@ -2,4 +2,5 @@
 <!-- Android Auto Backup rules for API 30 and below. -->
 <full-backup-content>
     <exclude domain="sharedpref" path="studentos_secure_prefs.xml" />
+        <exclude domain="sharedpref" path="bazaar_pending_purchases.xml" />
 </full-backup-content>

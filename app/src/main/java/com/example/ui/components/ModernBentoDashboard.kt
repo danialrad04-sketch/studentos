@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -10,6 +11,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +20,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -169,7 +171,7 @@ fun ModernBentoDashboard(
         )
 
 
-        AcademicPriorityActionCardV2(
+        if (primaryPriority != null || tasks.any { !it.isCompleted } || exams.isNotEmpty()) AcademicPriorityActionCardV2(
             courses = courses,
             coursesWithSessions = coursesWithSessions,
             attendance = attendanceList,
@@ -180,7 +182,7 @@ fun ModernBentoDashboard(
             onStartFocus = startFocus
         )
 
-        StudyPlanPreviewCardV2(
+        if (studyRecommendations.isNotEmpty()) StudyPlanPreviewCardV2(
             recommendations = studyRecommendations,
             acceptedRecommendationIds = acceptedStudyPlanIds,
             onAcceptRecommendation = onAcceptStudyPlan,
@@ -188,43 +190,18 @@ fun ModernBentoDashboard(
             onStartFocus = startFocus
         )
 
-        // 4 Quick Actions Grid (برنامه هفتگی، امتحانات، تکالیف، کلاس‌ها)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            QuickActionSquareTile(
-                title = "برنامه هفتگی",
-                icon = Icons.Default.CalendarToday,
-                onClick = { onNavigateTab(AppTab.SCHEDULE) },
-                modifier = Modifier.weight(1f)
-            )
-            QuickActionSquareTile(
-                title = "امتحانات",
-                icon = Icons.Default.School,
-                onClick = { onNavigateTab(AppTab.EXAMS) },
-                modifier = Modifier.weight(1f)
-            )
-            QuickActionSquareTile(
-                title = "تکالیف",
-                icon = Icons.Default.CheckCircle,
-                onClick = { onNavigateTab(AppTab.TASKS) },
-                modifier = Modifier.weight(1f)
-            )
-            QuickActionSquareTile(
-                title = "کلاس‌ها",
-                icon = Icons.Default.CastForEducation,
-                onClick = {
-                    val featured = courses.firstOrNull()
-                    if (onOpenCourseWorkspace != null && featured != null) {
-                        onOpenCourseWorkspace(featured)
-                    } else {
-                        onNavigateTab(AppTab.SCHEDULE)
-                    }
-                },
-                modifier = Modifier.weight(1f)
-            )
+        AcademicSectionHeader("برنامه و کارهای من", subtitle = "ابزارهای روزمره، در دسترس و مرتب")
+        listOf(
+            Triple("برنامه هفتگی", Icons.Default.CalendarToday, AppTab.SCHEDULE), Triple("امتحانات", Icons.Default.School, AppTab.EXAMS),
+            Triple("تکالیف", Icons.Default.CheckCircle, AppTab.TASKS), Triple("کلاس‌ها", Icons.Default.CastForEducation, AppTab.SCHEDULE)
+        ).chunked(if (LocalDensity.current.fontScale >= 1.3f) 1 else 2).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                row.forEach { (title, icon, tab) ->
+                    QuickActionSquareTile(title, icon, { onNavigateTab(tab) }, Modifier.weight(1f))
+                }
+            }
         }
+        AcademicSectionHeader("پیشرفت تحصیلی", subtitle = "خلاصهٔ اطلاعات ثبت‌شدهٔ شما")
 
         // 1. TOP 2x2 BENTO STAT TILES (معدل کل, واحد گذرانده, حضور و غیاب, تسک امروز)
         AnalyticsKpiSection(
@@ -653,165 +630,24 @@ private fun NextClassLiveBentoTile(
 // 4. SPLIT 2-CARD ROW: برنامه امروز & هوش مصنوعی
 // -------------------------------------------------------------
 @Composable
-private fun TodayScheduleAndAiSection(
-    courses: List<CourseEntity>,
-    coursesWithSessions: List<CourseWithSessions> = emptyList(),
-    onOpenSchedule: () -> Unit,
-    onOpenCopilot: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val now = java.util.Calendar.getInstance()
-    val dayOfWeek = now.get(java.util.Calendar.DAY_OF_WEEK)
-    val dayIndex = when (dayOfWeek) {
-        java.util.Calendar.SATURDAY -> 0
-        java.util.Calendar.SUNDAY -> 1
-        java.util.Calendar.MONDAY -> 2
-        java.util.Calendar.TUESDAY -> 3
-        java.util.Calendar.WEDNESDAY -> 4
-        java.util.Calendar.THURSDAY -> 5
-        else -> 6
-    }
-    val allSessions = remember(coursesWithSessions, courses) {
-        if (coursesWithSessions.isNotEmpty()) {
-            coursesWithSessions.flatMap { cws ->
-                cws.sessions.map { s ->
-                    BentoClassScheduleItem(cws.course, s.day, s.start, s.end, s.location)
-                }
-            }
-        } else {
-            emptyList()
-        }
-    }
-    val todaySessions = allSessions
-        .filter { it.day == dayIndex }
-        .sortedWith(compareBy({ com.example.data.local.util.DateTimeNormalizer.timeToMinutes(it.start) }, { it.course.name }))
-
-    val cardShape = RoundedCornerShape(22.dp)
-
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        // Right Card: برنامه امروز
-        Card(
-            modifier = Modifier
-                .weight(1f)
-                .clip(cardShape)
-                .tactileClickable { onOpenSchedule() },
-            shape = cardShape,
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.studentColors.glassSurface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, MaterialTheme.studentColors.glassBorderGradient, cardShape)
-                    .padding(14.dp)
-            ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "برنامه امروز",
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "${todaySessions.size} کلاس",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    if (todaySessions.isEmpty()) {
-                        Text(
-                            text = "امروز کلاسی ندارید 🎉",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        todaySessions.take(3).forEachIndexed { idx, s ->
-                            if (idx > 0) Spacer(modifier = Modifier.height(6.dp))
-                            ScheduleBulletItem(time = s.start, name = s.course.name)
-                        }
-                    }
-                }
+private fun TodayScheduleAndAiSection(courses: List<CourseEntity>, coursesWithSessions: List<CourseWithSessions> = emptyList(), onOpenSchedule: () -> Unit, onOpenCopilot: () -> Unit, modifier: Modifier = Modifier) {
+    val day = com.example.domain.util.JalaliCalendarUtil.getTodayWeekdayIndex()
+    val today = coursesWithSessions.flatMap { item -> item.sessions.filter { it.day == day }.map { item.course.name to it.start } }
+        .sortedBy { com.example.data.local.util.DateTimeNormalizer.timeToMinutes(it.second) }
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        AcademicCard(onClick = onOpenSchedule, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("برنامه امروز · ${today.size} کلاس", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                if (today.isEmpty()) Text(if (courses.isEmpty()) "برای دیدن برنامهٔ امروز، ابتدا کلاس‌های خود را ثبت کنید." else "کلاسی برای امروز ثبت نشده است.", style = MaterialTheme.typography.bodyLarge)
+                else today.take(3).forEach { (name, time) -> Text("$time · $name", style = MaterialTheme.typography.bodyLarge) }
+                Text("مشاهدهٔ برنامهٔ هفتگی", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
         }
-
-        // Left Card: هوش مصنوعی
-        Card(
-            modifier = Modifier
-                .weight(1f)
-                .clip(cardShape)
-                .tactileClickable { onOpenCopilot() },
-            shape = cardShape,
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.studentColors.glassSurface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, MaterialTheme.studentColors.glassBorderGradient, cardShape)
-                    .padding(14.dp)
-            ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "دستیار هوشمند",
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "تحلیل بار",
-                            fontSize = 10.5.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = StudentOsColors.AmberGlow
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(StudentOsColors.AmberGlow.copy(alpha = 0.12f))
-                            .border(0.8.dp, StudentOsColors.AmberGlow.copy(alpha = 0.30f), RoundedCornerShape(12.dp))
-                            .padding(9.dp)
-                    ) {
-                        val annotatedString = buildAnnotatedString {
-                            withStyle(
-                                style = SpanStyle(
-                                    color = StudentOsColors.AmberGlow,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp
-                                )
-                            ) {
-                                append("نکته: ")
-                            }
-                            withStyle(
-                                style = SpanStyle(
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 10.5.sp
-                                )
-                            ) {
-                                append("توزیع ساعات کلاسی شما این هفته متعادل و پایدار است.")
-                            }
-                        }
-                        Text(text = annotatedString, lineHeight = 15.sp)
-                    }
-                }
+        AcademicCard(onClick = onOpenCopilot, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("همراه هوشمند مطالعه", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("اولویت‌های خود را مرور کنید؛ برای برنامهٔ هفت‌روزه و مرور امتحان از ابزارهای Student Pro کمک بگیرید.", style = MaterialTheme.typography.bodyLarge)
+                Text("بازکردن دستیار", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -1077,50 +913,12 @@ private fun ModernCourseCard(
 }
 
 @Composable
-private fun QuickActionSquareTile(
-    title: String,
-    icon: ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
-        ),
-        shadowElevation = 2.dp,
-        modifier = modifier.tactileClickable { onClick() }
-    ) {
-        Column(
-            modifier = Modifier.padding(vertical = 12.dp, horizontal = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                modifier = Modifier.size(40.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = title,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = title,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+private fun QuickActionSquareTile(title: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(onClick = onClick, modifier = modifier.testTag("dashboard_tool_$title"), shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow, border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+        Row(Modifier.heightIn(min = 80.dp).padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Icon(icon, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+            Text(title, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
         }
     }
 }

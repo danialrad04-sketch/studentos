@@ -41,7 +41,7 @@ class AuthAndCopilotEngineTest {
         assertTrue(proTier.allowsCloudSync)
         assertTrue(proTier.allowsPdfExport)
 
-        assertEquals(999, ultraTier.maxAiQueriesPerDay)
+        assertEquals(50, ultraTier.maxAiQueriesPerDay)
         assertEquals(99, ultraTier.maxCourses)
         assertTrue(ultraTier.allowsCloudSync)
         assertTrue(ultraTier.allowsPdfExport)
