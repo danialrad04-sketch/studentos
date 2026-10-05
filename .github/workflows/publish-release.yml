@@ -66,6 +66,13 @@ jobs:
           for name in ['android-quality', 'backend-quality', 'instrumented-smoke', 'release-artifact-validation']:
               assert jobs.get(name) == 'success', f'{name} did not pass'
           PY
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow premium-functions.yml \
+            --commit "$RELEASE_REF" --limit 20 --json status,conclusion > /tmp/premium-runs.json
+          python3 - <<'PY'
+          import json
+          runs = json.load(open('/tmp/premium-runs.json'))
+          assert any(r['status'] == 'completed' and r['conclusion'] == 'success' for r in runs), 'No successful Firebase premium verification for release commit'
+          PY
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Release already exists; refusing overwrite."
             exit 1

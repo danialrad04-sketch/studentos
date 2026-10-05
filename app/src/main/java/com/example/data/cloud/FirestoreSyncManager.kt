@@ -10,6 +10,7 @@ import com.example.data.local.entity.NoteEntity
 import com.example.data.local.entity.StudentProfileEntity
 import com.example.data.local.entity.TaskEntity
 import com.example.domain.model.SubscriptionTier
+import com.example.domain.model.SubscriptionDetails
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -63,9 +64,23 @@ object FirestoreSyncManager {
     /**
      * Real-time Flow observing the server-validated subscription state from Firestore.
      */
-    fun observeUserSubscription(userId: String): Flow<SubscriptionTier> = callbackFlow {
+    internal fun subscriptionFromCloud(data: Map<String, Any>, now: Long = System.currentTimeMillis()): SubscriptionDetails {
+        val expiresAt = when (val expiry = data["subscriptionExpiresAt"]) {
+            is com.google.firebase.Timestamp -> expiry.toDate().time
+            is Number -> expiry.toLong()
+            else -> null
+        }
+        val declared = runCatching { SubscriptionTier.valueOf((data["subscriptionTier"] as? String ?: "FREE").uppercase()) }.getOrDefault(SubscriptionTier.FREE)
+        val paid = declared != SubscriptionTier.FREE && (expiresAt == null || expiresAt > now)
+        return SubscriptionDetails(tier = if (paid) declared else SubscriptionTier.FREE, expiresAt = expiresAt,
+            maxDailyAiQuota = if (paid) 50 else 5, maxDailyScanQuota = if (paid) 10 else 1,
+            isCloudSyncEnabled = paid, isUnlimitedExportEnabled = paid, isGpaPredictorUnlocked = paid,
+            autoRenewing = paid && data["bazaarAutoRenewing"] == true)
+    }
+
+    fun observeUserSubscription(userId: String): Flow<SubscriptionDetails> = callbackFlow {
         if (userId.isBlank() || userId.startsWith("guest_")) {
-            trySend(SubscriptionTier.FREE)
+            trySend(SubscriptionDetails())
             awaitClose { }
             return@callbackFlow
         }
@@ -74,30 +89,14 @@ object FirestoreSyncManager {
         val listener = docRef.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Log.w(TAG, "Firestore subscription listener error: ${error.message}")
-                trySend(SubscriptionTier.FREE)
+                trySend(SubscriptionDetails())
                 return@addSnapshotListener
             }
 
             if (snapshot != null && snapshot.exists()) {
-                val tierStr = snapshot.getString("subscriptionTier") ?: "FREE"
-                val expiresAt = when (val expiry = snapshot.get("subscriptionExpiresAt")) {
-                    is com.google.firebase.Timestamp -> expiry.toDate().time
-                    is Number -> expiry.toLong()
-                    else -> null
-                }
-                val expired = expiresAt != null && expiresAt <= System.currentTimeMillis()
-                val tier = if (expired) {
-                    SubscriptionTier.FREE
-                } else {
-                    try {
-                        SubscriptionTier.valueOf(tierStr.uppercase())
-                    } catch (_: Throwable) {
-                        SubscriptionTier.FREE
-                    }
-                }
-                trySend(tier)
+                trySend(subscriptionFromCloud(snapshot.data ?: emptyMap()))
             } else {
-                trySend(SubscriptionTier.FREE)
+                trySend(SubscriptionDetails())
             }
         }
 

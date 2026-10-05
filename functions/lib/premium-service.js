@@ -15,9 +15,14 @@ class PremiumService {
     const tokenCipher = core.seal(purchase.token, this.env);
     await this.db.runTransaction(async tx => {
       const previous = await tx.get(ref);
+      const existing = (await tx.get(user)).data() || {};
       if (previous.exists && previous.data().uid !== uid) core.fail('permission-denied', 'این اشتراک قبلاً به حساب دیگری متصل شده است.');
       tx.set(ref, { uid, tokenCipher, productId: active.productId, expiresAt: active.expiresAt, checkedAt: this.clock() }, { merge: true });
-      tx.set(user, { subscriptionTier: 'PRO', subscriptionExpiresAt: active.expiresAt, bazaarReceiptId: active.linkedId, bazaarAutoRenewing: active.autoRenewing, subscriptionProvider: 'bazaar', maxDailyAiQuota: 50, allowsPdfExport: true, gpaPredictorUnlocked: true }, { merge: true });
+      // Restoring several receipts in a different order must not shorten a
+      // longer, previously verified Bazaar entitlement.
+      if (existing.subscriptionProvider !== 'bazaar' || core.entitlement(existing, this.clock()).tier === 'FREE' || Number(existing.subscriptionExpiresAt) <= active.expiresAt) {
+        tx.set(user, { subscriptionTier: 'PRO', subscriptionExpiresAt: active.expiresAt, bazaarReceiptId: active.linkedId, bazaarAutoRenewing: active.autoRenewing, subscriptionProvider: 'bazaar', maxDailyAiQuota: 50, allowsPdfExport: true, gpaPredictorUnlocked: true }, { merge: true });
+      }
     });
     return this.status(uid, false);
   }

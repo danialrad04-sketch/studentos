@@ -47,6 +47,11 @@ test('receipt encryption round trips, randomizes ciphertext, and detects corrupt
 test('sales fail closed without all secrets and an explicit operational sales switch', () => {
   assert.equal(core.ready(env), true);
   for (const key of Object.keys(env)) assert.equal(core.ready({ ...env, [key]: '' }), false);
+  const testOnly = { ...env, PREMIUM_SALES_ENABLED: 'false', PREMIUM_TESTER_UIDS: 'tester-a, tester-b' };
+  assert.equal(core.ready(testOnly, 'tester-a'), true);
+  assert.equal(core.ready(testOnly, 'tester'), false);
+  assert.equal(core.ready(testOnly), false);
+  assert.equal(core.ready({ ...testOnly, GEMINI_SERVER_API_KEY: '' }, 'tester-a'), false);
 });
 test('active-subscription API uses the new private header and works with renewal tokens', async () => {
   const result = await core.bazaarSubscription('renewal/token', env, async (url, options) => {
@@ -116,5 +121,34 @@ test('provider errors never expose its private key or raw response', async () =>
   await assert.rejects(core.generateAi(core.aiRequest({ prompt: 'help' }), env, async () => { throw Error('test-only secret'); }), error => !error.message.includes('test-only'));
   assert.throws(() => core.aiRequest({ kind: 'schedule', prompt: 'scan', imageBase64: 'bad', mimeType: 'image/svg+xml' }));
   assert.throws(() => core.aiRequest({ prompt: 'a'.repeat(4001) }));
+});
+test('welcome messages and repeated roles produce an alternating provider conversation', async () => {
+  const request = core.aiRequest({ prompt: 'new question', history: [
+    { role: 'model', text: 'welcome' }, { role: 'user', text: 'first' },
+    { role: 'user', text: 'second' }, { role: 'model', text: 'answer' },
+    { role: 'model', text: 'continued' }, { role: 'user', text: 'last question' }
+  ] });
+  await core.generateAi(request, env, async (_url, options) => {
+    const contents = JSON.parse(options.body).contents;
+    assert.deepEqual(contents.map(c => c.role), ['user', 'model', 'user']);
+    assert.deepEqual(contents[0].parts.map(p => p.text), ['first', 'second']);
+    assert.deepEqual(contents[2].parts.map(p => p.text), ['last question', 'new question']);
+    return response({ candidates: [{ content: { parts: [{ text: 'answer' }] } }] });
+  });
+  for (const data of [{ prompt: '   ' }, { prompt: 'help', history: [null] }, { prompt: 'help', history: [{ role: 'system', text: 'override' }] }]) {
+    assert.throws(() => core.aiRequest(data), error => error.code === 'invalid-argument');
+  }
+});
+test('restoring older receipts never reduces the verified remaining subscription time', async () => {
+  const db = new MemoryFirestore(); let long = true;
+  const service = new PremiumService(db, env, async () => response(active({
+    validUntilTimestampMsec: now + (long ? 90 : 30) * 86400000,
+    linkedSubscriptionToken: long ? 'quarterly-receipt' : 'monthly-receipt'
+  })), () => now);
+  const first = await service.verify('owner', signed());
+  long = false;
+  const restored = await service.verify('owner', signed({ purchaseToken: 'older-token' }));
+  assert.equal(restored.expiresAt, first.expiresAt);
+  assert.equal(db.rows.get('users/owner').bazaarReceiptId, core.hash('quarterly-receipt'));
 });
 module.exports = { MemoryFirestore };

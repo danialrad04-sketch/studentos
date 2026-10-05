@@ -93,4 +93,21 @@ class PremiumExperienceTest {
     @Test fun expiredSubscriptionCannotUnlockPremium() {
         assertFalse(SubscriptionDetails(tier = SubscriptionTier.PRO, expiresAt = System.currentTimeMillis() - 1000).isProOrHigher)
     }
+    @Test fun cloudSnapshotPreservesExpiryAndUsesTheActualPaidQuotas() {
+        val now = System.currentTimeMillis()
+        val fields = mapOf<String, Any>("subscriptionTier" to "PRO", "subscriptionExpiresAt" to now + 60000,
+            "bazaarAutoRenewing" to false, "maxDailyAiQuota" to 999)
+        val active = com.example.data.cloud.FirestoreSyncManager.subscriptionFromCloud(fields, now)
+        assertEquals(now + 60000, active.expiresAt)
+        assertEquals(50, active.maxDailyAiQuota)
+        assertEquals(10, active.maxDailyScanQuota)
+        assertTrue(active.isProOrHigher)
+        assertFalse(active.autoRenewing)
+        val expired = com.example.data.cloud.FirestoreSyncManager.subscriptionFromCloud(fields, now + 60001)
+        assertEquals(SubscriptionTier.FREE, expired.tier)
+        assertEquals(5, expired.maxDailyAiQuota)
+        assertFalse(expired.isCloudSyncEnabled)
+        val timestampFields = fields + ("subscriptionExpiresAt" to com.google.firebase.Timestamp(java.util.Date(now + 60000)))
+        assertEquals(now + 60000, com.example.data.cloud.FirestoreSyncManager.subscriptionFromCloud(timestampFields, now).expiresAt)
+    }
 }

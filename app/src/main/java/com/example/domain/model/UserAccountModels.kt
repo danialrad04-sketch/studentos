@@ -10,8 +10,9 @@ enum class SubscriptionTier(
 ) {
     FREE("طرح دانشجویی پایه", "رایگان", 5, 8, false, false),
     PRO("اشتراک ویژه پرو (Student Pro)", "پرو ★", 50, 25, true, true),
-    ULTRA("طرح طلایی نامحدود دانشگاهی", "طلایی ✦", 999, 99, true, true),
-    CAMPUS_UNLIMITED("طرح طلایی نامحدود دانشگاهی", "طلایی ✦", 999, 99, true, true)
+    // Keep legacy identifiers for existing accounts; all paid AI quotas are server bounded.
+    ULTRA("اشتراک دانشگاهی", "دانشگاهی", 50, 99, true, true),
+    CAMPUS_UNLIMITED("اشتراک دانشگاهی", "دانشگاهی", 50, 99, true, true)
 }
 
 data class SubscriptionDetails(

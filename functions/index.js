@@ -27,7 +27,7 @@ async function safe(action) {
 }
 exports.getPremiumCatalog = secured.https.onCall(async (_data, context) => {
   const uid = member(context);
-  return safe(async () => ({ plans: premiumCore.plans(process.env), salesEnabled: premiumCore.ready(process.env), rsaPublicKey: process.env.BAZAAR_RSA_PUBLIC_KEY || '', aiEnabled: !!process.env.GEMINI_SERVER_API_KEY, ...await premium.status(uid) }));
+  return safe(async () => ({ plans: premiumCore.plans(process.env), salesEnabled: premiumCore.ready(process.env, uid), rsaPublicKey: process.env.BAZAAR_RSA_PUBLIC_KEY || '', aiEnabled: !!process.env.GEMINI_SERVER_API_KEY, ...await premium.status(uid) }));
 });
 exports.verifyBazaarSubscription = secured.https.onCall(async (data, context) => {
   const uid = member(context);
@@ -103,7 +103,7 @@ exports.validateAndApplyPromoCode = functions.https.onCall(async (data, context)
       "پیکربندی سطح اشتراک این کد معتبر نیست."
     );
   }
-  maxAiQueries = targetTier === "FREE" ? 5 : targetTier === "PRO" ? 50 : 999;
+  maxAiQueries = targetTier === "FREE" ? 5 : 50;
 
   await db.runTransaction(async (transaction) => {
     const userDoc = await transaction.get(userRef);

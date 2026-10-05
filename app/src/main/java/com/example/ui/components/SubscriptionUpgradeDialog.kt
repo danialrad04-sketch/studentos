@@ -88,8 +88,8 @@ fun SubscriptionUpgradeDialog(
                 Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.primaryContainer) {
                     Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Icon(Icons.Rounded.AutoAwesome, null, Modifier.size(30.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                        Text("برای هفته‌ای منظم‌تر، با یک همراه هوشمند", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        Text("برنامهٔ مطالعه متناسب با امتحان‌ها و تکالیف شما؛ پیشنهادها را بررسی کنید و تصمیم نهایی را خودتان بگیرید.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Text("مطالعهٔ منظم‌تر با Student Pro", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                        Text("مربی مطالعه، مرور امتحان و تحلیل پیشرفت متناسب با برنامهٔ شما.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
                 if (active) {
@@ -102,14 +102,6 @@ fun SubscriptionUpgradeDialog(
                         }
                     }
                 }
-                StudentSettingsGroup("امکانات پرو") {
-                    PremiumFeature("مربی مطالعهٔ هفت‌روزه", "تنظیم اولویت‌ها و زمان مطالعه با توجه به برنامهٔ واقعی شما", Icons.Rounded.EventNote)
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    PremiumFeature("۵۰ پاسخ آنلاین در روز", "مشاورهٔ درسی، مرور امتحان و تحلیل پیشرفت؛ سهمیه روی سرور بررسی می‌شود", Icons.Rounded.ChatBubbleOutline)
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    PremiumFeature("۱۰ اسکن برنامه در روز", "تبدیل عکس برنامهٔ کلاسی به جدول؛ پیش از ثبت، نتیجه را ویرایش و تأیید کنید", Icons.Rounded.DocumentScanner)
-                }
-                Text("طرح رایگان: ۵ پاسخ آنلاین و یک اسکن روزانه پس از ورود. برنامهٔ کلاسی، تکالیف و اطلاعات ذخیره‌شدهٔ شما همچنان در دسترس‌اند.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (!active) {
                     Text("انتخاب مدت اشتراک", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     status.plans.forEach { plan ->
@@ -130,6 +122,14 @@ fun SubscriptionUpgradeDialog(
                     if (!status.salesEnabled && !billing.busy) Text(if (userAccount.isGuest) "برای مشاهدهٔ قیمت و خرید، وارد حساب خود شوید." else "خرید اشتراک فعلاً در دسترس نیست. پس از فعال‌شدن فروش، قیمت و طرح‌ها از بازار دریافت می‌شوند.", style = MaterialTheme.typography.bodyLarge)
                     if (status.salesEnabled) Text("قیمت نهایی در صفحهٔ پرداخت بازار نمایش داده می‌شود. قبل از تأیید پرداخت، مبلغ و شرایط تمدید را بررسی کنید.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                StudentSettingsGroup("امکانات پرو") {
+                    PremiumFeature("مربی مطالعهٔ هفت‌روزه", "تنظیم اولویت‌ها و زمان مطالعه با توجه به برنامهٔ واقعی شما", Icons.Rounded.EventNote)
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    PremiumFeature("۵۰ پاسخ آنلاین در روز", "مشاورهٔ درسی، مرور امتحان و تحلیل پیشرفت با اطلاعات تحصیلی شما", Icons.Rounded.ChatBubbleOutline)
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    PremiumFeature("۱۰ اسکن برنامه در روز", "تبدیل عکس برنامهٔ کلاسی به جدول؛ پیش از ثبت، نتیجه را بررسی و تأیید کنید", Icons.Rounded.DocumentScanner)
+                }
+                Text("طرح رایگان: ۵ پاسخ آنلاین و یک اسکن روزانه پس از ورود. برنامهٔ کلاسی، تکالیف و اطلاعات ذخیره‌شدهٔ شما همچنان در دسترس‌اند.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 billing.message?.let { Text(it, Modifier.testTag("billing_message"), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface) }
                 OutlinedButton(onClick = onRestore, enabled = billing.connected && !billing.busy && !userAccount.isGuest, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("restore_purchase")) {
                     Icon(Icons.Rounded.Restore, null); Spacer(Modifier.width(8.dp)); Text("بازیابی خرید قبلی")

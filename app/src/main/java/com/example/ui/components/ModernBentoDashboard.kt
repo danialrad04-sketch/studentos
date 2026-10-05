@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -191,9 +192,9 @@ fun ModernBentoDashboard(
 
         AcademicSectionHeader("برنامه و کارهای من", subtitle = "ابزارهای روزمره، در دسترس و مرتب")
         listOf(
-            listOf(Triple("برنامه هفتگی", Icons.Default.CalendarToday, AppTab.SCHEDULE), Triple("امتحانات", Icons.Default.School, AppTab.EXAMS)),
-            listOf(Triple("تکالیف", Icons.Default.CheckCircle, AppTab.TASKS), Triple("کلاس‌ها", Icons.Default.CastForEducation, AppTab.SCHEDULE))
-        ).forEach { row ->
+            Triple("برنامه هفتگی", Icons.Default.CalendarToday, AppTab.SCHEDULE), Triple("امتحانات", Icons.Default.School, AppTab.EXAMS),
+            Triple("تکالیف", Icons.Default.CheckCircle, AppTab.TASKS), Triple("کلاس‌ها", Icons.Default.CastForEducation, AppTab.SCHEDULE)
+        ).chunked(if (LocalDensity.current.fontScale >= 1.3f) 1 else 2).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEach { (title, icon, tab) ->
                     QuickActionSquareTile(title, icon, { onNavigateTab(tab) }, Modifier.weight(1f))
