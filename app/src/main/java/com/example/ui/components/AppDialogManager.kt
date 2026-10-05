@@ -210,6 +210,12 @@ fun AppDialogManager(
             )
         }
 
+        is AppDialogState.PersonalCurriculum -> {
+            PersonalCurriculumDialog(profile, isSaving, dismiss) { university, major, year, credits, source ->
+                studentViewModel.importPersonalCurriculum(university, major, year, credits, source, dismiss)
+            }
+        }
+
         is AppDialogState.AddCourse -> {
             AddEditCourseDialog(
                 initialCourse = null,

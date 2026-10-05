@@ -30,6 +30,12 @@ interface CurriculumDao {
     @Query("SELECT COUNT(*) FROM curriculum_courses")
     suspend fun getCurriculumCount(): Int
 
+    @Query("DELETE FROM curriculum_courses WHERE majorId = :majorId AND majorId LIKE 'USER_MAJOR_%'")
+    suspend fun deletePersonalCourses(majorId: String)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertPersonalCurriculumVersion(version: com.example.data.local.entity.CurriculumVersionEntity)
+
     // Reference tables access
     @Query("SELECT * FROM reference_universities")
     fun getAllUniversities(): Flow<List<com.example.data.local.entity.UniversityEntity>>

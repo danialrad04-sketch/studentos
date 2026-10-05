@@ -6,7 +6,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "check": "node --check index.js && node --check lib/premium-core.js && node --check lib/premium-service.js",
+    "check": "node --check index.js && node --check lib/premium-core.js && node --check lib/premium-service.js && node --check lib/support-service.js",
     "test": "node --test test/*.test.js",
     "test:emulator": "firebase emulators:exec --project demo-studentos-premium --only firestore \"node --test test/firebase.test.js\""
   },

@@ -52,14 +52,17 @@ class StudentRepository(
         val majors = curriculumDao?.getAllMajorsSync().orEmpty()
 
         val normalizedUniversity = normalizeReferenceText(university)
-        val universityRow = universities.firstOrNull {
+        val currentProfile = dao.getProfileSync()
+        val preferredUniversity = universities.find { it.id == currentProfile?.universityId && normalizeReferenceText(it.displayNameFa) == normalizedUniversity }
+        val universityRow = preferredUniversity ?: universities.firstOrNull {
             val display = normalizeReferenceText(it.displayNameFa)
             val short = normalizeReferenceText(it.shortName)
             normalizedUniversity == display ||
                 normalizedUniversity == short ||
                 (normalizedUniversity.contains("امیرکبیر") && display.contains("امیرکبیر"))
         }
-        val majorRow = majors.firstOrNull {
+        val preferredMajor = majors.find { it.id == currentProfile?.majorId && it.universityId == universityRow?.id && normalizeReferenceText(it.majorDisplayNameFa) == normalizeReferenceText(major) }
+        val majorRow = preferredMajor ?: majors.firstOrNull {
             normalizeReferenceText(it.majorDisplayNameFa) == normalizeReferenceText(major) &&
                 (universityRow == null || it.universityId == universityRow.id)
         }
@@ -89,6 +92,35 @@ class StudentRepository(
     val curriculumMajors: Flow<List<MajorEntity>> = curriculumDao?.getAllMajors() ?: flowOf(emptyList())
     val curriculumVersions: Flow<List<CurriculumVersionEntity>> = curriculumDao?.getAllCurriculumVersions() ?: flowOf(emptyList())
     val studentAttempts: Flow<List<StudentCourseAttemptEntity>> = dao.getStudentAttempts(1)
+
+    suspend fun replaceSemesterSummary(attempt: StudentCourseAttemptEntity) = withContext(Dispatchers.IO) {
+        val persist = suspend {
+            dao.deleteLegacySemesterSummaries(attempt.profileId, attempt.semesterIndex)
+            dao.insertStudentAttempt(attempt)
+        }
+        if (database != null) database.withTransaction { persist() } else persist()
+    }
+
+    suspend fun savePersonalCurriculum(university: String, major: String, year: Int, requiredCredits: Int, text: String) = withContext(Dispatchers.IO) {
+        require(university.isNotBlank() && major.isNotBlank() && year in 1300..1500 && requiredCredits in 1..500) { "دانشگاه، رشته، سال ورود و تعداد واحد کل را بررسی کنید." }
+        val catalog = curriculumDao ?: error("ذخیره چارت در دسترس نیست.")
+        fun stable(value: String) = java.security.MessageDigest.getInstance("SHA-256").digest(value.toByteArray()).joinToString("") { "%02x".format(it) }.take(20)
+        val uniId = "USER_UNI_${stable(normalizeReferenceText(university))}"
+        val majorId = "USER_MAJOR_${stable(uniId + normalizeReferenceText(major))}"
+        val versionId = "USER_CHART_${majorId}_${year}"
+        val rows = com.example.data.parser.ManualCurriculumParser.parse(text, majorId)
+        val persist = suspend {
+            catalog.insertUniversities(listOf(UniversityEntity(uniId, university.trim(), university.trim())))
+            catalog.insertMajors(listOf(MajorEntity(majorId, uniId, "USER_FAC", major.trim(), major.trim())))
+            catalog.upsertPersonalCurriculumVersion(CurriculumVersionEntity(versionId, majorId, "چارت شخصی ${major.trim()} · ورودی $year", year, year, requiredCredits))
+            catalog.deletePersonalCourses(majorId)
+            catalog.insertCurriculumCourses(rows)
+            val p = dao.getProfileSync() ?: StudentProfileEntity()
+            dao.insertProfile(p.copy(university = university.trim(), major = major.trim(), entryYear = year,
+                universityId = uniId, majorId = majorId, facultyId = "USER_FAC", updatedAt = System.currentTimeMillis()))
+        }
+        if (database != null) database.withTransaction { persist() } else persist()
+    }
 
     // ==========================================
     // Semester Lifecycle & History
@@ -403,7 +435,12 @@ class StudentRepository(
     }
 
     suspend fun restoreFullBackupJson(jsonString: String): Result<Int> = withContext(Dispatchers.IO) {
-        LocalDataBackupManager.restoreDatabaseFromJson(jsonString, dao, curriculumDao)
+        try {
+            val restore = suspend { LocalDataBackupManager.restoreDatabaseFromJson(jsonString, dao, curriculumDao).getOrThrow() }
+            val count = if (database != null) database.withTransaction { restore() } else restore()
+            Result.success(count)
+        } catch (error: kotlinx.coroutines.CancellationException) { throw error }
+        catch (error: Exception) { Result.failure(error) }
     }
 
     // ==========================================

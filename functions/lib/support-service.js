@@ -57,5 +57,22 @@ class SupportService {
       return { ok: true };
     });
   }
+  /** Callable authorization is checked using trusted custom claims, never a client role flag. */
+  async respond(staffUid, data = {}) {
+    const uid = text(data.userId, 128, 'حساب دانشجو');
+    const id = text(data.ticketId, 64, 'شماره تیکت');
+    const message = text(data.message, 4000, 'پاسخ');
+    return this.db.runTransaction(async tx => {
+      const ref = this.ref(uid, id), current = await tx.get(ref);
+      if (!current.exists || current.data().userId !== uid) throw new ServiceError('not-found', 'تیکت یافت نشد.');
+      const ticket = current.data();
+      if (ticket.status === 'CLOSED' || ticket.messages.length >= 100) throw new ServiceError('failed-precondition', 'تیکت بسته شده یا به سقف پیام رسیده است.');
+      const now = this.clock();
+      const updated = { ...ticket, status: 'RESOLVED', updatedAt: now, messages: [...ticket.messages,
+        { id: crypto.randomUUID(), senderId: staffUid, senderName: 'پشتیبانی', senderRole: 'SUPPORT', message, timestamp: now }] };
+      tx.set(ref, updated); tx.set(this.global(id), updated);
+      return { ok: true };
+    });
+  }
 }
 module.exports = { SupportService };

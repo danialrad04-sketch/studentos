@@ -31,6 +31,11 @@ const supportFunctions = functions.runWith({ enforceAppCheck: true, timeoutSecon
 exports.submitSupportTicket = supportFunctions.https.onCall((data, context) => { const uid = member(context); return safe(() => support.create(uid, data)); });
 exports.replySupportTicket = supportFunctions.https.onCall((data, context) => { const uid = member(context); return safe(() => support.reply(uid, data)); });
 exports.closeSupportTicket = supportFunctions.https.onCall((data, context) => { const uid = member(context); return safe(() => support.close(uid, data)); });
+exports.respondSupportTicket = supportFunctions.https.onCall((data, context) => {
+  const uid = member(context);
+  if (context.auth.token.supportStaff !== true) throw new functions.https.HttpsError('permission-denied', 'این عملیات فقط برای پشتیبانی مجاز است.');
+  return safe(() => support.respond(uid, data));
+});
 
 exports.getPremiumCatalog = secured.https.onCall(async (_data, context) => {
   const uid = member(context);

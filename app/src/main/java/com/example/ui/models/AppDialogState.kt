@@ -15,6 +15,7 @@ sealed interface AppDialogState {
     data object PastSemesters : AppDialogState
     data object Notifications : AppDialogState
     data object ApkInfo : AppDialogState
+    data object PersonalCurriculum : AppDialogState
     data object AddCourse : AppDialogState
     data class EditCourse(val course: CourseEntity) : AppDialogState
     data class EditTask(val task: com.example.data.local.entity.TaskEntity) : AppDialogState

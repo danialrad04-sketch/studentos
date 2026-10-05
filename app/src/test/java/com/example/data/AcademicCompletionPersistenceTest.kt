@@ -90,4 +90,36 @@ class AcademicCompletionPersistenceTest {
         raw.query("SELECT isRecorded FROM grades ORDER BY id").use { cursor -> assertTrue(cursor.moveToFirst()); assertEquals(1, cursor.getInt(0)); assertTrue(cursor.moveToNext()); assertEquals(0, cursor.getInt(0)) }
         helper.close()
     }
+    @Test fun personalCurriculumAndItsReferenceIdentitySurviveCompleteBackup() = runBlocking {
+        db.studentDao().insertProfile(StudentProfileEntity(name = "دانشجوی کامپیوتر", notes = "یادداشت مهم"))
+        repo.savePersonalCurriculum("دانشگاه من", "مهندسی کامپیوتر", 1405, 140, "M1 | ریاضی ۱ | ۳ | ۱\nM2 | ریاضی ۲ | ۳ | ۲ | M1")
+        val profile = db.studentDao().getProfileSync()!!
+        assertTrue(profile.majorId!!.startsWith("USER_MAJOR_"))
+        assertEquals("یادداشت مهم", profile.notes)
+        assertEquals("ریاضی ۱", db.curriculumDao().getAllCurriculumCoursesSync().find { it.code == "M2" }!!.prerequisites)
+        val backup = repo.exportFullBackupJson()
+        val restored = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build()
+        try {
+            StudentRepository(restored.studentDao(), restored.curriculumDao(), restored).restoreFullBackupJson(backup).getOrThrow()
+            assertEquals(profile.majorId, restored.studentDao().getProfileSync()!!.majorId)
+            assertEquals(1, restored.curriculumDao().getAllCurriculumVersionsSync().size)
+            assertEquals(2, restored.curriculumDao().getAllCurriculumCoursesSync().size)
+        } finally { restored.close() }
+    }
+    @Test fun failedBackupRestoreRollsBackEarlierWrites() = runBlocking {
+        db.studentDao().insertProfile(StudentProfileEntity(name = "نام اصلی"))
+        val payload = """{"profile":{"name":"نام خراب"},"sessions":[{"id":"orphan","courseId":"missing","day":0,"start":"08:00","end":"10:00"}]}"""
+        assertTrue(repo.restoreFullBackupJson(payload).isFailure)
+        assertEquals("نام اصلی", db.studentDao().getProfileSync()!!.name)
+    }
+    @Test fun archivingUsesWholeRecordedGradeAndIncludesARealZero() = runBlocking {
+        db.studentDao().insertSemester(SemesterEntity("active", "ترم اصلی", academicYear = 1405, termNumber = 1, isCurrent = true))
+        val a = CourseEntity(id = "a", name = "ریاضی", units = 3, colorHex = "#59652F")
+        val b = a.copy(id = "b", name = "فیزیک")
+        repo.saveCourse(a); repo.saveCourse(b)
+        repo.updateGrade(GradeEntity(courseId = "a", courseName = a.name, units = 3, midtermGrade = 6.0, finalGrade = 12.0))
+        repo.updateGrade(GradeEntity(courseId = "b", courseName = b.name, units = 3))
+        repo.startNewSemester(com.example.domain.usecase.NewSemesterRequest("ترم بعد", 1405, 2))
+        assertEquals(9.0, db.studentDao().getSemesterById("active")!!.gpa!!, 0.001)
+    }
 }

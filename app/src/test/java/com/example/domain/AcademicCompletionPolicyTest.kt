@@ -44,4 +44,12 @@ class AcademicCompletionPolicyTest {
         assertTrue(GradeEntity(courseName = "ریاضی", isRecorded = true).hasRecordedScore())
         assertTrue(GradeEntity(courseName = "ریاضی", finalGrade = 18.0).hasRecordedScore())
     }
+    @Test fun personalChartRejectsUnknownPrerequisitesAndDuplicateCodes() {
+        val parser = com.example.data.parser.ManualCurriculumParser
+        val result = parser.parse("M1 | ریاضی ۱ | ۳ | ۱\nM2 | ریاضی ۲ | ۳ | ۲ | M1", "test")
+        assertEquals("ریاضی ۱", result[1].prerequisites)
+        for (invalid in listOf("M1 | ریاضی | 3 | 1 | missing", "M1 | ریاضی | 3 | 1\nM1 | فیزیک | 3 | 1", "M1 | ریاضی | 0 | 1")) {
+            assertTrue(runCatching { parser.parse(invalid, "test") }.isFailure)
+        }
+    }
 }

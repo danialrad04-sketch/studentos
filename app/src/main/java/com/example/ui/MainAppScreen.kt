@@ -522,6 +522,7 @@ fun MainAppScreen(
                                 onOpenExamEditor = { dialogState = AppDialogState.ExamEditor(it) },
                                 onOpenGradeEditor = { dialogState = AppDialogState.GradeEditor(it) },
                                 onOpenProfile = { dialogState = AppDialogState.Profile },
+                                onImportPersonalCurriculum = { dialogState = AppDialogState.PersonalCurriculum },
                                 onScheduleExamReminder = { exam, minutes -> checkAndRequestNotificationPermission { studentViewModel.scheduleExamReminder(exam, minutes) } },
                                 onOpenAddCourse = { dialogState = AppDialogState.AddCourse },
                                 onEditCourse = { dialogState = AppDialogState.EditCourse(it) },

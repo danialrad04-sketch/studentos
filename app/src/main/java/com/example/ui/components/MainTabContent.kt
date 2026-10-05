@@ -67,6 +67,7 @@ fun MainTabContent(
     onOpenGradeEditor: ((String) -> Unit)? = null,
     onScheduleExamReminder: ((ExamItem, Int) -> Unit)? = null,
     onOpenProfile: (() -> Unit)? = null,
+    onImportPersonalCurriculum: (() -> Unit)? = null,
     onOpenAddCourse: () -> Unit,
     onEditCourse: (CourseEntity) -> Unit,
     onOpenOcrImport: () -> Unit,
@@ -145,7 +146,6 @@ fun MainTabContent(
                     },
                     onExecuteAction = { payload ->
                         studentViewModel.executeCopilotPayload(payload)
-                        Toast.makeText(context, "تغییرات با موفقیت اعمال شد ✨", Toast.LENGTH_SHORT).show()
                     },
                     onOpenPastSemestersDialog = onOpenPastSemestersDialog,
                     userAccount = userAccount,
@@ -154,7 +154,9 @@ fun MainTabContent(
                 )
             }
             AppTab.ACADEMIC_INTELLIGENCE -> {
+                val history by studentViewModel.allSemesters.collectAsStateWithLifecycle()
                 AcademicIntelligenceScreen(
+                    semesterHistory = history,
                     gpa = currentTermGpa,
                     passedUnits = profile.passedUnits,
                     totalRequiredCredits = totalCurriculumUnits,
@@ -298,7 +300,8 @@ fun MainTabContent(
             AppTab.CURRICULUM -> {
                 CurriculumScreen(
                     matchState = curriculumMatchState,
-                    onOpenProfile = onOpenProfile
+                    onOpenProfile = onOpenProfile,
+                    onImportPersonalCurriculum = onImportPersonalCurriculum
                 )
             }
             AppTab.POMODORO -> {
@@ -319,7 +322,6 @@ fun MainTabContent(
                     notes = profile.notes,
                     onSaveNotes = { newNotes ->
                         studentViewModel.saveNotes(newNotes)
-                        Toast.makeText(context, "یادداشت‌ها و فرمول‌ها ذخیره شدند", Toast.LENGTH_SHORT).show()
                     }
                 )
             }

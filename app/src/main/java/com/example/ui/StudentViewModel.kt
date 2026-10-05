@@ -1,5 +1,7 @@
 package com.example.ui
 
+import androidx.room.withTransaction
+
 import android.app.Application
 import android.media.AudioManager
 import android.media.ToneGenerator
@@ -310,8 +312,9 @@ class StudentViewModel @JvmOverloads constructor(
     val curriculumMatchUiState: StateFlow<CurriculumMatchUiState> = combine(
         profile, courses, curriculumCourses, repository.studentAttempts, referenceCatalog
     ) { p, currentCoursesList, currCoursesList, attemptsList, catalog ->
-        val universityId = p.universityId.orEmpty()
-        val majorId = p.majorId.orEmpty()
+        fun norm(value: String) = value.trim().replace("ي", "ی").replace("ك", "ک").replace("\u200C", "")
+        val universityId = p.universityId ?: catalog.first.find { norm(it.displayNameFa) == norm(p.university) || norm(it.shortName) == norm(p.university) }?.id.orEmpty()
+        val majorId = p.majorId ?: catalog.second.find { it.universityId == universityId && norm(it.majorDisplayNameFa) == norm(p.major) }?.id.orEmpty()
         val entryYear = p.entryYear
         val universities = catalog.first.map { ResolvedUniversity(it.id, it.displayNameFa, it.shortName) }
         val majors = catalog.second.map { ResolvedMajor(it.id, it.universityId, it.facultyId, it.majorDisplayNameFa) }
@@ -703,6 +706,22 @@ class StudentViewModel @JvmOverloads constructor(
         _userMessage.tryEmit("برنامه هدف ذخیره شد؛ ثبت‌نام دانشگاه باید جداگانه انجام شود.")
     }
 
+    fun importPersonalCurriculum(university: String, major: String, year: Int, credits: Int, text: String, onSaved: () -> Unit) {
+        if (_isSavingRecord.value) return
+        _isSavingRecord.value = true
+        viewModelScope.launch {
+            try {
+                repository.savePersonalCurriculum(university, major, year, credits, text)
+                _optimisticProfile.value = null
+                preferencesRepository.saveSemesterPlan(null)
+                onSaved()
+                _userMessage.emit("چارت شخصی ذخیره شد؛ برای انتقال آن از پشتیبان کامل استفاده کنید.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "چارت ذخیره نشد.") }
+            finally { _isSavingRecord.value = false }
+        }
+    }
+
     fun cancelExamReminder(examId: String) {
         androidx.work.WorkManager.getInstance(getApplication()).cancelUniqueWork("reminder_$examId")
         preferencesRepository.setExamReminder(examId, false)
@@ -884,6 +903,8 @@ class StudentViewModel @JvmOverloads constructor(
         onSuccess: () -> Unit = {}
     ) {
         viewModelScope.launch {
+            try {
+            require(title.isNotBlank() && academicYear in 1300..1500 && termNumber in 1..20) { "عنوان، سال و شماره ترم را بررسی کنید." }
             val result = repository.startNewSemester(
                 com.example.domain.usecase.NewSemesterRequest(
                     title = title,
@@ -901,6 +922,8 @@ class StudentViewModel @JvmOverloads constructor(
             )
             triggerCloudSync()
             onSuccess()
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "انتقال ترم انجام نشد؛ داده‌های پیشین حفظ شد.") }
         }
     }
 
@@ -941,6 +964,7 @@ class StudentViewModel @JvmOverloads constructor(
         preferencesRepository.recordSuccessfulSave()
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             repository.updateProfile(profileEntity)
+            _optimisticProfile.value = null
             addNotification("ویرایش مشخصات", "اطلاعات پروفایل دانشجویی به‌روزرسانی شد.")
             triggerCloudSync()
         }
@@ -953,6 +977,7 @@ class StudentViewModel @JvmOverloads constructor(
         preferencesRepository.recordSuccessfulSave()
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             repository.updateProfile(updated)
+            _optimisticProfile.value = null
             addNotification("ویرایش مشخصات", "اطلاعات پروفایل دانشجویی به‌روزرسانی شد.")
             triggerCloudSync()
         }
@@ -987,16 +1012,22 @@ class StudentViewModel @JvmOverloads constructor(
         preferencesRepository.recordSuccessfulSave()
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             repository.updateProfile(updated)
+            _optimisticProfile.value = null
             addNotification("به‌روزرسانی پروفایل", "مشخصات دانشگاهی شما با موفقیت ذخیره شد.")
             triggerCloudSync()
         }
     }
 
     fun saveNotes(notes: String) {
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            val current = profile.value
-            repository.updateProfile(current.copy(notes = notes))
-            triggerCloudSync()
+        viewModelScope.launch {
+            try {
+                val current = repository.getProfileSync() ?: profile.value
+                repository.updateProfile(current.copy(notes = notes))
+                _optimisticProfile.value = null
+                triggerCloudSync()
+                _userMessage.emit("یادداشت‌ها ذخیره شد.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit("یادداشت ذخیره نشد؛ متن را حفظ و دوباره تلاش کنید.") }
         }
     }
 
@@ -1139,113 +1170,95 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    fun savePastSemesterHistory(
-        selectedSemester: Int,
-        totalPassedCredits: Int,
-        overallGpa: Double,
-        summaries: List<com.example.ui.components.SemesterSummaryItem>
-    ) {
-        val current = profile.value
-        val updated = current.copy(
-            currentSemester = selectedSemester,
-            passedUnits = totalPassedCredits,
-            declaredPassedCredits = totalPassedCredits,
-            declaredGpa = overallGpa,
-            term = "ترم $selectedSemester ${current.major}"
-        )
-        _optimisticProfile.value = updated
-        preferencesRepository.recordSuccessfulSave()
-
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            repository.updateProfile(updated)
-
-            // Save individual attempts for past semesters if available
-            summaries.forEach { s ->
-                val u = s.units.toIntOrNull() ?: 17
-                val g = s.gpa.toDoubleOrNull()
-                val attempt = com.example.data.local.entity.StudentCourseAttemptEntity(
-                    id = "sem_summary_${s.semesterIndex}_${System.currentTimeMillis()}",
-                    profileId = 1,
-                    courseId = null,
-                    courseName = "مجموع دروس گذرانده ترم ${s.semesterIndex}",
-                    units = u,
-                    attemptNumber = 1,
-                    semesterIndex = s.semesterIndex,
-                    status = "PASSED",
-                    grade = g,
-                    source = "QUICK_SETUP"
-                )
-                repository.saveStudentAttempt(attempt)
-            }
-
-            addNotification(
-                "به‌روزرسانی سوابق تحصیلی",
-                "ترم تحصیلی به ترم $selectedSemester تغییر یافت و $totalPassedCredits واحد پاس‌شده با معدل ${String.format(Locale.US, "%.2f", overallGpa)} ثبت گردید."
-            )
+    fun savePastSemesterHistory(selectedSemester: Int, totalPassedCredits: Int, overallGpa: Double,
+        summaries: List<com.example.ui.components.SemesterSummaryItem>) {
+        viewModelScope.launch {
+            try {
+                require(selectedSemester in 1..20 && totalPassedCredits in 0..500 && overallGpa.isFinite() && overallGpa in 0.0..20.0) { "ترم، واحد و معدل واردشده معتبر نیست." }
+                val parsed = summaries.map { summary ->
+                    val units = com.example.data.local.util.DateTimeNormalizer.normalizeDigits(summary.units).toIntOrNull()
+                    val gpa = com.example.data.local.util.DateTimeNormalizer.normalizeDigits(summary.gpa).replace('٫', '.').toDoubleOrNull()
+                    require(units != null && units in 0..40 && gpa != null && gpa.isFinite() && gpa in 0.0..20.0) { "خلاصه ترم ${summary.semesterIndex} را بررسی کنید؛ مقدار نامعتبر ذخیره نمی‌شود." }
+                    Triple(summary.semesterIndex, units, gpa)
+                }
+                val current = repository.getProfileSync() ?: profile.value
+                val persist = suspend {
+                    repository.updateProfile(current.copy(currentSemester = selectedSemester, passedUnits = totalPassedCredits,
+                        declaredPassedCredits = totalPassedCredits, declaredGpa = overallGpa, term = "ترم $selectedSemester ${current.major}"))
+                    parsed.forEach { (term, units, gpa) ->
+                        repository.replaceSemesterSummary(com.example.data.local.entity.StudentCourseAttemptEntity(id = "sem_summary_$term", profileId = 1,
+                            courseId = null, courseName = "مجموع دروس گذرانده ترم $term", units = units, semesterIndex = term, status = "PASSED", grade = gpa, source = "QUICK_SETUP"))
+                        if (term < selectedSemester) repository.saveSemester(SemesterEntity(id = "history_summary_${current.entryYear}_$term", title = "خلاصه ترم $term",
+                            academicYear = current.entryYear + (term - 1) / 2, termNumber = term, semesterNumber = term,
+                            status = "ARCHIVED", isArchived = true, totalUnits = units, gpa = gpa))
+                    }
+                }
+                if (repository.database != null) repository.database.withTransaction { persist() } else persist()
+                _optimisticProfile.value = null
+                triggerCloudSync()
+                _userMessage.emit("سوابق تحصیلی ذخیره شد؛ ثبت دوباره همان ترم، رکورد تکراری نمی‌سازد.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "سوابق ذخیره نشد.") }
         }
     }
 
     fun executeCopilotPayload(payload: com.example.domain.model.CopilotPayload) {
         viewModelScope.launch {
-            when (payload) {
-                is com.example.domain.model.CopilotPayload.AddTask -> {
-                    saveTask(payload.title, payload.courseName, payload.dueDate)
-                }
-                is com.example.domain.model.CopilotPayload.CompleteTask -> {
-                    val task = tasks.value.find { it.id.toString() == payload.taskId || it.title == payload.taskTitle }
-                    if (task != null) {
-                        toggleTask(task)
+            try {
+                when (payload) {
+                    is com.example.domain.model.CopilotPayload.AddTask -> saveTask(payload.title, payload.courseName, payload.dueDate)
+                    is com.example.domain.model.CopilotPayload.CompleteTask -> {
+                        val task = tasks.value.find { it.id.toString() == payload.taskId }
+                            ?: tasks.value.filter { it.title == payload.taskTitle }.singleOrNull()
+                            ?: error("تکلیف مشخصی پیدا نشد؛ آن را از صفحه کارها انتخاب کنید.")
+                        if (!task.isCompleted) repository.updateTask(task.copy(isCompleted = true))
+                        triggerCloudSync()
+                        _userMessage.emit("تکلیف انجام‌شده ثبت شد.")
                     }
-                }
-                is com.example.domain.model.CopilotPayload.ChangeCurrentSemester -> {
-                    val current = profile.value
-                    repository.updateProfile(current.copy(currentSemester = payload.newSemesterIndex, term = "ترم ${payload.newSemesterIndex} ${current.major}"))
-                    addNotification("تغییر ترم تحصیلی", "ترم جاری به ترم ${payload.newSemesterIndex} تغییر یافت.")
-                }
-                is com.example.domain.model.CopilotPayload.UpdatePastSemesterSummary -> {
-                    val current = profile.value
-                    val newPassed = current.passedUnits + payload.units
-                    repository.updateProfile(current.copy(passedUnits = newPassed, declaredPassedCredits = newPassed))
-                    addNotification("ثبت واحد گذشته", "${payload.units} واحد برای ترم ${payload.semesterIndex} اضافه شد.")
-                }
-                is com.example.domain.model.CopilotPayload.ClearAttendanceWarning -> {
-                    val item = attendance.value.find { it.courseName == payload.courseName }
-                    if (item != null) {
+                    is com.example.domain.model.CopilotPayload.ChangeCurrentSemester -> {
+                        require(payload.newSemesterIndex in 1..20)
+                        val current = profile.value
+                        if (current.currentSemester != payload.newSemesterIndex) startNewSemester(
+                            "ترم ${payload.newSemesterIndex}", current.entryYear + (payload.newSemesterIndex - 1) / 2, payload.newSemesterIndex)
+                    }
+                    is com.example.domain.model.CopilotPayload.UpdatePastSemesterSummary -> {
+                        require(payload.semesterIndex in 1..20 && payload.units in 0..40)
+                        require(payload.gpa == null || (payload.gpa.isFinite() && payload.gpa in 0.0..20.0))
+                        val id = "sem_summary_${payload.semesterIndex}"
+                        val old = repository.dao.getStudentAttemptsSync(1).find { it.id == id }
+                        repository.replaceSemesterSummary(com.example.data.local.entity.StudentCourseAttemptEntity(id = id, profileId = 1,
+                            courseId = null, courseName = "مجموع دروس گذرانده ترم ${payload.semesterIndex}", units = payload.units,
+                            semesterIndex = payload.semesterIndex, status = "PASSED", grade = payload.gpa, source = "USER_DECLARED"))
+                        val current = repository.getProfileSync() ?: profile.value
+                        val units = (current.passedUnits - (old?.units ?: 0) + payload.units).coerceAtLeast(0)
+                        repository.updateProfile(current.copy(passedUnits = units, declaredPassedCredits = units))
+                        _optimisticProfile.value = null
+                        triggerCloudSync()
+                        _userMessage.emit("خلاصه ترم ذخیره شد.")
+                    }
+                    is com.example.domain.model.CopilotPayload.ClearAttendanceWarning -> {
+                        val item = attendance.value.filter { it.courseName == payload.courseName }.singleOrNull()
+                            ?: error("درس مشخصی پیدا نشد؛ از صفحه حضور و غیاب انتخاب کنید.")
                         repository.updateAttendance(item.copy(absentCount = 0))
-                        addNotification("پاکسازی غیبت", "غیبت‌های درس ${payload.courseName} صفر شد.")
+                        triggerCloudSync()
+                        _userMessage.emit("شمار غیبت این درس صفر شد.")
                     }
-                }
-                is com.example.domain.model.CopilotPayload.QuickEnrollCourse -> {
-                    val dayInt = when (payload.dayOfWeek.trim()) {
-                        "یکشنبه" -> 1
-                        "دوشنبه" -> 2
-                        "سه‌شنبه" -> 3
-                        "چهارشنبه" -> 4
-                        else -> 0
+                    is com.example.domain.model.CopilotPayload.QuickEnrollCourse -> {
+                        val days = listOf("شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنج‌شنبه", "جمعه")
+                        val day = days.indexOf(payload.dayOfWeek.trim())
+                        val start = com.example.domain.util.AcademicInputValidator.time(payload.startTime)
+                        val end = com.example.domain.util.AcademicInputValidator.time(payload.endTime)
+                        require(day >= 0 && payload.units in 1..10 && payload.courseName.isNotBlank() && start != null && end != null && start < end) { "نام، واحد، روز یا ساعت درس معتبر نیست." }
+                        require(courses.value.none { CourseIdentityNormalizer.normalize(it.name) == CourseIdentityNormalizer.normalize(payload.courseName) }) { "این درس ثبت شده؛ آن را در برنامه کلاسی ویرایش کنید." }
+                        val id = java.util.UUID.randomUUID().toString()
+                        saveCourse(CourseEntity(id = id, name = payload.courseName.trim(), colorHex = "#59652F", units = payload.units),
+                            listOf(CourseSessionEntity(courseId = id, day = day, start = start, end = end, location = "")))
                     }
-                    val newCourseId = java.util.UUID.randomUUID().toString()
-                    val course = CourseEntity(
-                        id = newCourseId,
-                        name = payload.courseName,
-                        colorHex = "#59652F",
-                        units = payload.units
-                    )
-                    val session = CourseSessionEntity(
-                        courseId = newCourseId,
-                        day = dayInt,
-                        start = payload.startTime,
-                        end = payload.endTime,
-                        location = "کلاس فنی"
-                    )
-                    saveCourse(course, listOf(session))
+                    is com.example.domain.model.CopilotPayload.NavigateToTab -> runCatching { AppTab.valueOf(payload.tabName) }.getOrNull()?.let { selectTab(it) }
+                    is com.example.domain.model.CopilotPayload.SimulateGpaTarget -> selectTab(AppTab.GRADES)
                 }
-                is com.example.domain.model.CopilotPayload.NavigateToTab -> {
-                    // Handled at UI level
-                }
-                is com.example.domain.model.CopilotPayload.SimulateGpaTarget -> {
-                    // Analytical
-                }
-            }
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "این فرمان اجرا نشد؛ دوباره بررسی کنید.") }
         }
     }
 

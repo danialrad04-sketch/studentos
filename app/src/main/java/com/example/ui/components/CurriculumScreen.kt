@@ -63,6 +63,7 @@ import com.example.ui.theme.Rose600
 fun CurriculumScreen(
     matchState: CurriculumMatchUiState? = null,
     onOpenProfile: (() -> Unit)? = null,
+    onImportPersonalCurriculum: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -78,7 +79,7 @@ fun CurriculumScreen(
         }
 
         val totalUnits = if (matchState is CurriculumMatchUiState.Ready) {
-            "" + matchState.output.version.totalCreditsRequired + " واحد مصوب"
+            "" + matchState.output.version.totalCreditsRequired + " واحد در چارت"
         } else {
             "اطلاعات چارت پس از تکمیل مشخصات تحصیلی نمایش داده می‌شود"
         }
@@ -97,6 +98,8 @@ fun CurriculumScreen(
             onOpenProfile?.let { action -> androidx.compose.material3.OutlinedButton(onClick = action, modifier = Modifier.fillMaxWidth()) { Text("بررسی دانشگاه، رشته و سال ورود") } }
             Spacer(Modifier.height(12.dp))
         }
+        onImportPersonalCurriculum?.let { action -> androidx.compose.material3.OutlinedButton(onClick = action, modifier = Modifier.fillMaxWidth()) { Text("ورود یا جایگزینی چارت شخصی") } }
+        Spacer(Modifier.height(12.dp))
         // Status Symbol Legend
         CurriculumStatusLegend()
 
@@ -160,7 +163,7 @@ fun CurriculumScreen(
                     ) {
                         CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, strokeWidth = 3.dp)
                         Text(
-                            text = "در حال تطبیق دروس با چارت مصوب...",
+                            text = "در حال تطبیق دروس با چارت تحصیلی...",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -250,7 +253,7 @@ fun CurriculumScreen(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Text(
-                        text = "برای نمایش چارت مصوب، ابتدا اطلاعات دانشگاه، رشته و سال ورود را تکمیل کنید.",
+                        text = "برای نمایش چارت تحصیلی، ابتدا اطلاعات دانشگاه، رشته و سال ورود را تکمیل کنید.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(20.dp)

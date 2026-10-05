@@ -112,9 +112,10 @@ fun SemesterTransitionDialog(
     // Summary calculation for current semester
     val totalUnits = currentCourses.sumOf { it.units }
     val calculatedGpa = remember(currentGrades, currentCourses) {
-        val totalGradedUnits = currentGrades.sumOf { it.units }
+        val recorded = currentGrades.filter { it.hasRecordedScore() }
+        val totalGradedUnits = recorded.sumOf { it.units }
         if (totalGradedUnits > 0) {
-            val weighted = currentGrades.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
+            val weighted = recorded.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
             weighted / totalGradedUnits
         } else {
             0.0
