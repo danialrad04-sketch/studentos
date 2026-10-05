@@ -604,18 +604,18 @@ fun MainAppScreen(
 
             // Interactive First-Time & On-Demand App Tour Guide
             if (showAppTourGuide) {
+                val targetGoal by studentViewModel.targetGpaGoal.collectAsStateWithLifecycle()
                 FirstTimeAppTourDialog(
                     currentProfile = profile,
+                    initialTargetGpa = targetGoal,
                     onSaveProfileEssentials = { name, studentId, targetGpa, notes ->
-                        studentViewModel.updateProfile(
+                        studentViewModel.saveTourProfile(
                             profile.copy(
                                 name = name,
                                 studentId = studentId,
-                                declaredGpa = targetGpa,
                                 notes = notes
-                            )
+                            ), targetGpa
                         )
-                        Toast.makeText(context, "اطلاعات ضروری دانشجو ثبت و ذخیره شد ✅", Toast.LENGTH_SHORT).show()
                     },
                     onDismiss = { showAppTourGuide = false }
                 )

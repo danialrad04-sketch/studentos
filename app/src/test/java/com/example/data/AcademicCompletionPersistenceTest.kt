@@ -85,13 +85,17 @@ class AcademicCompletionPersistenceTest {
         val plan = com.example.domain.model.SemesterPlan("personal", "ترم من", 3, listOf(course), isDraft = false, isActive = true, tradeOffs = listOf("بار سبک"))
         preferences.saveSemesterPlan(plan)
         preferences.setExamReminder("exam-42", true)
+        preferences.saveTargetGpaGoal(18.25)
         val restored = AppPreferencesRepository(context)
         assertEquals(plan, restored.selectedSemesterPlan.value)
         assertEquals(setOf("exam-42"), restored.examReminderIds.value)
+        assertEquals(18.25, restored.targetGpaGoal.value!!, 0.0)
+        assertTrue(runCatching { restored.saveTargetGpaGoal(Double.NaN) }.isFailure)
         restored.clearAcademicChoices()
         val cleared = AppPreferencesRepository(context)
         assertNull(cleared.selectedSemesterPlan.value)
         assertTrue(cleared.examReminderIds.value.isEmpty())
+        assertNull(cleared.targetGpaGoal.value)
     }
     @Test fun upgradeAddsRecordedFlagWithoutDeletingGrades() {
         val config = SupportSQLiteOpenHelper.Configuration.builder(context).name(null)
@@ -116,7 +120,7 @@ class AcademicCompletionPersistenceTest {
                         val entity = entities.getJSONObject(i)
                         val table = entity.getString("tableName")
                         raw.execSQL(entity.getString("createSql").replace("\${TABLE_NAME}", table))
-                        val indices = entity.getJSONArray("indices")
+                        val indices = entity.optJSONArray("indices") ?: org.json.JSONArray()
                         for (j in 0 until indices.length()) raw.execSQL(indices.getJSONObject(j).getString("createSql").replace("\${TABLE_NAME}", table))
                     }
                     val setup = schema.getJSONArray("setupQueries")

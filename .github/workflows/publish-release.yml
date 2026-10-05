@@ -139,7 +139,7 @@ jobs:
           gh release create "$RELEASE_TAG" release-output/* \
             --repo "$GITHUB_REPOSITORY" --target "$RELEASE_REF" \
             --title "Student OS $VERSION_NAME" --draft \
-            --notes-file docs/RELEASE_NOTES_V2_3.md
+            --notes-file "docs/release-notes/$VERSION_NAME-fa.md"
 
       - name: Remove signing material
         if: always()

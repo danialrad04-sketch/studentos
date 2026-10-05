@@ -109,6 +109,7 @@ class StudentViewModel @JvmOverloads constructor(
     private var pomodoroJob: Job? = null
 
     val themeMode: StateFlow<ThemeMode> = preferencesRepository.themeMode
+    val targetGpaGoal: StateFlow<Double?> = preferencesRepository.targetGpaGoal
     val notificationsEnabled: StateFlow<Boolean> = preferencesRepository.notificationsEnabled
     val customGeminiApiKey: StateFlow<String> = preferencesRepository.customGeminiApiKey
     val lastSavedTimestamp: StateFlow<Long> = preferencesRepository.lastSuccessfulSaveTimestamp
@@ -960,27 +961,32 @@ class StudentViewModel @JvmOverloads constructor(
     }
 
     fun updateProfile(profileEntity: StudentProfileEntity) {
-        _optimisticProfile.value = profileEntity
-        preferencesRepository.recordSuccessfulSave()
+        persistProfile(profileEntity, null)
+    }
+
+    fun saveTourProfile(profileEntity: StudentProfileEntity, goal: Double) {
+        persistProfile(profileEntity, goal)
+    }
+
+    private fun persistProfile(profileEntity: StudentProfileEntity, goal: Double?) {
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            repository.updateProfile(profileEntity)
-            _optimisticProfile.value = null
-            addNotification("ویرایش مشخصات", "اطلاعات پروفایل دانشجویی به‌روزرسانی شد.")
-            triggerCloudSync()
+            try {
+                require(goal == null || (goal.isFinite() && goal in 0.0..20.0)) { "معدل هدف باید بین صفر و بیست باشد." }
+                _optimisticProfile.value = profileEntity
+                repository.updateProfile(profileEntity)
+                if (goal != null) preferencesRepository.saveTargetGpaGoal(goal)
+                preferencesRepository.recordSuccessfulSave()
+                addNotification("ویرایش مشخصات", "اطلاعات پروفایل دانشجویی به‌روزرسانی شد.")
+                triggerCloudSync()
+                _userMessage.emit("مشخصات دانشجو ذخیره شد.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "مشخصات ذخیره نشد؛ دوباره تلاش کنید.") }
+            finally { _optimisticProfile.value = null }
         }
     }
 
     fun updateProfile(name: String, studentId: String) {
-        val current = profile.value
-        val updated = current.copy(name = name, studentId = studentId)
-        _optimisticProfile.value = updated
-        preferencesRepository.recordSuccessfulSave()
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            repository.updateProfile(updated)
-            _optimisticProfile.value = null
-            addNotification("ویرایش مشخصات", "اطلاعات پروفایل دانشجویی به‌روزرسانی شد.")
-            triggerCloudSync()
-        }
+        updateProfile(profile.value.copy(name = name, studentId = studentId))
     }
 
     fun updateFullProfile(
@@ -1008,14 +1014,7 @@ class StudentViewModel @JvmOverloads constructor(
             faculty = "دانشکده $major · $activeUnits واحد فعال",
             isOnboardingCompleted = true
         )
-        _optimisticProfile.value = updated
-        preferencesRepository.recordSuccessfulSave()
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            repository.updateProfile(updated)
-            _optimisticProfile.value = null
-            addNotification("به‌روزرسانی پروفایل", "مشخصات دانشگاهی شما با موفقیت ذخیره شد.")
-            triggerCloudSync()
-        }
+        updateProfile(updated)
     }
 
     fun saveNotes(notes: String) {

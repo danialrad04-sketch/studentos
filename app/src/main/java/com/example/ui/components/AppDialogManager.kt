@@ -317,15 +317,10 @@ fun AppDialogManager(
         }
 
         is AppDialogState.Copilot -> {
-            AcademicCopilotDialog(
-                profile = profile,
-                courses = courses,
-                attendanceList = attendance,
-                grades = grades,
-                tasks = tasks,
-                exams = exams,
-                onDismiss = dismiss
-            )
+            LaunchedEffect(Unit) {
+                studentViewModel.selectTab(AppTab.COPILOT)
+                onUpdateDialogState(AppDialogState.None)
+            }
         }
 
         is AppDialogState.OcrImport -> {

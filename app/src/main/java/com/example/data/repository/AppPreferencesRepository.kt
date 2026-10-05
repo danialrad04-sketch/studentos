@@ -71,6 +71,13 @@ class AppPreferencesRepository(context: Context) {
     val focusSession: StateFlow<com.example.domain.model.FocusSession> = _focusSession.asStateFlow()
     private val _selectedSemesterPlan = MutableStateFlow(readSemesterPlan())
     val selectedSemesterPlan: StateFlow<com.example.domain.model.SemesterPlan?> = _selectedSemesterPlan.asStateFlow()
+    private val _targetGpaGoal = MutableStateFlow(prefs.getString("target_gpa_goal", null)?.toDoubleOrNull()?.takeIf { it.isFinite() && it in 0.0..20.0 })
+    val targetGpaGoal: StateFlow<Double?> = _targetGpaGoal.asStateFlow()
+    fun saveTargetGpaGoal(goal: Double?) {
+        require(goal == null || (goal.isFinite() && goal in 0.0..20.0))
+        check(prefs.edit().putString("target_gpa_goal", goal?.toString()).commit())
+        _targetGpaGoal.value = goal
+    }
     private val _examReminderIds = MutableStateFlow(prefs.getStringSet("exam_reminder_ids", emptySet())?.toSet().orEmpty())
     val examReminderIds: StateFlow<Set<String>> = _examReminderIds.asStateFlow()
 
@@ -109,6 +116,7 @@ class AppPreferencesRepository(context: Context) {
     }
 
     fun clearAcademicChoices() {
+        saveTargetGpaGoal(null)
         clearAcceptedStudyPlan()
         saveSemesterPlan(null)
         saveFocusSession(com.example.domain.model.FocusSession())
