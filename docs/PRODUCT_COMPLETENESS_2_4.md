@@ -27,6 +27,7 @@ Date: 2026-10-05. This audit follows actual UI → ViewModel → repository path
 - Room 9 → 10 adds `grades.isRecorded` without destructive migration. Positive legacy grades are marked recorded; old zero placeholders remain unentered.
 - New targeted policy, Room/migration and Compose workflow tests cover the corrected paths. CI results must be linked after execution.
 - Local Gradle bootstrap is blocked by network access to services.gradle.org; executable Android validation is performed by GitHub Actions.
+- The 2.4 test prerelease publisher only runs for the current immutable `main` SHA after all four Android CI jobs and Firebase verification succeed. It reuses those exact signed candidates, verifies identity/certificate and the Bazaar AAB/BIN pair, and publishes test assets without changing the stable release.
 - WorkManager reminders survive process recreation/reboot but do not promise exact delivery. See https://developer.android.com/develop/background-work/background-tasks/persistent/getting-started/define-work.
 
 This document does not certify live AI, marketplace sales, unsupported curricula, device accessibility or completion of every future master-plan item.

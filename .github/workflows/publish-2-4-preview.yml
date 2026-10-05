@@ -1,0 +1,137 @@
+name: Publish verified 2.4 preview
+
+on:
+  workflow_run:
+    workflows: [Android CI, Premium Firebase verification]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: studentos-2-4-preview
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_REF: ${{ github.event.workflow_run.head_sha }}
+      RELEASE_TAG: v2.4.0-test.1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Gate immutable main commit and both verification suites
+        id: gate
+        shell: bash
+        run: |
+          [[ "$RELEASE_REF" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$RELEASE_REF"
+          if test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')" != "$RELEASE_REF"; then
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! grep -Fq 'orElse("2.4.0")' app/build.gradle.kts || ! grep -Fq 'orElse("2010")' app/build.gradle.kts; then
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow android-build.yml --commit "$RELEASE_REF" --limit 20 --json databaseId,status,conclusion > "$RUNNER_TEMP/android-runs.json"
+          gh run list --repo "$GITHUB_REPOSITORY" --workflow premium-functions.yml --commit "$RELEASE_REF" --limit 20 --json status,conclusion > "$RUNNER_TEMP/firebase-runs.json"
+          RUN_ID=$(python3 - <<'PY'
+          import json, os
+          root = os.environ['RUNNER_TEMP']
+          android = json.load(open(root + '/android-runs.json'))
+          firebase = json.load(open(root + '/firebase-runs.json'))
+          run = next((r for r in android if r['status'] == 'completed' and r['conclusion'] == 'success'), None)
+          if run and any(r['status'] == 'completed' and r['conclusion'] == 'success' for r in firebase):
+              print(run['databaseId'])
+          PY
+          )
+          if test -z "$RUN_ID"; then
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --json jobs > "$RUNNER_TEMP/jobs.json"
+          python3 - <<'PY'
+          import json, os
+          jobs = {j['name']: j['conclusion'] for j in json.load(open(os.environ['RUNNER_TEMP'] + '/jobs.json'))['jobs']}
+          for name in ['android-quality', 'backend-quality', 'instrumented-smoke', 'release-artifact-validation']:
+              assert jobs.get(name) == 'success', name + ' did not pass'
+          PY
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'Preview already exists; refusing to overwrite it.'
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo 'ready=true' >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@v5
+        if: steps.gate.outputs.ready == 'true'
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Retrieve the exact verified release candidates
+        if: steps.gate.outputs.ready == 'true'
+        env:
+          RUN_ID: ${{ steps.gate.outputs.run_id }}
+        run: |
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name studentos-v2.1-release-candidates --dir "$RUNNER_TEMP/candidates"
+          python3 - <<'PY'
+          import pathlib, shutil, os
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'candidates'
+          out = pathlib.Path('release-output')
+          out.mkdir()
+          for source, target in [('app-release.apk', 'StudentOS-2.4.0-preview.apk'), ('app-release.aab', 'StudentOS-2.4.0.aab')]:
+              matches = list(root.rglob(source))
+              assert len(matches) == 1 and matches[0].stat().st_size > 0, source
+              shutil.copyfile(matches[0], out / target)
+          PY
+
+      - name: Verify identity and original signature
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          APK=release-output/StudentOS-2.4.0-preview.apk
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$APK" > "$RUNNER_TEMP/certificate.txt"
+          grep -Fi 'a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950' "$RUNNER_TEMP/certificate.txt"
+          "$BUILD_TOOLS/aapt" dump badging "$APK" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='2010' versionName='2.4.0'"
+          "$BUILD_TOOLS/zipalign" -c -P 16 -v 4 "$APK"
+          python3 scripts/check_apk_16kb.py "$APK"
+
+      - name: Decode existing signing material
+        if: steps.gate.outputs.ready == 'true'
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$RELEASE_KEYSTORE_BASE64"
+          printf '%s' "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/studentos-release.jks"
+
+      - name: Prepare and verify the Bazaar bundle signature
+        if: steps.gate.outputs.ready == 'true'
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/studentos-release.jks
+          STORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+        run: |
+          bash scripts/generate_bazaar_bin.sh release-output/StudentOS-2.4.0.aab release-output/StudentOS-2.4.0.bin
+          cd release-output
+          sha256sum ./*.apk ./*.aab ./*.bin > SHA256SUMS.txt
+
+      - name: Publish the completed test assets
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          gh release create "$RELEASE_TAG" release-output/* --repo "$GITHUB_REPOSITORY" --target "$RELEASE_REF" --title 'Student OS 2.4.0 — نسخه آزمایشی' --draft --prerelease --notes-file docs/release-notes/2.4.0-fa.md
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease --latest=false
+
+      - name: Remove signing material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/studentos-release.jks"
