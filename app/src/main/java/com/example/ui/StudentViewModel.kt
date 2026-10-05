@@ -1265,6 +1265,8 @@ class StudentViewModel @JvmOverloads constructor(
     fun resetToDefaults() {
         viewModelScope.launch {
             repository.resetDefaults()
+            preferencesRepository.clearAcademicChoices()
+            com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
             addNotification("بازنشانی سامانه", "کلیه اطلاعات به حالت پیش‌فرض بازگشت.")
         }
     }
@@ -1272,6 +1274,8 @@ class StudentViewModel @JvmOverloads constructor(
     fun loadDemoData() {
         viewModelScope.launch {
             repository.loadRichDemoData()
+            preferencesRepository.clearAcademicChoices()
+            com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
             addNotification("حالت دمو فعال شد", "داده‌های کامل و نمونه دانشگاهی بارگذاری شد 🎓")
         }
     }
@@ -1286,6 +1290,8 @@ class StudentViewModel @JvmOverloads constructor(
     ) {
         viewModelScope.launch {
             repository.clearToFreshSlate(name, studentId, university, major, entryYear, currentSemester)
+            preferencesRepository.clearAcademicChoices()
+            com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
             addNotification("شروع نو و پاکسازی", "سیستم‌عامل تحصیلی با یک بوم پاک و آماده ثبت دروس شما آماده شد ✨")
         }
     }
@@ -1327,6 +1333,8 @@ class StudentViewModel @JvmOverloads constructor(
         viewModelScope.launch {
             val result = repository.restoreFullBackupJson(jsonString)
             if (result.isSuccess) {
+                preferencesRepository.clearAcademicChoices()
+                com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
                 preferencesRepository.recordSuccessfulSave()
                 LocalDataBackupManager.saveLocalSnapshot(application, jsonString)
                 _userMessage.emit("داده‌های شما با موفقیت از فایل پشتیبان بازیابی شدند.")

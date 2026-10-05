@@ -78,6 +78,21 @@ class AcademicCompletionPersistenceTest {
         assertFalse(restored.completeFocusSession(1_000_002))
         restored.clearAcademicChoices()
     }
+    @Test fun selectedPlanAndReminderChoicesRestoreAndClearAcrossSessions() {
+        val preferences = AppPreferencesRepository(context)
+        val course = com.example.domain.model.EvaluatedCurriculumCourse("math", "M1", "ریاضی", 3, "اصلی", 1, com.example.domain.model.CourseState.BLOCKED,
+            com.example.domain.model.BlockedReason(missingPrerequisiteNames = listOf("پایه"), explanation = "نیاز به پیش‌نیاز"))
+        val plan = com.example.domain.model.SemesterPlan("personal", "ترم من", 3, listOf(course), isDraft = false, isActive = true, tradeOffs = listOf("بار سبک"))
+        preferences.saveSemesterPlan(plan)
+        preferences.setExamReminder("exam-42", true)
+        val restored = AppPreferencesRepository(context)
+        assertEquals(plan, restored.selectedSemesterPlan.value)
+        assertEquals(setOf("exam-42"), restored.examReminderIds.value)
+        restored.clearAcademicChoices()
+        val cleared = AppPreferencesRepository(context)
+        assertNull(cleared.selectedSemesterPlan.value)
+        assertTrue(cleared.examReminderIds.value.isEmpty())
+    }
     @Test fun upgradeAddsRecordedFlagWithoutDeletingGrades() {
         val config = SupportSQLiteOpenHelper.Configuration.builder(context).name(null)
             .callback(object : SupportSQLiteOpenHelper.Callback(9) {

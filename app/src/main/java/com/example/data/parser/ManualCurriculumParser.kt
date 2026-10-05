@@ -19,7 +19,7 @@ object ManualCurriculumParser {
         }
         require(rows.map { it.code.lowercase() }.distinct().size == rows.size) { "کد درس‌ها نباید تکراری باشد." }
         require(rows.map { it.name }.distinct().size == rows.size) { "نام درس‌ها نباید تکراری باشد." }
-        return rows.map { row ->
+        val resolved = rows.map { row ->
             val prerequisites = row.prerequisites.split(',', '،').map { it.trim() }.filter { it.isNotEmpty() }
             val names = prerequisites.map { key ->
                 val prerequisite = rows.find { it.code.equals(key, ignoreCase = true) || it.name == key }
@@ -28,5 +28,17 @@ object ManualCurriculumParser {
             }
             row.copy(prerequisites = names.joinToString("،"))
         }
+        val byName = resolved.associateBy { it.name }
+        val visiting = mutableSetOf<String>()
+        val visited = mutableSetOf<String>()
+        fun visit(name: String) {
+            if (name in visited) return
+            require(visiting.add(name)) { "پیش‌نیازها چرخه دارند؛ ارتباط درس $name را اصلاح کنید." }
+            byName.getValue(name).prerequisites.split('،').filter { it.isNotBlank() }.forEach { visit(it) }
+            visiting.remove(name)
+            visited.add(name)
+        }
+        resolved.forEach { visit(it.name) }
+        return resolved
     }
 }

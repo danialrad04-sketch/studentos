@@ -51,5 +51,6 @@ class AcademicCompletionPolicyTest {
         for (invalid in listOf("M1 | ریاضی | 3 | 1 | missing", "M1 | ریاضی | 3 | 1\nM1 | فیزیک | 3 | 1", "M1 | ریاضی | 0 | 1")) {
             assertTrue(runCatching { parser.parse(invalid, "test") }.isFailure)
         }
+        assertTrue(runCatching { parser.parse("A | الف | 3 | 1 | B\nB | ب | 3 | 2 | A", "test") }.isFailure)
     }
 }

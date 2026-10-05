@@ -93,6 +93,7 @@ fun SupportTicketDialog(
         SupportTicketManager.observeUserTickets(userAccount.uid)
     }
     val tickets by ticketsFlow.collectAsState(initial = emptyList())
+    val currentTicket = tickets.find { it.id == selectedTicket?.id } ?: selectedTicket
     val observationError by SupportTicketManager.observationError.collectAsState()
 
     StudentGlassModalSheet(
@@ -169,7 +170,7 @@ fun SupportTicketDialog(
             if (selectedTicket != null) {
                 // Ticket Detail & Conversation View
                 TicketDetailView(
-                    ticket = selectedTicket!!,
+                    ticket = currentTicket!!,
                     currentUserId = userAccount.uid,
                     currentUserName = userAccount.displayName,
                     onReplySent = {
