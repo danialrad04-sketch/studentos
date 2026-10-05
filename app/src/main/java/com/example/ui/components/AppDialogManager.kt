@@ -404,6 +404,7 @@ fun AppDialogManager(
         is AppDialogState.SupportTickets -> {
             SupportTicketDialog(
                 userAccount = userAccount,
+                onSignIn = { openChild(AppDialogState.Auth) },
                 onDismiss = dismiss
             )
         }

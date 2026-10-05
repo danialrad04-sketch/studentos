@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import androidx.compose.material3.Checkbox
+
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest

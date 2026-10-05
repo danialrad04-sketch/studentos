@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import androidx.compose.material3.FilterChip
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode

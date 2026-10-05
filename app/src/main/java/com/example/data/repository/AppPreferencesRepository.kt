@@ -64,6 +64,9 @@ class AppPreferencesRepository(context: Context) {
     private val _acceptedStudyPlanIds = MutableStateFlow(readAcceptedStudyPlanIds())
     val acceptedStudyPlanIds: StateFlow<Set<String>> = _acceptedStudyPlanIds.asStateFlow()
 
+    private val moshi = com.squareup.moshi.Moshi.Builder().add(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory()).build()
+    private val focusAdapter = moshi.adapter(com.example.domain.model.FocusSession::class.java)
+    private val planAdapter = moshi.adapter(com.example.domain.model.SemesterPlan::class.java)
     private val _focusSession = MutableStateFlow(readFocusSession())
     val focusSession: StateFlow<com.example.domain.model.FocusSession> = _focusSession.asStateFlow()
     private val _selectedSemesterPlan = MutableStateFlow(readSemesterPlan())
@@ -72,13 +75,13 @@ class AppPreferencesRepository(context: Context) {
     val examReminderIds: StateFlow<Set<String>> = _examReminderIds.asStateFlow()
 
     private fun readFocusSession(): com.example.domain.model.FocusSession = runCatching {
-        com.google.gson.Gson().fromJson(prefs.getString("focus_session_v1", ""), com.example.domain.model.FocusSession::class.java)
+        focusAdapter.fromJson(prefs.getString("focus_session_v1", "").orEmpty())
             ?.takeIf { it.durationSeconds in 300..7200 && it.pausedSeconds in 0..it.durationSeconds && it.endsAtMillis >= 0 }
     }.getOrNull() ?: com.example.domain.model.FocusSession()
 
     @Synchronized
     fun saveFocusSession(session: com.example.domain.model.FocusSession) {
-        check(prefs.edit().putString("focus_session_v1", com.google.gson.Gson().toJson(session)).commit())
+        check(prefs.edit().putString("focus_session_v1", focusAdapter.toJson(session)).commit())
         _focusSession.value = session
     }
 
@@ -91,11 +94,11 @@ class AppPreferencesRepository(context: Context) {
     }
 
     private fun readSemesterPlan(): com.example.domain.model.SemesterPlan? = runCatching {
-        com.google.gson.Gson().fromJson(prefs.getString("semester_plan_v1", ""), com.example.domain.model.SemesterPlan::class.java)
+        planAdapter.fromJson(prefs.getString("semester_plan_v1", "").orEmpty())
     }.getOrNull()
 
     fun saveSemesterPlan(plan: com.example.domain.model.SemesterPlan?) {
-        check(prefs.edit().putString("semester_plan_v1", plan?.let { com.google.gson.Gson().toJson(it) }).commit())
+        check(prefs.edit().putString("semester_plan_v1", plan?.let { planAdapter.toJson(it) }).commit())
         _selectedSemesterPlan.value = plan
     }
 
