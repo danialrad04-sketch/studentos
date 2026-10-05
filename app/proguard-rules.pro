@@ -41,6 +41,11 @@
 # Domain / DTO / Network Models
 -keep class com.example.domain.model.** { *; }
 
+# The complete-backup envelope uses Moshi reflection. Keep its constructor,
+# field names and Kotlin metadata stable across minified release upgrades.
+-keep class com.example.data.backup.StudentOSBackupPayload { *; }
+-keep class com.example.data.api.backend.** { *; }
+
 # Firebase Authentication, Firestore, Remote Config, App Check
 -keep class com.google.firebase.** { *; }
 -keepclassmembers class com.google.firebase.** { *; }

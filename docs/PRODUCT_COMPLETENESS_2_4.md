@@ -25,6 +25,7 @@ Date: 2026-10-05. This audit follows actual UI → ViewModel → repository path
 - Application ID and original production signing certificate stay unchanged.
 - Version 2.4.0 / code 2010 exceeds the distributed 2.3.0 test build.
 - Room 9 → 10 adds `grades.isRecorded` without destructive migration. Positive legacy grades are marked recorded; old zero placeholders remain unentered.
+- Reflectively serialized full-backup and backend DTO fields are preserved in R8 releases, following Moshi's keep-rule requirement: https://github.com/square/moshi#r8--proguard. Release mapping is retained with the verified candidate artifact for review.
 - New targeted policy, Room/migration and Compose workflow tests cover the corrected paths. CI results must be linked after execution.
 - Local Gradle bootstrap is blocked by network access to services.gradle.org; executable Android validation is performed by GitHub Actions.
 - The 2.4 test prerelease publisher only runs for the current immutable `main` SHA after all four Android CI jobs and Firebase verification succeed. It reuses those exact signed candidates, verifies identity/certificate and the Bazaar AAB/BIN pair, and publishes test assets without changing the stable release.
