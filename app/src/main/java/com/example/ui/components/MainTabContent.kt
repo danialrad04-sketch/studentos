@@ -69,7 +69,8 @@ fun MainTabContent(
     onOpenPastSemestersDialog: () -> Unit,
     onExportPayload: (ExportSourcePayload) -> Unit,
     onOpenAppTour: (() -> Unit)? = null,
-    onRequestNotificationPermission: () -> Unit = {}
+    onRequestNotificationPermission: () -> Unit = {},
+    onOpenPremium: () -> Unit = {}
 ) {
     AnimatedContent(
         targetState = selectedTab,
@@ -121,7 +122,7 @@ fun MainTabContent(
             }
             AppTab.COPILOT -> {
                 val currCourses by studentViewModel.curriculumCourses.collectAsStateWithLifecycle()
-                val customApiKey by studentViewModel.customGeminiApiKey.collectAsStateWithLifecycle()
+                val userAccount by studentViewModel.currentUser.collectAsStateWithLifecycle()
                 AcademicCopilotScreen(
                     profile = profile,
                     courses = courses,
@@ -142,8 +143,9 @@ fun MainTabContent(
                         Toast.makeText(context, "تغییرات با موفقیت اعمال شد ✨", Toast.LENGTH_SHORT).show()
                     },
                     onOpenPastSemestersDialog = onOpenPastSemestersDialog,
-                    customApiKey = customApiKey,
-                    onSaveCustomApiKey = { studentViewModel.setCustomGeminiApiKey(it) }
+                    userAccount = userAccount,
+                    onOpenPremium = onOpenPremium,
+                    onSubscriptionLoaded = studentViewModel::applyVerifiedSubscription
                 )
             }
             AppTab.ACADEMIC_INTELLIGENCE -> {

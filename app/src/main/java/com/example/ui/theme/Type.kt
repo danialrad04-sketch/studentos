@@ -88,28 +88,36 @@ val Typography = Typography(
     titleLarge = TextStyle(
         fontFamily = VazirmatnFontFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 15.5.sp,
-        lineHeight = 24.sp,
+        fontSize = 18.sp,
+        lineHeight = 28.sp,
         letterSpacing = 0.sp,
         lineHeightStyle = DefaultLineHeightStyle
     ),
     titleMedium = TextStyle(
         fontFamily = VazirmatnFontFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 14.5.sp,
-        lineHeight = 22.sp,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
         letterSpacing = 0.sp,
         lineHeightStyle = DefaultLineHeightStyle
     ),
     titleSmall = TextStyle(
         fontFamily = VazirmatnFontFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 13.5.sp,
-        lineHeight = 21.sp,
+        fontSize = 14.sp,
+        lineHeight = 22.sp,
         letterSpacing = 0.sp,
         lineHeightStyle = DefaultLineHeightStyle
     ),
     bodyLarge = TextStyle(
+        fontFamily = VazirmatnFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.sp,
+        lineHeightStyle = DefaultLineHeightStyle
+    ),
+    bodyMedium = TextStyle(
         fontFamily = VazirmatnFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
@@ -117,43 +125,35 @@ val Typography = Typography(
         letterSpacing = 0.sp,
         lineHeightStyle = DefaultLineHeightStyle
     ),
-    bodyMedium = TextStyle(
-        fontFamily = VazirmatnFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 13.5.sp,
-        lineHeight = 21.sp,
-        letterSpacing = 0.sp,
-        lineHeightStyle = DefaultLineHeightStyle
-    ),
     bodySmall = TextStyle(
         fontFamily = VazirmatnFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 18.sp,
+        fontSize = 13.sp,
+        lineHeight = 20.sp,
         letterSpacing = 0.sp,
         lineHeightStyle = DefaultLineHeightStyle
     ),
     labelLarge = TextStyle(
         fontFamily = VazirmatnFontFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 12.5.sp,
-        lineHeight = 19.sp,
+        fontSize = 14.sp,
+        lineHeight = 22.sp,
         letterSpacing = 0.sp,
         lineHeightStyle = DefaultLineHeightStyle
     ),
     labelMedium = TextStyle(
         fontFamily = VazirmatnFontFamily,
         fontWeight = FontWeight.Medium,
-        fontSize = 11.5.sp,
-        lineHeight = 17.sp,
+        fontSize = 12.5.sp,
+        lineHeight = 19.sp,
         letterSpacing = 0.sp,
         lineHeightStyle = DefaultLineHeightStyle
     ),
     labelSmall = TextStyle(
         fontFamily = VazirmatnFontFamily,
         fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
+        fontSize = 12.sp,
+        lineHeight = 18.sp,
         letterSpacing = 0.sp,
         lineHeightStyle = DefaultLineHeightStyle
     )

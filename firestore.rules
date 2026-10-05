@@ -16,13 +16,15 @@ service cloud.firestore {
       // fields are server-managed and rejected even during first document creation.
       allow create: if isOwner(userId) && !request.resource.data.keys().hasAny([
         'subscriptionTier', 'subscriptionExpiresAt', 'maxDailyAiQuota',
-        'allowsCloudSync', 'allowsPdfExport', 'gpaPredictorUnlocked', 'isAdmin'
+        'allowsCloudSync', 'allowsPdfExport', 'gpaPredictorUnlocked', 'isAdmin',
+        'subscriptionProvider', 'bazaarReceiptId', 'bazaarAutoRenewing'
       ]);
       
       // Entitlements/admin state are writable only by trusted server code.
       allow update: if isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
         'subscriptionTier', 'subscriptionExpiresAt', 'maxDailyAiQuota',
-        'allowsCloudSync', 'allowsPdfExport', 'gpaPredictorUnlocked', 'isAdmin'
+        'allowsCloudSync', 'allowsPdfExport', 'gpaPredictorUnlocked', 'isAdmin',
+        'subscriptionProvider', 'bazaarReceiptId', 'bazaarAutoRenewing'
       ]);
       
       // Allow deletion only by the authenticated owner
@@ -30,9 +32,12 @@ service cloud.firestore {
 
       // Sub-collections: courses, attendance, grades, tasks, profile
       match /{subcollection}/{document=**} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) && subcollection != 'redemptions';
       }
     }
+    match /bazaarReceipts/{id} { allow read, write: if false; }
+    match /aiUsage/{id} { allow read, write: if false; }
+    match /aiRequests/{id} { allow read, write: if false; }
     
     // Promo codes repository - Read-only from clients, modified only by Admin
     match /promoCodes/{code} {

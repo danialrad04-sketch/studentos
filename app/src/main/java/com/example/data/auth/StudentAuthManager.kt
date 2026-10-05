@@ -190,6 +190,7 @@ class StudentAuthManager(private val context: Context) {
                 }.getOrDefault(SubscriptionTier.FREE)
                 SubscriptionDetails(
                     tier = tier,
+                    expiresAt = entitlement.expiresAt,
                     maxDailyAiQuota = entitlement.maxDailyAiQuota,
                     isCloudSyncEnabled = entitlement.allowsCloudSync,
                     isUnlimitedExportEnabled = entitlement.allowsPdfExport,
@@ -254,7 +255,7 @@ class StudentAuthManager(private val context: Context) {
                                 isCloudSyncEnabled = tier != SubscriptionTier.FREE,
                                 isUnlimitedExportEnabled = tier != SubscriptionTier.FREE,
                                 isGpaPredictorUnlocked = tier != SubscriptionTier.FREE,
-                                maxDailyAiQuota = if (tier == SubscriptionTier.FREE) 5 else 999
+                                maxDailyAiQuota = if (tier == SubscriptionTier.FREE) 5 else 50
                             )
                         )
                     }
@@ -625,16 +626,18 @@ class StudentAuthManager(private val context: Context) {
                     isCloudSyncEnabled = true,
                     isUnlimitedExportEnabled = true,
                     isGpaPredictorUnlocked = true,
-                    maxDailyAiQuota = 999
+                    maxDailyAiQuota = tier.maxAiQueriesPerDay
                 )
             )
         }
         result
     }
 
-    suspend fun upgradeSubscriptionTier(tier: SubscriptionTier): Result<SubscriptionTier> = withContext(Dispatchers.IO) {
-        // Entitlements must come from the server; a failed purchase never grants access.
-        applyPromoCode("UPGRADE_${tier.name}")
+    fun applyVerifiedSubscription(details: SubscriptionDetails) {
+        val current = _currentUser.value
+        if (com.example.data.api.PremiumApiClient.memberId() == current.uid && !current.isGuest) {
+            _currentUser.value = current.copy(subscription = details)
+        }
     }
 
     suspend fun signOutUser() = withContext(Dispatchers.IO) {

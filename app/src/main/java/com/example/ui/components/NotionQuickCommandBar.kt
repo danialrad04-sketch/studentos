@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -71,39 +72,28 @@ fun StudentOperationsHubCard(
     onOpenOcrImport: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // 5 Quick Action Buttons Hub from screenshot with squircle emoji pack
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        QuickEmojiButton(
-            title = "سنتر",
-            emojiType = AppEmojiType.BOLT,
-            onClick = onOpenCommandCenter
-        )
-        QuickEmojiButton(
-            title = "تسک",
-            emojiType = AppEmojiType.PLUS,
-            onClick = onQuickAddTask
-        )
-        QuickEmojiButton(
-            title = "حضور",
-            emojiType = AppEmojiType.TARGET,
-            onClick = onQuickAttendance
-        )
-        QuickEmojiButton(
-            title = "پومودورو",
-            emojiType = AppEmojiType.POMODORO,
-            onClick = onQuickPomodoro
-        )
-        QuickEmojiButton(
-            title = "کوپایلوت",
-            emojiType = AppEmojiType.COPILOT,
-            onClick = onOpenCopilot
-        )
+    val actions = listOf(
+        Triple("ثبت تکلیف", Icons.Default.Add, onQuickAddTask),
+        Triple("ثبت حضور", Icons.Default.WarningAmber, onQuickAttendance),
+        Triple("شروع تمرکز", Icons.Default.HourglassTop, onQuickPomodoro),
+        Triple("دستیار تحصیلی", Icons.Default.AutoAwesome, onOpenCopilot),
+        Triple("اسکن برنامه", Icons.Default.CameraAlt, onOpenOcrImport),
+        Triple("مرکز برنامه‌ریزی", Icons.Default.FlashOn, onOpenCommandCenter)
+    )
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("اقدام سریع", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        actions.chunked(2).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                row.forEach { (title, icon, action) ->
+                    Surface(onClick = action, modifier = Modifier.weight(1f), shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                        Column(Modifier.heightIn(min = 88.dp).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Icon(icon, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+                            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

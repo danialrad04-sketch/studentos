@@ -8,8 +8,10 @@
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="sharedpref" path="studentos_secure_prefs.xml" />
+        <exclude domain="sharedpref" path="bazaar_pending_purchases.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="sharedpref" path="studentos_secure_prefs.xml" />
+        <exclude domain="sharedpref" path="bazaar_pending_purchases.xml" />
     </device-transfer>
 </data-extraction-rules>

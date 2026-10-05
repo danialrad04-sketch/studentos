@@ -21,13 +21,17 @@ data class SubscriptionDetails(
     val maxDailyAiQuota: Int = 5,
     val isCloudSyncEnabled: Boolean = false,
     val isUnlimitedExportEnabled: Boolean = false,
-    val isGpaPredictorUnlocked: Boolean = false
+    val isGpaPredictorUnlocked: Boolean = false,
+    val dailyScanQuotaUsed: Int = 0,
+    val maxDailyScanQuota: Int = 1,
+    val autoRenewing: Boolean = false
 ) {
     val remainingAiQuota: Int
         get() = (maxDailyAiQuota - dailyAiQuotaUsed).coerceAtLeast(0)
 
     val isProOrHigher: Boolean
-        get() = tier == SubscriptionTier.PRO || tier == SubscriptionTier.ULTRA || tier == SubscriptionTier.CAMPUS_UNLIMITED
+        get() = (expiresAt == null || expiresAt > System.currentTimeMillis()) &&
+            (tier == SubscriptionTier.PRO || tier == SubscriptionTier.ULTRA || tier == SubscriptionTier.CAMPUS_UNLIMITED)
 }
 
 data class UserAccount(

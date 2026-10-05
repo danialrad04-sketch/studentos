@@ -9,15 +9,15 @@ on:
       tag:
         description: "Release tag matching version_name"
         required: true
-        default: "v2.2.0"
+        default: "v2.3.0"
       version_code:
         description: "Must exceed every previously distributed build"
         required: true
-        default: "2008"
+        default: "2009"
       version_name:
         description: "Android version name"
         required: true
-        default: "2.2.0"
+        default: "2.3.0"
 
 permissions:
   contents: write
@@ -132,7 +132,7 @@ jobs:
           gh release create "$RELEASE_TAG" release-output/* \
             --repo "$GITHUB_REPOSITORY" --target "$RELEASE_REF" \
             --title "Student OS $VERSION_NAME" --draft \
-            --notes-file docs/RELEASE_NOTES_V2_2.md
+            --notes-file docs/RELEASE_NOTES_V2_3.md
 
       - name: Remove signing material
         if: always()

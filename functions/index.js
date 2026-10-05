@@ -3,11 +3,40 @@
  * Handles Server-Side Subscription Verification, Promo Code Redemption, and Play Billing Receipts.
  */
 
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+const functions = require("firebase-functions/v1");
+const { initializeApp } = require("firebase-admin/app");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 
-admin.initializeApp();
-const db = admin.firestore();
+initializeApp();
+const db = getFirestore();
+const premiumCore = require('./lib/premium-core');
+const { PremiumService } = require('./lib/premium-service');
+const premium = new PremiumService(db);
+const secured = functions.runWith({ enforceAppCheck: true, timeoutSeconds: 60, memory: '256MB', maxInstances: 10, secrets: ['BAZAAR_API_SECRET', 'BAZAAR_RSA_PUBLIC_KEY', 'BILLING_TOKEN_ENCRYPTION_KEY', 'GEMINI_SERVER_API_KEY'] });
+function member(context) {
+  if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') throw new functions.https.HttpsError('unauthenticated', 'ابتدا وارد حساب خود شوید؛ اطلاعات مهمان روی دستگاه باقی می‌ماند.');
+  return context.auth.uid;
+}
+async function safe(action) {
+  try { return await action(); }
+  catch (error) {
+    if (error instanceof premiumCore.ServiceError) throw new functions.https.HttpsError(error.code, error.message);
+    // Never log receipt tokens, prompts, signatures, upstream bodies or secrets.
+    throw new functions.https.HttpsError('unavailable', 'سرویس موقتاً در دسترس نیست؛ دوباره تلاش کنید.');
+  }
+}
+exports.getPremiumCatalog = secured.https.onCall(async (_data, context) => {
+  const uid = member(context);
+  return safe(async () => ({ plans: premiumCore.plans(process.env), salesEnabled: premiumCore.ready(process.env), rsaPublicKey: process.env.BAZAAR_RSA_PUBLIC_KEY || '', aiEnabled: !!process.env.GEMINI_SERVER_API_KEY, ...await premium.status(uid) }));
+});
+exports.verifyBazaarSubscription = secured.https.onCall(async (data, context) => {
+  const uid = member(context);
+  return safe(() => premium.verify(uid, data || {}));
+});
+exports.generateAcademicAdvice = secured.https.onCall(async (data, context) => {
+  const uid = member(context);
+  return safe(() => premium.generate(uid, data || {}));
+});
 
 /**
  * Callable Cloud Function: validateAndApplyPromoCode
@@ -103,26 +132,29 @@ exports.validateAndApplyPromoCode = functions.https.onCall(async (data, context)
 
     transaction.set(userRef, {
       subscriptionTier: targetTier,
+      subscriptionProvider: "promo",
+      bazaarReceiptId: null,
+      bazaarAutoRenewing: false,
       maxDailyAiQuota: maxAiQueries,
       isCloudSyncEnabled: targetTier !== "FREE",
       allowsPdfExport: targetTier !== "FREE",
       gpaPredictorUnlocked: targetTier !== "FREE",
       subscriptionExpiresAt: expiresAt,
       lastPromoCode: rawCode,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      updatedAt: FieldValue.serverTimestamp()
     }, { merge: true });
 
     transaction.create(redemptionRef, {
       code: rawCode,
       tierGranted: targetTier,
-      redeemedAt: admin.firestore.FieldValue.serverTimestamp()
+      redeemedAt: FieldValue.serverTimestamp()
     });
     transaction.set(
       promoRef,
       {
         redeemedCount: redeemedCount + 1,
         isActive: redeemedCount + 1 < maxRedemptions,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: FieldValue.serverTimestamp()
       },
       { merge: true }
     );

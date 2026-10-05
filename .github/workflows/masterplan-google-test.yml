@@ -49,7 +49,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
-          ./gradlew assembleRelease -PVERSION_CODE=2008 -PVERSION_NAME=2.2.0-rc --stacktrace
+          ./gradlew assembleRelease -PVERSION_CODE=2009 -PVERSION_NAME=2.3.0-rc --stacktrace
 
       - name: Verify APK and certificate
         shell: bash

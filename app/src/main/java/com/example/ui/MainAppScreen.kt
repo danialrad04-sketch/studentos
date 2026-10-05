@@ -522,7 +522,8 @@ fun MainAppScreen(
                                 onOpenPastSemestersDialog = { dialogState = AppDialogState.PastSemesters },
                                 onExportPayload = { dialogState = AppDialogState.ExportShare(it) },
                                 onOpenAppTour = { showAppTourGuide = true },
-                                onRequestNotificationPermission = { checkAndRequestNotificationPermission { } }
+                                onRequestNotificationPermission = { checkAndRequestNotificationPermission { } },
+                                onOpenPremium = { dialogState = AppDialogState.Upgrade }
                             )
                         }
                         } // scrolling destination column

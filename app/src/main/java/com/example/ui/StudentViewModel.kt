@@ -1430,16 +1430,8 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    fun upgradeSubscriptionTier(tier: com.example.domain.model.SubscriptionTier, onResult: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
-            val result = authManager.upgradeSubscriptionTier(tier)
-            if (result.isSuccess) {
-                _userMessage.emit("اشتراک شما ارتقا یافت.")
-                onResult(true, "طرح ${result.getOrThrow().titleFa} فعال شد.")
-            } else {
-                onResult(false, result.exceptionOrNull()?.localizedMessage ?: "ارتقای اشتراک انجام نشد.")
-            }
-        }
+    fun applyVerifiedSubscription(details: com.example.domain.model.SubscriptionDetails) {
+        authManager.applyVerifiedSubscription(details)
     }
 
     fun signOutUser() {

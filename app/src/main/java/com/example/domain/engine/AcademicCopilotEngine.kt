@@ -862,7 +862,8 @@ object AcademicCopilotEngine {
         coursesWithSessions: List<CourseWithSessions> = emptyList(),
         curriculumCourses: List<CurriculumCourseEntity> = emptyList(),
         conversationHistory: List<CopilotMessage> = emptyList(),
-        customApiKey: String? = null
+        customApiKey: String? = null,
+        kind: String = "chat"
     ): CopilotMessage {
         val todayWeekdayIdx = JalaliCalendarUtil.getTodayWeekdayIndex()
         val todayWeekdayName = JalaliCalendarUtil.getWeekdayName(todayWeekdayIdx)
@@ -876,6 +877,7 @@ object AcademicCopilotEngine {
             append("ترم تحصیلی: ترم ${profile.currentSemester} (ورودی ${profile.entryYear})\n")
             append("واحدهای گذرانده: ${profile.passedUnits}\n")
             append("معدل کل: ${String.format(Locale.US, "%.2f", computeGpa(grades, profile.declaredGpa))}\n")
+            grades.take(40).forEach { append("نمرهٔ ثبت‌شده: ${it.courseName} ${it.midtermGrade + it.finalGrade}\n") }
             append("تاریخ امروز: $todayWeekdayName $todayJalali\n")
             append("تاریخ فردا: $tomorrowJalali\n\n")
 
@@ -906,7 +908,7 @@ object AcademicCopilotEngine {
         }
 
         // Format recent conversation history (last 6 turns)
-        val historyTurns = conversationHistory.takeLast(6).map { msg ->
+        val historyTurns = conversationHistory.dropLastWhile { it.sender == CopilotSender.USER && it.text.trim() == query.trim() }.takeLast(6).map { msg ->
             val role = if (msg.sender == CopilotSender.USER) "user" else "model"
             Pair(role, msg.text)
         }
@@ -916,13 +918,13 @@ object AcademicCopilotEngine {
             prompt = query,
             studentContext = studentContext,
             history = historyTurns,
-            customApiKey = customApiKey
+            customApiKey = customApiKey,
+            kind = kind
         )
 
         if (geminiResult.isSuccess) {
             val geminiText = geminiResult.getOrNull()
             if (!geminiText.isNullOrBlank()) {
-                val activeModel = com.example.data.api.GeminiApiClient.getActiveModelName()
                 val detectedAction = detectActionProposal(query, geminiText, tasks, courses, profile)
                 val dynamicQuickReplies = generateDynamicQuickReplies(query, geminiText)
 
@@ -931,7 +933,7 @@ object AcademicCopilotEngine {
                     sender = CopilotSender.COPILOT,
                     text = geminiText,
                     timestamp = currentTimeString(),
-                    confidenceBadge = "پاسخ زنده هوش مصنوعی $activeModel ✦",
+                    confidenceBadge = "پاسخ آنلاین دستیار تحصیلی",
                     proposedAction = detectedAction,
                     suggestedQuickReplies = dynamicQuickReplies
                 )
@@ -965,8 +967,8 @@ object AcademicCopilotEngine {
         }
 
         return fallbackMsg.copy(
-            text = fallbackMsg.text + debugSuffix,
-            confidenceBadge = "پاسخ هوشمند آکادمیک (موتور تحلیلی Student OS)"
+            text = "${com.example.data.api.PremiumApiClient.userMessage(failureException)}\n\nتحلیل بر اساس اطلاعات ذخیره‌شده:\n" + fallbackMsg.text + debugSuffix,
+            confidenceBadge = "تحلیل آفلاین · پاسخ آنلاین دریافت نشد"
         )
     }
 

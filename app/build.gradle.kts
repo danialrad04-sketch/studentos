@@ -15,10 +15,11 @@ android {
 
   defaultConfig {
     applicationId = "com.aistudio.studentos.appvzk"
+    buildConfigField("String", "PREMIUM_FUNCTIONS_REGION", "\"us-central1\"")
     minSdk = 24
     targetSdk = 36
-    versionCode = providers.gradleProperty("VERSION_CODE").orElse("2008").get().toInt()
-    versionName = providers.gradleProperty("VERSION_NAME").orElse("2.2.0").get()
+    versionCode = providers.gradleProperty("VERSION_CODE").orElse("2009").get().toInt()
+    versionName = providers.gradleProperty("VERSION_NAME").orElse("2.3.0").get()
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -82,6 +83,7 @@ secrets {
   propertiesFileName = ".env"
   defaultPropertiesFileName = ".env.example"
   ignoreList.add("FIREBASE_APPCHECK_DEBUG_TOKEN")
+  ignoreList.add("GEMINI_API_KEY")
 }
 
 googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN }
@@ -93,6 +95,7 @@ ksp {
 // Some unused dependencies are commented out below instead of being removed.
 // This makes it easy to add them back in the future if needed.
 dependencies {
+  implementation("com.github.cafebazaar.Poolakey:poolakey:2.2.0")
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
   // implementation(libs.accompanist.permissions)

@@ -22,6 +22,7 @@ dependencyResolutionManagement {
   repositories {
     maven { url = uri("https://maven.google.com") }
     mavenCentral()
+    maven { url = uri("https://jitpack.io"); content { includeGroup("com.github.cafebazaar.Poolakey") } }
   }
 }
 

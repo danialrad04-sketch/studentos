@@ -80,7 +80,11 @@ object FirestoreSyncManager {
 
             if (snapshot != null && snapshot.exists()) {
                 val tierStr = snapshot.getString("subscriptionTier") ?: "FREE"
-                val expiresAt = snapshot.getTimestamp("subscriptionExpiresAt")?.toDate()?.time
+                val expiresAt = when (val expiry = snapshot.get("subscriptionExpiresAt")) {
+                    is com.google.firebase.Timestamp -> expiry.toDate().time
+                    is Number -> expiry.toLong()
+                    else -> null
+                }
                 val expired = expiresAt != null && expiresAt <= System.currentTimeMillis()
                 val tier = if (expired) {
                     SubscriptionTier.FREE

@@ -5,7 +5,6 @@ import android.util.Log
 import com.example.di.AppContainer
 import com.example.ui.util.NotificationHelper
 import com.example.util.CrashLogger
-import com.example.data.api.GeminiApiClient
 import com.example.data.cloud.BackendSyncScheduler
 import com.example.data.local.AppDatabase
 import com.google.firebase.FirebaseApp
@@ -69,12 +68,7 @@ class StudentApplication : Application() {
             Log.w("StudentApplication", "Firebase initialization skipped/failed: ${e.message}")
         }
 
-        // Initialize Remote Config for dynamic model configuration
-        try {
-            GeminiApiClient.initRemoteConfig()
-        } catch (e: Throwable) {
-            Log.w("StudentApplication", "GeminiApiClient remote config initialization failed: ${e.message}")
-        }
+
     }
 }
 
