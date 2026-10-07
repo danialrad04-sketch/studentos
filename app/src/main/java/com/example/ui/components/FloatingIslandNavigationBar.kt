@@ -9,9 +9,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material.icons.rounded.*
@@ -50,15 +47,8 @@ fun FloatingIslandNavigationBar(
         )
     }
     Box(Modifier.fillMaxWidth().padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
-    Surface(
-        modifier = modifier.widthIn(max = 600.dp).fillMaxWidth(),
-        shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        tonalElevation = 0.dp
-    ) {
     NavigationBar(
-        modifier = Modifier.fillMaxWidth().testTag("primary_navigation"),
+        modifier = modifier.widthIn(max = 600.dp).fillMaxWidth().testTag("primary_navigation"),
         containerColor = Color.Transparent,
         tonalElevation = 0.dp
     ) {
@@ -85,7 +75,6 @@ fun FloatingIslandNavigationBar(
                 )
             )
         }
-    }
     }
     }
     if (showAllModulesSheet) {

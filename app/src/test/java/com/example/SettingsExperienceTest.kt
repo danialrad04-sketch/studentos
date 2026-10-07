@@ -50,7 +50,7 @@ class SettingsExperienceTest {
         rule.onNodeWithContentDescription("بازگشت").performClick()
         rule.onNodeWithTag("setting_حساب کاربری").assertExists()
     }
-    @Test fun darkSettingsLargeText() {
+    @Test @Config(fontScale = 1.5f) fun darkSettingsLargeText() {
         settings(dark = true, scale = 1.5f)
         rule.onNodeWithTag("setting_داده‌ها و پشتیبان").performScrollTo().assertIsDisplayed()
         rule.onNodeWithTag("settings_page").captureRoboImage("build/outputs/visual-review/settings-dark-large-text.png")
@@ -112,7 +112,7 @@ class SettingsExperienceTest {
         assertEquals("حل تمرین فصل سوم", saved?.first())
         assertEquals(com.example.ui.components.datepicker.JalaliCalendarUtil.today().format(), saved?.last())
     }
-    @Test @Config(qualifiers = "w360dp-h480dp-xxhdpi", sdk = [35])
+    @Test @Config(qualifiers = "w360dp-h480dp-xxhdpi", sdk = [35], fontScale = 1.5f)
     fun shortWindowWithLargeTextKeepsTaskActionsReachable() {
         rule.setContent {
             val density = LocalDensity.current
@@ -169,7 +169,7 @@ class SettingsExperienceTest {
         rule.waitForIdle()
         assertTrue(account)
     }
-    @Test fun compactHeaderWithLargeTextKeepsMenuAndAccountAccessible() {
+    @Test @Config(fontScale = 1.5f) fun compactHeaderWithLargeTextKeepsMenuAndAccountAccessible() {
         rule.setContent {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, 1.5f)) {

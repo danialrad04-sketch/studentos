@@ -189,7 +189,7 @@ fun CourseWorkspaceDialogV2(
                                 Modifier.padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                StudentAdaptiveRow(minimumRowWidth = 260.dp) { cell ->
+                                StudentAdaptiveRow(minimumRowWidth = 216.dp) { cell ->
                                     WorkspaceMetric(course.units.toString(), "واحد", cell)
                                     WorkspaceMetric(openTasks.toString(), "کار باز", cell)
                                     WorkspaceMetric(sessions.size.toString(), "جلسه", cell)
@@ -322,11 +322,11 @@ fun CourseWorkspaceDialogV2(
                                         ) {
                                             Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                             Spacer(Modifier.width(5.dp))
-                                            Text(
+                                            StudentReadableText(
                                                 exam.location,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                                detailTitle = "محل امتحان",
+                                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                                                maxLines = 2,
                                                 modifier = Modifier.weight(1f)
                                             )
                                         }
@@ -349,7 +349,7 @@ fun CourseWorkspaceDialogV2(
                             shape = RoundedCornerShape(17.dp),
                             color = MaterialTheme.colorScheme.surface
                         ) {
-                            StudentAdaptiveRow(Modifier.padding(14.dp), minimumRowWidth = 260.dp) { cell ->
+                            StudentAdaptiveRow(Modifier.padding(14.dp), minimumRowWidth = 216.dp) { cell ->
                                 WorkspaceScoreV2("میان‌ترم", grade?.midtermGrade?.toString() ?: "—", cell)
                                 WorkspaceScoreV2("پایان‌ترم", grade?.finalGrade?.toString() ?: "—", cell)
                                 WorkspaceScoreV2("کار", completedTasks.toString() + "/" + tasks.size, cell)

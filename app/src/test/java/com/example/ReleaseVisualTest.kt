@@ -69,7 +69,7 @@ class ReleaseVisualTest {
     }
     @Test fun dashboardLight() = dashboard(false)
     @Test fun dashboardDark() = dashboard(true)
-    @Test fun dashboardLargeText() = dashboard(false, 1.5f)
+    @Test @Config(fontScale = 1.5f) fun dashboardLargeText() = dashboard(false, 1.5f)
     private fun tasks(dark: Boolean, scale: Float) {
         rule.setContent {
             val density = LocalDensity.current
@@ -101,7 +101,7 @@ class ReleaseVisualTest {
     }
     @Test @Config(qualifiers = "w360dp-h800dp-xxhdpi", sdk = [35])
     fun compactTasks() = tasks(false, 1f)
-    @Test @Config(qualifiers = "w360dp-h800dp-xxhdpi", sdk = [35])
+    @Test @Config(qualifiers = "w360dp-h800dp-xxhdpi", sdk = [35], fontScale = 1.5f)
     fun compactTasksLargeText() = tasks(false, 1.5f)
     @Test @Config(qualifiers = "w360dp-h800dp-xxhdpi", sdk = [35])
     fun compactTasksDark() = tasks(true, 1f)

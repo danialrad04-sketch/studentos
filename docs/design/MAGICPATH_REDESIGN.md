@@ -1,6 +1,6 @@
 # Student OS — MagicPath design implementation
 
-Design project: `458702222482640896`. Initial component/revision: `458702301721423872` / `458702301721423873`.
+Design project: `458702222482640896`. Component/current revision: `458702301721423872` / `458706959772831744`.
 
 The interactive design reference covers home, schedule, tasks, grades, account/settings and course workspace. Its data is illustrative, not a live account. The React/CSS source lives in `magicpath/src/components/generated`; the Android UI remains native Compose.
 
@@ -14,7 +14,7 @@ The interactive design reference covers home, schedule, tasks, grades, account/s
 
 ## Native implementation
 
-Apply shared theme/shape/token changes across existing Material screens. Put next class first on the dashboard, avoid the duplicated class preview, improve metadata and responsive KPI groups. Keep navigation callbacks and all module entry points. Let schedule cards grow with supported system text scaling.
+Apply shared theme/shape/token changes across existing Material screens. Put next class first on the dashboard, avoid the duplicated class preview, improve metadata and responsive KPI groups. Keep navigation callbacks and all module entry points, with a transparent navigation container and selection indicators. Let schedule cards grow with supported system text scaling.
 
 Reflow workspace metrics, actions, scores, sessions and attendance using actual content width and font scale. Keep edit/delete in a contextual menu. Preserve access to tasks beyond the first ten and to complete notes, professor names and task titles.
 

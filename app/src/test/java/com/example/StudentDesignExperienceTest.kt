@@ -69,7 +69,7 @@ class StudentDesignExperienceTest {
         rule.onNodeWithTag("student_modal").assertDoesNotExist()
     }
 
-    @Test fun compactLargeTextActionsReflowInsteadOfClipping() {
+    @Test @Config(fontScale = 2f) fun compactLargeTextActionsReflowInsteadOfClipping() {
         rule.setContent {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, 2f)) {
@@ -91,7 +91,7 @@ class StudentDesignExperienceTest {
         rule.onNodeWithTag("course_workspace").captureRoboImage("build/outputs/visual-review/workspace-light-320.png")
     }
 
-    @Test fun workspaceDarkLargeTextVisual() {
+    @Test @Config(fontScale = 2f) fun workspaceDarkLargeTextVisual() {
         workspace(dark = true, scale = 2f)
         rule.onNodeWithTag("course_workspace").captureRoboImage("build/outputs/visual-review/workspace-dark-320-2.0.png")
     }
