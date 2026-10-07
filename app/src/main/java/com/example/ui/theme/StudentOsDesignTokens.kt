@@ -9,23 +9,23 @@ import androidx.compose.ui.unit.dp
  * Compatibility token layer for Student OS.
  *
  * The product source of truth is the Academic Premium palette:
- * Olive + neutral paper + Petrol/Navy with separate semantic status colors.
+ * Lavender + cool paper + Petrol/Navy with separate semantic status colors.
  *
  * Existing public token names are retained so feature screens can migrate
  * incrementally without a wholesale rewrite.
  */
 object StudentOsColors {
     // Core Academic Premium surfaces
-    val LightCanvas = Color(0xFFFAFAF6)
-    val LightPaper = Color(0xFFF1F2EA)
+    val LightCanvas = Color(0xFFF7F5FC)
+    val LightPaper = Color(0xFFF0ECF8)
     val LightSurface = Color(0xFFFFFFFF)
-    val LightSurface2 = Color(0xFFF1F2EA)
-    val LightInk = Color(0xFF24271F)
-    val LightInkSoft = Color(0xFF62665A)
-    val LightInkFaint = Color(0xFF94A3B8)
-    val LightBrand = Color(0xFF59652F)
-    val LightIndigoStrong = Color(0xFF27320C)
-    val LightIndigoSoft = Color(0xFFE5EACE)
+    val LightSurface2 = Color(0xFFF0ECF8)
+    val LightInk = Color(0xFF252137)
+    val LightInkSoft = Color(0xFF736D83)
+    val LightInkFaint = Color(0xFFA69CBD)
+    val LightBrand = Color(0xFF6D4DCC)
+    val LightIndigoStrong = Color(0xFF38246D)
+    val LightIndigoSoft = Color(0xFFEDE6FF)
 
     // Semantic status colors — deliberately separate from brand colors
     val LightAmber = Color(0xFFD97706)

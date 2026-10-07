@@ -149,17 +149,6 @@ fun ModernBentoDashboard(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        StudentTodayCommandStrip(
-            courses = courses,
-            coursesWithSessions = coursesWithSessions,
-            attendance = attendanceList,
-            tasks = tasks,
-            exams = exams,
-            studyRecommendations = studyRecommendations,
-            onNavigateTab = onNavigateTab,
-            onStartFocus = startFocus
-        )
-
         // 2. HERO GRADIENT CARD ("کلاس بعدی")
         NextClassLiveBentoTile(
             courses = courses,
@@ -169,6 +158,20 @@ fun ModernBentoDashboard(
             },
             onOpenSchedule = { onNavigateTab(AppTab.SCHEDULE) }
         )
+
+        StudentTodayCommandStrip(
+            courses = courses,
+            coursesWithSessions = coursesWithSessions,
+            attendance = attendanceList,
+            tasks = tasks,
+            exams = exams,
+            studyRecommendations = studyRecommendations,
+            onNavigateTab = onNavigateTab,
+            onStartFocus = startFocus,
+            showClassPreview = false
+        )
+
+
 
 
         if (primaryPriority != null || tasks.any { !it.isCompleted } || exams.isNotEmpty()) AcademicPriorityActionCardV2(
@@ -193,7 +196,7 @@ fun ModernBentoDashboard(
         AcademicSectionHeader("برنامه و کارهای من", subtitle = "ابزارهای روزمره، در دسترس و مرتب")
         listOf(
             Triple("برنامه هفتگی", Icons.Default.CalendarToday, AppTab.SCHEDULE), Triple("امتحانات", Icons.Default.School, AppTab.EXAMS),
-            Triple("تکالیف", Icons.Default.CheckCircle, AppTab.TASKS), Triple("کلاس‌ها", Icons.Default.CastForEducation, AppTab.SCHEDULE)
+            Triple("تکالیف", Icons.Default.CheckCircle, AppTab.TASKS), Triple("حضور و غیاب", Icons.Default.CastForEducation, AppTab.ATTENDANCE)
         ).chunked(if (LocalDensity.current.fontScale >= 1.3f) 1 else 2).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEach { (title, icon, tab) ->
@@ -341,54 +344,48 @@ private fun AnalyticsKpiSection(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // Row 1: معدل کل & واحد گذرانده
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
+        StudentAdaptiveRow(minimumRowWidth = 280.dp) { cell ->
             BentoKpiTile(
                 title = "معدل کل",
                 value = displayGpa,
-                subtitle = targetGpa?.let { "هدف ثبت‌شده: ${String.format(Locale.US, "%.2f", it)} 🎯" } ?: "هدف معدل ثبت نشده",
+                subtitle = targetGpa?.let { "هدف ثبت‌شده: ${String.format(Locale.US, "%.2f", it)}" } ?: "هدف معدل ثبت نشده",
                 emojiType = AppEmojiType.CHART,
                 accentColor = MaterialTheme.colorScheme.secondary,
                 onClick = onNavigateToGrades,
-                modifier = Modifier.weight(1f)
+                modifier = cell
             )
 
             BentoKpiTile(
                 title = "واحد گذرانده",
                 value = "$displayPassed از $totalRequiredCredits",
-                subtitle = "${((passedUnits.toFloat() / totalRequiredCredits.coerceAtLeast(1)) * 100).toInt()}% چارت 📈",
+                subtitle = "${((passedUnits.toFloat() / totalRequiredCredits.coerceAtLeast(1)) * 100).toInt()}% از چارت",
                 emojiType = AppEmojiType.CHECK,
                 accentColor = MaterialTheme.colorScheme.primary,
                 onClick = onNavigateToPassport,
-                modifier = Modifier.weight(1f)
+                modifier = cell
             )
         }
 
         // Row 2: حضور و غیاب & تسک امروز
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
+        StudentAdaptiveRow(minimumRowWidth = 280.dp) { cell ->
             BentoKpiTile(
                 title = "حضور و غیاب",
                 value = displayAttendance,
-                subtitle = if (dangerCourses > 0) "$dangerCourses هشدار غیبت!" else if (attendanceList.isEmpty()) "هنوز داده‌ای ثبت نشده" else "وضعیت پایدار 🛡️",
+                subtitle = if (dangerCourses > 0) "$dangerCourses هشدار غیبت!" else if (attendanceList.isEmpty()) "هنوز داده‌ای ثبت نشده" else "وضعیت مناسب",
                 emojiType = AppEmojiType.CALENDAR,
                 accentColor = if (dangerCourses > 0) StudentOsColors.CrimsonRose else MaterialTheme.colorScheme.primary,
                 onClick = onNavigateToAttendance,
-                modifier = Modifier.weight(1f)
+                modifier = cell
             )
 
             BentoKpiTile(
-                title = "تسک امروز",
+                title = "کارهای باز",
                 value = displayTasks,
-                subtitle = "تکالیف در جریان ⏳",
+                subtitle = "برای امروز یک قدم بردار",
                 emojiType = AppEmojiType.TARGET,
                 accentColor = StudentOsColors.AmberGlow,
                 onClick = onNavigateToTasks,
-                modifier = Modifier.weight(1f)
+                modifier = cell
             )
         }
     }
@@ -409,9 +406,9 @@ private fun BentoKpiTile(
             .clip(RoundedCornerShape(22.dp))
             .tactileClickable { onClick() },
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.studentColors.glassSurfaceElevated),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.studentColors.glassBorderGradient),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -467,8 +464,8 @@ private fun BentoKpiTile(
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = subtitle,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
                     color = accentColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -512,116 +509,48 @@ private fun NextClassLiveBentoTile(
         else -> "${featured.daysAhead} روز دیگر · $featuredStart"
     }
 
-    val shape = RoundedCornerShape(24.dp)
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val heroColor = if (isDark) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.primary
+    val heroInk = if (isDark) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onPrimary
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .tactileClickable { featuredCourse?.let(onOpenWorkspace) ?: onOpenSchedule() },
-        shape = shape,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = androidx.compose.foundation.BorderStroke(1.dp, if (isDark) Color(0x33FFFFFF) else Color(0xFFE2E8F0)),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 1.5.dp)
+        modifier = modifier.fillMaxWidth().tactileClickable { featuredCourse?.let(onOpenWorkspace) ?: onOpenSchedule() },
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = heroColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
-                            Color(0x00000000)
-                        ),
-                        radius = 450f
-                    )
-                )
-                .padding(18.dp)
+        Column(
+            Modifier.fillMaxWidth().background(Brush.linearGradient(listOf(heroColor, heroColor.copy(alpha = 0.94f))))
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.secondary)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = classLabel,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.14f),
-                        border = androidx.compose.foundation.BorderStroke(0.8.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f))
-                    ) {
-                        Text(
-                            text = if (featuredCourse != null) "${featuredCourse.units} واحد" else "برنامه هفتگی",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(
-                    text = featuredCourse?.name ?: "هنوز جلسه‌ای در برنامه ثبت نشده",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = if (featuredCourse != null) featuredLocation + " · " + featuredCourse.professor.ifBlank { "استاد درس" } else "جهت ثبت کلاس، از بخش برگه انتخاب واحد یا برنامه هفتگی اقدام کنید",
-                    fontSize = 12.5.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Cyan Glowing Progress Bar
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(featured?.progress ?: 0f)
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(
-                                Brush.horizontalGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.secondary,
-                                        MaterialTheme.colorScheme.tertiary
-                                    )
-                                )
-                            )
-                    )
-                }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(Icons.Default.CalendarToday, null, tint = heroInk, modifier = Modifier.size(20.dp))
+                Text(classLabel, color = heroInk, style = MaterialTheme.typography.labelLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
+            Text(
+                featuredCourse?.name ?: "کلاس‌های خودت را ثبت کن",
+                style = MaterialTheme.typography.displaySmall,
+                fontWeight = FontWeight.Bold, color = heroInk,
+                maxLines = 2, overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                if (featuredCourse != null) featuredLocation else "برنامهٔ هفتگی را بساز تا کلاس بعدی همین‌جا دیده شود.",
+                style = MaterialTheme.typography.bodyMedium, color = heroInk,
+                maxLines = 2, overflow = TextOverflow.Ellipsis
+            )
+            TextButton(
+                onClick = { featuredCourse?.let(onOpenWorkspace) ?: onOpenSchedule() },
+                modifier = Modifier.heightIn(min = 48.dp),
+                colors = androidx.compose.material3.ButtonDefaults.textButtonColors(contentColor = heroInk)
+            ) {
+                Text(if (featuredCourse == null) "رفتن به برنامهٔ هفتگی" else "باز کردن فضای درس")
+                Spacer(Modifier.width(8.dp))
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(18.dp))
+            }
+            if (featured?.isOngoing == true) LinearProgressIndicator(
+                progress = { featured.progress }, modifier = Modifier.fillMaxWidth(),
+                color = heroInk, trackColor = heroInk.copy(alpha = 0.2f)
+            )
         }
     }
 }
@@ -1157,7 +1086,7 @@ private fun AcademicPulseBentoTile(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(
             modifier = Modifier
@@ -1259,7 +1188,7 @@ private fun TasksSprintBentoTile(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(
             modifier = Modifier

@@ -51,7 +51,8 @@ fun StudentTodayCommandStrip(
     studyRecommendations: List<StudySessionRecommendation>,
     onNavigateTab: (AppTab) -> Unit,
     onStartFocus: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showClassPreview: Boolean = true
 ) {
     val clock = rememberAcademicClock()
     val snapshot = AcademicContextEngine.buildSnapshot(
@@ -127,7 +128,7 @@ fun StudentTodayCommandStrip(
                 TodaySignal(Icons.Default.Event, dangerAttendance.toString(), "غیبت بحرانی", MaterialTheme.colorScheme.error, Modifier.weight(1f))
             }
 
-            if (snapshot.nextCourseName != null) {
+            if (showClassPreview && snapshot.nextCourseName != null) {
                 val courseName = snapshot.nextCourseName.orEmpty()
                 Surface(
                     Modifier.fillMaxWidth(),

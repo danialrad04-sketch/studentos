@@ -66,7 +66,7 @@ fun AcademicSectionHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            StudentCardTitle(title, style = MaterialTheme.typography.titleLarge)
+            Text(title, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             subtitle?.let {
                 Spacer(Modifier.height(StudentSpacing.Xs))
                 Text(

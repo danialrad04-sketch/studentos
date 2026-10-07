@@ -324,15 +324,15 @@ fun TaskCard(
 
                 Spacer(modifier = Modifier.width(StudentSpacing.Sm))
 
-                Column {
-                    Text(
+                Column(Modifier.weight(1f)) {
+                    StudentReadableText(
                         text = task.title,
-                        style = MaterialTheme.typography.titleSmall,
+                        detailTitle = "عنوان کامل کار",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                            textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                        ),
                         maxLines = 2,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
