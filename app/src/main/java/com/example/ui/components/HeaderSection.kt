@@ -39,8 +39,8 @@ fun HeaderSection(
         }
         Box {
         IconButton(onClick = { expanded = true }) {
-            BadgedBox(badge = { if (notifCount > 0) Badge { Text(if (notifCount > 99) "۹۹+" else notifCount.toString()) } }) {
-                Icon(Icons.Rounded.MoreVert, "جست‌وجو و اعلان‌ها")
+            BadgedBox(badge = { if (notifCount > 0) Badge() }) {
+                Icon(Icons.Rounded.MoreVert, if (notifCount > 0) "جست‌وجو و اعلان‌ها، $notifCount اعلان" else "جست‌وجو و اعلان‌ها")
             }
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
