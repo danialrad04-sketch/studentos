@@ -41,7 +41,8 @@ fun AuthAccountDialog(
     onOpenProfile: () -> Unit = {},
     onOpenBackupRestore: () -> Unit = {},
     onOpenPrivacyPolicy: () -> Unit = {},
-    onOpenSupport: () -> Unit = {}
+    onOpenSupport: () -> Unit = {},
+    onlineAccountEntryEnabled: Boolean = com.example.ui.ReleaseAccessPolicy.onlineAccountEntryEnabled
 ) {
     var showLogin by rememberSaveable { mutableStateOf(false) }
     var confirmation by rememberSaveable { mutableStateOf<String?>(null) }
@@ -55,11 +56,13 @@ fun AuthAccountDialog(
                 onSignUp = onSignUpEmail,
                 onGoogleSignIn = onGoogleSignIn,
                 onForgotPassword = onForgotPassword,
+                onlineAccountEntryEnabled = onlineAccountEntryEnabled,
                 onContinueAsGuest = { showLogin = false }
             )
         } else {
             StudentAccountContent(
                 userAccount = userAccount, syncState = syncState,
+                onlineAccountEntryEnabled = onlineAccountEntryEnabled,
                 onSignIn = { showLogin = true }, onOpenProfile = onOpenProfile,
                 onOpenBackupRestore = onOpenBackupRestore, onOpenPrivacyPolicy = onOpenPrivacyPolicy,
                 onOpenSupport = onOpenSupport, onOpenUpgrade = onOpenUpgrade,
@@ -99,7 +102,8 @@ fun StudentAccountContent(
     onSyncNow: () -> Unit,
     onSignOut: () -> Unit,
     onDeleteAccount: () -> Unit,
-    onResetPassword: () -> Unit = {}
+    onResetPassword: () -> Unit = {},
+    onlineAccountEntryEnabled: Boolean = com.example.ui.ReleaseAccessPolicy.onlineAccountEntryEnabled
 ) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp).testTag("account_center"), verticalArrangement = Arrangement.spacedBy(24.dp)) {
         Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.primaryContainer) {
@@ -107,12 +111,13 @@ fun StudentAccountContent(
                 Icon(Icons.Rounded.AccountCircle, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
                 Text(userAccount.displayName, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
                 Text(if (userAccount.isGuest) "حالت مهمان · اطلاعات روی این دستگاه ذخیره می‌شود" else userAccount.email ?: "حساب متصل", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                if (userAccount.isGuest) Button(onClick = onSignIn, modifier = Modifier.fillMaxWidth()) { Text("ورود یا ساخت حساب") }
+                if (userAccount.isGuest && onlineAccountEntryEnabled) Button(onClick = onSignIn, modifier = Modifier.fillMaxWidth()) { Text("ورود یا ساخت حساب") }
+                if (userAccount.isGuest && !onlineAccountEntryEnabled) Text("ورود و ثبت‌نام آنلاین فعلاً غیرفعال است. برای استفاده از امکانات محلی نیازی به حساب ندارید.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
         }
         StudentSettingsGroup("پروفایل و دسترسی‌ها") {
             StudentSettingsRow("پروفایل دانشجویی", "نام، دانشگاه، رشته و مشخصات ترم", Icons.Rounded.School, onOpenProfile)
-            StudentSettingsRow("طرح حساب", userAccount.subscription.tier.titleFa, Icons.Rounded.Verified, onOpenUpgrade)
+            if (!userAccount.isGuest || onlineAccountEntryEnabled) StudentSettingsRow("طرح حساب", userAccount.subscription.tier.titleFa, Icons.Rounded.Verified, onOpenUpgrade)
         }
         StudentSettingsGroup("اطلاعات و همگام‌سازی") {
             if (!userAccount.isGuest) {

@@ -84,6 +84,12 @@ fun SupportTicketDialog(
     modifier: Modifier = Modifier,
     onSignIn: (() -> Unit)? = null
 ) {
+    if (userAccount.isGuest && !com.example.ui.ReleaseAccessPolicy.onlineAccountEntryEnabled) {
+        StudentGlassModalSheet(title = "پشتیبانی آنلاین", onDismiss = onDismiss) {
+            OfflineAccountNotice(onContinue = onDismiss)
+        }
+        return
+    }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var selectedTab by remember { mutableIntStateOf(0) } // 0: تیکت‌های من, 1: ارسال تیکت جدید

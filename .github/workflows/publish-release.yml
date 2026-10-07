@@ -9,15 +9,15 @@ on:
       tag:
         description: "Release tag matching version_name"
         required: true
-        default: "v2.4.0"
+        default: "v2.4.1"
       version_code:
         description: "Must exceed every previously distributed build"
         required: true
-        default: "2010"
+        default: "2011"
       version_name:
         description: "Android version name"
         required: true
-        default: "2.4.0"
+        default: "2.4.1"
 
 permissions:
   contents: write
@@ -43,7 +43,7 @@ jobs:
           [[ "$RELEASE_REF" =~ ^[0-9a-f]{40}$ ]]
           [[ "$VERSION_CODE" =~ ^[0-9]+$ ]]
           [[ "$VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          test "$VERSION_CODE" -gt 2005
+          test "$VERSION_CODE" -gt 2010
           test "$RELEASE_TAG" = "v$VERSION_NAME"
 
       - uses: actions/checkout@v4

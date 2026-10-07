@@ -81,6 +81,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.local.entity.CourseEntity
 import androidx.compose.material3.CircularProgressIndicator
 import com.example.ui.components.AppDialogManager
+import androidx.compose.ui.platform.testTag
 import com.example.ui.components.AccountGateV2
 import com.example.ui.components.LoginRegisterScreen
 import com.example.ui.components.DynamicIslandLiveActivity
@@ -286,7 +287,7 @@ fun MainAppScreen(
         }
         // Enforce Persian RTL
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-            if (!isAuthInitialized) {
+            if (ReleaseAccessPolicy.onlineAccountEntryEnabled && !isAuthInitialized) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -297,7 +298,7 @@ fun MainAppScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-            } else if (currentUser.isGuest && !guestModeEnabled) {
+            } else if (ReleaseAccessPolicy.onlineAccountEntryEnabled && currentUser.isGuest && !guestModeEnabled) {
                 AccountGateV2(
                     onSignIn = { email, pass, onResult ->
                         studentViewModel.signInWithEmail(email, pass, onResult)
@@ -325,6 +326,7 @@ fun MainAppScreen(
                     val effectiveInitialMaj = if (profile.major.isNotBlank() && profile.major != "مهندسی") profile.major else ""
 
                     OnboardingScreen(
+                        modifier = Modifier.testTag("local_onboarding"),
                         initialName = effectiveInitialName,
                         initialStudentId = profile.studentId,
                         initialUniversity = effectiveInitialUni,

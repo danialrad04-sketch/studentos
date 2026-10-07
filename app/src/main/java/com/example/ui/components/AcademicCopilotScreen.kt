@@ -236,12 +236,13 @@ fun AcademicCopilotScreen(
         Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("دستیار تحصیلی", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             val quota = onlineStatus?.subscription ?: userAccount.subscription
-            Text(if (userAccount.isGuest) "تحلیل آفلاین آماده است؛ برای پاسخ آنلاین وارد حساب شوید."
+            Text(if (userAccount.isGuest && !com.example.ui.ReleaseAccessPolicy.onlineAccountEntryEnabled) "تحلیل آفلاین آماده است؛ پاسخ آنلاین فعلاً برای حالت بدون حساب فعال نیست."
+                else if (userAccount.isGuest) "تحلیل آفلاین آماده است؛ برای پاسخ آنلاین وارد حساب شوید."
                 else if (onlineStatus?.aiEnabled == true) "آنلاین · ${quota.remainingAiQuota} از ${quota.maxDailyAiQuota} پاسخ امروز باقی مانده"
                 else if (onlineStatus != null) "پاسخ آنلاین فعلاً در دسترس نیست؛ تحلیل آفلاین آماده است."
                 else connectionMessage ?: "در حال بررسی دسترسی آنلاین…", style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("ai_service_status"))
-            TextButton(onClick = onOpenPremium, modifier = Modifier.heightIn(min = 48.dp)) {
+            if (!userAccount.isGuest || com.example.ui.ReleaseAccessPolicy.onlineAccountEntryEnabled) TextButton(onClick = onOpenPremium, modifier = Modifier.heightIn(min = 48.dp)) {
                 Text(if (userAccount.isGuest) "ورود و امکانات آنلاین" else if (quota.isProOrHigher) "مدیریت اشتراک پرو" else "مشاهدهٔ امکانات Student Pro")
             }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
