@@ -87,7 +87,7 @@ class SettingsExperienceTest {
         rule.onNodeWithTag("settings_page").captureRoboImage("build/outputs/visual-review/account-connected.png")
     }
     @Test fun guestAccountReusesStartupForm() {
-        rule.setContent { StudentOsTheme(darkTheme = false) { AuthAccountDialog(UserAccount(), { _, _, _ -> }, { _, _, _, _ -> }, {}, {}, {}, {}, {}, {}, {}) } }
+        rule.setContent { StudentOsTheme(darkTheme = false) { AuthAccountDialog(UserAccount(), { _, _, _ -> }, { _, _, _, _ -> }, {}, {}, {}, {}, {}, {}, {}, onlineAccountEntryEnabled = true) } }
         rule.onNodeWithText("همگام‌سازی اکنون").assertDoesNotExist()
         rule.onNodeWithTag("settings_page").captureRoboImage("build/outputs/visual-review/account-guest.png")
         rule.onNodeWithText("ورود یا ساخت حساب").performClick()
@@ -95,7 +95,7 @@ class SettingsExperienceTest {
     }
     @Test fun successfulSignInReturnsToAccountCenter() {
         var user by mutableStateOf(UserAccount())
-        rule.setContent { StudentOsTheme(darkTheme = false) { AuthAccountDialog(user, { _, _, _ -> }, { _, _, _, _ -> }, {}, {}, {}, {}, {}, {}, {}) } }
+        rule.setContent { StudentOsTheme(darkTheme = false) { AuthAccountDialog(user, { _, _, _ -> }, { _, _, _, _ -> }, {}, {}, {}, {}, {}, {}, {}, onlineAccountEntryEnabled = true) } }
         rule.onNodeWithText("ورود یا ساخت حساب").performClick()
         rule.onNodeWithTag("primary_guest_entry").assertExists()
         rule.runOnIdle { user = UserAccount(isGuest = false, displayName = "دانیال", email = "student@example.com") }

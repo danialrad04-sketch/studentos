@@ -1,4 +1,4 @@
-name: Publish verified 2.4 preview
+name: Publish verified Bazaar 2.4.1 release
 
 on:
   workflow_run:
@@ -11,7 +11,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: studentos-2-4-preview
+  group: studentos-bazaar-2-4-1
   cancel-in-progress: false
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       RELEASE_REF: ${{ github.event.workflow_run.head_sha }}
-      RELEASE_TAG: v2.4.0-test.1
+      RELEASE_TAG: v2.4.1
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,10 +37,11 @@ jobs:
             echo 'ready=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if ! grep -Fq 'orElse("2.4.0")' app/build.gradle.kts || ! grep -Fq 'orElse("2010")' app/build.gradle.kts; then
+          if ! grep -Fq 'orElse("2.4.1")' app/build.gradle.kts || ! grep -Fq 'orElse("2011")' app/build.gradle.kts; then
             echo 'ready=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          grep -Fq 'const val onlineAccountEntryEnabled = false' app/src/main/java/com/example/ui/ReleaseAccessPolicy.kt
           gh run list --repo "$GITHUB_REPOSITORY" --workflow android-build.yml --commit "$RELEASE_REF" --limit 20 --json databaseId,status,conclusion > "$RUNNER_TEMP/android-runs.json"
           gh run list --repo "$GITHUB_REPOSITORY" --workflow premium-functions.yml --commit "$RELEASE_REF" --limit 20 --json status,conclusion > "$RUNNER_TEMP/firebase-runs.json"
           RUN_ID=$(python3 - <<'PY'
@@ -65,7 +66,7 @@ jobs:
               assert jobs.get(name) == 'success', name + ' did not pass'
           PY
           if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo 'Preview already exists; refusing to overwrite it.'
+            echo 'Release already exists; refusing to overwrite it.'
             echo 'ready=false' >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -89,7 +90,7 @@ jobs:
           root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'candidates'
           out = pathlib.Path('release-output')
           out.mkdir()
-          for source, target in [('app-release.apk', 'StudentOS-2.4.0-preview.apk'), ('app-release.aab', 'StudentOS-2.4.0.aab')]:
+          for source, target in [('app-release.apk', 'StudentOS-2.4.1.apk'), ('app-release.aab', 'StudentOS-2.4.1.aab')]:
               matches = list(root.rglob(source))
               assert len(matches) == 1 and matches[0].stat().st_size > 0, source
               shutil.copyfile(matches[0], out / target)
@@ -99,10 +100,10 @@ jobs:
         if: steps.gate.outputs.ready == 'true'
         run: |
           BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
-          APK=release-output/StudentOS-2.4.0-preview.apk
+          APK=release-output/StudentOS-2.4.1.apk
           "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$APK" > "$RUNNER_TEMP/certificate.txt"
           grep -Fi 'a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950' "$RUNNER_TEMP/certificate.txt"
-          "$BUILD_TOOLS/aapt" dump badging "$APK" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='2010' versionName='2.4.0'"
+          "$BUILD_TOOLS/aapt" dump badging "$APK" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='2011' versionName='2.4.1'"
           "$BUILD_TOOLS/zipalign" -c -P 16 -v 4 "$APK"
           python3 scripts/check_apk_16kb.py "$APK"
 
@@ -122,15 +123,18 @@ jobs:
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
-          bash scripts/generate_bazaar_bin.sh release-output/StudentOS-2.4.0.aab release-output/StudentOS-2.4.0.bin
+          bash scripts/generate_bazaar_bin.sh release-output/StudentOS-2.4.1.aab release-output/StudentOS-2.4.1.bin
+          cp docs/BAZAAR_OFFLINE_ACCESS_2_4_1.md release-output/README-BAZAAR.md
           cd release-output
-          sha256sum ./*.apk ./*.aab ./*.bin > SHA256SUMS.txt
+          sha256sum StudentOS-2.4.1.aab StudentOS-2.4.1.bin > BAZAAR-SHA256SUMS.txt
+          zip -j CafeBazaar-2.4.1.zip StudentOS-2.4.1.aab StudentOS-2.4.1.bin README-BAZAAR.md BAZAAR-SHA256SUMS.txt
+          sha256sum ./*.apk ./*.aab ./*.bin ./*.zip > SHA256SUMS.txt
 
       - name: Publish the completed test assets
         if: steps.gate.outputs.ready == 'true'
         run: |
-          gh release create "$RELEASE_TAG" release-output/* --repo "$GITHUB_REPOSITORY" --target "$RELEASE_REF" --title 'Student OS 2.4.0 — نسخه آزمایشی' --draft --prerelease --notes-file docs/release-notes/2.4.0-fa.md
-          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease --latest=false
+          gh release create "$RELEASE_TAG" release-output/* --repo "$GITHUB_REPOSITORY" --target "$RELEASE_REF" --title 'Student OS 2.4.1 — آماده بررسی کافه‌بازار' --draft --notes-file docs/release-notes/2.4.1-fa.md
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease=false --latest=true
 
       - name: Remove signing material
         if: always()

@@ -55,8 +55,13 @@ fun AccountGateV2(
     onForgotPassword: (String) -> Unit,
     onGoogleSignIn: ((Boolean, String) -> Unit) -> Unit,
     onContinueAsGuest: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onlineAccountEntryEnabled: Boolean = com.example.ui.ReleaseAccessPolicy.onlineAccountEntryEnabled
 ) {
+    if (!onlineAccountEntryEnabled) {
+        OfflineAccountNotice(onContinue = onContinueAsGuest, modifier = modifier)
+        return
+    }
     var mode by remember { mutableIntStateOf(0) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }

@@ -31,6 +31,10 @@ import java.util.Locale
 
 @Composable
 fun SubscriptionUpgradeRoute(userAccount: UserAccount, onVerified: (SubscriptionDetails) -> Unit, onSignIn: () -> Unit, onDismiss: () -> Unit) {
+    if (userAccount.isGuest && !com.example.ui.ReleaseAccessPolicy.onlineAccountEntryEnabled) {
+        StudentSettingsPage("امکانات آنلاین", onDismiss) { OfflineAccountNotice(onContinue = onDismiss) }
+        return
+    }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var status by remember { mutableStateOf(PremiumStatus()) }
