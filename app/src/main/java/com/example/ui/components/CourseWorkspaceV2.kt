@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.FilledTonalButton
 
@@ -143,7 +144,7 @@ fun CourseWorkspaceDialogV2(
         ) {
             Column(Modifier.fillMaxSize()) {
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                    Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = dismissWindow) {
@@ -163,10 +164,11 @@ fun CourseWorkspaceDialogV2(
                         }
                     }
                 }
+                Box(Modifier.fillMaxWidth().height(3.dp).background(accent))
                 StudentReadableText(
                     text = course.name, detailTitle = "عنوان کامل درس",
                     style = MaterialTheme.typography.headlineSmall, maxLines = 2,
-                    modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 14.dp)
+                    modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(horizontal = 20.dp).padding(bottom = 14.dp)
                 )
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))
@@ -181,7 +183,7 @@ fun CourseWorkspaceDialogV2(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(22.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = accent.copy(alpha = if (isDark) 0.11f else 0.065f)
+                                containerColor = androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surface, accent, if (isDark) 0.16f else 0.08f)
                             ),
                             border = androidx.compose.foundation.BorderStroke(1.dp, accent.copy(alpha = 0.24f))
                         ) {
@@ -256,7 +258,9 @@ fun CourseWorkspaceDialogV2(
                         Surface(
                             Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(17.dp),
-                            color = MaterialTheme.colorScheme.surface
+                            color = MaterialTheme.colorScheme.surface,
+                            shadowElevation = 2.dp,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                         ) {
                             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 StudentAdaptiveRow(minimumRowWidth = 280.dp) { cell ->
@@ -310,7 +314,9 @@ fun CourseWorkspaceDialogV2(
                             Surface(
                                 Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(17.dp),
-                                color = MaterialTheme.colorScheme.surface
+                                color = MaterialTheme.colorScheme.surface,
+                                shadowElevation = 2.dp,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                             ) {
                                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     StudentCardMeta(exam.solarDate, fontWeight = FontWeight.Black)
@@ -347,7 +353,9 @@ fun CourseWorkspaceDialogV2(
                         Surface(
                             Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(17.dp),
-                            color = MaterialTheme.colorScheme.surface
+                            color = MaterialTheme.colorScheme.surface,
+                            shadowElevation = 2.dp,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                         ) {
                             StudentAdaptiveRow(Modifier.padding(14.dp), minimumRowWidth = 216.dp) { cell ->
                                 WorkspaceScoreV2("میان‌ترم", grade?.midtermGrade?.toString() ?: "—", cell)
@@ -423,7 +431,7 @@ private fun WorkspaceScoreV2(label: String, value: String, modifier: Modifier = 
 
 @Composable
 private fun WorkspaceSectionTitleV2(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+    Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
         Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
         StudentCardTitle(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
     }
@@ -439,7 +447,9 @@ private fun WorkspaceSessionRow(session: CourseSessionEntity, accent: Color) {
     Surface(
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(15.dp),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 2.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             StudentAdaptiveRow(minimumRowWidth = 240.dp) { cell ->
@@ -461,7 +471,9 @@ private fun WorkspaceTaskRowV2(
     Surface(
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(15.dp),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 2.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Row(
             Modifier.padding(horizontal = 10.dp, vertical = 8.dp),

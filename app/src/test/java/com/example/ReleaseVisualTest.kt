@@ -41,7 +41,7 @@ class ReleaseVisualTest {
         CourseEntity(id="thermo", name="ترمودینامیک مهندسی شیمی", professor="دکتر کریمی"),
         CourseEntity(id="math", name="ریاضی مهندسی", professor="دکتر صیفاری")
     )
-    private fun dashboard(dark: Boolean, scale: Float = 1f) {
+    private fun dashboard(dark: Boolean, scale: Float = 1f, semester: Boolean = false) {
         rule.setContent {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, scale)) {
@@ -65,10 +65,21 @@ class ReleaseVisualTest {
             }
         }
         rule.waitForIdle()
-        rule.onRoot().captureRoboImage("build/outputs/visual-review/dashboard-${if(dark) "dark" else "light"}-$scale.png")
+        if (semester) {
+            rule.onNodeWithTag("desk_semester").performClick().assertIsSelected()
+            rule.onNodeWithText("پیشرفت تحصیلی").assertIsDisplayed()
+            rule.onNodeWithText("کلاس بعدی").assertDoesNotExist()
+        }
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/dashboard-${if (semester) "semester-" else ""}${if(dark) "dark" else "light"}-$scale.png")
+        if (semester) {
+            rule.onNodeWithTag("desk_today").performClick().assertIsSelected()
+            rule.onNodeWithText("کلاس بعدی").assertIsDisplayed()
+        }
     }
     @Test fun dashboardLight() = dashboard(false)
     @Test fun dashboardDark() = dashboard(true)
+    @Test fun semesterViewKeepsDailyNavigationReachable() = dashboard(false, semester = true)
+    @Test fun semesterViewDark() = dashboard(true, semester = true)
     @Test @Config(fontScale = 1.5f) fun dashboardLargeText() = dashboard(false, 1.5f)
     private fun tasks(dark: Boolean, scale: Float) {
         rule.setContent {

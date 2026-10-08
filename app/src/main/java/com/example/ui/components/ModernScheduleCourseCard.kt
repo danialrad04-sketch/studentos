@@ -45,6 +45,7 @@ import com.example.data.local.entity.CourseSessionEntity
 import com.example.ui.theme.NumericDisplayStat
 import com.example.ui.theme.StudentOsShapes
 import com.example.ui.theme.studentColors
+import com.example.ui.theme.cardElevation
 
 @Composable
 fun ModernScheduleCourseCard(
@@ -76,7 +77,7 @@ fun ModernScheduleCourseCard(
             1.dp,
             MaterialTheme.colorScheme.outline.copy(alpha = 0.26f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp, pressedElevation = 2.dp)
+        elevation = MaterialTheme.cardElevation
     ) {
         Row(
             Modifier.fillMaxWidth().padding(12.dp),

@@ -141,11 +141,11 @@ private val LightStudentSemanticColors = StudentSemanticColors(
     cyanAccent = Color(0xFF547998),
     emeraldAccent = Color(0xFF6D4DCC),
     purpleAccent = Color(0xFF6D4DCC),
-    deepSpaceCanvas = Color(0xFFF7F5FC),
+    deepSpaceCanvas = Color(0xFFF0EEE8),
     glassSurface = Color(0xFFFFFFFF),
-    glassSurfaceElevated = Color(0xFFF0ECF8),
-    glassBorder = Color(0xFFE7E1F0),
-    glassBorderGradient = Brush.linearGradient(listOf(Color(0xFFE7E1F0), Color(0xFFF3EFFA)))
+    glassSurfaceElevated = Color(0xFFE8E5DE),
+    glassBorder = Color(0xFFD6D4CD),
+    glassBorderGradient = Brush.linearGradient(listOf(Color(0xFFD6D4CD), Color(0xFFE2DED5)))
 )
 
 private val DarkStudentSemanticColors = StudentSemanticColors(

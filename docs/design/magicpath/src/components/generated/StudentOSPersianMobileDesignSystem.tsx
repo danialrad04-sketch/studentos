@@ -1,46 +1,136 @@
 import { useState } from 'react';
 import './StudentOSPersianMobileDesignSystem.css';
-
 type Page = 'خانه' | 'برنامه' | 'کارها' | 'کارنامه' | 'بیشتر';
 type IconName = 'home' | 'calendar' | 'check' | 'chart' | 'grid' | 'book' | 'arrow' | 'sun' | 'moon' | 'bell' | 'search' | 'plus' | 'clock' | 'settings';
 const paths: Record<IconName, string> = {
- home:'M3 10 12 3l9 7v10H3V10Zm6 10v-7h6v7',calendar:'M4 5h16v16H4V5Zm3-3v6m10-6v6M4 11h16',check:'M20 11a8 8 0 1 1-4-7M7 11l4 4 10-11',chart:'M4 20V10m8 10V4m8 16v-7M2 21h20',grid:'M3 3h7v7H3V3Zm11 0h7v7h-7V3ZM3 14h7v7H3v-7Zm11 0h7v7h-7v-7Z',book:'M12 5v16M3 4c4-1 6 0 9 2 3-2 5-3 9-2v15c-4-1-6 0-9 2-3-2-5-3-9-2V4Z',arrow:'M5 12h14m-6-6 6 6-6 6',sun:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM12 2v2m0 16v2M2 12h2m16 0h2M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2',moon:'M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11Z',bell:'M6 9a6 6 0 0 1 12 0v7l2 2H4l2-2V9Zm4 12h4',search:'M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm5 12 6 6',plus:'M12 5v14M5 12h14',clock:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 4v6l4 2',settings:'M9 3h6l1 4 4 1v8l-4 1-1 4H9l-1-4-4-1V8l4-1 1-4Zm3 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z'
+  home: 'M3 10 12 3l9 7v10H3V10Zm6 10v-7h6v7',
+  calendar: 'M4 5h16v16H4V5Zm3-3v6m10-6v6M4 11h16',
+  check: 'M20 11a8 8 0 1 1-4-7M7 11l4 4 10-11',
+  chart: 'M4 20V10m8 10V4m8 16v-7M2 21h20',
+  grid: 'M3 3h7v7H3V3Zm11 0h7v7h-7V3ZM3 14h7v7H3v-7Zm11 0h7v7h-7v-7Z',
+  book: 'M12 5v16M3 4c4-1 6 0 9 2 3-2 5-3 9-2v15c-4-1-6 0-9 2-3-2-5-3-9-2V4Z',
+  arrow: 'M5 12h14m-6-6 6 6-6 6',
+  sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM12 2v2m0 16v2M2 12h2m16 0h2M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2',
+  moon: 'M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11Z',
+  bell: 'M6 9a6 6 0 0 1 12 0v7l2 2H4l2-2V9Zm4 12h4',
+  search: 'M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm5 12 6 6',
+  plus: 'M12 5v14M5 12h14',
+  clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 4v6l4 2',
+  settings: 'M9 3h6l1 4 4 1v8l-4 1-1 4H9l-1-4-4-1V8l4-1 1-4Zm3 6a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z'
 };
-function Icon({name, size=21}:{name:IconName;size?:number}) {return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[name]}/></svg>}
-const nav: [Page, IconName][] = [['خانه','home'],['برنامه','calendar'],['کارها','check'],['کارنامه','chart'],['بیشتر','grid']];
-const initialTasks = [{title:'تمرین فصل دوم ترمودینامیک',course:'ترمودینامیک',due:'امروز · ۱۸:۰۰',done:false},{title:'مرور روش نصف‌کردن',course:'محاسبات عددی',due:'فردا',done:false},{title:'مطالعهٔ یادداشت‌های فیزیک',course:'فیزیک ۲',due:'انجام شده',done:true}];
-function Phone({dark=false, workspace=false}:{dark?:boolean;workspace?:boolean}) {
- const [page,setPage]=useState<Page>('خانه'); const [course,setCourse]=useState(workspace); const [tasks,setTasks]=useState(initialTasks); const [focus,setFocus]=useState(false); const [details,setDetails]=useState(false); const [day,setDay]=useState(0); const [localDark,setLocalDark]=useState(dark);
- const openCount=tasks.filter(t=>!t.done).length;
- const notes='این درس به بررسی قانون اول و دوم ترمودینامیک و کاربرد آن‌ها در سیستم‌های مهندسی شیمی می‌پردازد. برای جلسهٔ آینده، مثال‌های فصل دوم را مرور کنید و پرسش‌های خود را یادداشت کنید. منابع تکمیلی و تمرین‌های حل‌شده در فضای درس نگهداری می‌شوند.';
- const section=(title:string,action?:string,click?:()=>void)=><div className="so-section"><h3>{title}</h3>{action&&<button onClick={click}>{action}<Icon name="arrow" size={15}/></button>}</div>;
- const taskRows=<div className="so-card so-task-list">{tasks.map((t,i)=><button className={'so-task '+(t.done?'is-done':'')} key={t.title} onClick={()=>setTasks(tasks.map((v,j)=>j===i?{...v,done:!v.done}:v))} aria-pressed={t.done}><span className="so-checkbox">{t.done&&<Icon name="check" size={16}/>}</span><span><strong>{t.title}</strong><small>{t.course} · {t.due}</small></span></button>)}</div>;
- return <div className={'so-phone '+(localDark?'so-dark':'')} dir="rtl">
+function Icon({
+  name,
+  size = 21
+}: {
+  name: IconName;
+  size?: number;
+}) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[name]} /></svg>;
+}
+const nav: [Page, IconName][] = [['خانه', 'home'], ['برنامه', 'calendar'], ['کارها', 'check'], ['کارنامه', 'chart'], ['بیشتر', 'grid']];
+const initialTasks = [{
+  title: 'تمرین فصل دوم ترمودینامیک',
+  course: 'ترمودینامیک',
+  due: 'امروز · ۱۸:۰۰',
+  done: false
+}, {
+  title: 'مرور روش نصف‌کردن',
+  course: 'محاسبات عددی',
+  due: 'فردا',
+  done: false
+}, {
+  title: 'مطالعهٔ یادداشت‌های فیزیک',
+  course: 'فیزیک ۲',
+  due: 'انجام شده',
+  done: true
+}];
+function Phone({
+  dark = false,
+  workspace = false
+}: {
+  dark?: boolean;
+  workspace?: boolean;
+}) {
+  const [page, setPage] = useState<Page>('خانه');
+  const [semester, setSemester] = useState(false);
+  const [course, setCourse] = useState(workspace);
+  const [tasks, setTasks] = useState(initialTasks);
+  const [focus, setFocus] = useState(false);
+  const [details, setDetails] = useState(false);
+  const [day, setDay] = useState(0);
+  const [localDark, setLocalDark] = useState(dark);
+  const openCount = tasks.filter(t => !t.done).length;
+  const notes = 'این درس به بررسی قانون اول و دوم ترمودینامیک و کاربرد آن‌ها در سیستم‌های مهندسی شیمی می‌پردازد. برای جلسهٔ آینده، مثال‌های فصل دوم را مرور کنید و پرسش‌های خود را یادداشت کنید. منابع تکمیلی و تمرین‌های حل‌شده در فضای درس نگهداری می‌شوند.';
+  const section = (title: string, action?: string, click?: () => void) => <div className="so-section"><h3>{title}</h3>{action && <button onClick={click}>{action}<Icon name="arrow" size={15} /></button>}</div>;
+  const taskRows = <div className="so-card so-task-list">{tasks.map((t, i) => <button className={'so-task ' + (t.done ? 'is-done' : '')} key={t.title} onClick={() => setTasks(tasks.map((v, j) => j === i ? {
+      ...v,
+      done: !v.done
+    } : v))} aria-pressed={t.done}><span className="so-checkbox">{t.done && <Icon name="check" size={16} />}</span><span><strong>{t.title}</strong><small>{t.course} · {t.due}</small></span></button>)}</div>;
+  return <div className={'so-phone ' + (localDark ? 'so-dark' : '')} dir="rtl">
   <div className="so-status"><span>۹:۴۱</span><span>▂▄▆ &nbsp; ◒ &nbsp; ▰</span></div>
-  <header className="so-app-header"><button className="so-avatar" onClick={()=>{setCourse(false);setPage('بیشتر')}} aria-label="حساب کاربری">د</button><div><small>{course?'فضای درس':'دونینو · Student OS'}</small><strong>{course?'ترمودینامیک':'سلام دانیال'}</strong></div><button className="so-icon-btn" aria-label={course?'بستن فضای درس':'تغییر تم'} onClick={()=>course?setCourse(false):setLocalDark(!localDark)}><Icon name={course?'arrow':localDark?'sun':'moon'}/></button></header>
+  <header className="so-app-header"><button className="so-avatar" onClick={() => {
+        setCourse(false);
+        setPage('بیشتر');
+      }} aria-label="حساب کاربری">د</button><div><small>{course ? 'فضای درس' : 'دونینو · Student OS'}</small><strong>{course ? 'ترمودینامیک' : 'سلام دانیال'}</strong></div><button className="so-icon-btn" aria-label={course ? 'بستن فضای درس' : 'تغییر تم'} onClick={() => course ? setCourse(false) : setLocalDark(!localDark)}><Icon name={course ? 'arrow' : localDark ? 'sun' : 'moon'} /></button></header>
   <main className="so-phone-content">
-   {course?<>
-    <div className="so-course-heading"><span className="so-icon-tile"><Icon name="book" size={28}/></span><div><small>مهندسی شیمی · ترم سوم</small><h2>ترمودینامیک مهندسی شیمی</h2><p>دکتر کریمی · ۳ واحد</p></div></div>
+   {course ? <>
+    <div className="so-course-heading"><span className="so-icon-tile"><Icon name="book" size={28} /></span><div><small>مهندسی شیمی · ترم سوم</small><h2>ترمودینامیک مهندسی شیمی</h2><p>دکتر کریمی · ۳ واحد</p></div></div>
     <div className="so-metrics"><div><strong>۳</strong><small>واحد</small></div><div><strong>{openCount.toLocaleString('fa')}</strong><small>کار باز</small></div><div><strong>۲</strong><small>جلسه در هفته</small></div></div>
-    <div className="so-two-actions"><button className="so-primary" onClick={()=>setFocus(!focus)}><Icon name="clock"/>{focus?'تمرکز فعال است':'شروع تمرکز'}</button><button className="so-secondary" onClick={()=>{setCourse(false);setPage('کارها')}}><Icon name="plus"/>کار جدید</button></div>
+    <div className="so-two-actions"><button className="so-primary" onClick={() => setFocus(!focus)}><Icon name="clock" />{focus ? 'تمرکز فعال است' : 'شروع تمرکز'}</button><button className="so-secondary" onClick={() => {
+            setCourse(false);
+            setPage('کارها');
+          }}><Icon name="plus" />کار جدید</button></div>
     {section('برنامهٔ کلاس')}<div className="so-card so-session"><span className="so-chip">شنبه</span><strong>۱۵:۰۰ تا ۱۶:۰۰</strong><small>دانشکدهٔ فنی · کلاس ۱۰۸</small></div>
-    {section('حضور و غیاب')}<div className="so-card so-attendance"><div><span>۱ از ۳ غیبت مجاز</span><span className="so-safe">وضعیت مناسب</span></div><div className="so-progress"><i style={{width:'33%'}}/></div><small>۲ جلسهٔ دیگر تا سقف غیبت</small></div>
-    {section('کارهای این درس','مشاهدهٔ همه',()=>{setCourse(false);setPage('کارها')})}{taskRows}
-    {section('یادداشت درس')}<div className="so-card so-notes"><p>{notes}</p><button onClick={()=>setDetails(true)}>مشاهدهٔ متن کامل <Icon name="arrow" size={16}/></button></div>
-   </>:page==='خانه'?<>
-    <div className="so-date-row"><span>چهارشنبه، ۱۶ مهر</span><span className="so-chip"><i/> همه‌چیز ذخیره است</span></div>
-    <div className="so-hero"><div className="so-hero-top"><span><Icon name="calendar" size={17}/> کلاس بعدی</span><span>تا ۴۵ دقیقهٔ دیگر</span></div><h2>محاسبات عددی</h2><p>دکتر علیپور · کلاس ۱۰۷</p><div className="so-hero-bottom"><strong>۱۰:۰۰ — ۱۲:۰۰</strong><button onClick={()=>setCourse(true)}>فضای درس <Icon name="arrow" size={17}/></button></div><div className="so-hero-art"><Icon name="book" size={108}/></div></div>
-    {section('امروز، با خیال راحت','برنامه',()=>setPage('برنامه'))}<div className="so-overview"><div className="so-card"><span className="so-icon-tile"><Icon name="check"/></span><strong>{openCount.toLocaleString('fa')}</strong><small>کار باقی‌مانده</small></div><div className="so-card"><span className="so-icon-tile so-blue"><Icon name="chart"/></span><strong>۱۷٫۴۲</strong><small>معدل این ترم</small></div></div>
-    <div className="so-focus-card"><span className="so-icon-tile"><Icon name="clock"/></span><div><strong>{focus?'وقت تمرکز توست':'یک قدم برای امروز'}</strong><small>{focus?'جلسهٔ تمرکز فعال است':'۲۵ دقیقه مرور ترمودینامیک'}</small></div><button className="so-round" aria-label="شروع یا توقف تمرکز" onClick={()=>setFocus(!focus)}>{focus?'Ⅱ':'▷'}</button></div>
-    {section('کارهای نزدیک','همهٔ کارها',()=>setPage('کارها'))}{taskRows}
-    {section('درس‌های من','برنامهٔ هفتگی',()=>setPage('برنامه'))}<button className="so-card so-course-row" onClick={()=>setCourse(true)}><span className="so-icon-tile"><Icon name="book"/></span><span><strong>ترمودینامیک</strong><small>۳ واحد · دو جلسه در هفته</small></span><Icon name="arrow" size={18}/></button>
-   </>:page==='برنامه'?<><div className="so-page-heading"><small>هفتهٔ سوم نیم‌سال</small><h2>برنامهٔ هفتگی</h2></div><div className="so-days">{['ش','ی','د','س','چ'].map((d,i)=><button className={day===i?'active':''} key={i} onClick={()=>setDay(i)}><span>{d}</span><strong>{(12+i).toLocaleString('fa')}</strong></button>)}</div>{section(day===0?'شنبه':'برنامهٔ روز')}<div className="so-timeline">{['محاسبات عددی','ریاضی مهندسی','ترمودینامیک'].map((name,i)=><button className="so-card so-timeline-row" onClick={()=>setCourse(true)} key={name}><span className="so-time">{['۸:۰۰','۱۴:۰۰','۱۵:۰۰'][i]}</span><span><strong>{name}</strong><small>دانشکدهٔ فنی · کلاس {i===0?'۱۰۷':'۱۰۸'}</small></span><Icon name="arrow" size={16}/></button>)}</div><div className="so-card so-notes"><strong>برای وقت‌های خالی برنامه داری؟</strong><p>یک جلسهٔ مطالعهٔ کوتاه بین کلاس‌ها اضافه کن.</p><button onClick={()=>{setPage('خانه');setFocus(true)}}>شروع تمرکز <Icon name="arrow" size={16}/></button></div></>:page==='کارها'?<><div className="so-page-heading"><small>{openCount.toLocaleString('fa')} کار باقی‌مانده</small><h2>کارهای من</h2></div>{taskRows}<button className="so-primary so-full" onClick={()=>setTasks([...tasks,{title:'کار جدید برای مرور درس',course:'ترمودینامیک',due:'امروز',done:false}])}><Icon name="plus"/>افزودن کار</button></>:page==='کارنامه'?<><div className="so-page-heading"><small>پیشرفت، قدم به قدم</small><h2>کارنامهٔ تحصیلی</h2></div><div className="so-grade-hero"><small>معدل این ترم</small><strong>۱۷٫۴۲</strong><span>۱۸ واحد برداشته‌شده</span></div>{section('نمره‌های ثبت‌شده')}<div className="so-card">{[['ترمودینامیک','۱۸٫۵'],['فیزیک ۲','۱۶'],['محاسبات عددی','۱۷٫۵']].map(([name,grade])=><div className="so-grade-row" key={name}><span>{name}</span><strong>{grade}</strong></div>)}</div></>:<><div className="so-page-heading"><small>فضای شخصی تو</small><h2>حساب و تنظیمات</h2></div><div className="so-card so-profile"><span className="so-avatar">د</span><div><strong>دانیال</strong><small>حساب محلی · مهندسی شیمی</small></div></div>{section('ظاهر برنامه')}<button className="so-card so-setting-row" onClick={()=>setLocalDark(!localDark)}><Icon name={localDark?'moon':'sun'}/><span>حالت نمایش</span><strong>{localDark?'تیره':'روشن'}</strong></button>{section('اطلاعات و پشتیبانی')}<button className="so-card so-setting-row" onClick={()=>setDetails(true)}><Icon name="book"/><span>پشتیبان‌گیری و یادداشت‌ها</span><Icon name="arrow"/></button><button className="so-card so-setting-row" onClick={()=>setPage('برنامه')}><Icon name="calendar"/><span>برنامه و یادآورها</span><Icon name="arrow"/></button></>}
+    {section('حضور و غیاب')}<div className="so-card so-attendance"><div><span>۱ از ۳ غیبت مجاز</span><span className="so-safe">وضعیت مناسب</span></div><div className="so-progress"><i style={{
+              width: '33%'
+            }} /></div><small>۲ جلسهٔ دیگر تا سقف غیبت</small></div>
+    {section('کارهای این درس', 'مشاهدهٔ همه', () => {
+          setCourse(false);
+          setPage('کارها');
+        })}{taskRows}
+    {section('یادداشت درس')}<div className="so-card so-notes"><p>{notes}</p><button onClick={() => setDetails(true)}>مشاهدهٔ متن کامل <Icon name="arrow" size={16} /></button></div>
+   </> : page === 'خانه' ? <>
+    <div className="so-desk-heading"><div><small>چهارشنبه، ۱۶ مهر</small><h2>میز مطالعه</h2></div><span className="so-desk-mark">هر روز،<br/>یک قدم جلوتر.</span></div>
+    <div className="so-view-switch" role="group" aria-label="نمای میز مطالعه"><button aria-pressed={!semester} className={!semester ? 'active' : ''} onClick={() => setSemester(false)}><Icon name="calendar" size={16}/> امروز</button><button aria-pressed={semester} className={semester ? 'active' : ''} onClick={() => setSemester(true)}><Icon name="chart" size={16}/> این ترم</button></div>
+    {!semester ? <>
+    <button className="so-hero" onClick={() => setCourse(true)}><div className="so-hero-top"><span className="so-bookmark">کلاس بعدی</span><span>تا ۴۵ دقیقهٔ دیگر</span></div><h2>محاسبات عددی</h2><p>دکتر علیپور · کلاس ۱۰۷</p><div className="so-hero-bottom"><div><strong>۱۰:۰۰ — ۱۲:۰۰</strong><small>باز کردن فضای درس</small></div><span className="so-hero-arrow"><Icon name="arrow" size={21}/></span></div></button>
+    <div className="so-pulse"><div><strong>{openCount.toLocaleString('fa')}</strong><span>کار باز</span></div><div><strong>۳</strong><span>کلاس امروز</span></div><div><strong>۰</strong><span>غیبت بحرانی</span></div></div>
+    <div className="so-focus-card"><span className="so-icon-tile"><Icon name="clock" /></span><div><strong>{focus ? 'وقت تمرکز توست' : 'یک قدم برای امروز'}</strong><small>{focus ? 'جلسهٔ تمرکز فعال است' : '۲۵ دقیقه مرور ترمودینامیک'}</small></div><button className="so-round" aria-label="شروع یا توقف تمرکز" aria-pressed={focus} onClick={() => setFocus(!focus)}>{focus ? 'Ⅱ' : '▷'}</button></div>
+    {section('جعبه‌ابزار')}<div className="so-tools">{([['برنامهٔ هفتگی','calendar','برنامه'],['کارهای من','check','کارها'],['نمره‌ها','chart','کارنامه'],['فضای درس','book','خانه']] as [string,IconName,Page][]).map(([label,icon,target],i)=><button key={label} className={'so-tool so-tool-'+i} onClick={()=>i===3?setCourse(true):setPage(target)}><span><Icon name={icon} size={19}/></span><strong>{label}</strong></button>)}</div>
+    {section('کارهای نزدیک', 'همهٔ کارها', () => setPage('کارها'))}{taskRows}
+    </> : <>
+    <div className="so-semester-heading"><span className="so-chip">نیم‌سال اول ۱۴۰۵</span><h2>تصویر بزرگ‌تر را ببین.</h2><p>پیشرفت تو، در طول ترم</p></div>
+    <div className="so-overview"><button className="so-card" onClick={()=>setPage('کارنامه')}><span className="so-icon-tile so-blue"><Icon name="chart"/></span><strong>۱۷٫۴۲</strong><small>معدل این ترم</small></button><button className="so-card" onClick={()=>setPage('کارنامه')}><span className="so-icon-tile"><Icon name="book"/></span><strong>۳۴ <em>/ ۱۴۰</em></strong><small>واحد گذرانده</small></button></div>
+    {section('درس‌های من', 'برنامهٔ هفتگی', () => setPage('برنامه'))}{['ترمودینامیک','محاسبات عددی','فیزیک ۲'].map((title,i)=><button key={title} className="so-card so-course-row" onClick={()=>setCourse(true)}><span className={'so-course-index so-index-'+i}>{['۰۱','۰۲','۰۳'][i]}</span><span><strong>{title}</strong><small>۳ واحد · جزئیات و کارهای درس</small></span><Icon name="arrow" size={18}/></button>)}
+    </>}
+   </> : page === 'برنامه' ? <><div className="so-page-heading"><small>هفتهٔ سوم نیم‌سال</small><h2>برنامهٔ هفتگی</h2></div><div className="so-days">{['ش', 'ی', 'د', 'س', 'چ'].map((d, i) => <button className={day === i ? 'active' : ''} key={i} onClick={() => setDay(i)}><span>{d}</span><strong>{(12 + i).toLocaleString('fa')}</strong></button>)}</div>{section(day === 0 ? 'شنبه' : 'برنامهٔ روز')}<div className="so-timeline">{['محاسبات عددی', 'ریاضی مهندسی', 'ترمودینامیک'].map((name, i) => <button className="so-card so-timeline-row" onClick={() => setCourse(true)} key={name}><span className="so-time">{['۸:۰۰', '۱۴:۰۰', '۱۵:۰۰'][i]}</span><span><strong>{name}</strong><small>دانشکدهٔ فنی · کلاس {i === 0 ? '۱۰۷' : '۱۰۸'}</small></span><Icon name="arrow" size={16} /></button>)}</div><div className="so-card so-notes"><strong>برای وقت‌های خالی برنامه داری؟</strong><p>یک جلسهٔ مطالعهٔ کوتاه بین کلاس‌ها اضافه کن.</p><button onClick={() => {
+            setPage('خانه');
+            setFocus(true);
+          }}>شروع تمرکز <Icon name="arrow" size={16} /></button></div></> : page === 'کارها' ? <><div className="so-page-heading"><small>{openCount.toLocaleString('fa')} کار باقی‌مانده</small><h2>کارهای من</h2></div>{taskRows}<button className="so-primary so-full" onClick={() => setTasks([...tasks, {
+          title: 'کار جدید برای مرور درس',
+          course: 'ترمودینامیک',
+          due: 'امروز',
+          done: false
+        }])}><Icon name="plus" />افزودن کار</button></> : page === 'کارنامه' ? <><div className="so-page-heading"><small>پیشرفت، قدم به قدم</small><h2>کارنامهٔ تحصیلی</h2></div><div className="so-grade-hero"><small>معدل این ترم</small><strong>۱۷٫۴۲</strong><span>۱۸ واحد برداشته‌شده</span></div>{section('نمره‌های ثبت‌شده')}<div className="so-card">{[['ترمودینامیک', '۱۸٫۵'], ['فیزیک ۲', '۱۶'], ['محاسبات عددی', '۱۷٫۵']].map(([name, grade]) => <div className="so-grade-row" key={name}><span>{name}</span><strong>{grade}</strong></div>)}</div></> : <><div className="so-page-heading"><small>فضای شخصی تو</small><h2>حساب و تنظیمات</h2></div><div className="so-card so-profile"><span className="so-avatar">د</span><div><strong>دانیال</strong><small>حساب محلی · مهندسی شیمی</small></div></div>{section('ظاهر برنامه')}<button className="so-card so-setting-row" onClick={() => setLocalDark(!localDark)}><Icon name={localDark ? 'moon' : 'sun'} /><span>حالت نمایش</span><strong>{localDark ? 'تیره' : 'روشن'}</strong></button>{section('اطلاعات و پشتیبانی')}<button className="so-card so-setting-row" onClick={() => setDetails(true)}><Icon name="book" /><span>پشتیبان‌گیری و یادداشت‌ها</span><Icon name="arrow" /></button><button className="so-card so-setting-row" onClick={() => setPage('برنامه')}><Icon name="calendar" /><span>برنامه و یادآورها</span><Icon name="arrow" /></button></>}
   </main>
-  <nav className="so-navigation" aria-label="بخش‌های اصلی">{nav.map(([label,icon])=><button key={label} className={page===label&&!course?'selected':''} onClick={()=>{setCourse(false);setPage(label)}}><span><Icon name={icon}/></span><small>{label}</small></button>)}</nav><div className="so-gesture"/>
-  {details&&<div className="so-modal-scrim"><section className="so-sheet" role="dialog" aria-modal="true" aria-label="یادداشت کامل"><div className="so-sheet-handle"/><h3>یادداشت درس</h3><p>{notes}</p><button className="so-primary so-full" onClick={()=>setDetails(false)}>بستن</button></section></div>}
- </div>
+  <nav className="so-navigation" aria-label="بخش‌های اصلی">{nav.map(([label, icon]) => <button key={label} className={page === label && !course ? 'selected' : ''} onClick={() => {
+        setCourse(false);
+        setPage(label);
+      }}><span><Icon name={icon} /></span><small>{label}</small></button>)}</nav><div className="so-gesture" />
+  {details && <div className="so-modal-scrim"><section className="so-sheet" role="dialog" aria-modal="true" aria-label="یادداشت کامل"><div className="so-sheet-handle" /><h3>یادداشت درس</h3><p>{notes}</p><button className="so-primary so-full" onClick={() => setDetails(false)}>بستن</button></section></div>}
+ </div>;
 }
 export const StudentOSPersianMobileDesignSystem = () => {
- const [dark,setDark]=useState(false);
- return <div className="so-board"><div className="so-board-top"><div><span className="so-brand-mark"><Icon name="book" size={26}/></span><div><strong>Student OS</strong><span>A calmer academic day.</span></div></div><button className="so-theme-toggle" onClick={()=>setDark(!dark)}><Icon name={dark?'sun':'moon'}/>{dark?'Light preview':'Dark preview'}</button></div><div className="so-board-heading"><p>PERSIAN ANDROID EXPERIENCE · INTERACTIVE DESIGN</p><h1>روزت را روشن‌تر پیش ببر.</h1><span>خانه، برنامه، کارها، کارنامه و فضای درس — یک تجربهٔ منسجم، خوانا و آرام.</span></div><div className="so-canvas-grid"><div className="so-caption"><span>01 / DAILY OVERVIEW</span><Phone key={'home'+dark} dark={dark}/><p>اطلاعات مهم، یک نگاه. هر کار، یک قدم.</p></div><aside className="so-design-notes" dir="rtl"><span className="so-eyebrow">طراحی برای دانشجو</span><h2>کمتر شلوغ.<br/>بیشتر کاربردی.</h2><p>بنفش ملایم روی سطح‌های روشن؛ نفتی عمیق برای شب. متن فارسی، فاصله‌های منظم و جزئیاتی که همیشه در دسترس‌اند.</p><div className="so-palette"><i style={{background:'#6D4DCC'}}/><i style={{background:'#EDE6FF'}}/><i style={{background:'#F7F5FC'}}/><i style={{background:'#0C1B25'}}/><i style={{background:'#A8D8DF'}}/></div><div className="so-note-line"><span>۰۱</span><div><strong>ساختار روشن</strong><p>کلاس بعدی، کارهای نزدیک و پیشرفت</p></div></div><div className="so-note-line"><span>۰۲</span><div><strong>اطلاعات، به اندازه</strong><p>خلاصهٔ کوتاه؛ متن کامل در فضای خودش</p></div></div><div className="so-note-line"><span>۰۳</span><div><strong>در هر حالت خوانا</strong><p>فارسی، روشن و تیره، پنجرهٔ کوچک و بزرگ</p></div></div><span className="so-demo-label">نمونهٔ تعاملی طراحی؛ اطلاعات نمایشی است.</span></aside><div className="so-caption"><span>02 / COURSE WORKSPACE</span><Phone dark workspace/><p>همهٔ جزئیات درس، مرتب و قابل دسترسی.</p></div></div></div>
+  const [dark, setDark] = useState(false);
+  return <div className="so-board"><div className="so-board-top"><div><span className="so-brand-mark"><Icon name="book" size={26} /></span><div><strong>Student OS</strong><span>A desk for your next chapter.</span></div></div><button className="so-theme-toggle" onClick={() => setDark(!dark)}><Icon name={dark ? 'sun' : 'moon'} />{dark ? 'Light preview' : 'Dark preview'}</button></div><div className="so-board-heading"><p>PERSIAN ANDROID EXPERIENCE · INTERACTIVE DESIGN</p><h1>میز مطالعهٔ تو، به سبک خودت.</h1><span>خانه، برنامه، کارها، کارنامه و فضای درس — یک تجربهٔ منسجم، خوانا و آرام.</span></div><div className="so-canvas-grid"><div className="so-caption"><span>01 / DAILY OVERVIEW</span><Phone key={'home' + dark} dark={dark} /><p>اطلاعات مهم، یک نگاه. هر کار، یک قدم.</p></div><aside className="so-design-notes" dir="rtl"><span className="so-eyebrow">طراحی برای دانشجو</span><h2>یک میز.<br />تمام مسیر تو.</h2><p>کاغذ گرم، جوهر نفتی و نشانک سبز روشن. هر سطح نقش خودش را دارد؛ امروز برای انجام‌دادن، این ترم برای دیدن مسیر.</p><div className="so-palette"><i style={{
+            background: '#6D4DCC'
+          }} /><i style={{
+            background: '#DCEAAB'
+          }} /><i style={{
+            background: '#F0EEE8'
+          }} /><i style={{
+            background: '#0C1B25'
+          }} /><i style={{
+            background: '#193E43'
+          }} /></div><div className="so-note-line"><span>۰۱</span><div><strong>امروز / این ترم</strong><p>کلاس بعدی، کارهای نزدیک و پیشرفت</p></div></div><div className="so-note-line"><span>۰۲</span><div><strong>سطح‌های قابل تشخیص</strong><p>حاشیهٔ دقیق، سایهٔ نرم و رنگ هدفمند</p></div></div><div className="so-note-line"><span>۰۳</span><div><strong>در هر حالت خوانا</strong><p>فارسی، روشن و تیره، پنجرهٔ کوچک و بزرگ</p></div></div><span className="so-demo-label">نمونهٔ تعاملی طراحی؛ اطلاعات نمایشی است.</span></aside><div className="so-caption"><span>02 / COURSE WORKSPACE</span><Phone dark workspace /><p>همهٔ جزئیات درس، مرتب و قابل دسترسی.</p></div></div></div>;
 };
