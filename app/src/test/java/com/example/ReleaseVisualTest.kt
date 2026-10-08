@@ -71,7 +71,7 @@ class ReleaseVisualTest {
             rule.onNodeWithText("پیشرفت تحصیلی").assertIsDisplayed()
             rule.onNodeWithText("کلاس بعدی").assertDoesNotExist()
         }
-        rule.onRoot().captureRoboImage("build/outputs/visual-review/dashboard-${if (semester) "semester-" else ""}${if(dark) "dark" else "light"}-$scale.png")
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/dashboard-${if (courseList.size > 2) "many-courses-" else ""}${if (semester) "semester-" else ""}${if(dark) "dark" else "light"}-$scale.png")
         if (semester) {
             rule.onNodeWithTag("desk_today").performClick().assertIsSelected()
             rule.onNodeWithText("کلاس بعدی").assertIsDisplayed()
