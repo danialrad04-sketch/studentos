@@ -122,7 +122,7 @@ fun StudentTodayCommandStrip(
             StudentAdaptiveRow(minimumRowWidth = 216.dp, gap = 8.dp) { cell ->
                 TodaySignal(Icons.Default.CheckCircle, openTasks.toString(), "کار باز", MaterialTheme.colorScheme.secondary, cell)
                 TodaySignal(Icons.Default.CalendarToday, snapshot.todaySessionCount.toString(), "کلاس امروز", MaterialTheme.colorScheme.primary, cell)
-                TodaySignal(Icons.Default.Event, dangerAttendance.toString(), "غیبت بحرانی", MaterialTheme.colorScheme.error, cell)
+                TodaySignal(Icons.Default.Event, dangerAttendance.toString(), "غیبت بحرانی", if (dangerAttendance > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant, cell)
             }
 
             if (showClassPreview && snapshot.nextCourseName != null) {

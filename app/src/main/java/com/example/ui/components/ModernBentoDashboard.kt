@@ -151,7 +151,7 @@ fun ModernBentoDashboard(
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("میز مطالعه", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text("میز مطالعه", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
                 Text("هر روز، یک قدم جلوتر", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -367,8 +367,8 @@ private fun AnalyticsKpiSection(
 
             BentoKpiTile(
                 title = "واحد گذرانده",
-                value = "$displayPassed از $totalRequiredCredits",
-                subtitle = "${((passedUnits.toFloat() / totalRequiredCredits.coerceAtLeast(1)) * 100).toInt()}% از چارت",
+                value = if (totalRequiredCredits > 0) "$displayPassed از $totalRequiredCredits" else displayPassed,
+                subtitle = if (totalRequiredCredits > 0) "${((passedUnits.toFloat() / totalRequiredCredits) * 100).toInt()}% از چارت" else "چارت تحصیلی ثبت نشده",
                 emojiType = AppEmojiType.CHECK,
                 accentColor = MaterialTheme.colorScheme.primary,
                 onClick = onNavigateToPassport,
@@ -412,9 +412,8 @@ private fun BentoKpiTile(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier
-            .clip(RoundedCornerShape(22.dp))
-            .tactileClickable { onClick() },
+        onClick = onClick,
+        modifier = modifier,
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surface, accentColor, 0.06f)),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.studentColors.glassBorderGradient),
@@ -425,30 +424,13 @@ private fun BentoKpiTile(
                 .fillMaxWidth()
                 .padding(14.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                AppEmoji(
-                    type = emojiType,
-                    size = 32.dp,
-                    shapeRadiusRatio = 0.28f,
-                    elevation = 1.dp
-                )
-
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = accentColor.copy(alpha = 0.12f),
-                    border = androidx.compose.foundation.BorderStroke(0.6.dp, accentColor.copy(alpha = 0.35f))
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(7.dp)
-                            .background(accentColor, CircleShape)
-                            .padding(2.dp)
-                    )
-                }
+            Surface(shape = RoundedCornerShape(10.dp), color = accentColor.copy(alpha = 0.12f)) {
+                Icon(when (emojiType) {
+                    AppEmojiType.CHART -> Icons.Default.School
+                    AppEmojiType.CHECK -> Icons.Default.CheckCircle
+                    AppEmojiType.CALENDAR -> Icons.Default.CalendarToday
+                    else -> Icons.Default.Bolt
+                }, null, Modifier.padding(9.dp).size(22.dp), tint = accentColor)
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -457,7 +439,7 @@ private fun BentoKpiTile(
                 text = value,
                 style = NumericDisplayStat,
                 fontSize = 22.sp,
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
@@ -476,7 +458,7 @@ private fun BentoKpiTile(
                     text = subtitle,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Normal,
-                    color = accentColor,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

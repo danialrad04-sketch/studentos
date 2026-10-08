@@ -6,6 +6,7 @@ import androidx.compose.material3.FilledTonalButton
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -152,7 +153,6 @@ fun CourseWorkspaceDialogV2(
                     }
                     Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
                         Text("فضای درس", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text("${course.units} واحد · ${sessions.size} جلسه در هفته", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Box {
                         IconButton(onClick = { showActions = true }) {
@@ -164,20 +164,23 @@ fun CourseWorkspaceDialogV2(
                         }
                     }
                 }
-                Box(Modifier.fillMaxWidth().height(3.dp).background(accent))
-                StudentReadableText(
-                    text = course.name, detailTitle = "عنوان کامل درس",
-                    style = MaterialTheme.typography.headlineSmall, maxLines = 2,
-                    modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(horizontal = 20.dp).padding(bottom = 14.dp)
-                )
-
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))
-
                 LazyColumn(
                     modifier = Modifier.fillMaxSize().testTag("course_workspace_list"),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    item {
+                        Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface,
+                            shadowElevation = 2.dp,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                            Column {
+                                Box(Modifier.fillMaxWidth().height(3.dp).background(accent))
+                                StudentReadableText(course.name, detailTitle = "عنوان کامل درس",
+                                    style = MaterialTheme.typography.headlineSmall, maxLines = 2,
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp))
+                            }
+                        }
+                    }
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -415,9 +418,19 @@ fun CourseWorkspaceDialogV2(
 
 @Composable
 private fun WorkspaceMetric(value: String, label: String, modifier: Modifier = Modifier) {
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        StudentCardMeta(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    BoxWithConstraints(modifier) {
+        // Stacked metrics at large font scale become compact value/label rows.
+        if (maxWidth >= 140.dp) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        } else {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                StudentCardMeta(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
     }
 }
 

@@ -41,7 +41,7 @@ class ReleaseVisualTest {
         CourseEntity(id="thermo", name="ترمودینامیک مهندسی شیمی", professor="دکتر کریمی"),
         CourseEntity(id="math", name="ریاضی مهندسی", professor="دکتر صیفاری")
     )
-    private fun dashboard(dark: Boolean, scale: Float = 1f, semester: Boolean = false) {
+    private fun dashboard(dark: Boolean, scale: Float = 1f, semester: Boolean = false, courseList: List<CourseEntity> = courses, onOpenCourse: (CourseEntity) -> Unit = {}) {
         rule.setContent {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, scale)) {
@@ -49,8 +49,9 @@ class ReleaseVisualTest {
                     Surface(color = MaterialTheme.colorScheme.background) {
                         StudentAppScaffold(AppTab.DASHBOARD, {}) {
                             ModernBentoDashboard(
-                                courses = courses,
-                                coursesWithSessions = courses.mapIndexed { i, course ->
+                                courses = courseList,
+                                onOpenCourseWorkspace = onOpenCourse,
+                                coursesWithSessions = courseList.mapIndexed { i, course ->
                                     CourseWithSessions(course,listOf(CourseSessionEntity(courseId=course.id, day=0, start="${10+i*2}:00", end="${12+i*2}:00", location="دانشکده فنی، کلاس ۱۰۸")))
                                 },
                                 attendanceList = emptyList(), tasks = emptyList(), grades = emptyList(),
@@ -80,6 +81,16 @@ class ReleaseVisualTest {
     @Test fun dashboardDark() = dashboard(true)
     @Test fun semesterViewKeepsDailyNavigationReachable() = dashboard(false, semester = true)
     @Test fun semesterViewDark() = dashboard(true, semester = true)
+    @Test fun semesterShowsAndOpensCoursesBeyondThePreview() {
+        var openedId: String? = null
+        val manyCourses = (1..5).map { CourseEntity(id = "desk-$it", name = "درس شماره $it") }
+        dashboard(false, courseList = manyCourses, onOpenCourse = { openedId = it.id })
+        rule.onNodeWithTag("desk_semester").performClick()
+        rule.onNodeWithText("نمایش همه").performScrollTo().performClick()
+        rule.onNodeWithText("درس شماره 5").performScrollTo().performClick()
+        org.junit.Assert.assertEquals("desk-5", openedId)
+    }
+
     @Test @Config(fontScale = 1.5f) fun dashboardLargeText() = dashboard(false, 1.5f)
     private fun tasks(dark: Boolean, scale: Float) {
         rule.setContent {
