@@ -1,7 +1,6 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -11,8 +10,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalDensity
 
 private fun TextStyle.withOptionalFontSize(fontSize: TextUnit?): TextStyle =
     if (fontSize == null || fontSize == TextUnit.Unspecified) this else copy(fontSize = fontSize)
@@ -22,7 +19,7 @@ private fun TextStyle.withOptionalFontSize(fontSize: TextUnit?): TextStyle =
  *
  * Title: one line, no uncontrolled growth.
  * Meta: one line, ellipsized.
- * Body: up to three lines with a hard visual height cap.
+ * Body: up to three lines, measured using the actual typography and font scale.
  */
 @Composable
 fun StudentCardTitle(
@@ -55,12 +52,9 @@ fun StudentCardBody(
     fontSize: TextUnit? = null
 ) {
     val safeLines = maxLines.coerceIn(1, 3)
-    val visualHeight = 72.dp * LocalDensity.current.fontScale.coerceAtLeast(1f)
     Text(
         text = text,
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(max = visualHeight),
+        modifier = modifier.fillMaxWidth(),
         style = style.withOptionalFontSize(fontSize),
         color = color,
         maxLines = safeLines,

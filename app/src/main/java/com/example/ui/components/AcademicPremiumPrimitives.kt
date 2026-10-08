@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.ui.theme.StudentShapeTokens
 import com.example.ui.theme.StudentSpacing
+import com.example.ui.theme.cardElevation
 
 /**
  * Reusable Academic Premium primitives.
@@ -37,7 +38,7 @@ fun AcademicCard(
             shape = shape,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.82f)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            elevation = MaterialTheme.cardElevation,
             content = content
         )
     } else {
@@ -47,7 +48,7 @@ fun AcademicCard(
             shape = shape,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.82f)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            elevation = MaterialTheme.cardElevation,
             content = content
         )
     }
@@ -66,7 +67,7 @@ fun AcademicSectionHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            StudentCardTitle(title, style = MaterialTheme.typography.titleLarge)
+            Text(title, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             subtitle?.let {
                 Spacer(Modifier.height(StudentSpacing.Xs))
                 Text(

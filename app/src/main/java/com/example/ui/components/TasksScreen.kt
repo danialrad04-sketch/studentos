@@ -287,7 +287,7 @@ fun TaskCard(
     val containerColor = if (task.isCompleted) {
         MaterialTheme.colorScheme.surfaceContainerLow
     } else {
-        MaterialTheme.colorScheme.surfaceContainer
+        MaterialTheme.colorScheme.surface
     }
 
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
@@ -299,7 +299,7 @@ fun TaskCard(
             .tactileClickable { onToggle() },
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        border = BorderStroke(1.dp, if (isDark) MaterialTheme.colorScheme.outline.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outline),
+        border = BorderStroke(1.dp, if (isDark) MaterialTheme.colorScheme.outline.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 1.5.dp)
     ) {
         Row(
@@ -324,15 +324,15 @@ fun TaskCard(
 
                 Spacer(modifier = Modifier.width(StudentSpacing.Sm))
 
-                Column {
-                    Text(
+                Column(Modifier.weight(1f)) {
+                    StudentReadableText(
                         text = task.title,
-                        style = MaterialTheme.typography.titleSmall,
+                        detailTitle = "عنوان کامل کار",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                            textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
+                        ),
                         maxLines = 2,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
