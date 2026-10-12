@@ -14,7 +14,7 @@ import org.robolectric.annotation.Config
 @Config(sdk = [35], application = Application::class)
 class NotificationReleasePolicyTest {
     @Test fun inAppNotificationDisablePreventsSystemDelivery() {
-        val context = RuntimeEnvironment.getApplication()
+        val context: Application = RuntimeEnvironment.getApplication()
         val preferences = AppPreferencesRepository.getInstance(context)
         preferences.setNotificationsEnabled(false)
         try {
@@ -25,7 +25,7 @@ class NotificationReleasePolicyTest {
     }
 
     @Test fun refusingAndroidPermissionDoesNotPreventLocalUseOrForceDelivery() {
-        val context = RuntimeEnvironment.getApplication()
+        val context: Application = RuntimeEnvironment.getApplication()
         AppPreferencesRepository.getInstance(context).setNotificationsEnabled(true)
         org.robolectric.Shadows.shadowOf(context).denyPermissions(android.Manifest.permission.POST_NOTIFICATIONS)
         assertFalse(NotificationHelper.showSystemNotification(context, "امتحان", "یادآور", notificationId = 43))
