@@ -1,0 +1,265 @@
+{
+  "retrievedOn": "2026-10-13 Asia/Tehran",
+  "sourceApi": "https://developers.cafebazaar.ir/wp-json/v2/document/single?lang=fa&slug={path}",
+  "documents": [
+    {
+      "id": 739,
+      "title": "محتوا",
+      "path": "rules/content",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/rules/content",
+      "contentSha256": "1ca13ed31f93a20d42e26510576992ea9074d6f78c2a41ba28462ce77bce3c65"
+    },
+    {
+      "id": 952,
+      "title": "قابلیت و کیفیت برنامه",
+      "path": "rules/quality",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/rules/quality",
+      "contentSha256": "86114c0446e8747849626dab5d0702210bf1878c19fa9023db844ee3214f2583"
+    },
+    {
+      "id": 998,
+      "title": "امنیت",
+      "path": "rules/security",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/rules/security",
+      "contentSha256": "e302864405e23d43e9ae9c731e185e6457f09d6e3c429afc07ba379d46befb1c"
+    },
+    {
+      "id": 2719,
+      "title": "حریم خصوصی کاربران",
+      "path": "rules/privacy",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/rules/privacy",
+      "contentSha256": "b09a629ccea9b5092e2013ad53825304b19738515f4b5c0fb495a77d8e7fa45a"
+    },
+    {
+      "id": 971,
+      "title": "مالکیت‌ فکری (کپی‌رایت و سایر مصادیق)",
+      "path": "rules/copyright",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/rules/copyright",
+      "contentSha256": "fee5aa3d2071a3cf356707221b44c262e11f20173d16c60565595ab01a794e47"
+    },
+    {
+      "id": 1006,
+      "title": "پرداخت",
+      "path": "rules/payment",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/rules/payment",
+      "contentSha256": "95e62eb34c9dc88a01a73a8729c3654f44d381551fafab27f7e82ea2542b4586"
+    },
+    {
+      "id": 1019,
+      "title": "تبلیغات",
+      "path": "rules/ads",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/rules/ads",
+      "contentSha256": "0f8685c55359419d90a310fd0d62a79a13f591a032412aa575a4e4dd2e1c5c84"
+    },
+    {
+      "id": 959,
+      "title": "رفتار گمراه کننده",
+      "path": "rules/deceptive-behavior",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/rules/deceptive-behavior",
+      "contentSha256": "86d13c3ed9c536fccceba58255769b4ca89231e079992b9b5c70a87a3f9925c0"
+    },
+    {
+      "id": 1060,
+      "title": "تاریخچه بروزرسانی قوانین",
+      "path": "rules/policy-updates",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/rules/policy-updates",
+      "contentSha256": "88a2bc0fbf06d3d5990009ce226f9458b619c8f344904e012af3a05549b9b569"
+    },
+    {
+      "id": 1058,
+      "title": "گزارش و رسیدگی به تخلف",
+      "path": "enforcement/policy-violation",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/enforcement/policy-violation",
+      "contentSha256": "7fe91f6839246e6e4b1e708d8985ba05dd3057ba90aae0abd44aab44eb513678"
+    },
+    {
+      "id": 2200,
+      "title": "تعلیق و حذف برنامه و حساب توسعه‌دهندگی",
+      "path": "enforcement/app-suspension",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/enforcement/app-suspension",
+      "contentSha256": "caa085d7db032bc70612b3dda21c092a9e131dda1b821e788601d98ada558ad8"
+    },
+    {
+      "id": 5270,
+      "title": "راهنمای رده‌بندی سنی بازی‌ها",
+      "path": "academy/game-age-rating",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/academy/game-age-rating",
+      "contentSha256": "df1b5378f51bb978bddaaca6efa4304754e246778ae96121ad6169040f84ad16"
+    },
+    {
+      "id": 2243,
+      "title": "خطای Blocked By Play Protect",
+      "path": "academy/blocked-play-protect",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/academy/blocked-play-protect",
+      "contentSha256": "3f0bdef2e12e251a60503338776c0ab1b9ecbcaedf8fe368bb6f961a56645800"
+    },
+    {
+      "id": 2229,
+      "title": "دلایل متداول رد برنامه‌‌ها",
+      "path": "academy/unpublishingreasons-forapps",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/academy/unpublishingreasons-forapps",
+      "contentSha256": "152c9899904eb7301ea1aff03cbbe40a9860a73518b242ea5d33e4215bffe74d"
+    },
+    {
+      "id": 2221,
+      "title": "راهنمای برنامه‌های اسپم",
+      "path": "academy/spam-apps",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/academy/spam-apps",
+      "contentSha256": "587293a16525dcfb7aa8edc1d315fd3ba65fe073729bab8e91cf8988e4ce3437"
+    },
+    {
+      "id": 4216,
+      "title": "راهنمای فنی دسترسی‌ های اندروید",
+      "path": "academy/android-access-guide",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/academy/android-access-guide",
+      "contentSha256": "63f5ec01231df7e34da83e2621d66f369ff43475e83e821c0c734c983eb768b1"
+    },
+    {
+      "id": 2226,
+      "title": "راهنمای بدافزار",
+      "path": "academy/malware-detection",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/academy/malware-detection",
+      "contentSha256": "aebab358b9432eddba58ea2599a81bb9c5a56e0e2510e9c234e6ef9bf0e5d36d"
+    },
+    {
+      "id": 2224,
+      "title": "راهنمای دسترسی‌‌ها",
+      "path": "academy/permission",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/academy/permission",
+      "contentSha256": "fdb118ed1a6d6387dcf07878e6c3c898ca7b684cca726af894c4fd53b4bde331"
+    },
+    {
+      "id": 2219,
+      "title": "راهنمای کپی‌رایت",
+      "path": "academy/copyright",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/academy/copyright",
+      "contentSha256": "bf8a64b237b527b0d6bc7b1369f7830535f1cd3ce9fd61d43b80e74d99251e48"
+    },
+    {
+      "id": 2322,
+      "title": "جزئیات صفحه برنامه",
+      "path": "academy/app-detail",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/academy/app-detail",
+      "contentSha256": "c0ad3e2a5bb3e188093b1e4d09b18ff176d334997d034cc0659024e6bd88dd1a"
+    },
+    {
+      "id": 2876,
+      "title": "راهنمای حفظ حریم‌ خصوصی",
+      "path": "academy/privacypolicy",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/academy/privacypolicy",
+      "contentSha256": "d685e3ecc15c3b1f1718089f7126605337b2a21f2a18abb45af30ca547c7ec04"
+    },
+    {
+      "id": 3027,
+      "title": "راهنمای Push Notification",
+      "path": "academy/push_notification",
+      "url": "https://developers.cafebazaar.ir/fa/app-publish-guidelines/academy/push_notification",
+      "contentSha256": "e8e129f53c715654246c7334bbca328b6636485e32584f6b6fbfc3d21c926aac"
+    },
+    {
+      "id": 2249,
+      "title": "ثبت‌نام و ساخت حساب",
+      "path": "getting-started/sign-up",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/getting-started/sign-up",
+      "contentSha256": "45ced8dc7959b0ecfe9a130b73587e346b534cb64f809601f62be2bf24bf0da6"
+    },
+    {
+      "id": 4575,
+      "title": "ثبت‌نام توسعه‌دهندگان خارجی در بازار",
+      "path": "getting-started/registration",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/getting-started/registration",
+      "contentSha256": "621792937253024f367a57793cc8d09d7c1f1164a085504d30879446ccad1a1b"
+    },
+    {
+      "id": 1491,
+      "title": "قرارداد همکاری",
+      "path": "getting-started/contract",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/getting-started/contract",
+      "contentSha256": "c2b9423546be251c5dfe5d916129cc052306fbd898ad11b8f85022c077f9e723"
+    },
+    {
+      "id": 3711,
+      "title": "مفاهیم کاربردی اندروید",
+      "path": "getting-started/practical-principles",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/getting-started/practical-principles",
+      "contentSha256": "71dce782c2899fd2c5fbcaed841a413a1c3c360678147b40a61ca6cab8c5a1e9"
+    },
+    {
+      "id": 3383,
+      "title": "چک لیست انتشار برنامه در بازار",
+      "path": "getting-started/launch-checklist",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/getting-started/launch-checklist",
+      "contentSha256": "3f28d588ac95cfc63c48491263cc84e6fb89cb3386f09ed255e7e186fb839a94"
+    },
+    {
+      "id": 915,
+      "title": "نام‌گذاری بسته‌ها",
+      "path": "build-app/package-name",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/build-app/package-name",
+      "contentSha256": "3f32329a1d4713b62d8cda33f8f7ef8f016225f9bbe14531986199d5b4c34e09"
+    },
+    {
+      "id": 1081,
+      "title": "مدیریت نسخه‌ها",
+      "path": "build-app/manage-version",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/build-app/manage-version",
+      "contentSha256": "1c57588821c86a054c0fe4664f3cd7bf85749eae4eb0700dbbe580cdc1ae9592"
+    },
+    {
+      "id": 4860,
+      "title": "توسعه‌ی برنامه بر اساس معماری پردازنده",
+      "path": "build-app/development-based-on-processor-architecture",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/build-app/development-based-on-processor-architecture",
+      "contentSha256": "1f7a3973096e2a4684f007d1b71c35c9b0f301caa2ceb390da2fcd3e47319444"
+    },
+    {
+      "id": 4770,
+      "title": "«Package Name» برنامه‌‌ی من چیست؟",
+      "path": "build-app/whats-my-application-package-name",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/build-app/whats-my-application-package-name",
+      "contentSha256": "15dc85cd36e5cc06b0880ab968e979862e3ccd22f15ae6dfb85590538b8854ec"
+    },
+    {
+      "id": 4593,
+      "title": "تغییر پکیج‌ نیم در اندروید استودیو",
+      "path": "build-app/rename-the-package",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/build-app/rename-the-package",
+      "contentSha256": "48ad188b45295efe3087907979a30895e9cc65a7fade82b631d8af63cfd59837"
+    },
+    {
+      "id": 3883,
+      "title": "ایجاد کلید و خروجی APK و AAB",
+      "path": "build-app/app-signature/sign-your-app-using-android-studio",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/build-app/app-signature/sign-your-app-using-android-studio",
+      "contentSha256": "dab8200387c5c820aea854472ecbeadaf593adab02c843f36bf731011c7df21d"
+    },
+    {
+      "id": 878,
+      "title": "انتخاب نام مناسب",
+      "path": "build-app/app-name",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/build-app/app-name",
+      "contentSha256": "301cedcdec09daaa82d950efb33a6f379f8b7e0a554b54d3b1583d9aa5c0427e"
+    },
+    {
+      "id": 821,
+      "title": "نوشتن توضیحات مناسب",
+      "path": "build-app/app-description-guideline",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/build-app/app-description-guideline",
+      "contentSha256": "b7955496a38ce267038896a2d4ef4129764dbd640c3aea44da6b159a4c31fa29"
+    },
+    {
+      "id": 546,
+      "title": "انتخاب دسته‌ی مناسب",
+      "path": "build-app/category-description",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/build-app/category-description",
+      "contentSha256": "e2e4b60f58da748b91bfe9f635fe533523f9bb8ec1c84c4cee11922ed4d80274"
+    },
+    {
+      "id": 855,
+      "title": "طراحی آیکون برنامه",
+      "path": "build-app/icon-design",
+      "url": "https://developers.cafebazaar.ir/fa/guidelines/build-app/icon-design",
+      "contentSha256": "c31d936292adb2172a11079dac4d9fb4069e9ff98f96ab25d00cf57b73b026f0"
+    }
+  ]
+}

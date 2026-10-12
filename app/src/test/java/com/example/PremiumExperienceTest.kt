@@ -33,7 +33,7 @@ class PremiumExperienceTest {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, scale)) {
                 StudentOsTheme(darkTheme = dark) {
-                    SubscriptionUpgradeDialog(UserAccount(uid = "test-member", isGuest = guest), status, billing, purchase, restore, {}, signIn, {})
+                    SubscriptionUpgradeDialog(UserAccount(uid = "test-member", isGuest = guest), status, billing, purchase, restore, {}, signIn, {}, billingEnabled = true)
                 }
             }
         }

@@ -30,6 +30,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Verify packaged release policy checker
+        run: python3 -m unittest discover -s scripts -p 'test_*.py' -v
+
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest assembleDebugAndroidTest -Proborazzi.test.record=true --stacktrace
 
@@ -45,7 +48,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Run Android lint
-        run: ./gradlew lintDebug --stacktrace
+        run: ./gradlew lintDebug lintRelease --stacktrace
 
       - name: Decode fixed Student OS signing key
         shell: bash
@@ -177,7 +180,7 @@ jobs:
           test -s "$AAB"
           "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner" verify --verbose "$APK"
           BADGING="$("$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/aapt" dump badging "$APK")"
-          echo "$BADGING" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='2011' versionName='2.4.1'"
+          echo "$BADGING" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='2012' versionName='2.4.2'"
           EXPECTED_SHA256="a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950"
           EXPECTED_SHA1="b25fe31884ec18a96ae09e6fc0070fd20717a766"
           KEY_SHA256="$(keytool -list -v -keystore "$KEYSTORE_PATH" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" | awk -F': ' '/SHA256:/{print $2; exit}' | tr -d ':' | tr '[:upper:]' '[:lower:]')"
@@ -194,6 +197,40 @@ jobs:
 
           echo "Checking packaged ELF PT_LOAD alignment..."
           python3 scripts/check_apk_16kb.py "$APK"
+
+      - name: Audit final packaged permissions and production policy
+        run: |
+          python3 scripts/check_bazaar_release.py app/build/outputs/apk/release/app-release.apk \
+            --version-code 2012 --version-name 2.4.2 --output bazaar-output/release-evidence.json
+
+      - name: Prepare the verified Cafe Bazaar upload pair
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/studentos-release.jks
+          STORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk bazaar-output/StudentOS-2.4.2.apk
+          cp app/build/outputs/bundle/release/app-release.aab bazaar-output/StudentOS-2.4.2.aab
+          bash scripts/generate_bazaar_bin.sh bazaar-output/StudentOS-2.4.2.aab bazaar-output/StudentOS-2.4.2.bin
+          cp docs/BAZAAR_COMPLIANCE_2_4_2.md bazaar-output/README-BAZAAR.md
+          cp docs/BAZAAR_SUBMISSION_2_4_2_FA.md bazaar-output/BAZAAR-SUBMISSION-FA.md
+          cd bazaar-output
+          sha256sum StudentOS-2.4.2.apk StudentOS-2.4.2.aab StudentOS-2.4.2.bin > SHA256SUMS.txt
+          zip CafeBazaar-2.4.2.zip StudentOS-2.4.2.aab StudentOS-2.4.2.bin README-BAZAAR.md BAZAAR-SUBMISSION-FA.md release-evidence.json SHA256SUMS.txt
+          unzip -t CafeBazaar-2.4.2.zip
+
+      - name: Upload Cafe Bazaar package (not published)
+        uses: actions/upload-artifact@v4
+        with:
+          name: studentos-bazaar-2.4.2
+          path: bazaar-output/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Remove signing material
+        if: always()
+        run: rm -f "$GITHUB_WORKSPACE/studentos-release.jks"
 
       - name: Upload release candidates (not published)
         uses: actions/upload-artifact@v4

@@ -52,4 +52,34 @@ class OfflineReleaseAccessTest {
         rule.onNodeWithText("پشتیبان و بازیابی").performScrollTo().performClick()
         assertEquals(1, backups)
     }
+
+    @Test fun existingAccountCannotExposeCheckoutFromServerCatalog() {
+        var purchases = 0
+        var restores = 0
+        rule.setContent {
+            StudentOsTheme {
+                com.example.ui.components.SubscriptionUpgradeDialog(
+                    UserAccount(uid = "existing-member", isGuest = false),
+                    com.example.domain.model.PremiumStatus(salesEnabled = true),
+                    com.example.domain.model.BazaarBillingState(connected = true),
+                    { purchases++ }, { restores++ }, {}, {}, {})
+            }
+        }
+        rule.onNodeWithTag("billing_unavailable").assertIsDisplayed()
+        rule.onNodeWithTag("purchase_subscription").assertDoesNotExist()
+        rule.onNodeWithTag("restore_purchase").assertDoesNotExist()
+        assertEquals(0, purchases)
+        assertEquals(0, restores)
+    }
+
+    @Test fun subscriptionRouteDoesNotContactBillingForGuestOrRestoredMember() {
+        rule.setContent {
+            StudentOsTheme {
+                com.example.ui.components.SubscriptionUpgradeRoute(
+                    UserAccount(uid = "existing-member", isGuest = false), {}, {}, {})
+            }
+        }
+        rule.onNodeWithTag("billing_unavailable").assertIsDisplayed()
+        rule.onNodeWithTag("premium_sign_in").assertDoesNotExist()
+    }
 }
