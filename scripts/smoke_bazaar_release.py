@@ -68,6 +68,16 @@ def onboard():
     return xml
 
 
+def assert_profile():
+    xml = wait_ui(lambda x: 'خانه' in x)
+    assert 'رد شدن' not in xml, 'Onboarding state was lost'
+    tap_node(xml, lambda a: a.get('text') == 'بیشتر')
+    xml = wait_ui(lambda x: 'حساب کاربری' in x)
+    assert MARKER in xml, 'Saved local profile was lost on update/restart'
+    adb('shell', 'input', 'keyevent', '4')
+    wait_ui(lambda x: 'خانه' in x)
+
+
 def capture(out, name):
     xml = dump()
     (out / (name + '.xml')).write_text(xml)
@@ -90,16 +100,15 @@ def main():
     adb('install', args.previous_apk)
     launch()
     onboard()
+    assert_profile()
     capture(args.output, 'before-upgrade')
     # Android itself checks signature/package compatibility during this real update.
     assert 'Success' in adb('install', '-r', args.candidate_apk)
     launch()
-    xml = wait_ui(lambda x: 'خانه' in x)
-    assert MARKER in xml, 'Saved local profile was lost on update'
-    assert 'رد شدن' not in xml, 'Onboarding state was lost on update'
+    assert_profile()
     capture(args.output, 'after-upgrade-offline')
     launch()
-    assert MARKER in wait_ui(lambda x: 'خانه' in x), 'Profile lost after process restart'
+    assert_profile()
     adb('uninstall', PACKAGE)
     assert 'Success' in adb('install', args.candidate_apk)
     launch()

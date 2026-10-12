@@ -301,7 +301,9 @@ fun OnboardingScreen(
                         )
                     }
                 } else {
-                    Spacer(modifier = Modifier.size(48.dp))
+                    IconButton(onClick = onOpenPrivacyPolicy, modifier = Modifier.size(48.dp)) {
+                        Icon(Icons.Default.Policy, contentDescription = "سیاست حفظ حریم خصوصی", tint = TextPureWhite)
+                    }
                 }
 
                 // Step Indicator Pills
