@@ -22,7 +22,7 @@ All nine primary policy topics and publication/permission/privacy guides were re
 | Function / quality | Local-first entry retained. Unit, lintDebug/lintRelease, emulator startup/recreation/navigation and release/R8 build gates run. | Emulator/debug evidence does not prove every physical device or live cloud provider. |
 | Notifications | Permission refusal, application-level disable and channel disable return without playing a bypass tone. Notification sound comes from system settings. | Device vendor behavior requires physical validation. |
 | Content | Academic schedule/grades/task features; no new public user-content publishing feature. | User notes, online generated answers and store screenshots are not exhaustively certifiable from source. |
-| Copyright | No copied policy articles or new third-party visual assets added. | Developer must own all current store branding and bundled assets. |
+| Copyright | Bundled fonts identified from their own metadata; original OFL licenses packaged and readable in Settings → About → Font licenses. No copied Bazaar policy articles or new visual assets added. | Developer must own all current store branding and bundled assets. |
 | Advertising | No new advertising SDK or ad feature added; APK rejects advertising ID permission. | External metadata/marketing not inspected. |
 | Misleading behavior | New release explains disabled checkout; actual build identity shown; metadata draft lists local features only. | Current Bazaar description/screenshots must be replaced if they promise available sales, login or online AI. |
 | Enforcement / policy history | Official enforcement/history documents included in source inventory. | Bazaar makes the acceptance decision. |

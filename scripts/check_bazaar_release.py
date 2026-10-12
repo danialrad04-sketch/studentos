@@ -70,6 +70,9 @@ def main():
     with zipfile.ZipFile(args.apk) as archive:
         if archive.testzip():
             raise ValueError('APK ZIP integrity failure')
+        for name in ('Vazirmatn-OFL.txt', 'JetBrainsMono-OFL.txt', 'PlusJakartaSans-OFL.txt'):
+            if b'SIL OPEN FONT LICENSE' not in archive.read('assets/licenses/' + name):
+                raise ValueError('Packaged font license missing: ' + name)
         abis = sorted({p.split('/')[1] for p in archive.namelist() if p.startswith('lib/') and p.endswith('.so')})
     result = audit(run('aapt', 'dump', 'badging', args.apk),
                    run('aapt', 'dump', 'permissions', args.apk),
