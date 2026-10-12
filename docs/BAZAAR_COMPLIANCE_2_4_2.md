@@ -16,7 +16,7 @@ All nine primary policy topics and publication/permission/privacy guides were re
 
 | Topic | Current action / evidence | Limit |
 | --- | --- | --- |
-| Permissions / security | Billing permission and redundant `USE_EXACT_ALARM` removed. Checker audits actual APK permissions including dependencies. HTTPS/system trust only in release; local development exceptions remain in debug. | Final packaged gate must pass. |
+| Permissions / security | Billing permission, unused `VIBRATE` and redundant `USE_EXACT_ALARM` removed. Checker audits actual APK permissions including dependencies. HTTPS/system trust only in release; local development exceptions remain in debug. | Final packaged gate must pass. |
 | Payment | Checkout/restore disabled consistently for every user; no external digital payment. | Production subscriptions remain a separate unverified capability. |
 | Privacy | In-app Persian policy describes actual local data, existing connected accounts, Firebase/AI processing, Android backup, permissions and deletion. Policy is available from onboarding and settings. | Store contact details and hosted page cannot be verified without console access. |
 | Function / quality | Local-first entry retained. Unit, lintDebug/lintRelease, emulator startup/recreation/navigation and release/R8 build gates run. | Emulator/debug evidence does not prove every physical device or live cloud provider. |
@@ -30,7 +30,7 @@ All nine primary policy topics and publication/permission/privacy guides were re
 
 ## Build evidence
 
-Android CI on the immutable branch commit builds signed release APK/AAB, checks packaged identity and certificate, runs `check_bazaar_release.py`, generates a BIN from the exact AAB with the official Bazaar signer and verifies reconstructed APK signatures. It uploads **studentos-bazaar-2.4.2** as a candidate artifact with JSON evidence/checksums and submission notes. It does not publish a store version. The existing 2.4.1 automatic publisher rejects the new version constants; main is not changed by candidate preparation.
+Android CI on the immutable branch commit builds signed release APK/AAB, checks packaged identity and certificate, runs `check_bazaar_release.py`, generates a BIN from the exact AAB with the official Bazaar signer and verifies reconstructed APK signatures. It uploads **studentos-bazaar-2.4.2** as a candidate artifact with JSON evidence/checksums and submission notes. A separate `signed-release-smoke` job installs the actual R8 APK offline, tests an update from the original 2.4.1 APK and checks that a local profile and onboarding state survive restart/update. It does not publish a store version. The existing 2.4.1 automatic publisher rejects the new version constants; main is not changed by candidate preparation.
 
 Do not label this version ready until every required CI job passes. Physical-device update/persistence tests and current store metadata/contact verification are still required. Store approval is not guaranteed.
 

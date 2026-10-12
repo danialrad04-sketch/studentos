@@ -14,7 +14,7 @@ CERTIFICATE = 'a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950'
 FORBIDDEN = {
     'com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR',
     'com.android.vending.BILLING', 'ir.mservices.market.BILLING',
-    'android.permission.USE_EXACT_ALARM', 'android.permission.MANAGE_EXTERNAL_STORAGE',
+    'android.permission.VIBRATE', 'android.permission.USE_EXACT_ALARM', 'android.permission.MANAGE_EXTERNAL_STORAGE',
     'android.permission.REQUEST_INSTALL_PACKAGES', 'android.permission.QUERY_ALL_PACKAGES',
     'android.permission.READ_CONTACTS', 'android.permission.WRITE_CONTACTS',
     'android.permission.READ_SMS', 'android.permission.SEND_SMS', 'android.permission.RECEIVE_SMS',

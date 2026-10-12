@@ -63,7 +63,7 @@ jobs:
           python3 - <<'PY'
           import json
           jobs = {j['name']: j['conclusion'] for j in json.load(open('/tmp/jobs.json'))['jobs']}
-          for name in ['android-quality', 'backend-quality', 'instrumented-smoke', 'release-artifact-validation']:
+          for name in ['android-quality', 'backend-quality', 'instrumented-smoke', 'release-artifact-validation', 'signed-release-smoke']:
               assert jobs.get(name) == 'success', f'{name} did not pass'
           PY
           gh run list --repo "$GITHUB_REPOSITORY" --workflow premium-functions.yml \

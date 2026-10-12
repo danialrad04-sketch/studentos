@@ -286,3 +286,40 @@ jobs:
             app/build/reports/androidTests/
             app/build/outputs/androidTest-results/
           if-no-files-found: ignore
+
+  signed-release-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: release-artifact-validation
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exact verified APK
+        uses: actions/download-artifact@v4
+        with:
+          name: studentos-bazaar-2.4.2
+          path: bazaar-candidates
+      - name: Download previous production APK for real upgrade testing
+        run: curl --fail --location --retry 3 https://github.com/danialrad04-sketch/studentos/releases/download/v2.4.1/StudentOS-2.4.1.apk --output "$RUNNER_TEMP/previous.apk"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Test actual signed release offline and update from 2.4.1
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7_pro
+          avd-name: studentos-release-api35
+          force-avd-creation: true
+          emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
+          script: python3 scripts/smoke_bazaar_release.py --previous-apk "$RUNNER_TEMP/previous.apk" --candidate-apk bazaar-candidates/StudentOS-2.4.2.apk --output build/signed-release-smoke
+      - name: Upload signed release device evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: studentos-signed-release-smoke
+          path: build/signed-release-smoke/
+          if-no-files-found: ignore

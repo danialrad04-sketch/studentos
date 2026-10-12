@@ -621,7 +621,6 @@ class StudentViewModel @JvmOverloads constructor(
             isDanger = isDanger
         )
         _notifications.value = listOf(notif) + _notifications.value
-        playNotificationTone(isDanger)
         NotificationHelper.showSystemNotification(application, title, description, isDanger)
     }
 
