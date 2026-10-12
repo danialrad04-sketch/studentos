@@ -54,16 +54,16 @@ def onboard():
     xml = wait_ui(lambda x: MARKER in x and 'رد شدن' in x)
     tap_node(xml, lambda a: 'رد شدن' in a.get('text', ''))
     # Reject optional notifications on API 33+, without rejecting normal navigation.
-    xml = wait_ui(lambda x: 'خانه' in x or 'اجازه' in x or 'permission' in x)
+    xml = wait_ui(lambda x: 'خانه' in x or 'بعداً' in x or 'permission_deny_button' in x)
     for _ in range(3):
-        if 'خانه' in xml:
+        if 'خانه' in xml and 'بعداً' not in xml and 'permission_deny_button' not in xml:
             break
         try:
             tap_node(xml, lambda a: a.get('resource-id', '').endswith('permission_deny_button') or
                      a.get('text') in ['فعلاً نه', 'بعداً', 'انصراف'])
         except AssertionError:
             adb('shell', 'input', 'keyevent', '4')
-        xml = wait_ui(lambda x: 'خانه' in x or 'permission_deny_button' in x, timeout=30)
+        xml = wait_ui(lambda x: 'خانه' in x or 'بعداً' in x or 'permission_deny_button' in x, timeout=30)
     assert 'خانه' in xml, 'Local navigation did not become available'
     return xml
 
@@ -125,4 +125,15 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception:
+        import sys
+        try:
+            out = Path(sys.argv[sys.argv.index('--output') + 1])
+            out.mkdir(parents=True, exist_ok=True)
+            capture(out, 'failure')
+            (out / 'failure-logcat.log').write_text(adb('logcat', '-d'))
+        except Exception:
+            pass
+        raise
