@@ -29,6 +29,8 @@ class OfflineStartupTest {
         val permissions = info.requestedPermissions.orEmpty().toSet()
         org.junit.Assert.assertFalse(permissions.contains("com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR"))
         org.junit.Assert.assertFalse(permissions.contains("android.permission.USE_EXACT_ALARM"))
+        org.junit.Assert.assertFalse(permissions.contains("android.permission.SCHEDULE_EXACT_ALARM"))
+        org.junit.Assert.assertFalse(permissions.contains("android.permission.VIBRATE"))
         org.junit.Assert.assertFalse(permissions.contains("android.permission.MANAGE_EXTERNAL_STORAGE"))
     }
 }

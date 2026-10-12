@@ -56,6 +56,7 @@ object NotificationHelper {
         isDanger: Boolean = false,
         notificationId: Int = System.currentTimeMillis().toInt()
     ): Boolean {
+        if (!com.example.data.repository.AppPreferencesRepository.getInstance(context).notificationsEnabled.value) return false
         initNotificationChannel(context)
 
         // Check permission for Android 13+ (API 33+)

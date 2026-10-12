@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" tools:node="remove" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove" />
     <!-- No checkout in this public release. Poolakey declares this permission in its
          library manifest, so remove it explicitly during manifest merging.
          Restore only alongside a verified, accessible production checkout. -->
@@ -28,6 +28,9 @@
         android:usesCleartextTraffic="false"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
+
+        <!-- No billing connection exists in this release; omit Poolakey's inactive receiver. -->
+        <receiver android:name="ir.cafebazaar.poolakey.receiver.BillingReceiver" tools:node="remove" />
 
         <receiver
             android:name=".ui.util.AlarmReceiver"

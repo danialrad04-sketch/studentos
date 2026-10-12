@@ -16,11 +16,11 @@ All nine primary policy topics and publication/permission/privacy guides were re
 
 | Topic | Current action / evidence | Limit |
 | --- | --- | --- |
-| Permissions / security | Billing permission, unused `VIBRATE` and redundant `USE_EXACT_ALARM` removed. Checker audits actual APK permissions including dependencies. HTTPS/system trust only in release; local development exceptions remain in debug. | Final packaged gate must pass. |
+| Permissions / security | Billing permission/receiver, unused `VIBRATE` and both exact-alarm permissions removed; the active reminder path uses WorkManager. Checker audits actual APK permissions including dependencies. HTTPS/system trust only in release; local development exceptions remain in debug. | Final packaged gate must pass. |
 | Payment | Checkout/restore disabled consistently for every user; no external digital payment. | Production subscriptions remain a separate unverified capability. |
 | Privacy | In-app Persian policy describes actual local data, existing connected accounts, Firebase/AI processing, Android backup, permissions and deletion. Policy is available from onboarding and settings. | Store contact details and hosted page cannot be verified without console access. |
 | Function / quality | Local-first entry retained. Unit, lintDebug/lintRelease, emulator startup/recreation/navigation and release/R8 build gates run. | Emulator/debug evidence does not prove every physical device or live cloud provider. |
-| Notifications | Permission refusal, application-level disable and channel disable return without playing a bypass tone. Notification sound comes from system settings. | Device vendor behavior requires physical validation. |
+| Notifications | In-app notification toggle, permission refusal, application-level disable and channel disable return without playing a bypass tone. Notification sound comes from system settings. | Device vendor behavior requires physical validation. |
 | Content | Academic schedule/grades/task features; no new public user-content publishing feature. | User notes, online generated answers and store screenshots are not exhaustively certifiable from source. |
 | Copyright | Bundled fonts identified from their own metadata; original OFL licenses packaged and readable in Settings → About → Font licenses. No copied Bazaar policy articles or new visual assets added. | Developer must own all current store branding and bundled assets. |
 | Advertising | No new advertising SDK or ad feature added; APK rejects advertising ID permission. | External metadata/marketing not inspected. |
