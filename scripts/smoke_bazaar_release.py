@@ -78,6 +78,30 @@ def assert_profile():
     wait_ui(lambda x: 'خانه' in x)
 
 
+def find_scroll(predicate):
+    size = re.search(r'(\d+)x(\d+)', adb('shell', 'wm', 'size'))
+    width, height = map(int, size.groups())
+    for _ in range(8):
+        xml = dump()
+        if any(predicate(n.attrib) for n in ET.fromstring(xml).iter('node')):
+            return xml
+        adb('shell', 'input', 'swipe', width//2, height*4//5, width//2, height//3, '300')
+    raise AssertionError('Scrollable destination not found')
+
+
+def inspect_licenses(out):
+    xml = wait_ui(lambda x: 'خانه' in x)
+    tap_node(xml, lambda a: a.get('text') == 'بیشتر')
+    xml = wait_ui(lambda x: 'حساب کاربری' in x)
+    tap_node(xml, lambda a: a.get('text') == 'تنظیمات')
+    xml = find_scroll(lambda a: a.get('text') == 'راهنما و دربارهٔ برنامه')
+    tap_node(xml, lambda a: a.get('text') == 'راهنما و دربارهٔ برنامه')
+    xml = find_scroll(lambda a: a.get('text') == 'مجوز قلم‌ها')
+    tap_node(xml, lambda a: a.get('text') == 'مجوز قلم‌ها')
+    wait_ui(lambda x: 'Copyright 2015' in x)
+    capture(out, 'font-licenses-release')
+
+
 def capture(out, name):
     xml = dump()
     (out / (name + '.xml')).write_text(xml)
@@ -115,8 +139,14 @@ def main():
     xml = wait_ui(lambda x: 'رد شدن' in x)
     assert 'سیاست حفظ حریم خصوصی' in xml, 'First-run privacy entry is missing'
     capture(args.output, 'fresh-release-offline')
+    tap_node(xml, lambda a: a.get('content-desc') == 'سیاست حفظ حریم خصوصی')
+    wait_ui(lambda x: 'نحوهٔ نگهداری و استفاده از اطلاعات' in x)
+    capture(args.output, 'privacy-release')
+    adb('shell', 'input', 'keyevent', '4')
+    wait_ui(lambda x: 'رد شدن' in x)
     onboard()
     capture(args.output, 'fresh-local-home')
+    inspect_licenses(args.output)
     logs = adb('logcat', '-d', '-s', 'AndroidRuntime:E')
     (args.output / 'android-runtime.log').write_text(logs)
     assert 'FATAL EXCEPTION' not in logs, 'Signed release crashed'
