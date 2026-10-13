@@ -8,7 +8,7 @@ import time
 import xml.etree.ElementTree as ET
 
 PACKAGE = 'com.aistudio.studentos.appvzk'
-MARKER = 'BazaarSmoke'
+MARKER = 'BZ42'
 
 
 def adb(*args):
@@ -49,7 +49,12 @@ def launch():
 def onboard():
     xml = wait_ui(lambda x: 'رد شدن' in x)
     tap_node(xml, lambda a: a.get('class') == 'android.widget.EditText')
-    adb('shell', 'input', 'text', MARKER)
+    # Fast adb input can drop the last characters while Compose updates its field.
+    for index, character in enumerate(MARKER, start=1):
+        adb('shell', 'input', 'text', character)
+        expected = MARKER[:index]
+        wait_ui(lambda x: any(n.attrib.get('text') == expected
+                              for n in ET.fromstring(x).iter('node')), timeout=15)
     adb('shell', 'input', 'keyevent', '4')
     xml = wait_ui(lambda x: MARKER in x and 'رد شدن' in x)
     tap_node(xml, lambda a: 'رد شدن' in a.get('text', ''))
