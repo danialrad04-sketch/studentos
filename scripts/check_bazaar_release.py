@@ -48,8 +48,10 @@ def audit(badging, permissions_output, manifest, certificates, version_code, ver
             raise ValueError('Production APK has ' + flag + ' enabled')
     if not re.search(r'android:usesCleartextTraffic\([^\n]+\)0x0(?:\s|$)', manifest):
         raise ValueError('Production APK must explicitly disable cleartext traffic')
-    digests = re.findall(r'Signer #\d+ certificate SHA-256 digest: ([0-9a-f]+)', certificates, re.I)
-    if len(digests) != 1 or digests[0].lower() != CERTIFICATE:
+    digests = re.findall(
+        r'(?m)^(?:Signer #\d+|V[1-4] Signer(?: #\d+)?):? certificate SHA-256 digest: ([0-9a-f]{64})\s*$',
+        certificates, re.I)
+    if {digest.lower() for digest in digests} != {CERTIFICATE}:
         raise ValueError('APK does not use the existing Student OS production certificate')
     return {'package': PACKAGE, 'versionCode': version_code, 'versionName': version_name,
             'certificateSha256': CERTIFICATE, 'permissions': permissions, 'billingEnabled': False}

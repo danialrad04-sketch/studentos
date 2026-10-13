@@ -12,6 +12,16 @@ class PackagedReleasePolicyTest(unittest.TestCase):
     def test_current_release_has_no_billing_permission(self):
         self.assertFalse(self.check()['billingEnabled'])
 
+    def test_android_sdk_scheme_labels_repeat_the_same_production_certificate(self):
+        cert = f'V2 Signer: certificate SHA-256 digest: {CERTIFICATE}\nV3 Signer: certificate SHA-256 digest: {CERTIFICATE}\n'
+        self.assertEqual(CERTIFICATE, self.check(cert=cert)['certificateSha256'])
+
+    def test_different_scheme_certificate_or_only_public_key_digest_is_rejected(self):
+        for cert in [f'V2 Signer: certificate SHA-256 digest: {CERTIFICATE}\nV3 Signer: certificate SHA-256 digest: {"0" * 64}\n',
+                     f'V2 Signer: public key SHA-256 digest: {CERTIFICATE}\n']:
+            with self.subTest(cert=cert), self.assertRaises(ValueError):
+                self.check(cert=cert)
+
     def test_transitive_billing_and_sdk_specific_storage_permission_are_rejected(self):
         for name in ['com.farsitel.bazaar.permission.PAY_THROUGH_BAZAAR', 'android.permission.READ_EXTERNAL_STORAGE']:
             with self.subTest(name=name), self.assertRaises(ValueError):
