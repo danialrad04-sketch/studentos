@@ -117,7 +117,7 @@ fun StudentAccountContent(
         }
         StudentSettingsGroup("پروفایل و دسترسی‌ها") {
             StudentSettingsRow("پروفایل دانشجویی", "نام، دانشگاه، رشته و مشخصات ترم", Icons.Rounded.School, onOpenProfile)
-            if (!userAccount.isGuest || onlineAccountEntryEnabled) StudentSettingsRow("طرح حساب", userAccount.subscription.tier.titleFa, Icons.Rounded.Verified, onOpenUpgrade)
+            if (com.example.ui.ReleaseAccessPolicy.bazaarBillingEnabled && (!userAccount.isGuest || onlineAccountEntryEnabled)) StudentSettingsRow("طرح حساب", userAccount.subscription.tier.titleFa, Icons.Rounded.Verified, onOpenUpgrade)
         }
         StudentSettingsGroup("اطلاعات و همگام‌سازی") {
             if (!userAccount.isGuest) {

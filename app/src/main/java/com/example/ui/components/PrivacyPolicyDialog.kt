@@ -44,7 +44,7 @@ import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.AcademicOlive
 
 /**
- * In-App Persian Privacy Policy screen complying with Google Play Developer Program policies.
+ * In-app Persian disclosure of actual local and optional connected account behavior.
  * Outlines local Room storage, Firebase Auth, Cloud Firestore sync, data retention, and account deletion.
  */
 @Composable
@@ -78,18 +78,24 @@ fun PrivacyPolicyDialog(
             // Section 2: Storage & Firebase
             PrivacySectionCard(
                 icon = Icons.Rounded.CloudDone,
-                title = "۲. ذخیره‌سازی ابری و احراز هویت (Firebase)",
-                description = "در حالت عادی تمام اطلاعات در دیتابیس محلی (Room) روی حافظه دستگاه ذخیره می‌شود. در صورت ثبت‌نام یا ورود، هویت حساب در Firebase Authentication مدیریت می‌شود و داده‌های همگام‌شده می‌توانند در Cloud Firestore و سرور اختصاصی Student OS نگهداری شوند تا با تغییر دستگاه اطلاعات حفظ شود."
+                title = "۲. اطلاعات محلی و حساب‌های قبلی",
+                description = "اطلاعات تحصیلی در پایگاه دادهٔ محلی دستگاه نگهداری می‌شود. در این نسخه ورود، ثبت‌نام و خرید اشتراک جدید غیرفعال است. برای حساب متصل از نسخه‌های قبلی، Firebase Authentication، Cloud Firestore و سرور Student OS می‌توانند برای هویت حساب و همگام‌سازی اطلاعات تحصیلی استفاده شوند. نسخهٔ پشتیبان سیستم اندروید، در صورت فعال‌بودن در تنظیمات دستگاه، ممکن است داده‌های محلی را منتقل کند؛ اطلاعات امن ورود و رسیدهای ذخیره‌شده از پشتیبان برنامه مستثنا هستند."
             )
 
             // Section 3: Third Party Sharing
             PrivacySectionCard(
                 icon = Icons.Rounded.Lock,
-                title = "۳. عدم اشتراک‌گذاری با اشخاص ثالث",
-                description = "داده‌های شما برای تبلیغات یا بازاریابی فروخته یا استفاده نمی‌شوند. سرویس‌های موردنیاز برنامه مانند Firebase Authentication، Cloud Firestore و در حالت اتصال حساب، سرور اختصاصی Student OS برای احراز هویت و همگام‌سازی استفاده می‌شوند و نوع استفاده از داده در بخش‌های بعدی توضیح داده شده است."
+                title = "۳. خدمات آنلاین و استفاده از داده",
+                description = "داده‌ها برای تبلیغات فروخته نمی‌شوند. قابلیت‌های آنلاین حساب‌های قبلی ممکن است متن درخواست، اطلاعات تحصیلی لازم و عکس انتخاب‌شده برای اسکن را برای پردازش به سرویس‌های Firebase و هوش مصنوعی Google ارسال کنند. تحلیل آفلاین به ارسال درخواست آنلاین نیاز ندارد. خرید و بازیابی خرید بازار در این نسخه انجام نمی‌شود؛ برنامه اطلاعات کارت بانکی شما را دریافت نمی‌کند."
             )
 
-            // Section 4: Account Deletion (Google Play Mandate)
+            PrivacySectionCard(
+                icon = Icons.Rounded.Policy,
+                title = "دسترسی‌های برنامه",
+                description = "اینترنت برای خدمات آنلاین حساب متصل و اعلان‌ها برای یادآوری امتحان و تکلیف استفاده می‌شود. رد کردن اجازهٔ اعلان، مانع استفاده از برنامه نیست. زمان ارسال یادآورها به زمان‌بندی و تنظیمات باتری اندروید وابسته است و ممکن است با تأخیر همراه باشد. انتخاب عکس و فایل پشتیبان با انتخاب‌گر سیستم انجام می‌شود؛ برنامه دسترسی عمومی به مخاطبین، پیامک، مکان، میکروفون یا همهٔ فایل‌های دستگاه درخواست نمی‌کند."
+            )
+
+            // Local deletion and existing account deletion.
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = StudentShapeTokens.Card,
@@ -116,14 +122,14 @@ fun PrivacyPolicyDialog(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "۴. حق حذف کامل حساب کاربری و تمامی داده‌ها",
+                            text = "۴. حذف اطلاعات محلی و حساب قبلی",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = StudentOsColors.CrimsonRose
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "شما می‌توانید از داخل حساب کاربری درخواست حذف کنید. در این فرایند، حذف داده‌های ابری تا زمانی موفق تلقی نمی‌شود که سرویس مربوطه نتیجه موفقیت‌آمیز برگرداند؛ سپس داده‌های محلی حساب نیز پاکسازی می‌شوند.",
+                            text = "برای پاک‌کردن اطلاعات این دستگاه، از تنظیمات ← داده‌ها و پشتیبان ← پاکسازی اطلاعات محلی استفاده کنید. حساب متصل قبلی گزینهٔ حذف دائمی حساب را در بخش حساب دارد؛ حذف ابری تنها پس از پاسخ موفق سرویس تأیید می‌شود. فایل‌های پشتیبان و تصاویر خروجی که خودتان ذخیره یا به اشتراک گذاشته‌اید باید جداگانه حذف شوند. برای پرسش‌های حریم خصوصی، از راه تماس توسعه‌دهنده در صفحهٔ برنامه در بازار استفاده کنید.",
                             fontSize = 14.sp,
                             lineHeight = 22.sp,
                             color = MaterialTheme.colorScheme.onSurface

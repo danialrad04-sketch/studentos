@@ -36,6 +36,9 @@ class BazaarBillingClient(context: Context, private val scope: CoroutineScope, p
     }
     fun connect(status: PremiumStatus) {
         disconnect()
+        if (!com.example.ui.ReleaseAccessPolicy.bazaarBillingEnabled) {
+            message("خرید و بازیابی اشتراک در این نسخه فعال نیست."); return
+        }
         catalog = status
         if (uid == null || uid != PremiumApiClient.memberId()) { message("ابتدا با حساب زمان خرید وارد شوید."); return }
         if (status.rsaPublicKey.isBlank()) { message("پرداخت بازار هنوز فعال نشده است."); return }
@@ -58,6 +61,9 @@ class BazaarBillingClient(context: Context, private val scope: CoroutineScope, p
         } catch (_: Exception) { message("سرویس خرید آماده نشد؛ دوباره تلاش کنید.") }
     }
     fun purchase(activity: ComponentActivity, plan: PremiumPlan) {
+        if (!com.example.ui.ReleaseAccessPolicy.bazaarBillingEnabled) {
+            message("خرید اشتراک در این نسخه فعال نیست."); return
+        }
         val current = mutableState.value
         if (current.busy) return
         if (uid == null || uid != PremiumApiClient.memberId()) { message("حساب شما تغییر کرده؛ صفحه را دوباره باز کنید."); return }
@@ -72,6 +78,9 @@ class BazaarBillingClient(context: Context, private val scope: CoroutineScope, p
         }
     }
     fun restore() {
+        if (!com.example.ui.ReleaseAccessPolicy.bazaarBillingEnabled) {
+            message("بازیابی خرید در این نسخه فعال نیست."); return
+        }
         if (!mutableState.value.connected || mutableState.value.busy || uid != PremiumApiClient.memberId()) return
         mutableState.value = mutableState.value.copy(busy = true, message = "در حال بازیابی و تأیید خرید…")
         payment?.getSubscribedProducts {

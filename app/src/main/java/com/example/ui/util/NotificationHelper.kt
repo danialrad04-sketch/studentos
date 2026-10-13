@@ -56,6 +56,7 @@ object NotificationHelper {
         isDanger: Boolean = false,
         notificationId: Int = System.currentTimeMillis().toInt()
     ): Boolean {
+        if (!com.example.data.repository.AppPreferencesRepository.getInstance(context).notificationsEnabled.value) return false
         initNotificationChannel(context)
 
         // Check permission for Android 13+ (API 33+)
@@ -66,10 +67,14 @@ object NotificationHelper {
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 // Permission not yet granted
-                triggerHaptic(context, isDanger)
-                playToneSafely(isDanger)
                 return false
             }
+        }
+
+        if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+            if (manager?.getNotificationChannel(CHANNEL_ID)?.importance == NotificationManager.IMPORTANCE_NONE) return false
         }
 
         try {
@@ -91,16 +96,12 @@ object NotificationHelper {
                 .setPriority(if (isDanger) NotificationCompat.PRIORITY_MAX else NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setDefaults(NotificationCompat.DEFAULT_SOUND or NotificationCompat.DEFAULT_LIGHTS)
 
             NotificationManagerCompat.from(context).notify(notificationId, builder.build())
-            triggerHaptic(context, isDanger)
-            playToneSafely(isDanger)
             return true
         } catch (e: Exception) {
             e.printStackTrace()
-            triggerHaptic(context, isDanger)
-            playToneSafely(isDanger)
             return false
         }
     }

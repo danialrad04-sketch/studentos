@@ -301,7 +301,9 @@ fun OnboardingScreen(
                         )
                     }
                 } else {
-                    Spacer(modifier = Modifier.size(48.dp))
+                    IconButton(onClick = onOpenPrivacyPolicy, modifier = Modifier.size(48.dp)) {
+                        Icon(Icons.Rounded.Policy, contentDescription = "سیاست حفظ حریم خصوصی", tint = TextPureWhite)
+                    }
                 }
 
                 // Step Indicator Pills
@@ -466,30 +468,6 @@ fun OnboardingScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { onOpenPrivacyPolicy() }
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Policy,
-                        contentDescription = "سیاست حفظ حریم خصوصی",
-                        tint = AccentPrimaryBright,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "سیاست حفظ حریم خصوصی و امنیت داده‌ها",
-                        fontSize = 11.5.sp,
-                        color = AccentPrimaryBright,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
             }
         }
     }

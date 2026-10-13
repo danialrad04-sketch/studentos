@@ -242,7 +242,7 @@ fun AcademicCopilotScreen(
                 else if (onlineStatus != null) "پاسخ آنلاین فعلاً در دسترس نیست؛ تحلیل آفلاین آماده است."
                 else connectionMessage ?: "در حال بررسی دسترسی آنلاین…", style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("ai_service_status"))
-            if (!userAccount.isGuest || com.example.ui.ReleaseAccessPolicy.onlineAccountEntryEnabled) TextButton(onClick = onOpenPremium, modifier = Modifier.heightIn(min = 48.dp)) {
+            if (com.example.ui.ReleaseAccessPolicy.bazaarBillingEnabled && (!userAccount.isGuest || com.example.ui.ReleaseAccessPolicy.onlineAccountEntryEnabled)) TextButton(onClick = onOpenPremium, modifier = Modifier.heightIn(min = 48.dp)) {
                 Text(if (userAccount.isGuest) "ورود و امکانات آنلاین" else if (quota.isProOrHigher) "مدیریت اشتراک پرو" else "مشاهدهٔ امکانات Student Pro")
             }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

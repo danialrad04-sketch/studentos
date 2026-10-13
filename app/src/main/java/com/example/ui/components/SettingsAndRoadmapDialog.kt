@@ -47,8 +47,8 @@ fun SettingsAndRoadmapDialog(
     var section by rememberSaveable { mutableStateOf(initialSection) }
     var confirmation by rememberSaveable { mutableStateOf<String?>(null) }
     fun navigate(value: String) { section = value; onSectionChanged(value) }
-    val back = { if (section == "home") onDismiss() else navigate("home") }
-    val title = when (section) { "appearance" -> "ظاهر برنامه"; "notifications" -> "اعلان‌ها و یادآورها"; "data" -> "داده‌ها و پشتیبان"; "about" -> "راهنما و دربارهٔ برنامه"; else -> "تنظیمات" }
+    val back = { if (section == "home") onDismiss() else navigate(if (section == "licenses") "about" else "home") }
+    val title = when (section) { "appearance" -> "ظاهر برنامه"; "notifications" -> "اعلان‌ها و یادآورها"; "data" -> "داده‌ها و پشتیبان"; "about" -> "راهنما و دربارهٔ برنامه"; "licenses" -> "مجوز قلم‌ها"; else -> "تنظیمات" }
     StudentSettingsPage(title, back) {
         StudentSectionTransition(section) { page ->
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
@@ -102,6 +102,7 @@ fun SettingsAndRoadmapDialog(
                             StudentSettingsRow("پاکسازی اطلاعات محلی", "حذف اطلاعات تحصیلی ذخیره‌شده روی دستگاه", Icons.Rounded.DeleteSweep, { confirmation = "reset" }, destructive = true)
                         }
                     }
+                    "licenses" -> { FontLicenseContent() }
                     "about" -> {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Student OS", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
@@ -111,6 +112,7 @@ fun SettingsAndRoadmapDialog(
                         StudentSettingsGroup("راهنما و شفافیت") {
                             StudentSettingsRow("پشتیبانی", "ثبت درخواست و پیگیری پاسخ‌ها", Icons.AutoMirrored.Rounded.HelpOutline, onOpenSupportTickets)
                             StudentSettingsRow("حریم خصوصی", "نحوهٔ نگهداری و استفاده از اطلاعات", Icons.Rounded.PrivacyTip, onOpenPrivacyPolicy)
+                            StudentSettingsRow("مجوز قلم‌ها", "منابع و متن مجوز قلم‌های برنامه", Icons.Rounded.Description, { navigate("licenses") })
                             StudentSettingsRow("اطلاعات نسخه", "جزئیات برنامه و فایل نصب", Icons.Rounded.Info, onOpenApkInfo)
                         }
                     }
@@ -128,5 +130,25 @@ fun SettingsAndRoadmapDialog(
             onConfirm = { confirmation = null; if (action == "reset") onClearToFreshSlate() else onLoadDemoData() },
             onDismiss = { confirmation = null }
         )
+    }
+}
+
+@Composable
+private fun FontLicenseContent() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val texts by produceState<List<String>>(initialValue = emptyList(), context) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            listOf("Vazirmatn-OFL.txt", "JetBrainsMono-OFL.txt", "PlusJakartaSans-OFL.txt").map { name ->
+                context.assets.open("licenses/$name").bufferedReader().use { it.readText() }
+            }
+        }
+    }
+    Text("قلم‌های Vazirmatn، JetBrains Mono و Plus Jakarta Sans با مجوز SIL Open Font License 1.1 در برنامه استفاده می‌شوند. نام سازندگان، منابع و متن کامل مجوزها در ادامه آمده است.", style = MaterialTheme.typography.bodyLarge)
+    texts.forEach { text ->
+        androidx.compose.runtime.CompositionLocalProvider(
+            androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr
+        ) {
+            Text(text, style = MaterialTheme.typography.bodySmall)
+        }
     }
 }

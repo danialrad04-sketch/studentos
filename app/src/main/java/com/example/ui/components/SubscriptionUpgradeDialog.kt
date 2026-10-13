@@ -31,6 +31,10 @@ import java.util.Locale
 
 @Composable
 fun SubscriptionUpgradeRoute(userAccount: UserAccount, onVerified: (SubscriptionDetails) -> Unit, onSignIn: () -> Unit, onDismiss: () -> Unit) {
+    if (!com.example.ui.ReleaseAccessPolicy.bazaarBillingEnabled) {
+        BillingUnavailableNotice(onDismiss)
+        return
+    }
     if (userAccount.isGuest && !com.example.ui.ReleaseAccessPolicy.onlineAccountEntryEnabled) {
         StudentSettingsPage("امکانات آنلاین", onDismiss) { OfflineAccountNotice(onContinue = onDismiss) }
         return
@@ -78,8 +82,13 @@ fun SubscriptionUpgradeDialog(
     onRestore: () -> Unit,
     onRefresh: () -> Unit,
     onSignIn: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    billingEnabled: Boolean = com.example.ui.ReleaseAccessPolicy.bazaarBillingEnabled
 ) {
+    if (!billingEnabled) {
+        BillingUnavailableNotice(onDismiss)
+        return
+    }
     var selectedId by rememberSaveable { mutableStateOf("studentos_pro_monthly") }
     val selected = status.plans.firstOrNull { it.productId == selectedId } ?: status.plans.firstOrNull()
     val active = status.subscription.isProOrHigher || userAccount.isProOrHigher
@@ -165,4 +174,16 @@ private fun PremiumFeature(title: String, subtitle: String, icon: androidx.compo
 private fun expiryDate(millis: Long): String {
     val cal = java.util.Calendar.getInstance().apply { timeInMillis = millis }
     return com.example.domain.util.JalaliCalendarUtil.gregorianToJalali(cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH) + 1, cal.get(java.util.Calendar.DAY_OF_MONTH)).toPersianDigits()
+}
+
+@Composable
+private fun BillingUnavailableNotice(onDismiss: () -> Unit) {
+    StudentSettingsPage("امکانات آنلاین", onDismiss) {
+        Column(Modifier.fillMaxWidth().padding(20.dp).testTag("billing_unavailable"),
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text("خرید اشتراک در این نسخه فعال نیست", style = MaterialTheme.typography.titleLarge)
+            Text("امکانات محلی برنامه بدون خرید در دسترس‌اند. این نسخه پرداخت یا بازیابی خرید از بازار انجام نمی‌دهد. اطلاعات تحصیلی و وضعیت حساب قبلی شما حفظ می‌شود.", style = MaterialTheme.typography.bodyLarge)
+            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("بازگشت به برنامه") }
+        }
+    }
 }
