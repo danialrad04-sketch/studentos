@@ -39,7 +39,7 @@ private val DefaultLineHeightStyle = LineHeightStyle(
 val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = VazirmatnFontFamily,
-        fontWeight = FontWeight.Black,
+        fontWeight = FontWeight.Bold,
         fontSize = 30.sp,
         lineHeight = 42.sp,
         letterSpacing = 0.sp,
@@ -210,7 +210,7 @@ object StudentTextTokens {
     val MetaText = TextStyle(
         fontFamily = VazirmatnFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 11.5.sp,
+        fontSize = 13.sp,
         lineHeight = 18.sp,
         letterSpacing = 0.sp
     )
@@ -218,7 +218,7 @@ object StudentTextTokens {
     val BadgeText = TextStyle(
         fontFamily = VazirmatnFontFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 11.sp,
+        fontSize = 12.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.sp
     )

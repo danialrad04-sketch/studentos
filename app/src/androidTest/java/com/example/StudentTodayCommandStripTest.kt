@@ -1,5 +1,8 @@
 package com.example
 
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import org.junit.Assert.assertEquals
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.example.data.local.entity.AttendanceEntity
@@ -19,6 +22,8 @@ class StudentTodayCommandStripTest {
 
     @Test
     fun showsTodaySignalsAndPrimaryActions() {
+        var destination: AppTab? = null
+        var focusStarts = 0
         composeRule.setContent {
             MyApplicationTheme {
                 StudentTodayCommandStrip(
@@ -42,18 +47,22 @@ class StudentTodayCommandStripTest {
                         )
                     ),
                     studyRecommendations = emptyList(),
-                    onNavigateTab = {},
-                    onStartFocus = {}
+                    onNavigateTab = { destination = it },
+                    onStartFocus = { focusStarts++ }
                 )
             }
         }
 
-        assertTrue(composeRule.onAllNodesWithText("امروز").fetchSemanticsNodes().isNotEmpty())
+        assertTrue(composeRule.onAllNodesWithText("نبض امروز").fetchSemanticsNodes().isNotEmpty())
         assertTrue(composeRule.onAllNodesWithText("کار باز").fetchSemanticsNodes().isNotEmpty())
         assertTrue(composeRule.onAllNodesWithText("کلاس امروز").fetchSemanticsNodes().isNotEmpty())
         assertTrue(composeRule.onAllNodesWithText("غیبت بحرانی").fetchSemanticsNodes().isNotEmpty())
         assertTrue(composeRule.onAllNodesWithText("شروع تمرکز").fetchSemanticsNodes().isNotEmpty())
         assertTrue(composeRule.onAllNodesWithText("کارها").fetchSemanticsNodes().isNotEmpty())
         assertTrue(composeRule.onAllNodesWithText("1").fetchSemanticsNodes().isNotEmpty())
+        composeRule.onNodeWithText("شروع تمرکز").performClick()
+        assertEquals(1, focusStarts)
+        composeRule.onNodeWithText("کارها").performClick()
+        assertEquals(AppTab.TASKS, destination)
     }
 }

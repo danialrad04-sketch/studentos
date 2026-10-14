@@ -1,10 +1,12 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.FilledTonalButton
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,7 +23,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddTask
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CheckCircle
@@ -38,6 +41,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -55,8 +61,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
@@ -96,10 +104,13 @@ fun CourseWorkspaceDialogV2(
     onEditExam: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
-    var showAddTask by remember { mutableStateOf(false) }
+    var showAddTask by rememberSaveable(course.id) { mutableStateOf(false) }
     var taskTitle by remember { mutableStateOf("") }
     var taskDate by remember { mutableStateOf("") }
-    var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showDeleteConfirm by rememberSaveable(course.id) { mutableStateOf(false) }
+
+    var showActions by remember { mutableStateOf(false) }
+    var showAllTasks by rememberSaveable(course.id) { mutableStateOf(false) }
 
     val accent = remember(course.colorHex) {
         runCatching {
@@ -121,7 +132,7 @@ fun CourseWorkspaceDialogV2(
 
         Surface(
             modifier = modifier
-                .fillMaxSize()
+                .fillMaxSize().testTag("course_workspace")
                 .navigationBarsPadding()
                 .padding(10.dp),
             shape = RoundedCornerShape(26.dp),
@@ -134,61 +145,48 @@ fun CourseWorkspaceDialogV2(
         ) {
             Column(Modifier.fillMaxSize()) {
                 Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(
-                        modifier = Modifier.size(42.dp),
-                        shape = RoundedCornerShape(13.dp),
-                        color = accent.copy(alpha = 0.12f)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.MenuBook, "درس", tint = accent, modifier = Modifier.size(22.dp))
+                    IconButton(onClick = dismissWindow) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "بستن فضای درس")
+                    }
+                    Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
+                        Text("فضای درس", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    }
+                    Box {
+                        IconButton(onClick = { showActions = true }) {
+                            Icon(Icons.Default.MoreVert, "گزینه‌های درس")
                         }
-                    }
-                    Column(Modifier.weight(1f)) {
-                        Text("فضای درس", style = MaterialTheme.typography.labelMedium, color = accent, fontWeight = FontWeight.Bold)
-                        Text(
-                            course.name,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Black,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    IconButton(onClick = { onEditCourse(course) }, modifier = Modifier.minimumInteractiveComponentSize()) {
-                        Icon(Icons.Default.Edit, "ویرایش درس")
-                    }
-                    if (onDeleteCourse != null) {
-                        IconButton(onClick = { showDeleteConfirm = true }, modifier = Modifier.minimumInteractiveComponentSize()) {
-                            Icon(
-                                Icons.Default.DeleteOutline,
-                                "حذف درس",
-                                tint = MaterialTheme.studentColors.attendanceCritical
-                            )
+                        DropdownMenu(expanded = showActions, onDismissRequest = { showActions = false }) {
+                            DropdownMenuItem(text = { Text("ویرایش درس") }, leadingIcon = { Icon(Icons.Default.Edit, null) }, onClick = { showActions = false; onEditCourse(course) })
+                            if (onDeleteCourse != null) DropdownMenuItem(text = { Text("حذف درس") }, leadingIcon = { Icon(Icons.Default.DeleteOutline, null) }, onClick = { showActions = false; showDeleteConfirm = true })
                         }
-                    }
-                    IconButton(onClick = dismissWindow, modifier = Modifier.minimumInteractiveComponentSize()) {
-                        Icon(Icons.Default.ArrowBack, "بستن")
                     }
                 }
-
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))
-
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().testTag("course_workspace_list"),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    item {
+                        Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface,
+                            shadowElevation = 2.dp,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                            Column {
+                                Box(Modifier.fillMaxWidth().height(3.dp).background(accent))
+                                StudentReadableText(course.name, detailTitle = "عنوان کامل درس",
+                                    style = MaterialTheme.typography.headlineSmall, maxLines = 2,
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp))
+                            }
+                        }
+                    }
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(22.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = accent.copy(alpha = if (isDark) 0.11f else 0.065f)
+                                containerColor = androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surface, accent, if (isDark) 0.16f else 0.08f)
                             ),
                             border = androidx.compose.foundation.BorderStroke(1.dp, accent.copy(alpha = 0.24f))
                         ) {
@@ -196,13 +194,10 @@ fun CourseWorkspaceDialogV2(
                                 Modifier.padding(16.dp),
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    WorkspaceMetric(course.units.toString(), "واحد", Modifier.weight(1f))
-                                    WorkspaceMetric(openTasks.toString(), "کار باز", Modifier.weight(1f))
-                                    WorkspaceMetric(sessions.size.toString(), "جلسه", Modifier.weight(1f))
+                                StudentAdaptiveRow(minimumRowWidth = 216.dp) { cell ->
+                                    WorkspaceMetric(course.units.toString(), "واحد", cell)
+                                    WorkspaceMetric(openTasks.toString(), "کار باز", cell)
+                                    WorkspaceMetric(sessions.size.toString(), "جلسه", cell)
                                 }
                                 StudentCardBody(
                                     text = when {
@@ -216,15 +211,12 @@ fun CourseWorkspaceDialogV2(
                                     maxLines = 2,
                                     modifier = Modifier.fillMaxWidth()
                                 )
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
+                                StudentAdaptiveRow { cell ->
                                     Button(
                                         onClick = onStartFocus,
-                                        modifier = Modifier.weight(1f),
+                                        modifier = cell.heightIn(min = 48.dp),
                                         shape = RoundedCornerShape(12.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = accent)
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                                     ) {
                                         Icon(Icons.Default.PlayArrow, null, Modifier.size(17.dp))
                                         Spacer(Modifier.width(6.dp))
@@ -232,7 +224,7 @@ fun CourseWorkspaceDialogV2(
                                     }
                                     OutlinedButton(
                                         onClick = { showAddTask = true },
-                                        modifier = Modifier.weight(1f),
+                                        modifier = cell.heightIn(min = 48.dp),
                                         shape = RoundedCornerShape(12.dp)
                                     ) {
                                         Icon(Icons.Default.AddTask, null, Modifier.size(17.dp))
@@ -269,19 +261,17 @@ fun CourseWorkspaceDialogV2(
                         Surface(
                             Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(17.dp),
-                            color = MaterialTheme.colorScheme.surface
+                            color = MaterialTheme.colorScheme.surface,
+                            shadowElevation = 2.dp,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                         ) {
                             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Row(
-                                    Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
+                                StudentAdaptiveRow(minimumRowWidth = 280.dp) { cell ->
                                     Text(
                                         "غیبت: " + absent + if (maxAllowed > 0) " از " + maxAllowed else "",
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold, modifier = cell
                                     )
-                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Row(modifier = cell, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                         OutlinedButton(
                                             onClick = { onChangeAttendance(-1) },
                                             enabled = absent > 0,
@@ -309,8 +299,13 @@ fun CourseWorkspaceDialogV2(
                     if (tasks.isEmpty()) {
                         item { WorkspaceHintV2("هنوز کاری برای این درس ثبت نشده است.") }
                     } else {
-                        items(tasks.take(10), key = { it.id }) { task ->
+                        items(if (showAllTasks) tasks else tasks.take(10), key = { it.id }) { task ->
                             WorkspaceTaskRowV2(task, accent, { onToggleTask(task) }, onDeleteTask?.let { { it(task) } })
+                        }
+                        if (tasks.size > 10) item {
+                            TextButton(onClick = { showAllTasks = !showAllTasks }, modifier = Modifier.fillMaxWidth()) {
+                                Text(if (showAllTasks) "نمایش خلاصهٔ کارها" else "نمایش همهٔ ${tasks.size} کار")
+                            }
                         }
                     }
 
@@ -322,7 +317,9 @@ fun CourseWorkspaceDialogV2(
                             Surface(
                                 Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(17.dp),
-                                color = MaterialTheme.colorScheme.surface
+                                color = MaterialTheme.colorScheme.surface,
+                                shadowElevation = 2.dp,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                             ) {
                                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     StudentCardMeta(exam.solarDate, fontWeight = FontWeight.Black)
@@ -334,11 +331,11 @@ fun CourseWorkspaceDialogV2(
                                         ) {
                                             Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                             Spacer(Modifier.width(5.dp))
-                                            Text(
+                                            StudentReadableText(
                                                 exam.location,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                                detailTitle = "محل امتحان",
+                                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                                                maxLines = 2,
                                                 modifier = Modifier.weight(1f)
                                             )
                                         }
@@ -359,15 +356,14 @@ fun CourseWorkspaceDialogV2(
                         Surface(
                             Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(17.dp),
-                            color = MaterialTheme.colorScheme.surface
+                            color = MaterialTheme.colorScheme.surface,
+                            shadowElevation = 2.dp,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                         ) {
-                            Row(
-                                Modifier.padding(14.dp),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                WorkspaceScoreV2("میان‌ترم", grade?.midtermGrade?.toString() ?: "—", Modifier.weight(1f))
-                                WorkspaceScoreV2("پایان‌ترم", grade?.finalGrade?.toString() ?: "—", Modifier.weight(1f))
-                                WorkspaceScoreV2("کار", completedTasks.toString() + "/" + tasks.size, Modifier.weight(1f))
+                            StudentAdaptiveRow(Modifier.padding(14.dp), minimumRowWidth = 216.dp) { cell ->
+                                WorkspaceScoreV2("میان‌ترم", grade?.midtermGrade?.toString() ?: "—", cell)
+                                WorkspaceScoreV2("پایان‌ترم", grade?.finalGrade?.toString() ?: "—", cell)
+                                WorkspaceScoreV2("کار", completedTasks.toString() + "/" + tasks.size, cell)
                             }
                         }
                     }
@@ -376,11 +372,11 @@ fun CourseWorkspaceDialogV2(
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             if (course.professor.isNotBlank()) {
-                                StudentCardMeta("استاد: " + course.professor, style = MaterialTheme.typography.bodyMedium)
+                                StudentReadableText("استاد: " + course.professor, detailTitle = "استاد درس", maxLines = 2)
                             }
                             if (!course.notes.isNullOrBlank()) {
-                                StudentCardBody(
-                                    text = course.notes.orEmpty(),
+                                StudentReadableText(
+                                    text = course.notes.orEmpty(), detailTitle = "یادداشت درس",
                                     style = MaterialTheme.typography.bodyMedium,
                                     maxLines = 3,
                                     modifier = Modifier.fillMaxWidth()
@@ -422,9 +418,19 @@ fun CourseWorkspaceDialogV2(
 
 @Composable
 private fun WorkspaceMetric(value: String, label: String, modifier: Modifier = Modifier) {
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        StudentCardTitle(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-        StudentCardMeta(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    BoxWithConstraints(modifier) {
+        // Stacked metrics at large font scale become compact value/label rows.
+        if (maxWidth >= 140.dp) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        } else {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                StudentCardMeta(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
     }
 }
 
@@ -432,13 +438,13 @@ private fun WorkspaceMetric(value: String, label: String, modifier: Modifier = M
 private fun WorkspaceScoreV2(label: String, value: String, modifier: Modifier = Modifier) {
     Column(modifier) {
         StudentCardMeta(label, style = MaterialTheme.typography.labelMedium)
-        StudentCardTitle(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
 private fun WorkspaceSectionTitleV2(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+    Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
         Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
         StudentCardTitle(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
     }
@@ -454,29 +460,16 @@ private fun WorkspaceSessionRow(session: CourseSessionEntity, accent: Color) {
     Surface(
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(15.dp),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 2.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(shape = RoundedCornerShape(10.dp), color = accent.copy(alpha = 0.10f)) {
-                Text(
-                    WORKSPACE_DAYS.getOrNull(session.day) ?: "روز",
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = accent
-                )
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            StudentAdaptiveRow(minimumRowWidth = 240.dp) { cell ->
+                Text(WORKSPACE_DAYS.getOrNull(session.day) ?: "روز", modifier = cell, style = MaterialTheme.typography.labelLarge, color = accent)
+                Text("\u200E${session.start} — ${session.end}\u200E", modifier = cell, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
             }
-            Spacer(Modifier.width(10.dp))
-            StudentCardMeta("\u200E" + session.start + " — " + session.end + "\u200E", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
-            if (session.location.isNotBlank()) {
-                Spacer(Modifier.width(8.dp))
-                Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(15.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.width(3.dp))
-                StudentCardMeta(session.location, style = MaterialTheme.typography.bodySmall, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+            if (session.location.isNotBlank()) StudentReadableText(session.location, detailTitle = "محل کلاس", style = MaterialTheme.typography.bodySmall, maxLines = 2)
         }
     }
 }
@@ -491,33 +484,23 @@ private fun WorkspaceTaskRowV2(
     Surface(
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(15.dp),
-        color = MaterialTheme.colorScheme.surface
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 2.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Row(
             Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onToggle, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    Icons.Default.CheckCircle,
-                    contentDescription = if (task.isCompleted) "انجام شده" else "انجام نشده",
-                    tint = if (task.isCompleted) accent else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Checkbox(checked = task.isCompleted, onCheckedChange = { onToggle() })
             Column(Modifier.weight(1f)) {
-                Text(
-                    task.title,
-                    fontWeight = if (task.isCompleted) FontWeight.Medium else FontWeight.Bold,
-                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+                StudentReadableText(task.title, detailTitle = "عنوان کامل کار", style = MaterialTheme.typography.titleSmall, maxLines = 2)
                 if (task.dueDate.isNotBlank()) {
-                    StudentCardMeta("موعد: " + task.dueDate, fontSize = 10.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    StudentCardMeta("موعد: " + task.dueDate, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             if (onDelete != null) {
-                IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                IconButton(onClick = onDelete, modifier = Modifier.minimumInteractiveComponentSize()) {
                     Icon(
                         Icons.Default.DeleteOutline,
                         "حذف کار",

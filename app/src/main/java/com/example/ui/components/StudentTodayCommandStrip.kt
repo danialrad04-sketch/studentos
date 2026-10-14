@@ -51,7 +51,8 @@ fun StudentTodayCommandStrip(
     studyRecommendations: List<StudySessionRecommendation>,
     onNavigateTab: (AppTab) -> Unit,
     onStartFocus: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showClassPreview: Boolean = true
 ) {
     val clock = rememberAcademicClock()
     val snapshot = AcademicContextEngine.buildSnapshot(
@@ -70,11 +71,11 @@ fun StudentTodayCommandStrip(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
+            MaterialTheme.colorScheme.secondary.copy(alpha = 0.22f)
         )
     ) {
         Column(
@@ -99,7 +100,7 @@ fun StudentTodayCommandStrip(
                 }
                 Column(Modifier.weight(1f)) {
                     Text(
-                        "امروز",
+                        "نبض امروز",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Black
                     )
@@ -118,16 +119,13 @@ fun StudentTodayCommandStrip(
                 }
             }
 
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                TodaySignal(Icons.Default.CheckCircle, openTasks.toString(), "کار باز", MaterialTheme.colorScheme.secondary, Modifier.weight(1f))
-                TodaySignal(Icons.Default.CalendarToday, snapshot.todaySessionCount.toString(), "کلاس امروز", MaterialTheme.colorScheme.primary, Modifier.weight(1f))
-                TodaySignal(Icons.Default.Event, dangerAttendance.toString(), "غیبت بحرانی", MaterialTheme.colorScheme.error, Modifier.weight(1f))
+            StudentAdaptiveRow(minimumRowWidth = 216.dp, gap = 8.dp) { cell ->
+                TodaySignal(Icons.Default.CheckCircle, openTasks.toString(), "کار باز", MaterialTheme.colorScheme.secondary, cell)
+                TodaySignal(Icons.Default.CalendarToday, snapshot.todaySessionCount.toString(), "کلاس امروز", MaterialTheme.colorScheme.primary, cell)
+                TodaySignal(Icons.Default.Event, dangerAttendance.toString(), "غیبت بحرانی", if (dangerAttendance > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant, cell)
             }
 
-            if (snapshot.nextCourseName != null) {
+            if (showClassPreview && snapshot.nextCourseName != null) {
                 val courseName = snapshot.nextCourseName.orEmpty()
                 Surface(
                     Modifier.fillMaxWidth(),
@@ -209,15 +207,13 @@ private fun TodaySignal(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        color = accent.copy(alpha = 0.07f)
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)
     ) {
         Column(
             Modifier.padding(vertical = 9.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(icon, null, tint = accent, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.size(3.dp))
-            Text(value, fontWeight = FontWeight.Black)
+            Text(value, style = MaterialTheme.typography.titleLarge, color = accent, fontWeight = FontWeight.Bold)
             Text(
                 label,
                 style = MaterialTheme.typography.labelSmall,

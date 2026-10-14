@@ -155,13 +155,8 @@ fun AddEditCourseDialog(
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showQuickPresets by remember { mutableStateOf(false) }
 
-    val activeColor = remember(selectedColorHex) {
-        try {
-            Color(android.graphics.Color.parseColor(selectedColorHex))
-        } catch (_: Exception) {
-            Color(0xFF0D9488)
-        }
-    }
+    // Control contrast follows the theme; the selected course color remains saved separately.
+    val activeColor = MaterialTheme.colorScheme.primary
 
     val fieldColors = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = activeColor,
@@ -429,7 +424,7 @@ fun AddEditCourseDialog(
                                     STANDARD_TIME_SLOTS.forEach { (slotStart, slotEnd) ->
                                         val isSelected = sessionItem.start == slotStart && sessionItem.end == slotEnd
                                         SelectableChip(
-                                            text = "$slotStart–$slotEnd",
+                                            text = "\u200E$slotStart–$slotEnd\u200E",
                                             selected = isSelected,
                                             activeColor = activeColor,
                                             onClick = {
