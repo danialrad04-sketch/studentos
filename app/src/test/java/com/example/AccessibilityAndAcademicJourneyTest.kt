@@ -114,7 +114,46 @@ class AccessibilityAndAcademicJourneyTest {
         rule.runOnIdle { assertTrue(opened) }
         rule.onRoot().captureRoboImage("build/outputs/visual-review/academic-journey-dark-large.png")
         rule.onNodeWithText("گزارش مطالعهٔ هفت‌روزه").performScrollTo().assertIsDisplayed()
+        rule.onNodeWithText("هدف روزانه: 120 دقیقه · قابل تغییر در تنظیمات مطالعه").performScrollTo().assertIsDisplayed()
         rule.onRoot().captureRoboImage("build/outputs/visual-review/study-journal-dark-large.png")
+    }
+
+    @Test fun attendanceDoesNotInventASafeSummaryAndHonorsStoredLimits() {
+        var populated by mutableStateOf(false)
+        rule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, 1.5f)) {
+                StudentOsTheme(darkTheme = true) {
+                    com.example.ui.components.AttendanceRadarScreen(
+                        courses = if (populated) listOf(com.example.data.local.entity.CourseEntity(id = "math", name = "ریاضی")) else emptyList(),
+                        attendanceList = if (populated) listOf(com.example.data.local.entity.AttendanceEntity("math", "ریاضی", 2, 5)) else emptyList(),
+                        onChangeAttendance = { _, _ -> }, onEvaluateAlerts = {},
+                        modifier = Modifier.verticalScroll(rememberScrollState())
+                    )
+                }
+            }
+        }
+        rule.onNodeWithText("خلاصهٔ غیبت‌های ترم").assertDoesNotExist()
+        rule.onNodeWithText("بررسی هشدارها").assertIsNotEnabled()
+        rule.runOnIdle { populated = true }
+        rule.onNodeWithText("از 5").assertIsDisplayed()
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/attendance-populated-dark-large.png")
+        rule.onNodeWithText("سقف مجاز: 5 جلسه (نظری)").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test fun largeTextTaskSignalsUseTwoReadableRows() {
+        rule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, 1.5f)) {
+                StudentOsTheme(darkTheme = true) {
+                    com.example.ui.components.TaskContextSummaryV2(emptyList(), emptyList(), emptyList())
+                }
+            }
+        }
+        val first = rule.onNodeWithText("باز").fetchSemanticsNode().boundsInRoot
+        val secondRow = rule.onNodeWithText("مرتبط با امتحان").fetchSemanticsNode().boundsInRoot
+        assertTrue(secondRow.top > first.bottom)
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/task-signals-dark-large.png")
     }
 
     @Test fun semanticStatusColorsKeepWcagTextContrastInLightAndDarkThemes() {

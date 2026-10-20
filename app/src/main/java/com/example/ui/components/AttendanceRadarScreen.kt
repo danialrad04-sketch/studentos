@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -81,7 +83,9 @@ import com.example.ui.theme.Rose600
 import com.example.ui.theme.StudentShapeTokens
 import com.example.ui.theme.StudentSpacing
 import com.example.ui.theme.StudentOsGlassTokens
+import com.example.ui.theme.studentColors
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AttendanceRadarScreen(
     attendanceList: List<AttendanceEntity>,
@@ -105,29 +109,31 @@ fun AttendanceRadarScreen(
     val dangerCount = attendanceList.count { it.absentCount >= it.maxAllowed && it.maxAllowed > 0 }
     val warningCount = attendanceList.count { it.absentCount == it.maxAllowed - 1 && it.maxAllowed > 0 }
     val totalAbsences = attendanceList.sumOf { it.absentCount }
-    val totalAllowedSemester = remember(allCourseNames) {
+    fun allowedFor(name: String): Int = attendanceList.find { it.courseName == name }?.maxAllowed?.takeIf { it > 0 }
+        ?: if (name.contains("آزمایشگاه") || name.contains("کارگاه")) 2 else 3
+    val totalAllowedSemester = remember(allCourseNames, attendanceList) {
         allCourseNames.sumOf { name ->
-            if (name.contains("آزمایشگاه") || name.contains("کارگاه")) 2 else 3
-        }.coerceAtLeast(1)
+            allowedFor(name)
+        }
     }
 
     val filteredCourseNames = remember(allCourseNames, attendanceList, selectedFilter) {
         when (selectedFilter) {
             "danger" -> allCourseNames.filter { name ->
                 val rec = attendanceList.find { it.courseName == name }
-                val maxAllowed = if (name.contains("آزمایشگاه") || name.contains("کارگاه")) 2 else 3
+                val maxAllowed = allowedFor(name)
                 val cur = rec?.absentCount ?: 0
                 cur >= maxAllowed
             }
             "warning" -> allCourseNames.filter { name ->
                 val rec = attendanceList.find { it.courseName == name }
-                val maxAllowed = if (name.contains("آزمایشگاه") || name.contains("کارگاه")) 2 else 3
+                val maxAllowed = allowedFor(name)
                 val cur = rec?.absentCount ?: 0
                 cur == maxAllowed - 1
             }
             "safe" -> allCourseNames.filter { name ->
                 val rec = attendanceList.find { it.courseName == name }
-                val maxAllowed = if (name.contains("آزمایشگاه") || name.contains("کارگاه")) 2 else 3
+                val maxAllowed = allowedFor(name)
                 val cur = rec?.absentCount ?: 0
                 cur < maxAllowed - 1
             }
@@ -144,7 +150,7 @@ fun AttendanceRadarScreen(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "رادار پایش غیبت‌ها (قانون ۳/۱۶ و ماده ۳۵)",
+                    text = "پایش حضور و غیاب",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Black,
                     color = MaterialTheme.colorScheme.onSurface
@@ -159,6 +165,7 @@ fun AttendanceRadarScreen(
             }
 
             Button(
+                enabled = allCourseNames.isNotEmpty(),
                 onClick = {
                     onEvaluateAlerts()
                 },
@@ -169,11 +176,11 @@ fun AttendanceRadarScreen(
                 Icon(
                     imageVector = Icons.Default.NotificationsActive,
                     contentDescription = null,
-                    tint = StudentOsColors.CyanAccent,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(end = 4.dp).size(16.dp)
                 )
                 Text(
-                    text = "بررسی هوشمند",
+                    text = "بررسی هشدارها",
                     fontSize = 11.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -184,7 +191,7 @@ fun AttendanceRadarScreen(
         Spacer(modifier = Modifier.height(14.dp))
 
         // 1. CONCENTRIC SEMESTER RADAR GAUGE CARD
-        AttendanceSemesterConcentricGauge(
+        if (allCourseNames.isNotEmpty()) AttendanceSemesterConcentricGauge(
             totalAbsences = totalAbsences,
             totalAllowed = totalAllowedSemester,
             dangerCount = dangerCount,
@@ -225,7 +232,7 @@ fun AttendanceRadarScreen(
                             text = "اخطار ماده ۳۵: در آستانه حذف آموزشی در $dangerCount درس!",
                             fontWeight = FontWeight.Black,
                             fontSize = 12.5.sp,
-                            color = Rose500
+                            color = MaterialTheme.studentColors.attendanceCritical
                         )
                         Text(
                             text = "تعداد غیبت‌های شما در این دروس به سقف قانونی دانشگاه رسیده است.",
@@ -238,9 +245,10 @@ fun AttendanceRadarScreen(
         }
 
         // Filter chips bar
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             FilterChip(
                 selected = selectedFilter == "all",
@@ -250,8 +258,8 @@ fun AttendanceRadarScreen(
                 label = { Text("همه دروس (${allCourseNames.size})", fontSize = 11.5.sp) },
                 shape = StudentShapeTokens.Compact,
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = StudentOsColors.CyanAccent,
-                    selectedLabelColor = Color.Black
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
             if (dangerCount > 0) {
@@ -263,8 +271,8 @@ fun AttendanceRadarScreen(
                     label = { Text("حذف / خطر ($dangerCount)", fontSize = 11.5.sp) },
                     shape = RoundedCornerShape(12.dp),
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Rose600,
-                        selectedLabelColor = Color.White
+                        selectedContainerColor = MaterialTheme.colorScheme.errorContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onErrorContainer
                     )
                 )
             }
@@ -290,8 +298,8 @@ fun AttendanceRadarScreen(
                 label = { Text("امن", fontSize = 11.5.sp) },
                 shape = RoundedCornerShape(12.dp),
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = Emerald600,
-                    selectedLabelColor = Color.White
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
         }
@@ -312,7 +320,7 @@ fun AttendanceRadarScreen(
                 filteredCourseNames.forEach { courseName ->
                     val record = attendanceList.find { it.courseName == courseName }
                     val matchedCourse = courses.find { it.name == courseName }
-                    val maxAllowed = if (courseName.contains("آزمایشگاه") || courseName.contains("کارگاه")) 2 else 3
+                    val maxAllowed = allowedFor(courseName)
                     val curAbsents = record?.absentCount ?: 0
 
                     AttendanceCard(
@@ -415,9 +423,9 @@ fun AttendanceRadarScreen(
                         courseForDirectEdit = null
                     },
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = StudentOsColors.CyanAccent)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("ثبت عدد", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text("ثبت عدد", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
             },
             dismissButton = {
@@ -431,6 +439,7 @@ fun AttendanceRadarScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AttendanceSemesterConcentricGauge(
     totalAbsences: Int,
@@ -439,13 +448,13 @@ private fun AttendanceSemesterConcentricGauge(
     warningCount: Int,
     modifier: Modifier = Modifier
 ) {
-    val ratio = (totalAbsences.toFloat() / totalAllowed.toFloat()).coerceIn(0f, 1f)
+    val ratio = (totalAbsences.toFloat() / totalAllowed.coerceAtLeast(1)).coerceIn(0f, 1f)
     val percentage = (ratio * 100).toInt()
 
     val gaugeColor = when {
-        dangerCount > 0 || ratio > 0.75f -> Rose500
-        warningCount > 0 || ratio > 0.5f -> Amber500
-        else -> StudentOsColors.CyanAccent
+        dangerCount > 0 || ratio > 0.75f -> MaterialTheme.studentColors.attendanceCritical
+        warningCount > 0 || ratio > 0.5f -> MaterialTheme.studentColors.attendanceWarning
+        else -> MaterialTheme.colorScheme.primary
     }
 
     val trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
@@ -455,7 +464,7 @@ private fun AttendanceSemesterConcentricGauge(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 150.dp, max = 222.dp),
+            .heightIn(min = 150.dp),
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, if (isDark) MaterialTheme.colorScheme.outline.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outline),
@@ -487,7 +496,7 @@ private fun AttendanceSemesterConcentricGauge(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "گیج وضعیت رادار ترم",
+                        text = "خلاصهٔ غیبت‌های ترم",
                         fontWeight = FontWeight.Black,
                         fontSize = 13.5.sp,
                         color = MaterialTheme.colorScheme.onSurface
@@ -500,7 +509,7 @@ private fun AttendanceSemesterConcentricGauge(
                     text = when {
                         dangerCount > 0 -> "⚠️ اخطار جدی ماده ۳۵: $dangerCount درس در آستانه حذف آموزشی هستند."
                         warningCount > 0 -> "⚠️ احتیاط: $warningCount درس تنها ۱ جلسه تا سقف غیبت فاصله دارند."
-                        else -> "✅ وضعیت امن: حاشیه اطمینان بسیار خوب در تمامی دروس."
+                        else -> "هشداری بر اساس غیبت‌های ثبت‌شده وجود ندارد."
                     },
                     fontSize = 11.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -509,7 +518,7 @@ private fun AttendanceSemesterConcentricGauge(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = gaugeColor.copy(alpha = 0.12f)
@@ -527,7 +536,7 @@ private fun AttendanceSemesterConcentricGauge(
                         color = MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Text(
-                            text = "${totalAllowed - totalAbsences} جلسه مجاز باقیمانده",
+                            text = "${(totalAllowed - totalAbsences).coerceAtLeast(0)} جلسه تا سقف ثبت‌شده",
                             fontSize = 10.5.sp,
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
@@ -603,8 +612,8 @@ fun AttendanceCard(
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
 
     val cardBorder = when {
-        isDanger -> Rose500.copy(alpha = 0.85f)
-        isWarning -> Amber500.copy(alpha = 0.75f)
+        isDanger -> MaterialTheme.studentColors.attendanceCritical.copy(alpha = 0.85f)
+        isWarning -> MaterialTheme.studentColors.attendanceWarning.copy(alpha = 0.75f)
         else -> if (isDark) Color(0x33FFFFFF) else Color(0xFFE2E8F0)
     }
 
@@ -629,19 +638,19 @@ fun AttendanceCard(
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 13.5.sp,
                             color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                            modifier = Modifier.widthIn(max = 220.dp)
+                            modifier = Modifier.weight(1f)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = StudentOsColors.CyanAccent.copy(alpha = 0.14f)
+                            color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
                                 text = "$units واحد",
                                 style = NumericBadgeText,
-                                color = StudentOsColors.CyanAccent,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
@@ -649,14 +658,14 @@ fun AttendanceCard(
                             Spacer(modifier = Modifier.width(6.dp))
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
-                                color = AcademicNavy.copy(alpha = 0.15f),
+                                color = MaterialTheme.colorScheme.primaryContainer,
                                 modifier = Modifier.clickable { onOpenWorkspace() }
                             ) {
                                 Text(
                                     text = "میزکار ↗",
                                     fontSize = 9.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = StudentOsColors.CyanAccent,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
                                 )
                             }
@@ -673,8 +682,8 @@ fun AttendanceCard(
                 Surface(
                     shape = StudentShapeTokens.Compact,
                     color = when {
-                        isDanger -> Rose500.copy(alpha = 0.2f)
-                        isWarning -> Amber500.copy(alpha = 0.18f)
+                        isDanger -> MaterialTheme.colorScheme.errorContainer
+                        isWarning -> MaterialTheme.colorScheme.tertiaryContainer
                         else -> MaterialTheme.colorScheme.surfaceVariant
                     },
                     modifier = if (onDirectEdit != null) Modifier.clickable { onDirectEdit() } else Modifier
@@ -687,8 +696,8 @@ fun AttendanceCard(
                             text = "$absentCount / $maxAllowed",
                             style = NumericBadgeText,
                             color = when {
-                                isDanger -> Rose500
-                                isWarning -> Amber500
+                                isDanger -> MaterialTheme.colorScheme.onErrorContainer
+                                isWarning -> MaterialTheme.colorScheme.onTertiaryContainer
                                 else -> MaterialTheme.colorScheme.onSurface
                             }
                         )
@@ -755,10 +764,11 @@ fun AttendanceCard(
                     },
                     fontSize = 11.5.sp,
                     fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.weight(1f).padding(end = 8.dp),
                     color = when {
-                        isDanger -> Rose500
-                        isWarning -> Amber500
-                        else -> Emerald500
+                        isDanger -> MaterialTheme.studentColors.attendanceCritical
+                        isWarning -> MaterialTheme.studentColors.attendanceWarning
+                        else -> MaterialTheme.studentColors.attendanceSafe
                     }
                 )
 
@@ -790,14 +800,14 @@ fun AttendanceCard(
                         onClick = onAdd,
                         modifier = Modifier.size(48.dp),
                         shape = RoundedCornerShape(14.dp),
-                        color = if (isDanger) Rose600 else StudentOsColors.CyanAccent,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, if (isDanger) Rose500 else StudentOsColors.CyanAccent.copy(alpha = 0.6f))
+                        color = if (isDanger) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.Default.Add,
                                 contentDescription = "ثبت غیبت",
-                                tint = if (isDanger) Color.White else Color.Black,
+                                tint = if (isDanger) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(22.dp)
                             )
                         }

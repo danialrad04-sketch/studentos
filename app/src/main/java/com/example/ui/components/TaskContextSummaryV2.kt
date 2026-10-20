@@ -3,6 +3,8 @@ package com.example.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,7 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,6 +33,7 @@ import com.example.domain.engine.AcademicPlanningCollisionEngine
 import com.example.domain.util.JalaliCalendarUtil
 import com.example.ui.theme.StudentSpacing
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TaskContextSummaryV2(
     tasks: List<TaskEntity>,
@@ -99,14 +102,16 @@ fun TaskContextSummaryV2(
                 }
             }
 
-            Row(
+            FlowRow(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.3f) 2 else 4,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                TaskSignal(open.toString(), "باز", MaterialTheme.colorScheme.secondary, Modifier.weight(1f))
-                TaskSignal(overdue.toString(), "عقب‌افتاده", MaterialTheme.colorScheme.error, Modifier.weight(1f))
-                TaskSignal(examLinked.toString(), "مرتبط با امتحان", MaterialTheme.colorScheme.primary, Modifier.weight(1f))
-                TaskSignal(collisionCount.toString(), "تداخل برنامه", MaterialTheme.colorScheme.error, Modifier.weight(1f))
+                TaskSignal(open.toString(), "باز", Modifier.weight(1f))
+                TaskSignal(overdue.toString(), "عقب‌افتاده", Modifier.weight(1f))
+                TaskSignal(examLinked.toString(), "مرتبط با امتحان", Modifier.weight(1f))
+                TaskSignal(collisionCount.toString(), "تداخل برنامه", Modifier.weight(1f))
             }
         }
     }
@@ -116,13 +121,13 @@ fun TaskContextSummaryV2(
 private fun TaskSignal(
     value: String,
     label: String,
-    accent: Color,
     modifier: Modifier
 ) {
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(11.dp),
-        color = accent.copy(alpha = 0.07f)
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             Modifier.padding(vertical = 7.dp),
