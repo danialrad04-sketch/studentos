@@ -75,6 +75,22 @@ class NavigationAndHomeExperienceTest {
         rule.runOnIdle { assertTrue(support) }
     }
 
+    @Test fun changingAccountClearsTheUnsentConversationInput() {
+        var account by mutableStateOf(UserAccount(uid = "first-local-account"))
+        rule.setContent {
+            StudentOsTheme {
+                AcademicCopilotScreen(StudentProfileEntity(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList(),
+                    onNavigateTab = {}, onExecuteAction = {}, onOpenPastSemestersDialog = {}, userAccount = account)
+            }
+        }
+        rule.onNodeWithTag("copilot_input_field").performTextInput("یادداشت خصوصی حساب اول")
+        rule.runOnIdle { account = UserAccount(uid = "second-local-account") }
+        rule.waitForIdle()
+        val input = rule.onNodeWithTag("copilot_input_field").fetchSemanticsNode()
+            .config[androidx.compose.ui.semantics.SemanticsProperties.EditableText].text
+        assertEquals("", input)
+    }
+
     @Test fun newStudentHasWorkingScheduleAndCopilotEntriesWithoutCallbacks() {
         var selected: AppTab? = null
         rule.setContent {

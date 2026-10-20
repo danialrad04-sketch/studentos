@@ -110,6 +110,9 @@ import com.example.ui.theme.Rose500
 import com.example.ui.theme.Rose600
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -139,6 +142,10 @@ fun AcademicCopilotScreen(
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
+    var requestJob by remember(userAccount.uid) { mutableStateOf<Job?>(null) }
+    DisposableEffect(userAccount.uid) {
+        onDispose { requestJob?.cancel() }
+    }
     val messages = remember(userAccount.uid) {
         mutableStateListOf<CopilotMessage>().apply {
             add(
@@ -180,7 +187,7 @@ fun AcademicCopilotScreen(
             inputText = ""
             isAiLoading = true
 
-            coroutineScope.launch {
+            requestJob = coroutineScope.launch {
                 try {
                     listState.animateScrollToItem(messages.size - 1)
                     val responseMsg = AcademicCopilotEngine.processUserQueryAsync(
@@ -217,13 +224,13 @@ fun AcademicCopilotScreen(
                     ))
                 } finally {
                     isAiLoading = false
-                    refreshOnlineStatus()
-                    try {
-                        if (messages.isNotEmpty()) {
-                            listState.animateScrollToItem(messages.size - 1)
-                        }
-                    } catch (e: CancellationException) { throw e }
-                    catch (_: Exception) {}
+                    if (currentCoroutineContext().isActive) {
+                        refreshOnlineStatus()
+                        try {
+                            if (messages.isNotEmpty()) listState.animateScrollToItem(messages.size - 1)
+                        } catch (e: CancellationException) { throw e }
+                        catch (_: Exception) {}
+                    }
                 }
             }
         }
@@ -361,12 +368,12 @@ fun AcademicCopilotScreen(
             contentPadding = PaddingValues(vertical = 4.dp)
         ) {
             val quickChips = listOf(
-                "📜 شرایط حذف ترم بدون احتساب",
-                "⚠️ حدنصاب معدل مشروطی (ماده ۴۶)",
-                "🔗 قانون پیش‌نیاز و هم‌پیشنیاز",
-                "🚨 آیین‌نامه غیبت ۳/۱۶ و ماده ۳۵",
-                "🌟 سقف واحد ترم بعد (معدل الف)",
-                "🏆 وضعیت مدال‌ها و استریک تحصیلی"
+                "برای امروز چه کاری اولویت دارد؟",
+                "برای امتحان بعدی چطور مرور کنم؟",
+                "کدام تکلیف‌ها باقی مانده‌اند؟",
+                "وضعیت حضور و غیاب من چطور است؟",
+                "برای مطالعه یک برنامه پیشنهاد بده",
+                "پیشرفت تحصیلی من چطور است؟"
             )
             items(quickChips) { chipText ->
                 Box(
@@ -407,7 +414,7 @@ fun AcademicCopilotScreen(
                     onValueChange = { inputText = it },
                     placeholder = {
                         Text(
-                            "از Academic Copilot بپرسید (مثلاً: شرایط حذف ترم، غیبت ۳/۱۶...)",
+                            "از دستیار بپرس؛ مثلاً امروز از کجا شروع کنم؟",
                             fontSize = 11.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -428,12 +435,12 @@ fun AcademicCopilotScreen(
 
                 Surface(
                     onClick = { sendMessage(inputText) },
-                    enabled = inputText.isNotBlank(),
+                    enabled = inputText.isNotBlank() && !isAiLoading,
                     modifier = Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(16.dp)),
                     shape = RoundedCornerShape(16.dp),
-                    color = if (inputText.isNotBlank()) StudentOsColors.CyanAccent else Color.White.copy(alpha = 0.08f),
+                    color = if (inputText.isNotBlank() && !isAiLoading) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
                         if (inputText.isNotBlank()) Color.White.copy(alpha = 0.3f) else Color.Transparent
@@ -443,7 +450,7 @@ fun AcademicCopilotScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
                             contentDescription = "ارسال",
-                            tint = if (inputText.isNotBlank()) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (inputText.isNotBlank() && !isAiLoading) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                     }

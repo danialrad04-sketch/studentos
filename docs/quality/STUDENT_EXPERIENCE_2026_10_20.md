@@ -9,8 +9,8 @@ Review date: 2026-10-20. Base: `99dacc21b81033450c883e27b76bb397f7af5412`.
 - Pending tasks are labelled as pending tasks rather than today's tasks. Unknown curriculum totals do not appear as “0 out of 0” or a fabricated completion percentage.
 - KPI cards stack at large text sizes.
 - The drawer has a branded header, explicit close action, account card, searchable grouped destinations, selected-page state and distinct icons for all 14 destinations. Account, settings and support remain available.
-- All internal pages have a short context description and a directly accessible menu button.
-- Assistant UI uses theme-aware accents, actionable Persian errors and an explicit offline badge on the exceptional fallback path. Account changes reset the visible conversation and service status. Cancellation propagates instead of producing a fake fallback reply. Provider debug details stay out of chat.
+- All internal pages have a short context description and a directly accessible menu button. Shared empty-state actions use readable typography and at least 48dp touch targets.
+- Assistant UI uses theme-aware accents, actionable Persian errors and an explicit offline badge on the exceptional fallback path. Account changes reset the visible conversation and service status. Cancellation propagates instead of producing a fake fallback reply; a changed account cancels the prior request. Suggested prompts use actual study workflows instead of asserting specific university regulations, and Send is disabled during generation. Provider debug details stay out of chat.
 - Server AI handling rejects unusable provider bodies and filters non-answer parts. Timetable rows are checked against Android's import requirements before completing the scan, allowing existing transaction logic to refund failed scans.
 
 ## Executed locally
@@ -27,7 +27,7 @@ Review date: 2026-10-20. Base: `99dacc21b81033450c883e27b76bb397f7af5412`.
 
 ## Automated Android coverage added
 
-`NavigationAndHomeExperienceTest` checks selection/closing for every destination, no-result search and support at large text in dark mode, plus working home schedule and assistant fallback routes. It captures light/dark RTL drawer and new-student home images.
+`NavigationAndHomeExperienceTest` checks selection/closing for every destination, no-result search and support at large text in dark mode, plus working home schedule and assistant fallback routes and clearing the draft on account change. It captures light/dark RTL drawer and new-student home images.
 
 `DestinationScreensSmokeTest` renders 13 internal destination surfaces at 360dp, 150% text and dark theme, checks their shared menu action and primary navigation, and captures each page. It handles the planner/history/chat's own scroll containers separately. Existing `ReleaseVisualTest` supplies home light/dark/large-text coverage; existing form, persistence and academic engine suites remain in place.
 
@@ -40,3 +40,7 @@ These tests are included in the repository's existing Android CI unit test job. 
 - Check signed release startup, database upgrade, cloud synchronization and actual notification delivery using the existing release/instrumentation jobs and real-device checks.
 
 This review improves shared navigation, home and assistant behavior. It does not certify every feature complete or every screen visually approved.
+
+## CI observation
+
+The first PR commit (`dcaad97592e8106a34794c0ca0279487d17927a1`) passed Premium Firebase verification, including the Firestore emulator transaction and security-rule step: https://github.com/danialrad04-sketch/studentos/actions/runs/39463750805. Android CI was still queued at the time of this update. Subsequent commits require their own results; this does not certify a live provider connection.
