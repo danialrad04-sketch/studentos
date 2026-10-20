@@ -82,9 +82,10 @@ fun StudentNavigationDrawer(
                                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     Text(profile.name.ifBlank { user.displayName.ifBlank { "دانشجوی عزیز" } }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                     Text(if (user.isGuest) "حالت مهمان · ذخیره روی دستگاه" else user.email ?: "حساب متصل", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text("مدیریت حساب کاربری", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                                    Text("حساب کاربری", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                                 }
                             }
+                            NavigationDrawerItem(label = { Text("تنظیمات") }, icon = { Icon(Icons.Rounded.Settings, null) }, selected = false, onClick = { select(onOpenSettings) })
                             OutlinedTextField(
                                 value = query, onValueChange = { query = it },
                                 label = { Text("پیدا کردن صفحه") },
@@ -114,7 +115,6 @@ fun StudentNavigationDrawer(
                             }
                             if (groups.isEmpty()) Text("صفحه‌ای پیدا نشد؛ نام دیگری جست‌وجو کنید.", Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
                             HorizontalDivider(Modifier.padding(vertical = 12.dp))
-                            NavigationDrawerItem(label = { Text("تنظیمات") }, icon = { Icon(Icons.Rounded.Settings, null) }, selected = false, onClick = { select(onOpenSettings) })
                             NavigationDrawerItem(label = { Text("پشتیبانی") }, icon = { Icon(Icons.AutoMirrored.Rounded.HelpOutline, null) }, selected = false, onClick = { select(onOpenSupport) })
                             Spacer(Modifier.height(16.dp))
                         }

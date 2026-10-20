@@ -35,16 +35,19 @@ class NavigationAndHomeExperienceTest {
     @Test fun everyDestinationCanBeFoundSelectedAndDrawerCloses() {
         var open by mutableStateOf(true)
         var selected by mutableStateOf(AppTab.DASHBOARD)
+        var settingsOpened = false
         rule.setContent {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 StudentOsTheme {
                     StudentNavigationDrawer(open, { open = it }, selected, StudentProfileEntity(), UserAccount(),
-                        { selected = it }, {}, {}, {}) { Text("محتوای برنامه") }
+                        { selected = it }, {}, { settingsOpened = true }, {}) { Text("محتوای برنامه") }
                 }
             }
         }
         rule.waitForIdle()
         rule.onRoot().captureRoboImage("build/outputs/visual-review/drawer-light-rtl.png")
+        rule.onNodeWithText("تنظیمات").assertIsDisplayed().performClick()
+        rule.runOnIdle { assertTrue(settingsOpened) }
         AppTab.entries.forEach { tab ->
             rule.runOnIdle { open = true }
             rule.waitForIdle()
