@@ -104,15 +104,12 @@ import com.example.ui.models.AppTab
 import com.example.ui.models.ExamItem
 import com.example.ui.theme.Amber500
 import com.example.ui.theme.Amber600
-import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.Emerald500
 import com.example.ui.theme.Emerald600
 import com.example.ui.theme.Rose500
 import com.example.ui.theme.Rose600
-import com.example.ui.theme.AcademicOlive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -142,7 +139,7 @@ fun AcademicCopilotScreen(
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    val messages = remember {
+    val messages = remember(userAccount.uid) {
         mutableStateListOf<CopilotMessage>().apply {
             add(
                 AcademicCopilotEngine.generateWelcomeMessage(
@@ -156,16 +153,16 @@ fun AcademicCopilotScreen(
         }
     }
 
-    var inputText by remember { mutableStateOf("") }
-    var isAiLoading by remember { mutableStateOf(false) }
-    var mode by remember { mutableStateOf("chat") }
-    var onlineStatus by remember { mutableStateOf<com.example.domain.model.PremiumStatus?>(null) }
-    var connectionMessage by remember { mutableStateOf<String?>(null) }
+    var inputText by remember(userAccount.uid) { mutableStateOf("") }
+    var isAiLoading by remember(userAccount.uid) { mutableStateOf(false) }
+    var mode by remember(userAccount.uid) { mutableStateOf("chat") }
+    var onlineStatus by remember(userAccount.uid) { mutableStateOf<com.example.domain.model.PremiumStatus?>(null) }
+    var connectionMessage by remember(userAccount.uid) { mutableStateOf<String?>(null) }
     suspend fun refreshOnlineStatus() {
         if (userAccount.isGuest) return
         val result = com.example.data.api.PremiumApiClient.result { com.example.data.api.PremiumApiClient.catalog() }
         result.onSuccess { onlineStatus = it; onSubscriptionLoaded(it.subscription); connectionMessage = null }
-            .onFailure { connectionMessage = it.message }
+            .onFailure { connectionMessage = com.example.data.api.PremiumApiClient.userMessage(it) }
     }
     LaunchedEffect(userAccount.uid) { refreshOnlineStatus() }
 
@@ -200,7 +197,9 @@ fun AcademicCopilotScreen(
                         kind = mode
                     )
                     messages.add(responseMsg)
-                } catch (e: Throwable) {
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
                     val fallback = AcademicCopilotEngine.processUserQuery(
                         query = query,
                         profile = profile,
@@ -212,7 +211,10 @@ fun AcademicCopilotScreen(
                         coursesWithSessions = coursesWithSessions,
                         curriculumCourses = curriculumCourses
                     )
-                    messages.add(fallback)
+                    messages.add(fallback.copy(
+                        text = "${com.example.data.api.PremiumApiClient.userMessage(e)}\n\nتحلیل بر اساس اطلاعات ذخیره‌شده:\n${fallback.text}",
+                        confidenceBadge = "تحلیل آفلاین · پاسخ آنلاین دریافت نشد"
+                    ))
                 } finally {
                     isAiLoading = false
                     refreshOnlineStatus()
@@ -220,7 +222,8 @@ fun AcademicCopilotScreen(
                         if (messages.isNotEmpty()) {
                             listState.animateScrollToItem(messages.size - 1)
                         }
-                    } catch (_: Throwable) {}
+                    } catch (e: CancellationException) { throw e }
+                    catch (_: Exception) {}
                 }
             }
         }
@@ -335,7 +338,7 @@ fun AcademicCopilotScreen(
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(16.dp),
                                     strokeWidth = 2.dp,
-                                    color = AcademicNavy
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
                                     text = "دستیار در حال تحلیل وضعیت تحصیلی و تولید پاسخ...",
@@ -597,7 +600,7 @@ private fun CopilotContextHudHeader(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     HudPill(label = "ترم فعلی", value = "ترم ${profile.currentSemester}", color = MaterialTheme.colorScheme.primary)
-                    HudPill(label = "واحدهای فعال", value = "$totalActiveUnits واحد", color = AcademicNavy)
+                    HudPill(label = "واحدهای فعال", value = "$totalActiveUnits واحد", color = MaterialTheme.colorScheme.primary)
                     HudPill(label = "پاس‌شده", value = "${profile.passedUnits} واحد", color = Emerald600)
                     HudPill(label = "معدل", value = String.format(Locale.US, "%.2f", currentGpa), color = Amber600)
                     if (criticalAbsences > 0) {
@@ -821,7 +824,7 @@ private fun CopilotMessageItem(
                             text = reply,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
-                            color = AcademicNavy,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }

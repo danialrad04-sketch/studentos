@@ -277,8 +277,8 @@ fun AttendanceRadarScreen(
                     label = { Text("هشدار ($warningCount)", fontSize = 11.5.sp) },
                     shape = RoundedCornerShape(12.dp),
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Amber500,
-                        selectedLabelColor = Color.White
+                        selectedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 )
             }

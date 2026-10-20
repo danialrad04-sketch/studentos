@@ -10,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.platform.testTag
@@ -149,6 +150,14 @@ fun ModernBentoDashboard(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        StudentHomeOverview(
+            hasCourses = courses.isNotEmpty(),
+            pendingTasks = tasks.count { !it.isCompleted },
+            onOpenSchedule = { onNavigateTab(AppTab.SCHEDULE) },
+            onAddTask = { onQuickAddTask?.invoke() ?: onNavigateTab(AppTab.TASKS) },
+            onOpenSearch = onOpenCommandCenter,
+            onOpenCopilot = { onOpenCopilot?.invoke() ?: onNavigateTab(AppTab.COPILOT) }
+        )
         StudentTodayCommandStrip(
             courses = courses,
             coursesWithSessions = coursesWithSessions,
@@ -193,7 +202,7 @@ fun ModernBentoDashboard(
         AcademicSectionHeader("برنامه و کارهای من", subtitle = "ابزارهای روزمره، در دسترس و مرتب")
         listOf(
             Triple("برنامه هفتگی", Icons.Default.CalendarToday, AppTab.SCHEDULE), Triple("امتحانات", Icons.Default.School, AppTab.EXAMS),
-            Triple("تکالیف", Icons.Default.CheckCircle, AppTab.TASKS), Triple("کلاس‌ها", Icons.Default.CastForEducation, AppTab.SCHEDULE)
+            Triple("تکالیف", Icons.Default.CheckCircle, AppTab.TASKS), Triple("تمرکز و مطالعه", Icons.Default.HourglassTop, AppTab.POMODORO)
         ).chunked(if (LocalDensity.current.fontScale >= 1.3f) 1 else 2).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEach { (title, icon, tab) ->
@@ -219,11 +228,11 @@ fun ModernBentoDashboard(
 
         // 3. QUICK OPERATIONS 5 CIRCLES (سنتر, تسک, حضور, پومودورو, کوپایلوت)
         StudentOperationsHubCard(
-            onOpenCommandCenter = { onOpenCommandCenter?.invoke() ?: onNavigateTab(AppTab.DASHBOARD) },
+            onOpenCommandCenter = { onOpenCommandCenter?.invoke() ?: onNavigateTab(AppTab.COPILOT) },
             onQuickAddTask = { onQuickAddTask?.invoke() ?: onNavigateTab(AppTab.TASKS) },
             onQuickAttendance = { onNavigateTab(AppTab.ATTENDANCE) },
-            onQuickPomodoro = onTogglePomodoro,
-            onOpenCopilot = { onOpenCopilot?.invoke() ?: onNavigateTab(AppTab.DASHBOARD) },
+            onQuickPomodoro = startFocus,
+            onOpenCopilot = { onOpenCopilot?.invoke() ?: onNavigateTab(AppTab.COPILOT) },
             onOpenOcrImport = { onOpenOcrImport?.invoke() ?: onNavigateTab(AppTab.SCHEDULE) }
         )
 
@@ -232,7 +241,7 @@ fun ModernBentoDashboard(
             courses = courses,
             coursesWithSessions = coursesWithSessions,
             onOpenSchedule = { onNavigateTab(AppTab.SCHEDULE) },
-            onOpenCopilot = { onOpenCopilot?.invoke() ?: onNavigateTab(AppTab.DASHBOARD) }
+            onOpenCopilot = { onOpenCopilot?.invoke() ?: onNavigateTab(AppTab.COPILOT) }
         )
 
         // 5. COURSE STATUS LIST CARD ("وضعیت درس‌ها")
@@ -311,6 +320,7 @@ private fun StudyRecommendationsSection(
 // -------------------------------------------------------------
 // 1. 2x2 BENTO STAT TILES SECTION
 // -------------------------------------------------------------
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun AnalyticsKpiSection(
     gpa: String,
@@ -341,9 +351,11 @@ private fun AnalyticsKpiSection(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // Row 1: معدل کل & واحد گذرانده
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.3f) 1 else 2,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             BentoKpiTile(
                 title = "معدل کل",
@@ -357,8 +369,8 @@ private fun AnalyticsKpiSection(
 
             BentoKpiTile(
                 title = "واحد گذرانده",
-                value = "$displayPassed از $totalRequiredCredits",
-                subtitle = "${((passedUnits.toFloat() / totalRequiredCredits.coerceAtLeast(1)) * 100).toInt()}% چارت 📈",
+                value = if (totalRequiredCredits > 0) "$displayPassed از $totalRequiredCredits" else displayPassed,
+                subtitle = if (totalRequiredCredits > 0) "${((passedUnits.toFloat() / totalRequiredCredits) * 100).toInt().coerceIn(0, 100)}٪ چارت" else "تعداد واحدهای چارت ثبت نشده",
                 emojiType = AppEmojiType.CHECK,
                 accentColor = MaterialTheme.colorScheme.primary,
                 onClick = onNavigateToPassport,
@@ -367,9 +379,11 @@ private fun AnalyticsKpiSection(
         }
 
         // Row 2: حضور و غیاب & تسک امروز
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.3f) 1 else 2,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             BentoKpiTile(
                 title = "حضور و غیاب",
@@ -382,7 +396,7 @@ private fun AnalyticsKpiSection(
             )
 
             BentoKpiTile(
-                title = "تسک امروز",
+                title = "تکالیف باز",
                 value = displayTasks,
                 subtitle = "تکالیف در جریان ⏳",
                 emojiType = AppEmojiType.TARGET,
