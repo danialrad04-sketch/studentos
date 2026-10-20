@@ -87,6 +87,7 @@ fun MainTabContent(
     ) { currentTab ->
         when (currentTab) {
             AppTab.DASHBOARD -> {
+                val targetGpa by studentViewModel.targetGpaGoal.collectAsStateWithLifecycle()
                 ModernBentoDashboard(
                     courses = courses,
                     coursesWithSessions = coursesWithSessions,
@@ -96,7 +97,7 @@ fun MainTabContent(
                     grades = grades,
                     passedUnits = profile.passedUnits,
                     gpa = gpaFormatted,
-                    targetGpa = profile.declaredGpa,
+                    targetGpa = targetGpa,
                     totalRequiredCredits = totalCurriculumUnits,
                     academicProgressState = academicProgressState,
                     academicRisks = academicRisks,
@@ -310,12 +311,15 @@ fun MainTabContent(
             }
             AppTab.POMODORO -> {
                 val session by studentViewModel.focusSession.collectAsStateWithLifecycle()
+                val studyHistory by studentViewModel.studyHistory.collectAsStateWithLifecycle()
                 PomodoroAndNotesScreen(
                     secondsRemaining = pomodoroSeconds,
                     durationSeconds = session.durationSeconds,
                     focusLabel = session.label,
                     onDurationSelected = { studentViewModel.setFocusDuration(it) },
                     studyRecommendations = studyRecommendations,
+                    studyHistory = studyHistory,
+                    dailyStudyGoalMinutes = dailyStudyGoalMinutes,
                     isRunning = isPomodoroRunning,
                     onTogglePomodoro = {
                         studentViewModel.togglePomodoro()

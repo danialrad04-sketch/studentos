@@ -77,6 +77,8 @@ fun PomodoroAndNotesScreen(
     notes: String,
     onSaveNotes: (String) -> Unit,
     studyRecommendations: List<StudySessionRecommendation> = emptyList(),
+    studyHistory: List<com.example.domain.model.StudyDay> = emptyList(),
+    dailyStudyGoalMinutes: Int = 120,
     modifier: Modifier = Modifier
 ) {
     val minutes = secondsRemaining / 60
@@ -292,6 +294,8 @@ fun PomodoroAndNotesScreen(
                 }
             }
         }
+
+        StudyActivityJournal(studyHistory, dailyStudyGoalMinutes)
 
         // AI Study Session Recommendations (Phase 28)
         if (studyRecommendations.isNotEmpty()) {

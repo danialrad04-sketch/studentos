@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -19,6 +20,7 @@ import com.example.ui.models.AcademicProgressUiState
 import java.util.Locale
 
 /** A factual overview: every number is derived from the student's stored academic records. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AcademicJourneyOverview(
     state: AcademicProgressUiState?,
@@ -87,7 +89,8 @@ fun AcademicJourneyOverview(
                     trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                     strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
                 )
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(Modifier.fillMaxWidth(), maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.3f) 1 else 3,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     JourneyFact(Icons.Rounded.CheckCircle, "گذرانده", "${progress.passedCredits} واحد", Modifier.weight(1f))
                     JourneyFact(Icons.Rounded.School, "این ترم", "${progress.currentCredits} واحد", Modifier.weight(1f))
                     JourneyFact(Icons.Rounded.Flag, "باقی‌مانده", "${progress.remainingCredits} واحد", Modifier.weight(1f))
@@ -95,7 +98,7 @@ fun AcademicJourneyOverview(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Column {
-                        Text("معدل ثبت‌شده", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(if (progress.gpaState is GpaState.PartiallyCalculated) "معدل محاسبه‌شدهٔ این ترم" else "معدل ثبت‌شده", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(gpaLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     }
                     targetGpa?.let {
@@ -110,7 +113,7 @@ fun AcademicJourneyOverview(
             if (dailyStudyGoalMinutes > 0) {
                 Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text("مطالعهٔ ثبت‌شدهٔ امروز", fontWeight = FontWeight.Bold)
                             Text("$studiedTodayMinutes از $dailyStudyGoalMinutes دقیقه", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -125,7 +128,8 @@ fun AcademicJourneyOverview(
                 }
             }
 
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(Modifier.fillMaxWidth(), maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.3f) 1 else 2,
+                horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilledTonalButton(onClick = onOpenPassport, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("جزئیات مسیر") }
                 OutlinedButton(onClick = if (recommendations.isEmpty()) onOpenGrades else onOpenFocus, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
                     Text(if (recommendations.isEmpty()) "نمرات" else "شروع مطالعه")

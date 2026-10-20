@@ -51,7 +51,7 @@ class NavigationAndHomeExperienceTest {
         AppTab.entries.forEach { tab ->
             rule.runOnIdle { open = true }
             rule.waitForIdle()
-            rule.onNodeWithTag("drawer_search").performScrollTo().performTextReplacement(tab.title)
+            rule.onNodeWithTag("drawer_search").performTextReplacement(tab.title)
             rule.onNodeWithTag("drawer_${tab.name}").performScrollTo().performClick()
             rule.waitForIdle()
             rule.runOnIdle { assertEquals(tab, selected); assertFalse(open) }
@@ -72,7 +72,7 @@ class NavigationAndHomeExperienceTest {
         }
         rule.waitForIdle()
         rule.onRoot().captureRoboImage("build/outputs/visual-review/drawer-dark-rtl-large.png")
-        rule.onNodeWithTag("drawer_search").performScrollTo().performTextReplacement("پیدا نمی‌شود")
+        rule.onNodeWithTag("drawer_search").performTextReplacement("پیدا نمی‌شود")
         rule.onNodeWithText("صفحه‌ای پیدا نشد؛ نام دیگری جست‌وجو کنید.").performScrollTo().assertIsDisplayed()
         rule.onNodeWithText("پشتیبانی").assertIsDisplayed().performClick()
         rule.runOnIdle { assertTrue(support) }

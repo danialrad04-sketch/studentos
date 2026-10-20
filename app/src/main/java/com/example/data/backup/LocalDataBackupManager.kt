@@ -42,7 +42,8 @@ data class StudentOSBackupPayload(
     val curriculumCourses: List<CurriculumCourseEntity> = emptyList(),
     val universities: List<com.example.data.local.entity.UniversityEntity> = emptyList(),
     val majors: List<com.example.data.local.entity.MajorEntity> = emptyList(),
-    val curriculumVersions: List<com.example.data.local.entity.CurriculumVersionEntity> = emptyList()
+    val curriculumVersions: List<com.example.data.local.entity.CurriculumVersionEntity> = emptyList(),
+    val studySettings: com.example.domain.model.StudySettingsSnapshot? = null
 )
 
 /**
@@ -61,6 +62,17 @@ object LocalDataBackupManager {
 
     private val payloadAdapter by lazy {
         moshi.adapter(StudentOSBackupPayload::class.java)
+    }
+
+    fun withStudySettings(json: String, settings: com.example.domain.model.StudySettingsSnapshot): String {
+        settings.validate()
+        val payload = requireNotNull(payloadAdapter.fromJson(json)) { "فایل پشتیبان معتبر نیست." }
+        return payloadAdapter.indent("  ").toJson(payload.copy(studySettings = settings))
+    }
+
+    fun readStudySettings(json: String): com.example.domain.model.StudySettingsSnapshot? {
+        val payload = requireNotNull(payloadAdapter.fromJson(json)) { "فایل پشتیبان معتبر نیست." }
+        return payload.studySettings?.also { it.validate() }
     }
 
     suspend fun exportCompleteDatabaseJson(
@@ -98,6 +110,7 @@ object LocalDataBackupManager {
         try {
             val payload = payloadAdapter.fromJson(jsonString)
                 ?: return@withContext Result.failure(IllegalArgumentException("Invalid JSON payload format"))
+            payload.studySettings?.validate()
 
             curriculumDao?.let { catalog ->
                 catalog.insertUniversities(payload.universities)

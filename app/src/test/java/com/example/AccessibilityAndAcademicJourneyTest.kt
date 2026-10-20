@@ -4,6 +4,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import com.github.takahirom.roborazzi.captureRoboImage
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.example.data.local.entity.StudentProfileEntity
@@ -14,6 +21,7 @@ import com.example.ui.models.AcademicProgressUiState
 import com.example.ui.models.ThemeMode
 import com.example.ui.theme.StudentOsTheme
 import com.example.ui.theme.studentColors
+import com.example.ui.theme.readableAccent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -60,11 +68,12 @@ class AccessibilityAndAcademicJourneyTest {
         rule.onNodeWithText("50 واحد").assertIsDisplayed()
         rule.onNodeWithText("16.75").assertIsDisplayed()
         rule.onNodeWithText("75٪").assertDoesNotExist()
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/academic-journey-light.png")
     }
 
     @Test fun studySettingsPersistThroughCallbacksAndExposeSelectedValues() {
-        var goal = 120
-        var focus = 25
+        var goal by mutableStateOf(120)
+        var focus by mutableStateOf(25)
         rule.setContent {
             StudentOsTheme {
                 SettingsAndRoadmapDialog(
@@ -81,6 +90,31 @@ class AccessibilityAndAcademicJourneyTest {
         rule.onNodeWithText("3 ساعت").performScrollTo().performClick()
         rule.onNodeWithText("45 دقیقه").performScrollTo().performClick()
         rule.runOnIdle { assertEquals(180, goal); assertEquals(45, focus) }
+        rule.onNodeWithText("بازهٔ پیش‌فرض: 45 دقیقه").performScrollTo().assertIsDisplayed()
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/study-settings-light.png")
+    }
+
+    @Test fun darkLargeJourneyAndJournalKeepActionsReachable() {
+        var opened = false
+        val progress = AcademicProgress(140, 72, DataSource.USER_DECLARED, 18, 50, 51.42f,
+            GpaState.Known(16.75, DataSource.USER_DECLARED), DataConfidence.CREDIT_ONLY, 9, 3, 4)
+        rule.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, 1.5f)) {
+                StudentOsTheme(darkTheme = true) {
+                    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                        AcademicJourneyOverview(AcademicProgressUiState.Ready(progress), 18.0, emptyList(), 120,
+                            onOpenPassport = { opened = true }, onOpenGrades = {}, onOpenFocus = {})
+                        com.example.ui.components.StudyActivityJournal(emptyList(), 120)
+                    }
+                }
+            }
+        }
+        rule.onNodeWithText("جزئیات مسیر").performScrollTo().performClick()
+        rule.runOnIdle { assertTrue(opened) }
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/academic-journey-dark-large.png")
+        rule.onNodeWithText("گزارش مطالعهٔ هفت‌روزه").performScrollTo().assertIsDisplayed()
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/study-journal-dark-large.png")
     }
 
     @Test fun semanticStatusColorsKeepWcagTextContrastInLightAndDarkThemes() {
@@ -90,9 +124,12 @@ class AccessibilityAndAcademicJourneyTest {
             StudentOsTheme(darkTheme = dark) {
                 val background = MaterialTheme.colorScheme.surface
                 val colors = MaterialTheme.studentColors
+                val badge = MaterialTheme.colorScheme.surfaceContainerHigh
                 SideEffect {
                     ratios = listOf(colors.attendanceSafe, colors.attendanceWarning, colors.attendanceCritical)
                         .map { contrast(it, background) }
+                    ratios = ratios + listOf(Color.Yellow, Color.Cyan, Color.Blue, Color.Black, Color.White, Color.Red)
+                        .map { contrast(readableAccent(it, badge), badge) }
                 }
             }
         }

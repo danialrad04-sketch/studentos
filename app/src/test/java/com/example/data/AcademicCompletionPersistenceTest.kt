@@ -69,17 +69,56 @@ class AcademicCompletionPersistenceTest {
     }
     @Test fun focusDeadlineRestoresAndCompletionCanBeClaimedOnlyOnce() {
         val preferences = AppPreferencesRepository(context)
-        preferences.saveFocusSession(FocusSession(3600, 3600, endsAtMillis = 1_000_000, label = "فیزیک"))
+        val deadline = System.currentTimeMillis()
+        preferences.saveFocusSession(FocusSession(3600, 3600, endsAtMillis = deadline, label = "فیزیک"))
         val restored = AppPreferencesRepository(context)
         assertEquals("فیزیک", restored.focusSession.value.label)
         assertEquals(3600, restored.focusSession.value.durationSeconds)
         val minutesBefore = restored.todayFocusMinutes.value
-        assertFalse(restored.completeFocusSession(999_000))
-        assertTrue(restored.completeFocusSession(1_000_001))
-        assertFalse(restored.completeFocusSession(1_000_002))
+        assertFalse(restored.completeFocusSession(deadline - 1_000))
+        assertTrue(restored.completeFocusSession(deadline + 1))
+        assertFalse(restored.completeFocusSession(deadline + 2))
+        assertFalse(preferences.completeFocusSession(deadline + 2))
         assertEquals(minutesBefore + 60, restored.todayFocusMinutes.value)
         assertEquals(restored.todayFocusMinutes.value, AppPreferencesRepository(context).todayFocusMinutes.value)
         restored.clearAcademicChoices()
+    }
+    @Test fun delayedFocusWorkerCreditsTheDayOfCompletionAndRestoresHistory() {
+        val preferences = AppPreferencesRepository(context)
+        preferences.clearAcademicChoices()
+        val deadline = java.util.Calendar.getInstance().apply { add(java.util.Calendar.DAY_OF_YEAR, -1) }.timeInMillis
+        preferences.saveFocusSession(FocusSession(1500, 1500, endsAtMillis = deadline, label = "ریاضی"))
+        assertTrue(preferences.completeFocusSession(System.currentTimeMillis()))
+        assertEquals(0, preferences.todayFocusMinutes.value)
+        val history = AppPreferencesRepository(context).studyHistory.value
+        assertEquals(1, history.size)
+        assertEquals(25, history.single().minutes)
+        assertEquals(1, history.single().sessions)
+        preferences.clearAcademicChoices()
+        assertTrue(AppPreferencesRepository(context).studyHistory.value.isEmpty())
+    }
+    @Test fun studyPreferencesAndHistoryTravelWithBackupAndInvalidValuesAreRejected() = runBlocking {
+        val preferences = AppPreferencesRepository(context)
+        preferences.clearAcademicChoices()
+        val settings = com.example.domain.model.StudySettingsSnapshot(180, 45, 18.0,
+            listOf(com.example.domain.model.StudyDay("2026-10-19", 90, 2)))
+        preferences.restoreStudySettings(settings)
+        val json = com.example.data.backup.LocalDataBackupManager.withStudySettings(repo.exportFullBackupJson(), preferences.exportStudySettings())
+        val loaded = com.example.data.backup.LocalDataBackupManager.readStudySettings(json)!!
+        assertEquals(settings, loaded)
+        assertNull(com.example.data.backup.LocalDataBackupManager.readStudySettings(repo.exportFullBackupJson()))
+        preferences.clearAcademicChoices()
+        preferences.restoreStudySettings(loaded)
+        val restored = AppPreferencesRepository(context)
+        assertEquals(180, restored.dailyStudyGoalMinutes.value)
+        assertEquals(45, restored.defaultFocusMinutes.value)
+        assertEquals(90, restored.studyHistory.value.single().minutes)
+        assertFalse(restored.focusSession.value.isRunning)
+        assertEquals(2700, restored.focusSession.value.durationSeconds)
+        assertTrue(runCatching { preferences.restoreStudySettings(settings.copy(targetGpa = Double.NaN)) }.isFailure)
+        assertTrue(runCatching { preferences.restoreStudySettings(settings.copy(history = listOf(com.example.domain.model.StudyDay("2026-02-30", 90, 2)))) }.isFailure)
+        assertEquals(loaded, restored.exportStudySettings())
+        preferences.clearAcademicChoices()
     }
     @Test fun selectedPlanAndReminderChoicesRestoreAndClearAcrossSessions() {
         val preferences = AppPreferencesRepository(context)

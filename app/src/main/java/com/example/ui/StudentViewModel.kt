@@ -113,6 +113,7 @@ class StudentViewModel @JvmOverloads constructor(
     val dailyStudyGoalMinutes: StateFlow<Int> = preferencesRepository.dailyStudyGoalMinutes
     val defaultFocusMinutes: StateFlow<Int> = preferencesRepository.defaultFocusMinutes
     val todayFocusMinutes: StateFlow<Int> = preferencesRepository.todayFocusMinutes
+    val studyHistory = preferencesRepository.studyHistory
     val notificationsEnabled: StateFlow<Boolean> = preferencesRepository.notificationsEnabled
     val customGeminiApiKey: StateFlow<String> = preferencesRepository.customGeminiApiKey
     val lastSavedTimestamp: StateFlow<Long> = preferencesRepository.lastSuccessfulSaveTimestamp
@@ -659,6 +660,7 @@ class StudentViewModel @JvmOverloads constructor(
     init {
         pomodoroJob = viewModelScope.launch {
             while (true) {
+                preferencesRepository.refreshStudyActivity()
                 val state = focusSession.value
                 _pomodoroSeconds.value = state.remainingSeconds(System.currentTimeMillis())
                 _isPomodoroRunning.value = state.isRunning && _pomodoroSeconds.value > 0
@@ -1336,14 +1338,20 @@ class StudentViewModel @JvmOverloads constructor(
     }
 
     suspend fun exportDatabaseBackup(): String {
-        return repository.exportFullBackupJson()
+        return LocalDataBackupManager.withStudySettings(repository.exportFullBackupJson(), preferencesRepository.exportStudySettings())
     }
 
     fun importDatabaseBackup(jsonString: String, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
+            val settings = try { LocalDataBackupManager.readStudySettings(jsonString) }
+            catch (e: Exception) {
+                onResult(false, e.localizedMessage ?: "اطلاعات مطالعه در فایل پشتیبان معتبر نیست.")
+                return@launch
+            }
             val result = repository.restoreFullBackupJson(jsonString)
             if (result.isSuccess) {
                 preferencesRepository.clearAcademicChoices()
+                settings?.let { preferencesRepository.restoreStudySettings(it) }
                 com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
                 preferencesRepository.recordSuccessfulSave()
                 LocalDataBackupManager.saveLocalSnapshot(application, jsonString)

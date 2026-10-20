@@ -163,6 +163,17 @@ fun ModernBentoDashboard(
             onStartFocus = startFocus
         )
 
+        AcademicJourneyOverview(
+            state = academicProgressState,
+            targetGpa = targetGpa,
+            recommendations = studyRecommendations,
+            dailyStudyGoalMinutes = dailyStudyGoalMinutes,
+            studiedTodayMinutes = studiedTodayMinutes,
+            onOpenPassport = { onNavigateTab(AppTab.PASSPORT) },
+            onOpenGrades = { onNavigateTab(AppTab.GRADES) },
+            onOpenFocus = startFocus
+        )
+
         // 2. HERO GRADIENT CARD ("کلاس بعدی")
         NextClassLiveBentoTile(
             courses = courses,
@@ -204,19 +215,6 @@ fun ModernBentoDashboard(
                 }
             }
         }
-        AcademicSectionHeader("پیشرفت تحصیلی", subtitle = "خلاصهٔ اطلاعات ثبت‌شدهٔ شما")
-
-        AcademicJourneyOverview(
-            state = academicProgressState,
-            targetGpa = targetGpa,
-            recommendations = studyRecommendations,
-            dailyStudyGoalMinutes = dailyStudyGoalMinutes,
-            studiedTodayMinutes = studiedTodayMinutes,
-            onOpenPassport = { onNavigateTab(AppTab.PASSPORT) },
-            onOpenGrades = { onNavigateTab(AppTab.GRADES) },
-            onOpenFocus = startFocus
-        )
-
         // 3. QUICK OPERATIONS 5 CIRCLES (سنتر, تسک, حضور, پومودورو, کوپایلوت)
         StudentOperationsHubCard(
             onOpenCommandCenter = { onOpenCommandCenter?.invoke() ?: onNavigateTab(AppTab.COPILOT) },
@@ -241,6 +239,7 @@ fun ModernBentoDashboard(
             coursesWithSessions = coursesWithSessions,
             tasks = tasks,
             attendance = attendanceList,
+            onOpenAll = { onNavigateTab(AppTab.SCHEDULE) },
             onOpenCourse = { course ->
                 if (onOpenCourseWorkspace != null) {
                     onOpenCourseWorkspace(course)
@@ -693,6 +692,7 @@ private fun CourseStatusListSection(
     coursesWithSessions: List<CourseWithSessions> = emptyList(),
     tasks: List<TaskEntity> = emptyList(),
     attendance: List<AttendanceEntity> = emptyList(),
+    onOpenAll: () -> Unit,
     onOpenCourse: (CourseEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -714,10 +714,7 @@ private fun CourseStatusListSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                modifier = Modifier.tactileClickable {
-                    val first = courses.firstOrNull()
-                    if (first != null) onOpenCourse(first)
-                },
+                modifier = Modifier.heightIn(min = 48.dp).tactileClickable(onClick = onOpenAll),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -776,7 +773,9 @@ private fun CourseStatusListSection(
                         2 -> "دوشنبه"
                         3 -> "سه‌شنبه"
                         4 -> "چهارشنبه"
-                        else -> "امروز"
+                        5 -> "پنج‌شنبه"
+                        6 -> "جمعه"
+                        else -> "زمان نامشخص"
                     }
                     "$dayName ${s.start}"
                 } else {
@@ -878,7 +877,7 @@ private fun ModernCourseCard(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "جلسه بعد: $nextSessionText",
+                        text = "برنامهٔ هفتگی: $nextSessionText",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Normal,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

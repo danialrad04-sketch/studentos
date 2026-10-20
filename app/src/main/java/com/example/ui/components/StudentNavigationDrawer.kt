@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,7 @@ fun StudentNavigationDrawer(
     BackHandler(enabled = open) { onOpenChanged(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val drawerWidth = (maxWidth * 0.84f).coerceAtMost(340.dp)
+        val shortWindow = maxHeight < 480.dp
         ModalNavigationDrawer(
             drawerState = drawerState,
             gesturesEnabled = drawerState.isOpen,
@@ -59,7 +61,7 @@ fun StudentNavigationDrawer(
                     drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
                     drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
                 ) {
-                    Column(Modifier.fillMaxSize()) {
+                    Column(if (shortWindow) Modifier.fillMaxSize().verticalScroll(rememberScrollState()) else Modifier.fillMaxSize()) {
                         Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 16.dp, top = 12.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                             Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primaryContainer) {
                                 Icon(Icons.Rounded.School, null, Modifier.padding(9.dp).size(22.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -80,7 +82,7 @@ fun StudentNavigationDrawer(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp).testTag("drawer_search")
                         )
                         // Only destinations scroll. Identity and core actions stay reachable at every font size.
-                        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Column((if (shortWindow) Modifier else Modifier.weight(1f).verticalScroll(rememberScrollState())).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             val groups = studentFeatureGroups.map { (section, tabs) -> section to tabs.filter { it.title.contains(query.trim(), ignoreCase = true) } }.filter { it.second.isNotEmpty() }
                             groups.forEach { (section, tabs) ->
                                 Text(section, Modifier.padding(horizontal = 12.dp, vertical = 8.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -111,9 +113,20 @@ fun StudentNavigationDrawer(
                                 badge = { if (user.isGuest) Text("مهمان", style = MaterialTheme.typography.labelSmall) },
                                 onClick = { select(onOpenAccount) }
                             )
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                NavigationDrawerItem(modifier = Modifier.weight(1f), label = { Text("تنظیمات", style = MaterialTheme.typography.labelLarge) }, icon = { Icon(Icons.Rounded.Settings, null, Modifier.size(20.dp)) }, selected = false, onClick = { select(onOpenSettings) })
-                                NavigationDrawerItem(modifier = Modifier.weight(1f), label = { Text("پشتیبانی", style = MaterialTheme.typography.labelLarge) }, icon = { Icon(Icons.AutoMirrored.Rounded.HelpOutline, null, Modifier.size(20.dp)) }, selected = false, onClick = { select(onOpenSupport) })
+                            val settingsItem: @Composable (Modifier) -> Unit = { itemModifier ->
+                                NavigationDrawerItem(modifier = itemModifier, label = { Text("تنظیمات", style = MaterialTheme.typography.labelLarge) }, icon = { Icon(Icons.Rounded.Settings, null, Modifier.size(20.dp)) }, selected = false, onClick = { select(onOpenSettings) })
+                            }
+                            val supportItem: @Composable (Modifier) -> Unit = { itemModifier ->
+                                NavigationDrawerItem(modifier = itemModifier, label = { Text("پشتیبانی", style = MaterialTheme.typography.labelLarge) }, icon = { Icon(Icons.AutoMirrored.Rounded.HelpOutline, null, Modifier.size(20.dp)) }, selected = false, onClick = { select(onOpenSupport) })
+                            }
+                            if (LocalDensity.current.fontScale >= 1.3f) {
+                                settingsItem(Modifier.fillMaxWidth())
+                                supportItem(Modifier.fillMaxWidth())
+                            } else {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    settingsItem(Modifier.weight(1f))
+                                    supportItem(Modifier.weight(1f))
+                                }
                             }
                         }
                     }

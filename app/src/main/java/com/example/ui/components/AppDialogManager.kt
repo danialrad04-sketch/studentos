@@ -80,6 +80,7 @@ fun AppDialogManager(
         is AppDialogState.SettingsAndRoadmap -> {
             val dailyStudyGoalMinutes by studentViewModel.dailyStudyGoalMinutes.collectAsStateWithLifecycle()
             val defaultFocusMinutes by studentViewModel.defaultFocusMinutes.collectAsStateWithLifecycle()
+            val targetGpaGoal by studentViewModel.targetGpaGoal.collectAsStateWithLifecycle()
             SettingsAndRoadmapDialog(
                 profile = profile,
                 initialSection = settingsSection,
@@ -92,6 +93,8 @@ fun AppDialogManager(
                 onDailyStudyGoalChanged = studentViewModel::setDailyStudyGoal,
                 defaultFocusMinutes = defaultFocusMinutes,
                 onDefaultFocusMinutesChanged = studentViewModel::setDefaultFocusMinutes,
+                targetGpaGoal = targetGpaGoal,
+                onTargetGpaGoalChanged = { studentViewModel.preferencesRepository.saveTargetGpaGoal(it) },
                 onOpenEditProfile = { openChild(AppDialogState.Profile) },
                 onDismiss = dismiss,
                 userAccount = userAccount,

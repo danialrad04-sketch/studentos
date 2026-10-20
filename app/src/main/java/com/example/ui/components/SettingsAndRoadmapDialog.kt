@@ -47,7 +47,9 @@ fun SettingsAndRoadmapDialog(
     onOpenPrivacyPolicy: () -> Unit = {},
     onOpenSupportTickets: () -> Unit = {},
     initialSection: String = "home",
-    onSectionChanged: (String) -> Unit = {}
+    onSectionChanged: (String) -> Unit = {},
+    targetGpaGoal: Double? = null,
+    onTargetGpaGoalChanged: (Double?) -> Unit = {}
 ) {
     var section by rememberSaveable { mutableStateOf(initialSection) }
     var confirmation by rememberSaveable { mutableStateOf<String?>(null) }
@@ -91,7 +93,7 @@ fun SettingsAndRoadmapDialog(
                         Text("انیمیشن‌ها از تنظیمات حرکت سیستم پیروی می‌کنند.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     "study" -> {
-                        Text("این انتخاب‌ها روی برنامهٔ روزانه و شروع سریع تمرکز اعمال می‌شوند و روی همین دستگاه ذخیره می‌مانند.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("هدف مطالعه، معدل هدف و بازهٔ پیش‌فرض تمرکز را تنظیم کن. تغییر زمان پیش‌فرض، تایمرِ در حال اجرا را متوقف نمی‌کند.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         StudentSettingsGroup("هدف مطالعهٔ روزانه") {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 Text("روزانه $dailyStudyGoalMinutes دقیقه", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -100,7 +102,7 @@ fun SettingsAndRoadmapDialog(
                                         FilterChip(
                                             selected = dailyStudyGoalMinutes == minutes,
                                             onClick = { onDailyStudyGoalChanged(minutes) },
-                                            label = { Text(if (minutes < 60) "$minutes دقیقه" else if (minutes % 60 == 0) "${minutes / 60} ساعت" else "${minutes / 60}:${minutes % 60}") },
+                                            label = { Text(if (minutes % 60 == 0) "${minutes / 60} ساعت" else "$minutes دقیقه") },
                                             leadingIcon = if (dailyStudyGoalMinutes == minutes) ({ Icon(Icons.Rounded.Check, null, Modifier.size(18.dp)) }) else null
                                         )
                                     }
@@ -120,6 +122,20 @@ fun SettingsAndRoadmapDialog(
                                         )
                                     }
                                 }
+                            }
+                        }
+                        StudentSettingsGroup("هدف معدل") {
+                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text(targetGpaGoal?.let { "هدف ثبت‌شده: $it از ۲۰" } ?: "هنوز هدفی ثبت نشده", style = MaterialTheme.typography.titleMedium)
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    listOf(16.0, 17.0, 18.0, 19.0).forEach { goal ->
+                                        FilterChip(selected = targetGpaGoal == goal, onClick = { onTargetGpaGoalChanged(goal) },
+                                            label = { Text("معدل ${goal.toInt()}") },
+                                            leadingIcon = if (targetGpaGoal == goal) ({ Icon(Icons.Rounded.Check, null, Modifier.size(18.dp)) }) else null)
+                                    }
+                                }
+                                if (targetGpaGoal != null) TextButton(onClick = { onTargetGpaGoalChanged(null) }) { Text("حذف هدف معدل") }
+                                Text("معدل هدف، نمرات ثبت‌شده را تغییر نمی‌دهد و در خانه نمایش داده می‌شود.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     }
