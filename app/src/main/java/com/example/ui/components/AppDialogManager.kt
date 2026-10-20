@@ -78,6 +78,8 @@ fun AppDialogManager(
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             when (dialogState) {
         is AppDialogState.SettingsAndRoadmap -> {
+            val dailyStudyGoalMinutes by studentViewModel.dailyStudyGoalMinutes.collectAsStateWithLifecycle()
+            val defaultFocusMinutes by studentViewModel.defaultFocusMinutes.collectAsStateWithLifecycle()
             SettingsAndRoadmapDialog(
                 profile = profile,
                 initialSection = settingsSection,
@@ -86,6 +88,10 @@ fun AppDialogManager(
                 onSelectThemeMode = { studentViewModel.setThemeMode(it) },
                 notificationsEnabled = notificationsEnabled,
                 onToggleNotifications = { studentViewModel.setNotificationsEnabled(it); if (it) onRequestNotificationPermission() },
+                dailyStudyGoalMinutes = dailyStudyGoalMinutes,
+                onDailyStudyGoalChanged = studentViewModel::setDailyStudyGoal,
+                defaultFocusMinutes = defaultFocusMinutes,
+                onDefaultFocusMinutesChanged = studentViewModel::setDefaultFocusMinutes,
                 onOpenEditProfile = { openChild(AppDialogState.Profile) },
                 onDismiss = dismiss,
                 userAccount = userAccount,

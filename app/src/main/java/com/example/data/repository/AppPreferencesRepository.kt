@@ -78,13 +78,54 @@ class AppPreferencesRepository(context: Context) {
         check(prefs.edit().putString("target_gpa_goal", goal?.toString()).commit())
         _targetGpaGoal.value = goal
     }
+    private val _dailyStudyGoalMinutes = MutableStateFlow(
+        prefs.getInt(KEY_DAILY_STUDY_GOAL_MINUTES, 120).coerceIn(30, 480)
+    )
+    val dailyStudyGoalMinutes: StateFlow<Int> = _dailyStudyGoalMinutes.asStateFlow()
+    private val _defaultFocusMinutes = MutableStateFlow(
+        prefs.getInt(KEY_DEFAULT_FOCUS_MINUTES, 25).takeIf { it in FOCUS_MINUTE_OPTIONS } ?: 25
+    )
+    val defaultFocusMinutes: StateFlow<Int> = _defaultFocusMinutes.asStateFlow()
+    private val _todayFocusMinutes = MutableStateFlow(readTodayFocusMinutes())
+    val todayFocusMinutes: StateFlow<Int> = _todayFocusMinutes.asStateFlow()
+
+    fun setDailyStudyGoalMinutes(minutes: Int) {
+        val clean = minutes.coerceIn(30, 480)
+        check(prefs.edit().putInt(KEY_DAILY_STUDY_GOAL_MINUTES, clean).commit())
+        _dailyStudyGoalMinutes.value = clean
+    }
+
+    fun setDefaultFocusMinutes(minutes: Int) {
+        require(minutes in FOCUS_MINUTE_OPTIONS)
+        check(prefs.edit().putInt(KEY_DEFAULT_FOCUS_MINUTES, minutes).commit())
+        _defaultFocusMinutes.value = minutes
+    }
+
+    private fun currentDayKey(): String = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+
+    private fun readTodayFocusMinutes(): Int {
+        if (prefs.getString(KEY_FOCUS_STATS_DAY, null) != currentDayKey()) return 0
+        return prefs.getInt(KEY_FOCUS_STATS_MINUTES, 0).coerceAtLeast(0)
+    }
+
+    private fun recordCompletedFocus(minutes: Int) {
+        if (minutes <= 0) return
+        val day = currentDayKey()
+        val previous = if (prefs.getString(KEY_FOCUS_STATS_DAY, null) == day) prefs.getInt(KEY_FOCUS_STATS_MINUTES, 0) else 0
+        val total = (previous + minutes).coerceAtMost(24 * 60)
+        check(prefs.edit().putString(KEY_FOCUS_STATS_DAY, day).putInt(KEY_FOCUS_STATS_MINUTES, total).commit())
+        _todayFocusMinutes.value = total
+    }
     private val _examReminderIds = MutableStateFlow(prefs.getStringSet("exam_reminder_ids", emptySet())?.toSet().orEmpty())
     val examReminderIds: StateFlow<Set<String>> = _examReminderIds.asStateFlow()
 
     private fun readFocusSession(): com.example.domain.model.FocusSession = runCatching {
         focusAdapter.fromJson(prefs.getString("focus_session_v1", "").orEmpty())
             ?.takeIf { it.durationSeconds in 300..7200 && it.pausedSeconds in 0..it.durationSeconds && it.endsAtMillis >= 0 }
-    }.getOrNull() ?: com.example.domain.model.FocusSession()
+    }.getOrNull() ?: prefs.getInt(KEY_DEFAULT_FOCUS_MINUTES, 25)
+        .takeIf { it in FOCUS_MINUTE_OPTIONS }
+        .let { (it ?: 25) * 60 }
+        .let { seconds -> com.example.domain.model.FocusSession(durationSeconds = seconds, pausedSeconds = seconds) }
 
     @Synchronized
     fun saveFocusSession(session: com.example.domain.model.FocusSession) {
@@ -96,6 +137,7 @@ class AppPreferencesRepository(context: Context) {
     fun completeFocusSession(now: Long): Boolean {
         val session = _focusSession.value
         if (!session.isRunning || session.remainingSeconds(now) != 0) return false
+        recordCompletedFocus((session.durationSeconds / 60).coerceAtLeast(1))
         saveFocusSession(session.copy(pausedSeconds = 0, endsAtMillis = 0))
         return true
     }
@@ -120,8 +162,17 @@ class AppPreferencesRepository(context: Context) {
         clearAcceptedStudyPlan()
         saveSemesterPlan(null)
         saveFocusSession(com.example.domain.model.FocusSession())
-        check(prefs.edit().remove("exam_reminder_ids").commit())
+        check(prefs.edit()
+            .remove("exam_reminder_ids")
+            .remove(KEY_DAILY_STUDY_GOAL_MINUTES)
+            .remove(KEY_DEFAULT_FOCUS_MINUTES)
+            .remove(KEY_FOCUS_STATS_DAY)
+            .remove(KEY_FOCUS_STATS_MINUTES)
+            .commit())
         _examReminderIds.value = emptySet()
+        _dailyStudyGoalMinutes.value = 120
+        _defaultFocusMinutes.value = 25
+        _todayFocusMinutes.value = 0
     }
 
     private fun readStoredThemeMode(): ThemeMode {
@@ -308,6 +359,11 @@ class AppPreferencesRepository(context: Context) {
         private const val KEY_CUSTOM_GEMINI_API_KEY = "key_custom_gemini_api_key"
         private const val KEY_GUEST_MODE_ENABLED = "key_guest_mode_enabled_v1"
         private const val KEY_ACCEPTED_STUDY_PLAN_IDS = "key_accepted_study_plan_ids_v2"
+        private const val KEY_DAILY_STUDY_GOAL_MINUTES = "key_daily_study_goal_minutes_v1"
+        private const val KEY_DEFAULT_FOCUS_MINUTES = "key_default_focus_minutes_v1"
+        private const val KEY_FOCUS_STATS_DAY = "key_focus_stats_day_v1"
+        private const val KEY_FOCUS_STATS_MINUTES = "key_focus_stats_minutes_v1"
+        private val FOCUS_MINUTE_OPTIONS = setOf(15, 25, 45, 60)
 
         private const val KEY_IDENTITY_MIGRATED_TO_ROOM = "key_identity_migrated_to_room_v1"
         private const val KEY_LEGACY_STUDENT_NAME = "key_student_name"

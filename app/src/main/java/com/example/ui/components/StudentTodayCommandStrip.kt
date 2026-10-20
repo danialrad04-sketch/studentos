@@ -209,7 +209,8 @@ private fun TodaySignal(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        color = accent.copy(alpha = 0.07f)
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             Modifier.padding(vertical = 9.dp),

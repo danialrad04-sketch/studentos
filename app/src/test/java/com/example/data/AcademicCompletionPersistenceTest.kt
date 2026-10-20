@@ -73,9 +73,12 @@ class AcademicCompletionPersistenceTest {
         val restored = AppPreferencesRepository(context)
         assertEquals("فیزیک", restored.focusSession.value.label)
         assertEquals(3600, restored.focusSession.value.durationSeconds)
+        val minutesBefore = restored.todayFocusMinutes.value
         assertFalse(restored.completeFocusSession(999_000))
         assertTrue(restored.completeFocusSession(1_000_001))
         assertFalse(restored.completeFocusSession(1_000_002))
+        assertEquals(minutesBefore + 60, restored.todayFocusMinutes.value)
+        assertEquals(restored.todayFocusMinutes.value, AppPreferencesRepository(context).todayFocusMinutes.value)
         restored.clearAcademicChoices()
     }
     @Test fun selectedPlanAndReminderChoicesRestoreAndClearAcrossSessions() {
@@ -86,16 +89,22 @@ class AcademicCompletionPersistenceTest {
         preferences.saveSemesterPlan(plan)
         preferences.setExamReminder("exam-42", true)
         preferences.saveTargetGpaGoal(18.25)
+        preferences.setDailyStudyGoalMinutes(180)
+        preferences.setDefaultFocusMinutes(45)
         val restored = AppPreferencesRepository(context)
         assertEquals(plan, restored.selectedSemesterPlan.value)
         assertEquals(setOf("exam-42"), restored.examReminderIds.value)
         assertEquals(18.25, restored.targetGpaGoal.value!!, 0.0)
+        assertEquals(180, restored.dailyStudyGoalMinutes.value)
+        assertEquals(45, restored.defaultFocusMinutes.value)
         assertTrue(runCatching { restored.saveTargetGpaGoal(Double.NaN) }.isFailure)
         restored.clearAcademicChoices()
         val cleared = AppPreferencesRepository(context)
         assertNull(cleared.selectedSemesterPlan.value)
         assertTrue(cleared.examReminderIds.value.isEmpty())
         assertNull(cleared.targetGpaGoal.value)
+        assertEquals(120, cleared.dailyStudyGoalMinutes.value)
+        assertEquals(25, cleared.defaultFocusMinutes.value)
     }
     @Test fun upgradeAddsRecordedFlagWithoutDeletingGrades() {
         val config = SupportSQLiteOpenHelper.Configuration.builder(context).name(null)

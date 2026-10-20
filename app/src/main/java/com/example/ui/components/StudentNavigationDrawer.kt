@@ -1,7 +1,6 @@
 package com.example.ui.components
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,7 +48,7 @@ fun StudentNavigationDrawer(
     }
     BackHandler(enabled = open) { onOpenChanged(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val drawerWidth = (maxWidth * 0.9f).coerceAtMost(380.dp)
+        val drawerWidth = (maxWidth * 0.84f).coerceAtMost(340.dp)
         ModalNavigationDrawer(
             drawerState = drawerState,
             gesturesEnabled = drawerState.isOpen,
@@ -57,53 +56,41 @@ fun StudentNavigationDrawer(
             drawerContent = {
                 ModalDrawerSheet(
                     modifier = Modifier.width(drawerWidth).testTag("app_drawer"),
-                    drawerShape = RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp),
-                    drawerContainerColor = MaterialTheme.colorScheme.surface
+                    drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
+                    drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
                 ) {
-                    Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-                        Row(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.primaryContainer) {
-                                Icon(Icons.Rounded.School, null, Modifier.padding(10.dp).size(24.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                    Column(Modifier.fillMaxSize()) {
+                        Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 16.dp, top = 12.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primaryContainer) {
+                                Icon(Icons.Rounded.School, null, Modifier.padding(9.dp).size(22.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
                             }
-                            Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                                Text("Student OS", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                                Text("فضای تحصیلی من", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
+                                Text("Student OS", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                                Text("منوی دانشجو", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             IconButton(onClick = { onOpenChanged(false) }) { Icon(Icons.Rounded.Close, "بستن منوی برنامه") }
                         }
-                        // Keep navigation scrollable even on a short window or with large text.
-                        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Card(
-                                onClick = { select(onOpenAccount) },
-                                shape = RoundedCornerShape(20.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                            ) {
-                                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text(profile.name.ifBlank { user.displayName.ifBlank { "دانشجوی عزیز" } }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                    Text(if (user.isGuest) "حالت مهمان · ذخیره روی دستگاه" else user.email ?: "حساب متصل", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text("حساب کاربری", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                                }
-                            }
-                            NavigationDrawerItem(label = { Text("تنظیمات") }, icon = { Icon(Icons.Rounded.Settings, null) }, selected = false, onClick = { select(onOpenSettings) })
-                            OutlinedTextField(
-                                value = query, onValueChange = { query = it },
-                                label = { Text("پیدا کردن صفحه") },
-                                leadingIcon = { Icon(Icons.Rounded.Search, null) },
-                                trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Rounded.Close, "پاک کردن جست‌وجوی منو") } },
-                                singleLine = true, shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier.fillMaxWidth().testTag("drawer_search")
-                            )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        OutlinedTextField(
+                            value = query, onValueChange = { query = it },
+                            placeholder = { Text("جست‌وجوی بخش‌ها") },
+                            leadingIcon = { Icon(Icons.Rounded.Search, null) },
+                            trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Rounded.Close, "پاک کردن جست‌وجوی منو") } },
+                            singleLine = true, shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp).testTag("drawer_search")
+                        )
+                        // Only destinations scroll. Identity and core actions stay reachable at every font size.
+                        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             val groups = studentFeatureGroups.map { (section, tabs) -> section to tabs.filter { it.title.contains(query.trim(), ignoreCase = true) } }.filter { it.second.isNotEmpty() }
                             groups.forEach { (section, tabs) ->
-                                Text(section, Modifier.padding(start = 12.dp, top = 18.dp, bottom = 4.dp), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(section, Modifier.padding(horizontal = 12.dp, vertical = 8.dp), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 tabs.forEach { tab ->
                                     NavigationDrawerItem(
                                         modifier = Modifier.testTag("drawer_${tab.name}"),
-                                        label = { Text(tab.title, style = MaterialTheme.typography.bodyLarge, fontWeight = if (selectedTab == tab) FontWeight.Bold else FontWeight.Normal) },
+                                        label = { Text(tab.title, style = MaterialTheme.typography.bodyMedium, fontWeight = if (selectedTab == tab) FontWeight.Bold else FontWeight.Normal) },
                                         icon = { Icon(studentDestinationIcon(tab), null, Modifier.size(22.dp)) },
                                         selected = selectedTab == tab,
-                                        shape = RoundedCornerShape(14.dp),
+                                        shape = RoundedCornerShape(12.dp),
                                         colors = NavigationDrawerItemDefaults.colors(
                                             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                             selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -114,9 +101,20 @@ fun StudentNavigationDrawer(
                                 }
                             }
                             if (groups.isEmpty()) Text("صفحه‌ای پیدا نشد؛ نام دیگری جست‌وجو کنید.", Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium)
-                            HorizontalDivider(Modifier.padding(vertical = 12.dp))
-                            NavigationDrawerItem(label = { Text("پشتیبانی") }, icon = { Icon(Icons.AutoMirrored.Rounded.HelpOutline, null) }, selected = false, onClick = { select(onOpenSupport) })
-                            Spacer(Modifier.height(16.dp))
+                            Spacer(Modifier.height(8.dp))
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            NavigationDrawerItem(
+                                label = { Column { Text(profile.name.ifBlank { user.displayName.ifBlank { "دانشجو" } }, fontWeight = FontWeight.Bold); Text("حساب کاربری", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } },
+                                icon = { Icon(Icons.Rounded.AccountCircle, null) }, selected = false,
+                                badge = { if (user.isGuest) Text("مهمان", style = MaterialTheme.typography.labelSmall) },
+                                onClick = { select(onOpenAccount) }
+                            )
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                NavigationDrawerItem(modifier = Modifier.weight(1f), label = { Text("تنظیمات", style = MaterialTheme.typography.labelLarge) }, icon = { Icon(Icons.Rounded.Settings, null, Modifier.size(20.dp)) }, selected = false, onClick = { select(onOpenSettings) })
+                                NavigationDrawerItem(modifier = Modifier.weight(1f), label = { Text("پشتیبانی", style = MaterialTheme.typography.labelLarge) }, icon = { Icon(Icons.AutoMirrored.Rounded.HelpOutline, null, Modifier.size(20.dp)) }, selected = false, onClick = { select(onOpenSupport) })
+                            }
                         }
                     }
                 }

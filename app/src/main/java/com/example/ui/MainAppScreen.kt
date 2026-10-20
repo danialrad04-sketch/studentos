@@ -239,6 +239,8 @@ fun MainAppScreen(
     val planningCollisions by studentViewModel.planningCollisions.collectAsStateWithLifecycle()
     val syncStatus by studentViewModel.syncStatus.collectAsStateWithLifecycle()
     val acceptedStudyPlanIds by studentViewModel.acceptedStudyPlanIds.collectAsStateWithLifecycle()
+    val dailyStudyGoalMinutes by studentViewModel.dailyStudyGoalMinutes.collectAsStateWithLifecycle()
+    val studiedTodayMinutes by studentViewModel.todayFocusMinutes.collectAsStateWithLifecycle()
 
     // Dynamic weighted GPA: calculates accurately from evaluated grades, or falls back to declared GPA from setup
     val evaluatedGrades = grades.filter { it.hasRecordedScore() }
@@ -507,6 +509,8 @@ fun MainAppScreen(
                                 primaryPriority = academicPriorities.firstOrNull(),
                                 planningCollisions = planningCollisions,
                                 acceptedStudyPlanIds = acceptedStudyPlanIds,
+                                dailyStudyGoalMinutes = dailyStudyGoalMinutes,
+                                studiedTodayMinutes = studiedTodayMinutes,
                                 onAcceptStudyPlan = { studentViewModel.acceptStudyRecommendation(it) },
                                 pomodoroSeconds = pomodoroSeconds,
                                 isPomodoroRunning = isPomodoroRunning,

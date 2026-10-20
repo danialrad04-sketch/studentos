@@ -74,7 +74,7 @@ class NavigationAndHomeExperienceTest {
         rule.onRoot().captureRoboImage("build/outputs/visual-review/drawer-dark-rtl-large.png")
         rule.onNodeWithTag("drawer_search").performScrollTo().performTextReplacement("پیدا نمی‌شود")
         rule.onNodeWithText("صفحه‌ای پیدا نشد؛ نام دیگری جست‌وجو کنید.").performScrollTo().assertIsDisplayed()
-        rule.onNodeWithText("پشتیبانی").performScrollTo().performClick()
+        rule.onNodeWithText("پشتیبانی").assertIsDisplayed().performClick()
         rule.runOnIdle { assertTrue(support) }
     }
 

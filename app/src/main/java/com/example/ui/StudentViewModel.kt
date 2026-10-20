@@ -110,6 +110,9 @@ class StudentViewModel @JvmOverloads constructor(
 
     val themeMode: StateFlow<ThemeMode> = preferencesRepository.themeMode
     val targetGpaGoal: StateFlow<Double?> = preferencesRepository.targetGpaGoal
+    val dailyStudyGoalMinutes: StateFlow<Int> = preferencesRepository.dailyStudyGoalMinutes
+    val defaultFocusMinutes: StateFlow<Int> = preferencesRepository.defaultFocusMinutes
+    val todayFocusMinutes: StateFlow<Int> = preferencesRepository.todayFocusMinutes
     val notificationsEnabled: StateFlow<Boolean> = preferencesRepository.notificationsEnabled
     val customGeminiApiKey: StateFlow<String> = preferencesRepository.customGeminiApiKey
     val lastSavedTimestamp: StateFlow<Long> = preferencesRepository.lastSuccessfulSaveTimestamp
@@ -682,6 +685,15 @@ class StudentViewModel @JvmOverloads constructor(
         preferencesRepository.saveFocusSession(com.example.domain.model.FocusSession(duration, duration, label = label))
         _pomodoroSeconds.value = duration
         com.example.data.local.AcademicReminderWorker.cancelFocus(getApplication())
+    }
+
+    fun setDailyStudyGoal(minutes: Int) {
+        preferencesRepository.setDailyStudyGoalMinutes(minutes)
+    }
+
+    fun setDefaultFocusMinutes(minutes: Int) {
+        preferencesRepository.setDefaultFocusMinutes(minutes)
+        if (!focusSession.value.isRunning) setFocusDuration(minutes)
     }
 
     fun togglePomodoro() {
