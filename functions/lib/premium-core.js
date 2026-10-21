@@ -127,9 +127,25 @@ async function generateAi(request, env, fetcher = fetch) {
   try { response = await fetcher(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_SERVER_API_KEY }, body: JSON.stringify({ systemInstruction: { parts: [{ text: instruction + '\nStudent context:\n' + request.context }] }, contents, generationConfig: { maxOutputTokens: 1600, temperature: 0.4, ...(request.kind === 'schedule' ? { responseMimeType: 'application/json' } : {}) } }), signal: AbortSignal.timeout(35000), redirect: 'error' }); }
   catch (_) { fail('unavailable', 'پاسخ دستیار دریافت نشد؛ دوباره تلاش کنید.'); }
   if (!response.ok) fail('unavailable', 'دستیار آنلاین موقتاً در دسترس نیست؛ سهمیه شما کسر نشد.');
-  const body = await response.json();
-  const text = body.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
+  let body;
+  try { body = await response.json(); }
+  catch (_) { fail('unavailable', 'پاسخ دستیار معتبر نبود؛ سهمیه شما کسر نشد.'); }
+  const partsOut = body?.candidates?.[0]?.content?.parts;
+  let text = Array.isArray(partsOut) ? partsOut.filter(p => p && !p.thought && typeof p.text === 'string').map(p => p.text).join('').trim() : '';
   if (!text) fail('unavailable', 'پاسخی دریافت نشد؛ سهمیه شما کسر نشد.');
+  if (request.kind === 'schedule') {
+    // Validate before charging for a successful scan, using the Android import contract.
+    let rows;
+    try { rows = JSON.parse(text); } catch (_) { rows = null; }
+    const time = /^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/;
+    const valid = Array.isArray(rows) ? rows.filter(row => row && typeof row.name === 'string' && row.name.trim() &&
+      Number.isInteger(row.units) && row.units >= 1 && row.units <= 10 &&
+      Number.isInteger(row.dayOfWeek) && row.dayOfWeek >= 0 && row.dayOfWeek <= 6 &&
+      typeof row.startTime === 'string' && typeof row.endTime === 'string' &&
+      time.test(row.startTime) && time.test(row.endTime) && row.endTime > row.startTime) : [];
+    if (!valid.length) fail('unavailable', 'جدول قابل خواندنی دریافت نشد؛ تصویر واضح‌تری انتخاب کنید. سهمیه شما کسر نشد.');
+    text = JSON.stringify(valid);
+  }
   return { text, model };
 }
 module.exports = { PACKAGE, PLANS, ServiceError, fail, hash, ready, receipt, seal, unseal, bazaarSubscription, entitlement, aiRequest, generateAi, requireText, plans };

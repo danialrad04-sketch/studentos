@@ -154,3 +154,49 @@ test('restoring older receipts never reduces the verified remaining subscription
   assert.equal(db.rows.get('users/owner').bazaarReceiptId, core.hash('quarterly-receipt'));
 });
 module.exports = { MemoryFirestore };
+
+test('all study modes send actual context and accept a usable answer', async () => {
+  for (const kind of ['chat', 'coach', 'exam', 'review']) {
+    const db = new MemoryFirestore();
+    db.write('users/student', { subscriptionTier: 'PRO', subscriptionExpiresAt: now + 86400000 });
+    const service = new PremiumService(db, env, async (_url, options) => {
+      const payload = JSON.parse(options.body);
+      assert.ok(payload.systemInstruction.parts[0].text.includes('Math exam on Saturday'));
+      assert.equal(payload.contents.at(-1).parts[0].text, 'Make a plan');
+      return response({ candidates: [{ content: { parts: [{ text: 'برنامه بر اساس امتحان ثبت‌شده' }] } }] });
+    }, () => now);
+    const result = await service.generate('student', { kind, prompt: 'Make a plan', studentContext: 'Math exam on Saturday', requestId: crypto.randomUUID() });
+    assert.equal(result.text, 'برنامه بر اساس امتحان ثبت‌شده');
+    assert.equal(result.dailyAiQuotaUsed, 1);
+  }
+});
+
+test('unusable provider responses refund usage and return an actionable error', async () => {
+  for (const provider of [
+    async () => { throw new Error('timeout'); },
+    async () => response({}, 503),
+    async () => ({ ok: true, json: async () => { throw new SyntaxError('private upstream content'); } }),
+    async () => response(null),
+    async () => response({ promptFeedback: { blockReason: 'SAFETY' } }),
+    async () => response({ candidates: [{ content: { parts: [{ text: '   ' }] } }] }),
+    async () => response({ candidates: [{ content: { parts: [{ text: 'internal reasoning', thought: true }] } }] })
+  ]) {
+    const service = new PremiumService(new MemoryFirestore(), env, provider, () => now);
+    await assert.rejects(service.generate('student', { prompt: 'help', requestId: crypto.randomUUID() }), error => error.code === 'unavailable' && !error.message.includes('private'));
+    assert.equal((await service.status('student', false)).dailyAiQuotaUsed, 0);
+  }
+});
+
+test('schedule scans validate rows before consuming quota and retain only importable sessions', async () => {
+  const request = { kind: 'schedule', prompt: 'scan', mimeType: 'image/png', imageBase64: 'dGVzdA==', requestId: crypto.randomUUID() };
+  const row = { name: 'ریاضی', units: 3, dayOfWeek: 0, startTime: '08:00', endTime: '10:00', instructor: '', location: '' };
+  for (const text of ['not json', '{}', '[]', JSON.stringify([{ ...row, units: 0 }]), JSON.stringify([{ ...row, dayOfWeek: 7 }]), JSON.stringify([{ ...row, startTime: '10:00', endTime: '08:00' }])]) {
+    const service = new PremiumService(new MemoryFirestore(), env, async () => response({ candidates: [{ content: { parts: [{ text }] } }] }), () => now);
+    await assert.rejects(service.generate('student', request), error => error.code === 'unavailable');
+    assert.equal((await service.status('student', false)).dailyScanQuotaUsed, 0);
+  }
+  const service = new PremiumService(new MemoryFirestore(), env, async () => response({ candidates: [{ content: { parts: [{ text: JSON.stringify([row, { ...row, name: '' }]) }] } }] }), () => now);
+  const result = await service.generate('student', request);
+  assert.deepEqual(JSON.parse(result.text), [row]);
+  assert.equal(result.dailyScanQuotaUsed, 1);
+});

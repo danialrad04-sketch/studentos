@@ -311,8 +311,11 @@ jobs:
           api-level: 35
           target: google_apis
           arch: x86_64
-          profile: pixel_7_pro
+          # Keep the software-rendered emulator within hosted-runner resources.
+          # The previous 1440p Pixel launcher ANR blocked the upgrade test.
+          profile: pixel_2
           avd-name: studentos-release-api35
+          disable-animations: true
           force-avd-creation: true
           emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
           script: python3 scripts/smoke_bazaar_release.py --previous-apk "$RUNNER_TEMP/previous.apk" --candidate-apk bazaar-candidates/StudentOS-2.4.2.apk --output build/signed-release-smoke

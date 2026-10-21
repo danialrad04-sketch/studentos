@@ -67,6 +67,11 @@ class AppPreferencesRepository(context: Context) {
     private val moshi = com.squareup.moshi.Moshi.Builder().add(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory()).build()
     private val focusAdapter = moshi.adapter(com.example.domain.model.FocusSession::class.java)
     private val planAdapter = moshi.adapter(com.example.domain.model.SemesterPlan::class.java)
+    private val studyDaysAdapter = moshi.adapter<List<com.example.domain.model.StudyDay>>(
+        com.squareup.moshi.Types.newParameterizedType(List::class.java, com.example.domain.model.StudyDay::class.java)
+    )
+    private val _studyHistory = MutableStateFlow(readStudyHistory())
+    val studyHistory: StateFlow<List<com.example.domain.model.StudyDay>> = _studyHistory.asStateFlow()
     private val _focusSession = MutableStateFlow(readFocusSession())
     val focusSession: StateFlow<com.example.domain.model.FocusSession> = _focusSession.asStateFlow()
     private val _selectedSemesterPlan = MutableStateFlow(readSemesterPlan())
@@ -78,26 +83,111 @@ class AppPreferencesRepository(context: Context) {
         check(prefs.edit().putString("target_gpa_goal", goal?.toString()).commit())
         _targetGpaGoal.value = goal
     }
+    private val _dailyStudyGoalMinutes = MutableStateFlow(
+        prefs.getInt(KEY_DAILY_STUDY_GOAL_MINUTES, 120).coerceIn(30, 480)
+    )
+    val dailyStudyGoalMinutes: StateFlow<Int> = _dailyStudyGoalMinutes.asStateFlow()
+    private val _defaultFocusMinutes = MutableStateFlow(
+        prefs.getInt(KEY_DEFAULT_FOCUS_MINUTES, 25).takeIf { it in FOCUS_MINUTE_OPTIONS } ?: 25
+    )
+    val defaultFocusMinutes: StateFlow<Int> = _defaultFocusMinutes.asStateFlow()
+    private val _todayFocusMinutes = MutableStateFlow(readTodayFocusMinutes())
+    val todayFocusMinutes: StateFlow<Int> = _todayFocusMinutes.asStateFlow()
+    private var activityDayKey = currentDayKey()
+
+    fun setDailyStudyGoalMinutes(minutes: Int) {
+        val clean = minutes.coerceIn(30, 480)
+        check(prefs.edit().putInt(KEY_DAILY_STUDY_GOAL_MINUTES, clean).commit())
+        _dailyStudyGoalMinutes.value = clean
+    }
+
+    fun setDefaultFocusMinutes(minutes: Int) {
+        require(minutes in FOCUS_MINUTE_OPTIONS)
+        check(prefs.edit().putInt(KEY_DEFAULT_FOCUS_MINUTES, minutes).commit())
+        _defaultFocusMinutes.value = minutes
+    }
+
+    private fun currentDayKey(now: Long = System.currentTimeMillis()): String =
+        java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date(now))
+
+    private fun readStudyHistory(): List<com.example.domain.model.StudyDay> = runCatching {
+        studyDaysAdapter.fromJson(prefs.getString(KEY_STUDY_HISTORY, "[]").orEmpty()).orEmpty()
+            .filter { it.minutes in 1..1440 && it.sessions > 0 && it.date.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) }
+            .distinctBy { it.date }.sortedByDescending { it.date }.take(90)
+    }.getOrDefault(emptyList())
+
+    private fun readTodayFocusMinutes(): Int {
+        readStudyHistory().firstOrNull { it.date == currentDayKey() }?.let { return it.minutes }
+        if (prefs.getString(KEY_FOCUS_STATS_DAY, null) != currentDayKey()) return 0
+        return prefs.getInt(KEY_FOCUS_STATS_MINUTES, 0).coerceAtLeast(0)
+    }
+
+    fun refreshStudyActivity(force: Boolean = false) {
+        val day = currentDayKey()
+        if (!force && activityDayKey == day) return
+        activityDayKey = day
+        _studyHistory.value = readStudyHistory()
+        _todayFocusMinutes.value = readTodayFocusMinutes()
+    }
+
+    fun exportStudySettings(): com.example.domain.model.StudySettingsSnapshot =
+        com.example.domain.model.StudySettingsSnapshot(
+            _dailyStudyGoalMinutes.value, _defaultFocusMinutes.value, _targetGpaGoal.value, readStudyHistory()
+        )
+
+    fun restoreStudySettings(snapshot: com.example.domain.model.StudySettingsSnapshot) = synchronized(FOCUS_COMPLETION_LOCK) {
+        snapshot.validate()
+        val seconds = snapshot.defaultFocusMinutes * 60
+        val idle = com.example.domain.model.FocusSession(seconds, seconds)
+        check(prefs.edit().putInt(KEY_DAILY_STUDY_GOAL_MINUTES, snapshot.dailyGoalMinutes)
+            .putInt(KEY_DEFAULT_FOCUS_MINUTES, snapshot.defaultFocusMinutes)
+            .putString("target_gpa_goal", snapshot.targetGpa?.toString())
+            .putString(KEY_STUDY_HISTORY, studyDaysAdapter.toJson(snapshot.history.sortedByDescending { it.date }))
+            .putString("focus_session_v1", focusAdapter.toJson(idle))
+            .remove(KEY_FOCUS_STATS_DAY).remove(KEY_FOCUS_STATS_MINUTES).commit())
+        _dailyStudyGoalMinutes.value = snapshot.dailyGoalMinutes
+        _defaultFocusMinutes.value = snapshot.defaultFocusMinutes
+        _targetGpaGoal.value = snapshot.targetGpa
+        _focusSession.value = idle
+        refreshStudyActivity(force = true)
+    }
     private val _examReminderIds = MutableStateFlow(prefs.getStringSet("exam_reminder_ids", emptySet())?.toSet().orEmpty())
     val examReminderIds: StateFlow<Set<String>> = _examReminderIds.asStateFlow()
 
     private fun readFocusSession(): com.example.domain.model.FocusSession = runCatching {
         focusAdapter.fromJson(prefs.getString("focus_session_v1", "").orEmpty())
             ?.takeIf { it.durationSeconds in 300..7200 && it.pausedSeconds in 0..it.durationSeconds && it.endsAtMillis >= 0 }
-    }.getOrNull() ?: com.example.domain.model.FocusSession()
+    }.getOrNull() ?: prefs.getInt(KEY_DEFAULT_FOCUS_MINUTES, 25)
+        .takeIf { it in FOCUS_MINUTE_OPTIONS }
+        .let { (it ?: 25) * 60 }
+        .let { seconds -> com.example.domain.model.FocusSession(durationSeconds = seconds, pausedSeconds = seconds) }
 
-    @Synchronized
-    fun saveFocusSession(session: com.example.domain.model.FocusSession) {
+    fun saveFocusSession(session: com.example.domain.model.FocusSession) = synchronized(FOCUS_COMPLETION_LOCK) {
         check(prefs.edit().putString("focus_session_v1", focusAdapter.toJson(session)).commit())
         _focusSession.value = session
     }
 
-    @Synchronized
-    fun completeFocusSession(now: Long): Boolean {
-        val session = _focusSession.value
-        if (!session.isRunning || session.remainingSeconds(now) != 0) return false
-        saveFocusSession(session.copy(pausedSeconds = 0, endsAtMillis = 0))
-        return true
+    fun completeFocusSession(now: Long): Boolean = synchronized(FOCUS_COMPLETION_LOCK) {
+        // Read the persisted deadline so a worker and a recreated repository cannot claim it twice.
+        val session = readFocusSession()
+        if (!session.isRunning || session.remainingSeconds(now) != 0) return@synchronized false
+        val day = currentDayKey(session.endsAtMillis)
+        val history = readStudyHistory()
+        val previous = history.firstOrNull { it.date == day }
+        val legacyMinutes = if (prefs.getString(KEY_FOCUS_STATS_DAY, null) == day) prefs.getInt(KEY_FOCUS_STATS_MINUTES, 0) else 0
+        val entry = com.example.domain.model.StudyDay(
+            day, ((previous?.minutes ?: legacyMinutes) + session.durationSeconds / 60).coerceIn(0, 1440),
+            (previous?.sessions ?: 0) + 1
+        )
+        val nextHistory = (history.filterNot { it.date == day } + entry).sortedByDescending { it.date }.take(90)
+        val completed = session.copy(pausedSeconds = 0, endsAtMillis = 0)
+        // Claim the deadline and record the completed session in one durable write.
+        check(prefs.edit().putString("focus_session_v1", focusAdapter.toJson(completed))
+            .putString(KEY_STUDY_HISTORY, studyDaysAdapter.toJson(nextHistory))
+            .remove(KEY_FOCUS_STATS_DAY).remove(KEY_FOCUS_STATS_MINUTES).commit())
+        _focusSession.value = completed
+        refreshStudyActivity(force = true)
+        true
     }
 
     private fun readSemesterPlan(): com.example.domain.model.SemesterPlan? = runCatching {
@@ -115,13 +205,24 @@ class AppPreferencesRepository(context: Context) {
         _examReminderIds.value = next
     }
 
-    fun clearAcademicChoices() {
+    fun clearAcademicChoices() = synchronized(FOCUS_COMPLETION_LOCK) {
         saveTargetGpaGoal(null)
         clearAcceptedStudyPlan()
         saveSemesterPlan(null)
         saveFocusSession(com.example.domain.model.FocusSession())
-        check(prefs.edit().remove("exam_reminder_ids").commit())
+        check(prefs.edit()
+            .remove("exam_reminder_ids")
+            .remove(KEY_DAILY_STUDY_GOAL_MINUTES)
+            .remove(KEY_DEFAULT_FOCUS_MINUTES)
+            .remove(KEY_FOCUS_STATS_DAY)
+            .remove(KEY_FOCUS_STATS_MINUTES)
+            .remove(KEY_STUDY_HISTORY)
+            .commit())
         _examReminderIds.value = emptySet()
+        _dailyStudyGoalMinutes.value = 120
+        _defaultFocusMinutes.value = 25
+        _todayFocusMinutes.value = 0
+        _studyHistory.value = emptyList()
     }
 
     private fun readStoredThemeMode(): ThemeMode {
@@ -308,6 +409,13 @@ class AppPreferencesRepository(context: Context) {
         private const val KEY_CUSTOM_GEMINI_API_KEY = "key_custom_gemini_api_key"
         private const val KEY_GUEST_MODE_ENABLED = "key_guest_mode_enabled_v1"
         private const val KEY_ACCEPTED_STUDY_PLAN_IDS = "key_accepted_study_plan_ids_v2"
+        private const val KEY_DAILY_STUDY_GOAL_MINUTES = "key_daily_study_goal_minutes_v1"
+        private const val KEY_DEFAULT_FOCUS_MINUTES = "key_default_focus_minutes_v1"
+        private const val KEY_FOCUS_STATS_DAY = "key_focus_stats_day_v1"
+        private const val KEY_FOCUS_STATS_MINUTES = "key_focus_stats_minutes_v1"
+        private const val KEY_STUDY_HISTORY = "key_study_history_v1"
+        private val FOCUS_COMPLETION_LOCK = Any()
+        private val FOCUS_MINUTE_OPTIONS = setOf(15, 25, 45, 60)
 
         private const val KEY_IDENTITY_MIGRATED_TO_ROOM = "key_identity_migrated_to_room_v1"
         private const val KEY_LEGACY_STUDENT_NAME = "key_student_name"

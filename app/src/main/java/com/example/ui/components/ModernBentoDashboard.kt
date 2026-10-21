@@ -10,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.platform.testTag
@@ -92,15 +93,7 @@ private data class BentoClassScheduleItem(
     val location: String
 )
 
-/**
- * Modern Bento Dashboard matching exact design layout:
- * 1. 2x2 Bento Stat Tiles (معدل کل, واحد گذرانده, حضور و غیاب, تسک امروز)
- * 2. Hero Gradient Card ("کلاس بعدی")
- * 3. 5 Quick Action Circles (سنتر, تسک, حضور, پومودورو, کوپایلوت)
- * 4. Split 2-Card Row (برنامه امروز & هوش مصنوعی)
- * 5. Course Status List Card ("وضعیت درس‌ها")
- * 6. Bottom Curricular & Gamification Quick Access
- */
+/** Home workspace composed from recorded academic facts and actionable student tools. */
 @Composable
 fun ModernBentoDashboard(
     courses: List<CourseEntity>,
@@ -112,6 +105,9 @@ fun ModernBentoDashboard(
     passedUnits: Int = 0,
     gpa: String = "۰.۰۰",
     targetGpa: Double? = null,
+    declaredGpa: Double? = null,
+    dailyStudyGoalMinutes: Int = 120,
+    studiedTodayMinutes: Int = 0,
     totalRequiredCredits: Int = 0,
     academicProgressState: com.example.ui.models.AcademicProgressUiState? = null,
     academicRisks: List<com.example.domain.model.AcademicRisk> = emptyList(),
@@ -149,6 +145,14 @@ fun ModernBentoDashboard(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
+        StudentHomeOverview(
+            hasCourses = courses.isNotEmpty(),
+            pendingTasks = tasks.count { !it.isCompleted },
+            onOpenSchedule = { onNavigateTab(AppTab.SCHEDULE) },
+            onAddTask = { onQuickAddTask?.invoke() ?: onNavigateTab(AppTab.TASKS) },
+            onOpenSearch = onOpenCommandCenter,
+            onOpenCopilot = { onOpenCopilot?.invoke() ?: onNavigateTab(AppTab.COPILOT) }
+        )
         StudentTodayCommandStrip(
             courses = courses,
             coursesWithSessions = coursesWithSessions,
@@ -158,6 +162,20 @@ fun ModernBentoDashboard(
             studyRecommendations = studyRecommendations,
             onNavigateTab = onNavigateTab,
             onStartFocus = startFocus
+        )
+
+        AcademicJourneyOverview(
+            declaredPassedUnits = passedUnits,
+            declaredGpa = declaredGpa?.let { String.format(Locale.US, "%.2f", it) },
+            onCompleteRecords = { onNavigateTab(AppTab.CURRICULUM) },
+            state = academicProgressState,
+            targetGpa = targetGpa,
+            recommendations = studyRecommendations,
+            dailyStudyGoalMinutes = dailyStudyGoalMinutes,
+            studiedTodayMinutes = studiedTodayMinutes,
+            onOpenPassport = { onNavigateTab(AppTab.PASSPORT) },
+            onOpenGrades = { onNavigateTab(AppTab.GRADES) },
+            onOpenFocus = startFocus
         )
 
         // 2. HERO GRADIENT CARD ("کلاس بعدی")
@@ -193,7 +211,7 @@ fun ModernBentoDashboard(
         AcademicSectionHeader("برنامه و کارهای من", subtitle = "ابزارهای روزمره، در دسترس و مرتب")
         listOf(
             Triple("برنامه هفتگی", Icons.Default.CalendarToday, AppTab.SCHEDULE), Triple("امتحانات", Icons.Default.School, AppTab.EXAMS),
-            Triple("تکالیف", Icons.Default.CheckCircle, AppTab.TASKS), Triple("کلاس‌ها", Icons.Default.CastForEducation, AppTab.SCHEDULE)
+            Triple("تکالیف", Icons.Default.CheckCircle, AppTab.TASKS), Triple("تمرکز و مطالعه", Icons.Default.HourglassTop, AppTab.POMODORO)
         ).chunked(if (LocalDensity.current.fontScale >= 1.3f) 1 else 2).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEach { (title, icon, tab) ->
@@ -201,29 +219,13 @@ fun ModernBentoDashboard(
                 }
             }
         }
-        AcademicSectionHeader("پیشرفت تحصیلی", subtitle = "خلاصهٔ اطلاعات ثبت‌شدهٔ شما")
-
-        // 1. TOP 2x2 BENTO STAT TILES (معدل کل, واحد گذرانده, حضور و غیاب, تسک امروز)
-        AnalyticsKpiSection(
-            gpa = gpa,
-            passedUnits = passedUnits,
-            totalRequiredCredits = totalRequiredCredits.coerceAtLeast(0),
-            attendanceList = attendanceList,
-            tasks = tasks,
-            targetGpa = targetGpa,
-            onNavigateToGrades = { onNavigateTab(AppTab.GRADES) },
-            onNavigateToPassport = { onNavigateTab(AppTab.PASSPORT) },
-            onNavigateToAttendance = { onNavigateTab(AppTab.ATTENDANCE) },
-            onNavigateToTasks = { onNavigateTab(AppTab.TASKS) }
-        )
-
         // 3. QUICK OPERATIONS 5 CIRCLES (سنتر, تسک, حضور, پومودورو, کوپایلوت)
         StudentOperationsHubCard(
-            onOpenCommandCenter = { onOpenCommandCenter?.invoke() ?: onNavigateTab(AppTab.DASHBOARD) },
+            onOpenCommandCenter = { onOpenCommandCenter?.invoke() ?: onNavigateTab(AppTab.COPILOT) },
             onQuickAddTask = { onQuickAddTask?.invoke() ?: onNavigateTab(AppTab.TASKS) },
             onQuickAttendance = { onNavigateTab(AppTab.ATTENDANCE) },
-            onQuickPomodoro = onTogglePomodoro,
-            onOpenCopilot = { onOpenCopilot?.invoke() ?: onNavigateTab(AppTab.DASHBOARD) },
+            onQuickPomodoro = startFocus,
+            onOpenCopilot = { onOpenCopilot?.invoke() ?: onNavigateTab(AppTab.COPILOT) },
             onOpenOcrImport = { onOpenOcrImport?.invoke() ?: onNavigateTab(AppTab.SCHEDULE) }
         )
 
@@ -232,13 +234,16 @@ fun ModernBentoDashboard(
             courses = courses,
             coursesWithSessions = coursesWithSessions,
             onOpenSchedule = { onNavigateTab(AppTab.SCHEDULE) },
-            onOpenCopilot = { onOpenCopilot?.invoke() ?: onNavigateTab(AppTab.DASHBOARD) }
+            onOpenCopilot = { onOpenCopilot?.invoke() ?: onNavigateTab(AppTab.COPILOT) }
         )
 
         // 5. COURSE STATUS LIST CARD ("وضعیت درس‌ها")
         CourseStatusListSection(
             courses = courses,
             coursesWithSessions = coursesWithSessions,
+            tasks = tasks,
+            attendance = attendanceList,
+            onOpenAll = { onNavigateTab(AppTab.SCHEDULE) },
             onOpenCourse = { course ->
                 if (onOpenCourseWorkspace != null) {
                     onOpenCourseWorkspace(course)
@@ -311,6 +316,7 @@ private fun StudyRecommendationsSection(
 // -------------------------------------------------------------
 // 1. 2x2 BENTO STAT TILES SECTION
 // -------------------------------------------------------------
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun AnalyticsKpiSection(
     gpa: String,
@@ -341,9 +347,11 @@ private fun AnalyticsKpiSection(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // Row 1: معدل کل & واحد گذرانده
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.3f) 1 else 2,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             BentoKpiTile(
                 title = "معدل کل",
@@ -357,8 +365,8 @@ private fun AnalyticsKpiSection(
 
             BentoKpiTile(
                 title = "واحد گذرانده",
-                value = "$displayPassed از $totalRequiredCredits",
-                subtitle = "${((passedUnits.toFloat() / totalRequiredCredits.coerceAtLeast(1)) * 100).toInt()}% چارت 📈",
+                value = if (totalRequiredCredits > 0) "$displayPassed از $totalRequiredCredits" else displayPassed,
+                subtitle = if (totalRequiredCredits > 0) "${((passedUnits.toFloat() / totalRequiredCredits) * 100).toInt().coerceIn(0, 100)}٪ چارت" else "تعداد واحدهای چارت ثبت نشده",
                 emojiType = AppEmojiType.CHECK,
                 accentColor = MaterialTheme.colorScheme.primary,
                 onClick = onNavigateToPassport,
@@ -367,9 +375,11 @@ private fun AnalyticsKpiSection(
         }
 
         // Row 2: حضور و غیاب & تسک امروز
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.3f) 1 else 2,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             BentoKpiTile(
                 title = "حضور و غیاب",
@@ -382,7 +392,7 @@ private fun AnalyticsKpiSection(
             )
 
             BentoKpiTile(
-                title = "تسک امروز",
+                title = "تکالیف باز",
                 value = displayTasks,
                 subtitle = "تکالیف در جریان ⏳",
                 emojiType = AppEmojiType.TARGET,
@@ -684,6 +694,9 @@ private fun ScheduleBulletItem(time: String, name: String) {
 private fun CourseStatusListSection(
     courses: List<CourseEntity>,
     coursesWithSessions: List<CourseWithSessions> = emptyList(),
+    tasks: List<TaskEntity> = emptyList(),
+    attendance: List<AttendanceEntity> = emptyList(),
+    onOpenAll: () -> Unit,
     onOpenCourse: (CourseEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -705,10 +718,7 @@ private fun CourseStatusListSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                modifier = Modifier.tactileClickable {
-                    val first = courses.firstOrNull()
-                    if (first != null) onOpenCourse(first)
-                },
+                modifier = Modifier.heightIn(min = 48.dp).tactileClickable(onClick = onOpenAll),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -747,7 +757,6 @@ private fun CourseStatusListSection(
                 )
             }
         } else {
-            val progressList = listOf(75, 60, 40, 80)
             val iconList = listOf(
                 Icons.Default.Bolt,
                 Icons.Default.School,
@@ -756,9 +765,10 @@ private fun CourseStatusListSection(
             )
 
             displayCourses.forEachIndexed { index, c ->
-                val progress = progressList.getOrElse(index) { 65 }
                 val icon = iconList.getOrElse(index) { Icons.Default.School }
                 val sessions = sessionMap[c.id] ?: emptyList()
+                val openTasks = tasks.count { !it.isCompleted && (it.courseId == c.id || (it.courseId.isBlank() && it.courseName == c.name)) }
+                val absence = attendance.firstOrNull { it.courseId == c.id || (it.courseId.isBlank() && it.courseName == c.name) }
                 val nextSessionText = if (sessions.isNotEmpty()) {
                     val s = sessions.first()
                     val dayName = when (s.day) {
@@ -767,7 +777,9 @@ private fun CourseStatusListSection(
                         2 -> "دوشنبه"
                         3 -> "سه‌شنبه"
                         4 -> "چهارشنبه"
-                        else -> "امروز"
+                        5 -> "پنج‌شنبه"
+                        6 -> "جمعه"
+                        else -> "زمان نامشخص"
                     }
                     "$dayName ${s.start}"
                 } else {
@@ -776,7 +788,9 @@ private fun CourseStatusListSection(
 
                 ModernCourseCard(
                     course = c,
-                    progressPercentage = progress,
+                    sessionCount = sessions.size,
+                    openTaskCount = openTasks,
+                    absenceCount = absence?.absentCount,
                     nextSessionText = nextSessionText,
                     icon = icon,
                     onClick = { onOpenCourse(c) }
@@ -789,7 +803,9 @@ private fun CourseStatusListSection(
 @Composable
 private fun ModernCourseCard(
     course: CourseEntity,
-    progressPercentage: Int,
+    sessionCount: Int,
+    openTaskCount: Int,
+    absenceCount: Int?,
     nextSessionText: String,
     icon: ImageVector,
     onClick: () -> Unit
@@ -813,25 +829,11 @@ private fun ModernCourseCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Circular Progress Ring (Left in RTL)
-            Box(
-                modifier = Modifier.size(54.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                androidx.compose.material3.CircularProgressIndicator(
-                    progress = { progressPercentage / 100f },
-                    modifier = Modifier.size(54.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    strokeWidth = 5.dp,
-                    strokeCap = StrokeCap.Round
-                )
-                Text(
-                    text = "${progressPercentage}٪",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+            Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.primaryContainer) {
+                Column(Modifier.widthIn(min = 54.dp).padding(horizontal = 8.dp, vertical = 9.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(course.units.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    Text("واحد", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                }
             }
 
             // Course Info (Center)
@@ -879,7 +881,7 @@ private fun ModernCourseCard(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "جلسه بعد: $nextSessionText",
+                        text = "برنامهٔ هفتگی: $nextSessionText",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Normal,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -891,6 +893,18 @@ private fun ModernCourseCard(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                Spacer(modifier = Modifier.height(5.dp))
+                Text(
+                    text = buildList {
+                        add("$sessionCount جلسه در هفته")
+                        add("$openTaskCount تکلیف باز")
+                        absenceCount?.let { add("$it غیبت") }
+                    }.joinToString(" · "),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
 
             // Subject Icon in rounded square (Right in RTL)

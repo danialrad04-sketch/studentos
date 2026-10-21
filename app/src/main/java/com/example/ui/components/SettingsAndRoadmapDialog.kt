@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 
 /** Settings contain real controls; roadmap promises belong in repository docs. */
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 fun SettingsAndRoadmapDialog(
     profile: StudentProfileEntity,
     themeMode: ThemeMode,
@@ -36,19 +37,25 @@ fun SettingsAndRoadmapDialog(
     onOpenPastSemesters: () -> Unit,
     onOpenApkInfo: () -> Unit,
     onTestNotification: () -> Unit,
+    dailyStudyGoalMinutes: Int = 120,
+    onDailyStudyGoalChanged: (Int) -> Unit = {},
+    defaultFocusMinutes: Int = 25,
+    onDefaultFocusMinutesChanged: (Int) -> Unit = {},
     userAccount: UserAccount? = null,
     onOpenAuth: () -> Unit = {},
     onOpenBackupRestore: () -> Unit = {},
     onOpenPrivacyPolicy: () -> Unit = {},
     onOpenSupportTickets: () -> Unit = {},
     initialSection: String = "home",
-    onSectionChanged: (String) -> Unit = {}
+    onSectionChanged: (String) -> Unit = {},
+    targetGpaGoal: Double? = null,
+    onTargetGpaGoalChanged: (Double?) -> Unit = {}
 ) {
     var section by rememberSaveable { mutableStateOf(initialSection) }
     var confirmation by rememberSaveable { mutableStateOf<String?>(null) }
     fun navigate(value: String) { section = value; onSectionChanged(value) }
     val back = { if (section == "home") onDismiss() else navigate(if (section == "licenses") "about" else "home") }
-    val title = when (section) { "appearance" -> "ظاهر برنامه"; "notifications" -> "اعلان‌ها و یادآورها"; "data" -> "داده‌ها و پشتیبان"; "about" -> "راهنما و دربارهٔ برنامه"; "licenses" -> "مجوز قلم‌ها"; else -> "تنظیمات" }
+    val title = when (section) { "appearance" -> "ظاهر برنامه"; "study" -> "تنظیمات مطالعه"; "notifications" -> "اعلان‌ها و یادآورها"; "data" -> "داده‌ها و پشتیبان"; "about" -> "راهنما و دربارهٔ برنامه"; "licenses" -> "مجوز قلم‌ها"; else -> "تنظیمات" }
     StudentSettingsPage(title, back) {
         StudentSectionTransition(section) { page ->
             Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
@@ -60,6 +67,7 @@ fun SettingsAndRoadmapDialog(
                         }
                         StudentSettingsGroup("شخصی‌سازی") {
                             StudentSettingsRow("ظاهر برنامه", themeMode.titleFa, Icons.Rounded.Palette, { navigate("appearance") })
+                            StudentSettingsRow("مطالعه و تمرکز", "هدف روزانه و بازهٔ پیش‌فرض تمرکز", Icons.Rounded.Timer, { navigate("study") })
                             StudentSettingsRow("اعلان‌ها و یادآورها", if (notificationsEnabled) "یادآورهای درسی فعال‌اند" else "یادآورهای درسی خاموش‌اند", Icons.Rounded.Notifications, { navigate("notifications") })
                         }
                         StudentSettingsGroup("اطلاعات و راهنما") {
@@ -83,6 +91,53 @@ fun SettingsAndRoadmapDialog(
                             }
                         }
                         Text("انیمیشن‌ها از تنظیمات حرکت سیستم پیروی می‌کنند.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    "study" -> {
+                        Text("هدف مطالعه، معدل هدف و بازهٔ پیش‌فرض تمرکز را تنظیم کن. تغییر زمان پیش‌فرض، تایمرِ در حال اجرا را متوقف نمی‌کند.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        StudentSettingsGroup("هدف مطالعهٔ روزانه") {
+                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text("روزانه $dailyStudyGoalMinutes دقیقه", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    listOf(60, 90, 120, 180, 240).forEach { minutes ->
+                                        FilterChip(
+                                            selected = dailyStudyGoalMinutes == minutes,
+                                            onClick = { onDailyStudyGoalChanged(minutes) },
+                                            label = { Text(if (minutes % 60 == 0) "${minutes / 60} ساعت" else "$minutes دقیقه") },
+                                            leadingIcon = if (dailyStudyGoalMinutes == minutes) ({ Icon(Icons.Rounded.Check, null, Modifier.size(18.dp)) }) else null
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        StudentSettingsGroup("شروع سریع تمرکز") {
+                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text("بازهٔ پیش‌فرض: $defaultFocusMinutes دقیقه", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    listOf(15, 25, 45, 60).forEach { minutes ->
+                                        FilterChip(
+                                            selected = defaultFocusMinutes == minutes,
+                                            onClick = { onDefaultFocusMinutesChanged(minutes) },
+                                            label = { Text("$minutes دقیقه") },
+                                            leadingIcon = if (defaultFocusMinutes == minutes) ({ Icon(Icons.Rounded.Check, null, Modifier.size(18.dp)) }) else null
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        StudentSettingsGroup("هدف معدل") {
+                            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text(targetGpaGoal?.let { "هدف ثبت‌شده: $it از ۲۰" } ?: "هنوز هدفی ثبت نشده", style = MaterialTheme.typography.titleMedium)
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    listOf(16.0, 17.0, 18.0, 19.0).forEach { goal ->
+                                        FilterChip(selected = targetGpaGoal == goal, onClick = { onTargetGpaGoalChanged(goal) },
+                                            label = { Text("معدل ${goal.toInt()}") },
+                                            leadingIcon = if (targetGpaGoal == goal) ({ Icon(Icons.Rounded.Check, null, Modifier.size(18.dp)) }) else null)
+                                    }
+                                }
+                                if (targetGpaGoal != null) TextButton(onClick = { onTargetGpaGoalChanged(null) }) { Text("حذف هدف معدل") }
+                                Text("معدل هدف، نمرات ثبت‌شده را تغییر نمی‌دهد و در خانه نمایش داده می‌شود.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
                     }
                     "notifications" -> {
                         StudentSettingsGroup("یادآورهای تحصیلی") {

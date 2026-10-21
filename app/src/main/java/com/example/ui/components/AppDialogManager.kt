@@ -78,6 +78,9 @@ fun AppDialogManager(
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             when (dialogState) {
         is AppDialogState.SettingsAndRoadmap -> {
+            val dailyStudyGoalMinutes by studentViewModel.dailyStudyGoalMinutes.collectAsStateWithLifecycle()
+            val defaultFocusMinutes by studentViewModel.defaultFocusMinutes.collectAsStateWithLifecycle()
+            val targetGpaGoal by studentViewModel.targetGpaGoal.collectAsStateWithLifecycle()
             SettingsAndRoadmapDialog(
                 profile = profile,
                 initialSection = settingsSection,
@@ -86,6 +89,12 @@ fun AppDialogManager(
                 onSelectThemeMode = { studentViewModel.setThemeMode(it) },
                 notificationsEnabled = notificationsEnabled,
                 onToggleNotifications = { studentViewModel.setNotificationsEnabled(it); if (it) onRequestNotificationPermission() },
+                dailyStudyGoalMinutes = dailyStudyGoalMinutes,
+                onDailyStudyGoalChanged = studentViewModel::setDailyStudyGoal,
+                defaultFocusMinutes = defaultFocusMinutes,
+                onDefaultFocusMinutesChanged = studentViewModel::setDefaultFocusMinutes,
+                targetGpaGoal = targetGpaGoal,
+                onTargetGpaGoalChanged = { studentViewModel.preferencesRepository.saveTargetGpaGoal(it) },
                 onOpenEditProfile = { openChild(AppDialogState.Profile) },
                 onDismiss = dismiss,
                 userAccount = userAccount,
@@ -168,10 +177,8 @@ fun AppDialogManager(
             EditProfileDialog(
                 profile = profile,
                 onDismiss = dismiss,
-                onSave = { name, stdId, uni, maj, year, sem, passed, active ->
-                    studentViewModel.updateFullProfile(name, stdId, uni, maj, year, sem, passed, active)
-                    dismiss()
-                    Toast.makeText(context, "مشخصات دانشجویی با موفقیت ذخیره شد ✨", Toast.LENGTH_SHORT).show()
+                onSave = { name, stdId, uni, maj, year, sem, passed, active, gpa ->
+                    studentViewModel.updateFullProfile(name, stdId, uni, maj, year, sem, passed, active, gpa, onSaved = dismiss)
                 }
             )
         }

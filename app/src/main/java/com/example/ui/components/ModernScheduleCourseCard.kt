@@ -59,14 +59,16 @@ fun ModernScheduleCourseCard(
 ) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
     val fallback = MaterialTheme.colorScheme.primary
-    val accent = remember(course.colorHex, fallback) {
-        runCatching { Color(android.graphics.Color.parseColor(course.colorHex)) }.getOrDefault(fallback)
+    val badgeSurface = MaterialTheme.colorScheme.surfaceContainerHigh
+    val accent = remember(course.colorHex, fallback, badgeSurface) {
+        val chosen = runCatching { Color(android.graphics.Color.parseColor(course.colorHex)) }.getOrDefault(fallback)
+        com.example.ui.theme.readableAccent(chosen, badgeSurface)
     }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 88.dp, max = 136.dp)
+            .heightIn(min = 88.dp)
             .tactileClickable(onClick = onClick),
         shape = RoundedCornerShape(StudentOsShapes.mediumCard),
         colors = CardDefaults.cardColors(
@@ -85,7 +87,7 @@ fun ModernScheduleCourseCard(
         ) {
             Surface(
                 shape = RoundedCornerShape(13.dp),
-                color = accent.copy(alpha = 0.10f),
+                color = badgeSurface,
                 border = androidx.compose.foundation.BorderStroke(1.dp, accent.copy(alpha = 0.20f))
             ) {
                 Column(

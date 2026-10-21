@@ -52,6 +52,8 @@ fun MainTabContent(
     primaryPriority: com.example.domain.model.AcademicPriorityItem? = null,
     planningCollisions: List<com.example.domain.model.AcademicPlanningCollision> = emptyList(),
     acceptedStudyPlanIds: Set<String> = emptySet(),
+    dailyStudyGoalMinutes: Int = 120,
+    studiedTodayMinutes: Int = 0,
     onAcceptStudyPlan: (StudySessionRecommendation) -> Unit = {},
     pomodoroSeconds: Int,
     isPomodoroRunning: Boolean,
@@ -85,6 +87,7 @@ fun MainTabContent(
     ) { currentTab ->
         when (currentTab) {
             AppTab.DASHBOARD -> {
+                val targetGpa by studentViewModel.targetGpaGoal.collectAsStateWithLifecycle()
                 ModernBentoDashboard(
                     courses = courses,
                     coursesWithSessions = coursesWithSessions,
@@ -94,7 +97,8 @@ fun MainTabContent(
                     grades = grades,
                     passedUnits = profile.passedUnits,
                     gpa = gpaFormatted,
-                    targetGpa = profile.declaredGpa,
+                    declaredGpa = profile.declaredGpa,
+                    targetGpa = targetGpa,
                     totalRequiredCredits = totalCurriculumUnits,
                     academicProgressState = academicProgressState,
                     academicRisks = academicRisks,
@@ -102,6 +106,8 @@ fun MainTabContent(
                     studyRecommendations = studyRecommendations,
                     primaryPriority = primaryPriority,
                     acceptedStudyPlanIds = acceptedStudyPlanIds,
+                    dailyStudyGoalMinutes = dailyStudyGoalMinutes,
+                    studiedTodayMinutes = studiedTodayMinutes,
                     onAcceptStudyPlan = onAcceptStudyPlan,
                     onStartStudyPlan = studentViewModel::startStudyRecommendation,
                     pomodoroSeconds = pomodoroSeconds,
@@ -223,6 +229,7 @@ fun MainTabContent(
                     onSetAttendance = { name, count ->
                         studentViewModel.setAttendanceCount(name, count)
                     },
+                    onSetLimit = studentViewModel::setAttendanceLimit,
                     onEvaluateAlerts = {
                         val dangerCount = attendance.count { it.absentCount >= it.maxAllowed && it.maxAllowed > 0 }
                         if (dangerCount > 0) {
@@ -235,7 +242,7 @@ fun MainTabContent(
                         } else {
                             studentViewModel.addNotification(
                                 "✅ وضعیت غیبت‌ها مجاز است",
-                                "غیبت‌های ثبت‌شده در کلیه دروس کمتر از سقف قانونی ۳/۱۶ می‌باشد."
+                                "غیبت‌های ثبت‌شده از سقف تنظیم‌شدهٔ هر درس کمتر است."
                             )
                             Toast.makeText(context, "وضعیت غیبت‌ها مجاز است", Toast.LENGTH_SHORT).show()
                         }
@@ -306,12 +313,15 @@ fun MainTabContent(
             }
             AppTab.POMODORO -> {
                 val session by studentViewModel.focusSession.collectAsStateWithLifecycle()
+                val studyHistory by studentViewModel.studyHistory.collectAsStateWithLifecycle()
                 PomodoroAndNotesScreen(
                     secondsRemaining = pomodoroSeconds,
                     durationSeconds = session.durationSeconds,
                     focusLabel = session.label,
                     onDurationSelected = { studentViewModel.setFocusDuration(it) },
                     studyRecommendations = studyRecommendations,
+                    studyHistory = studyHistory,
+                    dailyStudyGoalMinutes = dailyStudyGoalMinutes,
                     isRunning = isPomodoroRunning,
                     onTogglePomodoro = {
                         studentViewModel.togglePomodoro()

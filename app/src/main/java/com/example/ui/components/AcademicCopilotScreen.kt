@@ -62,6 +62,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -102,17 +103,18 @@ import com.example.domain.model.CopilotPayload
 import com.example.domain.model.CopilotSender
 import com.example.ui.models.AppTab
 import com.example.ui.models.ExamItem
+import com.example.ui.theme.studentColors
 import com.example.ui.theme.Amber500
 import com.example.ui.theme.Amber600
-import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.Emerald500
 import com.example.ui.theme.Emerald600
 import com.example.ui.theme.Rose500
 import com.example.ui.theme.Rose600
-import com.example.ui.theme.AcademicOlive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -142,7 +144,11 @@ fun AcademicCopilotScreen(
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    val messages = remember {
+    var requestJob by remember(userAccount.uid) { mutableStateOf<Job?>(null) }
+    DisposableEffect(userAccount.uid) {
+        onDispose { requestJob?.cancel() }
+    }
+    val messages = remember(userAccount.uid) {
         mutableStateListOf<CopilotMessage>().apply {
             add(
                 AcademicCopilotEngine.generateWelcomeMessage(
@@ -156,16 +162,16 @@ fun AcademicCopilotScreen(
         }
     }
 
-    var inputText by remember { mutableStateOf("") }
-    var isAiLoading by remember { mutableStateOf(false) }
-    var mode by remember { mutableStateOf("chat") }
-    var onlineStatus by remember { mutableStateOf<com.example.domain.model.PremiumStatus?>(null) }
-    var connectionMessage by remember { mutableStateOf<String?>(null) }
+    var inputText by remember(userAccount.uid) { mutableStateOf("") }
+    var isAiLoading by remember(userAccount.uid) { mutableStateOf(false) }
+    var mode by remember(userAccount.uid) { mutableStateOf("chat") }
+    var onlineStatus by remember(userAccount.uid) { mutableStateOf<com.example.domain.model.PremiumStatus?>(null) }
+    var connectionMessage by remember(userAccount.uid) { mutableStateOf<String?>(null) }
     suspend fun refreshOnlineStatus() {
         if (userAccount.isGuest) return
         val result = com.example.data.api.PremiumApiClient.result { com.example.data.api.PremiumApiClient.catalog() }
         result.onSuccess { onlineStatus = it; onSubscriptionLoaded(it.subscription); connectionMessage = null }
-            .onFailure { connectionMessage = it.message }
+            .onFailure { connectionMessage = com.example.data.api.PremiumApiClient.userMessage(it) }
     }
     LaunchedEffect(userAccount.uid) { refreshOnlineStatus() }
 
@@ -183,7 +189,7 @@ fun AcademicCopilotScreen(
             inputText = ""
             isAiLoading = true
 
-            coroutineScope.launch {
+            requestJob = coroutineScope.launch {
                 try {
                     listState.animateScrollToItem(messages.size - 1)
                     val responseMsg = AcademicCopilotEngine.processUserQueryAsync(
@@ -200,7 +206,9 @@ fun AcademicCopilotScreen(
                         kind = mode
                     )
                     messages.add(responseMsg)
-                } catch (e: Throwable) {
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
                     val fallback = AcademicCopilotEngine.processUserQuery(
                         query = query,
                         profile = profile,
@@ -212,15 +220,19 @@ fun AcademicCopilotScreen(
                         coursesWithSessions = coursesWithSessions,
                         curriculumCourses = curriculumCourses
                     )
-                    messages.add(fallback)
+                    messages.add(fallback.copy(
+                        text = "${com.example.data.api.PremiumApiClient.userMessage(e)}\n\nتحلیل بر اساس اطلاعات ذخیره‌شده:\n${fallback.text}",
+                        confidenceBadge = "تحلیل آفلاین · پاسخ آنلاین دریافت نشد"
+                    ))
                 } finally {
                     isAiLoading = false
-                    refreshOnlineStatus()
-                    try {
-                        if (messages.isNotEmpty()) {
-                            listState.animateScrollToItem(messages.size - 1)
-                        }
-                    } catch (_: Throwable) {}
+                    if (currentCoroutineContext().isActive) {
+                        refreshOnlineStatus()
+                        try {
+                            if (messages.isNotEmpty()) listState.animateScrollToItem(messages.size - 1)
+                        } catch (e: CancellationException) { throw e }
+                        catch (_: Exception) {}
+                    }
                 }
             }
         }
@@ -335,7 +347,7 @@ fun AcademicCopilotScreen(
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(16.dp),
                                     strokeWidth = 2.dp,
-                                    color = AcademicNavy
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
                                     text = "دستیار در حال تحلیل وضعیت تحصیلی و تولید پاسخ...",
@@ -358,12 +370,12 @@ fun AcademicCopilotScreen(
             contentPadding = PaddingValues(vertical = 4.dp)
         ) {
             val quickChips = listOf(
-                "📜 شرایط حذف ترم بدون احتساب",
-                "⚠️ حدنصاب معدل مشروطی (ماده ۴۶)",
-                "🔗 قانون پیش‌نیاز و هم‌پیشنیاز",
-                "🚨 آیین‌نامه غیبت ۳/۱۶ و ماده ۳۵",
-                "🌟 سقف واحد ترم بعد (معدل الف)",
-                "🏆 وضعیت مدال‌ها و استریک تحصیلی"
+                "برای امروز چه کاری اولویت دارد؟",
+                "برای امتحان بعدی چطور مرور کنم؟",
+                "کدام تکلیف‌ها باقی مانده‌اند؟",
+                "وضعیت حضور و غیاب من چطور است؟",
+                "برای مطالعه یک برنامه پیشنهاد بده",
+                "پیشرفت تحصیلی من چطور است؟"
             )
             items(quickChips) { chipText ->
                 Box(
@@ -404,7 +416,7 @@ fun AcademicCopilotScreen(
                     onValueChange = { inputText = it },
                     placeholder = {
                         Text(
-                            "از Academic Copilot بپرسید (مثلاً: شرایط حذف ترم، غیبت ۳/۱۶...)",
+                            "از دستیار بپرس؛ مثلاً امروز از کجا شروع کنم؟",
                             fontSize = 11.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -425,12 +437,12 @@ fun AcademicCopilotScreen(
 
                 Surface(
                     onClick = { sendMessage(inputText) },
-                    enabled = inputText.isNotBlank(),
+                    enabled = inputText.isNotBlank() && !isAiLoading,
                     modifier = Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(16.dp)),
                     shape = RoundedCornerShape(16.dp),
-                    color = if (inputText.isNotBlank()) StudentOsColors.CyanAccent else Color.White.copy(alpha = 0.08f),
+                    color = if (inputText.isNotBlank() && !isAiLoading) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
                         if (inputText.isNotBlank()) Color.White.copy(alpha = 0.3f) else Color.Transparent
@@ -440,7 +452,7 @@ fun AcademicCopilotScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Send,
                             contentDescription = "ارسال",
-                            tint = if (inputText.isNotBlank()) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = if (inputText.isNotBlank() && !isAiLoading) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -597,7 +609,7 @@ private fun CopilotContextHudHeader(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     HudPill(label = "ترم فعلی", value = "ترم ${profile.currentSemester}", color = MaterialTheme.colorScheme.primary)
-                    HudPill(label = "واحدهای فعال", value = "$totalActiveUnits واحد", color = AcademicNavy)
+                    HudPill(label = "واحدهای فعال", value = "$totalActiveUnits واحد", color = MaterialTheme.colorScheme.primary)
                     HudPill(label = "پاس‌شده", value = "${profile.passedUnits} واحد", color = Emerald600)
                     HudPill(label = "معدل", value = String.format(Locale.US, "%.2f", currentGpa), color = Amber600)
                     if (criticalAbsences > 0) {
@@ -649,7 +661,7 @@ private fun CopilotMessageItem(
                     Icon(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = null,
-                        tint = Color.Black,
+                        tint = Color.White,
                         modifier = Modifier.size(17.dp)
                     )
                 }
@@ -701,8 +713,8 @@ private fun CopilotMessageItem(
                     // Badge if available
                     if (!isUser && message.confidenceBadge != null) {
                         val isOffline = message.confidenceBadge.contains("آفلاین")
-                        val badgeColor = if (isOffline) StudentOsColors.AmberGlow else StudentOsColors.VioletAccent
-                        val badgeBg = if (isOffline) StudentOsColors.AmberGlow.copy(alpha = 0.15f) else StudentOsColors.VioletAccent.copy(alpha = 0.2f)
+                        val badgeColor = if (isOffline) MaterialTheme.studentColors.attendanceWarning else MaterialTheme.colorScheme.primary
+                        val badgeBg = badgeColor.copy(alpha = 0.10f)
                         val badgeIcon = if (isOffline) Icons.Default.CloudOff else Icons.Default.AutoAwesome
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -821,7 +833,7 @@ private fun CopilotMessageItem(
                             text = reply,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
-                            color = AcademicNavy,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }

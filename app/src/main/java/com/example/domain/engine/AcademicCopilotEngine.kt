@@ -1,7 +1,6 @@
 package com.example.domain.engine
 
 import android.util.Log
-import com.example.BuildConfig
 import com.example.data.local.entity.AttendanceEntity
 import com.example.data.local.entity.CourseEntity
 import com.example.data.local.entity.CurriculumCourseEntity
@@ -913,7 +912,7 @@ object AcademicCopilotEngine {
             Pair(role, msg.text)
         }
 
-        // 1. Try real Gemini API via Firebase AI Logic / REST first
+        // Request online advice through the authenticated server callable.
         val geminiResult = com.example.data.api.GeminiApiClient.generateAcademicAdvice(
             prompt = query,
             studentContext = studentContext,
@@ -958,16 +957,8 @@ object AcademicCopilotEngine {
             curriculumCourses = curriculumCourses
         )
 
-        // In debug builds, append visible debug line so runtime/API failure reason is immediately clear on screen
-        val debugSuffix = if (BuildConfig.DEBUG) {
-            val errorMsg = failureException.message ?: failureException.javaClass.simpleName
-            "\n\n🚨 **[DEBUG] Gemini call failed:**\n`$errorMsg`"
-        } else {
-            ""
-        }
-
         return fallbackMsg.copy(
-            text = "${com.example.data.api.PremiumApiClient.userMessage(failureException)}\n\nتحلیل بر اساس اطلاعات ذخیره‌شده:\n" + fallbackMsg.text + debugSuffix,
+            text = "${com.example.data.api.PremiumApiClient.userMessage(failureException)}\n\nتحلیل بر اساس اطلاعات ذخیره‌شده:\n" + fallbackMsg.text,
             confidenceBadge = "تحلیل آفلاین · پاسخ آنلاین دریافت نشد"
         )
     }
