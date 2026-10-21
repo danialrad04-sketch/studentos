@@ -64,9 +64,7 @@ import com.example.domain.model.BadgeTier
 import com.example.domain.model.StudentGamificationProfile
 import com.example.ui.theme.Amber500
 import com.example.ui.theme.Amber600
-import com.example.ui.theme.BrandIndigo600
 import com.example.ui.theme.CyanNeon
-import com.example.ui.theme.Emerald600
 import com.example.ui.theme.Rose600
 import com.example.ui.theme.studentColors
 
@@ -255,7 +253,7 @@ private fun StudentLevelAndStreakHeroCard(
                                 Icon(
                                     imageVector = Icons.Default.MilitaryTech,
                                     contentDescription = null,
-                                    tint = Amber500,
+                                    tint = MaterialTheme.studentColors.streakFire,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -315,7 +313,7 @@ private fun StudentLevelAndStreakHeroCard(
                         Text(
                             text = "${profile.currentXp} از ${profile.nextLevelXp} امتیاز تا سطح بعد",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = BrandIndigo600
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
 
@@ -325,7 +323,7 @@ private fun StudentLevelAndStreakHeroCard(
                             .fillMaxWidth()
                             .height(8.dp)
                             .clip(RoundedCornerShape(4.dp)),
-                        color = BrandIndigo600,
+                        color = MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         strokeCap = StrokeCap.Round
                     )
@@ -410,11 +408,11 @@ private fun AcademicBadgeCard(
     modifier: Modifier = Modifier
 ) {
     val tierColor = when (badge.tier) {
-        BadgeTier.BRONZE -> Amber600
-        BadgeTier.SILVER -> MaterialTheme.colorScheme.outline
-        BadgeTier.GOLD -> Amber500
-        BadgeTier.PLATINUM -> CyanNeon
-        BadgeTier.DIAMOND -> BrandIndigo600
+        BadgeTier.BRONZE -> MaterialTheme.colorScheme.tertiary
+        BadgeTier.SILVER -> MaterialTheme.colorScheme.onSurfaceVariant
+        BadgeTier.GOLD -> MaterialTheme.studentColors.streakFire
+        BadgeTier.PLATINUM -> MaterialTheme.colorScheme.secondary
+        BadgeTier.DIAMOND -> MaterialTheme.colorScheme.primary
     }
 
     Card(
@@ -505,7 +503,7 @@ private fun AcademicBadgeCard(
                                 .weight(1f)
                                 .height(4.dp)
                                 .clip(RoundedCornerShape(2.dp)),
-                            color = if (badge.isUnlocked) Emerald600 else MaterialTheme.colorScheme.primary,
+                            color = if (badge.isUnlocked) MaterialTheme.studentColors.attendanceSafe else MaterialTheme.colorScheme.primary,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                             strokeCap = StrokeCap.Round
                         )
@@ -528,7 +526,7 @@ private fun AcademicBadgeCard(
                 if (badge.isUnlocked) {
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = Emerald600.copy(alpha = 0.12f)
+                        color = MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.12f)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -538,13 +536,13 @@ private fun AcademicBadgeCard(
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
                                 contentDescription = null,
-                                tint = Emerald600,
+                                tint = MaterialTheme.studentColors.attendanceSafe,
                                 modifier = Modifier.size(12.dp)
                             )
                             Text(
                                 text = "فعال",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = Emerald600
+                                color = MaterialTheme.studentColors.attendanceSafe
                             )
                         }
                     }
