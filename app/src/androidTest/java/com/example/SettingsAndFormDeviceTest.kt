@@ -27,7 +27,7 @@ class SettingsAndFormDeviceTest {
         input.performTextReplacement("۰")
         rule.onNodeWithText("ذخیره سقف").assertIsNotEnabled()
         input.performTextReplacement("۵")
-        rule.onNodeWithText("ذخیره سقف").performScrollTo().performClick()
+        rule.onNodeWithText("ذخیره سقف").assertIsDisplayed().performClick()
         assertEquals(5, saved)
     }
     @Test fun taskSaveRemainsReachableWhenKeyboardOpens() {
