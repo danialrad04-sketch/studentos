@@ -118,8 +118,8 @@ fun StudentGamificationHub(
                     },
                     shape = RoundedCornerShape(10.dp),
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = BrandIndigo600,
-                        selectedLabelColor = Color.White
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                     )
                 )
             }
@@ -139,8 +139,8 @@ fun StudentGamificationHub(
                     },
                     shape = RoundedCornerShape(10.dp),
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = BrandIndigo600,
-                        selectedLabelColor = Color.White
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                     )
                 )
             }
@@ -225,31 +225,26 @@ private fun StudentLevelAndStreakHeroCard(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 // Top Row: Level Title & Streak Pill
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(CircleShape)
-                                .background(
-                                    Brush.linearGradient(
-                                        listOf(BrandIndigo600, MaterialTheme.colorScheme.primary)
-                                    )
-                                ),
+                                .background(MaterialTheme.colorScheme.primary),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = "L${profile.level}",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+                        Column(Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = profile.levelTitle,
@@ -308,9 +303,9 @@ private fun StudentLevelAndStreakHeroCard(
 
                 // XP Progress Bar
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
                             text = "امتیاز تجربه آکادمیک (XP)",
@@ -318,7 +313,7 @@ private fun StudentLevelAndStreakHeroCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "${profile.currentXp} / ${profile.nextLevelXp} XP تا لول بعدی",
+                            text = "${profile.currentXp} از ${profile.nextLevelXp} امتیاز تا سطح بعد",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                             color = BrandIndigo600
                         )

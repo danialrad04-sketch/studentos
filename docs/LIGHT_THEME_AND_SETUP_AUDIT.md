@@ -40,6 +40,10 @@ Room persistence, settings, and light/dark rendering. This complements
   groups have an explicit border; grades, passport and assistant status badges
   use theme-aware foreground colors. Onboarding selections use onPrimary text,
   including in dark mode, and unselected option icons remain visible.
+- The achievements header places the level, study streak and XP labels in
+  separate rows. The streak no longer collapses into a vertical strip on phones;
+  the destination tests bound its text height in light and large-text dark mode.
+  Semester history status text also uses the semantic palette.
 
 ## Capability trace
 

@@ -71,7 +71,7 @@ import com.example.data.local.entity.SemesterEntity
 import com.example.data.local.entity.StudentProfileEntity
 import com.example.ui.StudentViewModel
 import com.example.ui.theme.Amber600
-import com.example.ui.theme.Emerald600
+import com.example.ui.theme.studentColors
 import java.util.Locale
 
 /**
@@ -215,7 +215,7 @@ fun SemesterHistoryScreen(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "منبع داده پایدار: Room",
+                    text = "ذخیره‌شده در این دستگاه",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -325,12 +325,12 @@ fun SemesterHistoryScreen(
                                 if (isCurrent) {
                                     Box(
                                         modifier = Modifier
-                                            .background(Emerald600.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
+                                            .background(MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
                                             .padding(horizontal = 8.dp, vertical = 2.dp)
                                     ) {
                                         Text(
                                             text = "ترم جاری",
-                                            color = Emerald600,
+                                            color = MaterialTheme.studentColors.attendanceSafe,
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -388,7 +388,7 @@ fun SemesterHistoryScreen(
                                 text = "معدل: ${String.format(Locale.US, "%.2f", semester.gpa ?: 0.0)}",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Emerald600
+                                color = MaterialTheme.studentColors.attendanceSafe
                             )
                         }
                     }

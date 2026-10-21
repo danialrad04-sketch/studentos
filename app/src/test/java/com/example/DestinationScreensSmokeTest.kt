@@ -86,8 +86,12 @@ open class DestinationScreensSmokeTest {
     }
     @Test fun curriculum() = screen(AppTab.CURRICULUM) { CurriculumScreen(CurriculumMatchUiState.Empty, onOpenProfile = {}) }
     @Test fun planner() = screen(AppTab.SEMESTER_PLANNER) { SemesterPlannerScreen(CurriculumMatchUiState.Empty, emptyList(), {}, onOpenProfile = {}) }
-    @Test fun achievements() = screen(AppTab.GAMIFICATION) {
-        StudentGamificationHub(StudentGamificationProfile(1, 0, 100, "شروع مسیر", 0, 0, 0.0, 0, 0, emptyList(), emptyList()))
+    @Test fun achievements() {
+        screen(AppTab.GAMIFICATION) {
+            StudentGamificationHub(StudentGamificationProfile(1, 0, 100, "شروع مسیر", 0, 0, 0.0, 0, 0, emptyList(), emptyList()))
+        }
+        val streak = rule.onNodeWithText("استریک پیوسته").assertIsDisplayed().fetchSemanticsNode()
+        org.junit.Assert.assertTrue("Study streak must remain a compact label", streak.boundsInRoot.height <= with(rule.density) { 48.dp.toPx() })
     }
 }
 
