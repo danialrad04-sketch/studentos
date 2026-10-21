@@ -145,6 +145,26 @@ fun WeeklyScheduleScreen(
             modifier = Modifier.padding(bottom = 10.dp)
         )
 
+        val unscheduled = effectiveCoursesWithSessions.filter { it.sessions.isEmpty() }
+        if (unscheduled.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("${unscheduled.size} درس بدون زمان کلاس", style = MaterialTheme.typography.titleMedium)
+                    Text("این درس‌ها ثبت شده‌اند؛ برای نمایش در جدول، روز و ساعت واقعی کلاس را اضافه کن.",
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    unscheduled.forEach { item ->
+                        androidx.compose.material3.TextButton(onClick = { onEditCourse(item.course) }, modifier = Modifier.fillMaxWidth()) {
+                            Text("تعیین زمان ${item.course.name}")
+                        }
+                    }
+                }
+            }
+        }
+
         // Conflict Warning Banner
         if (conflicts.isNotEmpty()) {
             Card(

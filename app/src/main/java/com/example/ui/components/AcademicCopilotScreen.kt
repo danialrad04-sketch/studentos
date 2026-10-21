@@ -103,6 +103,7 @@ import com.example.domain.model.CopilotPayload
 import com.example.domain.model.CopilotSender
 import com.example.ui.models.AppTab
 import com.example.ui.models.ExamItem
+import com.example.ui.theme.studentColors
 import com.example.ui.theme.Amber500
 import com.example.ui.theme.Amber600
 import com.example.ui.theme.Emerald500
@@ -712,8 +713,8 @@ private fun CopilotMessageItem(
                     // Badge if available
                     if (!isUser && message.confidenceBadge != null) {
                         val isOffline = message.confidenceBadge.contains("آفلاین")
-                        val badgeColor = if (isOffline) StudentOsColors.AmberGlow else StudentOsColors.VioletAccent
-                        val badgeBg = if (isOffline) StudentOsColors.AmberGlow.copy(alpha = 0.15f) else StudentOsColors.VioletAccent.copy(alpha = 0.2f)
+                        val badgeColor = if (isOffline) MaterialTheme.studentColors.attendanceWarning else MaterialTheme.colorScheme.primary
+                        val badgeBg = badgeColor.copy(alpha = 0.10f)
                         val badgeIcon = if (isOffline) Icons.Default.CloudOff else Icons.Default.AutoAwesome
                         Row(
                             verticalAlignment = Alignment.CenterVertically,

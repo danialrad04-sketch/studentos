@@ -189,7 +189,7 @@ enum class SetupMode {
 
 @Composable
 fun OnboardingScreen(
-    onCompleteQuickSetup: (name: String, studentId: String, university: String, major: String, entryYear: Int, currentSemester: Int, passedCredits: Int, currentGpa: Double, courses: List<CurriculumCourseEntity>) -> Unit,
+    onCompleteQuickSetup: (name: String, studentId: String, university: String, major: String, entryYear: Int, currentSemester: Int, passedCredits: Int, currentGpa: Double?, courses: List<CurriculumCourseEntity>) -> Unit,
     onCompleteTextImport: (drafts: List<ParsedCourseDraft>, name: String, studentId: String, university: String, major: String, entryYear: Int, currentSemester: Int) -> Unit = { _, _, _, _, _, _, _ -> },
     onSkip: (name: String, studentId: String, university: String, major: String, entryYear: Int, currentSemester: Int) -> Unit = { _, _, _, _, _, _ -> },
     onOpenPrivacyPolicy: () -> Unit = {},
@@ -199,6 +199,10 @@ fun OnboardingScreen(
     initialMajor: String = "",
     initialEntryYear: Int = 0,
     initialSemester: Int = 0,
+    initialPassedCredits: Int = 0,
+    initialGpa: Double? = null,
+    isSaving: Boolean = false,
+    revisiting: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val (
@@ -236,8 +240,8 @@ fun OnboardingScreen(
     var selectedMode by remember { mutableStateOf(SetupMode.QUICK_SETUP) }
 
     // Quick Setup starts empty; only explicitly entered summary values are stored.
-    var passedCreditsInput by remember { mutableStateOf("") }
-    var currentGpaInput by remember { mutableStateOf("") }
+    var passedCreditsInput by remember { mutableStateOf(initialPassedCredits.takeIf { it > 0 }?.toString().orEmpty()) }
+    var currentGpaInput by remember { mutableStateOf(initialGpa?.toString().orEmpty()) }
 
     // Text Paste States
     var rawRegistrationText by remember { mutableStateOf("") }
@@ -251,14 +255,10 @@ fun OnboardingScreen(
         activeMajorCourses.filter { it.recommendedSemester == currentSemester }
     }
     var selectedCurriculumCourseIds by remember(activeSemesterCourses) {
-        mutableStateOf(activeSemesterCourses.map { it.id }.toSet())
+        mutableStateOf(if (revisiting) emptySet() else activeSemesterCourses.map { it.id }.toSet())
     }
 
-    // Auto-update estimated passed credits when user changes currentSemester
-    LaunchedEffect(currentSemester) {
-        passedCreditsInput = ""
-        currentGpaInput = ""
-    }
+    // Changing the semester must not discard the student's entered academic summary.
 
     Box(
         modifier = modifier
@@ -320,6 +320,7 @@ fun OnboardingScreen(
                 }
 
                 TextButton(
+                    enabled = !isSaving,
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onSkip(
@@ -403,6 +404,7 @@ fun OnboardingScreen(
                         }
                     )
                     3 -> StepThreeReviewAndConfirm(
+                        isSaving = isSaving,
                         name = studentName,
                         studentId = studentId,
                         university = university,
@@ -410,8 +412,8 @@ fun OnboardingScreen(
                         entryYear = entryYear,
                         semester = currentSemester,
                         mode = selectedMode,
-                        passedCredits = passedCreditsInput.toIntOrNull() ?: 0,
-                        currentGpa = currentGpaInput.toDoubleOrNull() ?: 0.0,
+                        passedCredits = studentProfileNumber(passedCreditsInput) ?: 0,
+                        currentGpa = studentProfileGpa(currentGpaInput),
                         parsedDrafts = parsedDrafts,
                         selectedCourses = activeSemesterCourses.filter { selectedCurriculumCourseIds.contains(it.id) },
                         onConfirm = {
@@ -428,8 +430,8 @@ fun OnboardingScreen(
                                         major,
                                         entryYear,
                                         currentSemester,
-                                        passedCreditsInput.toIntOrNull() ?: 0,
-                                        currentGpaInput.toDoubleOrNull() ?: 0.0,
+                                        studentProfileNumber(passedCreditsInput) ?: 0,
+                                        studentProfileGpa(currentGpaInput),
                                         activeCourses
                                     )
                                 }
@@ -720,13 +722,13 @@ private fun StepOneAcademicIdentity(
                                             text = uni,
                                             fontSize = 11.sp,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) Color.White else TextMutedWhite
+                                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else TextMutedWhite
                                         )
                                     },
                                     shape = RoundedCornerShape(10.dp),
                                     colors = FilterChipDefaults.filterChipColors(
                                         selectedContainerColor = AccentPrimary,
-                                        selectedLabelColor = Color.White,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                                         containerColor = InputFieldBg,
                                         labelColor = TextMutedWhite
                                     ),
@@ -802,13 +804,13 @@ private fun StepOneAcademicIdentity(
                                         text = "همه رشته‌ها 🌐",
                                         fontSize = 10.5.sp,
                                         fontWeight = if (selectedFacultyIndex == 0) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (selectedFacultyIndex == 0) Color.White else TextMutedWhite
+                                        color = if (selectedFacultyIndex == 0) MaterialTheme.colorScheme.onPrimary else TextMutedWhite
                                     )
                                 },
                                 shape = RoundedCornerShape(10.dp),
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = AccentSecondary.copy(alpha = 0.85f),
-                                    selectedLabelColor = Color.White,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                                     containerColor = InputFieldBg,
                                     labelColor = TextMutedWhite
                                 ),
@@ -829,13 +831,13 @@ private fun StepOneAcademicIdentity(
                                             text = "${fac.iconEmoji} ${fac.name}",
                                             fontSize = 10.5.sp,
                                             fontWeight = if (isFacSelected) FontWeight.Bold else FontWeight.Normal,
-                                            color = if (isFacSelected) Color.White else TextMutedWhite
+                                            color = if (isFacSelected) MaterialTheme.colorScheme.onPrimary else TextMutedWhite
                                         )
                                     },
                                     shape = RoundedCornerShape(10.dp),
                                     colors = FilterChipDefaults.filterChipColors(
                                         selectedContainerColor = AccentPrimary,
-                                        selectedLabelColor = Color.White,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                                         containerColor = InputFieldBg,
                                         labelColor = TextMutedWhite
                                     ),
@@ -867,13 +869,13 @@ private fun StepOneAcademicIdentity(
                                             text = m,
                                             fontSize = 11.sp,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) Color.White else TextMutedWhite
+                                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else TextMutedWhite
                                         )
                                     },
                                     shape = RoundedCornerShape(10.dp),
                                     colors = FilterChipDefaults.filterChipColors(
                                         selectedContainerColor = AccentPrimary,
-                                        selectedLabelColor = Color.White,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                                         containerColor = InputFieldBg,
                                         labelColor = TextMutedWhite
                                     ),
@@ -913,13 +915,13 @@ private fun StepOneAcademicIdentity(
                                         text = if (year == 1405) "ورودی ۱۴۰۵ (جدید)" else if (year == 1397) "۱۳۹۷ و قبل" else "$year",
                                         fontSize = 11.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) Color.White else TextMutedWhite
+                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else TextMutedWhite
                                     )
                                 },
                                 shape = RoundedCornerShape(10.dp),
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = AccentPrimary,
-                                    selectedLabelColor = Color.White,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                                     containerColor = InputFieldBg,
                                     labelColor = TextMutedWhite
                                 ),
@@ -958,13 +960,13 @@ private fun StepOneAcademicIdentity(
                                         text = if (sem == 10) "ترم ۱۰ به بعد" else "ترم $sem",
                                         fontSize = 11.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) Color.White else TextMutedWhite
+                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else TextMutedWhite
                                     )
                                 },
                                 shape = RoundedCornerShape(10.dp),
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = AccentPrimary,
-                                    selectedLabelColor = Color.White,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
                                     containerColor = InputFieldBg,
                                     labelColor = TextMutedWhite
                                 ),
@@ -995,13 +997,13 @@ private fun StepOneAcademicIdentity(
                 text = "مرحله بعد: استقرار برنامه ترم 🚀",
                 fontSize = 13.5.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onPrimary
             )
             Spacer(modifier = Modifier.width(6.dp))
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -1083,6 +1085,8 @@ private fun StepTwoSetupMode(
                     ) {
                         OutlinedTextField(
                             value = passedCredits,
+                            isError = studentProfileNumber(passedCredits) == null,
+                            supportingText = { if (studentProfileNumber(passedCredits) == null) Text("عدد غیرمنفی وارد کن") },
                             onValueChange = onPassedCreditsChange,
                             label = { Text("تعداد واحد پاس‌شده", fontSize = 11.sp, color = TextSubtleGray) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -1101,6 +1105,8 @@ private fun StepTwoSetupMode(
 
                         OutlinedTextField(
                             value = currentGpa,
+                            isError = currentGpa.isNotBlank() && studentProfileGpa(currentGpa) == null,
+                            supportingText = { if (currentGpa.isNotBlank() && studentProfileGpa(currentGpa) == null) Text("عدد صفر تا ۲۰") },
                             onValueChange = onCurrentGpaChange,
                             label = { Text("معدل کل فعلی (از ۲۰)", fontSize = 11.sp, color = TextSubtleGray) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -1277,7 +1283,7 @@ private fun StepTwoSetupMode(
                                                         shape = RoundedCornerShape(8.dp),
                                                         colors = FilterChipDefaults.filterChipColors(
                                                             selectedContainerColor = AccentPrimary,
-                                                            selectedLabelColor = Color.White
+                                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                                                         )
                                                     )
                                                 }
@@ -1304,7 +1310,7 @@ private fun StepTwoSetupMode(
                                                     shape = RoundedCornerShape(8.dp),
                                                     colors = FilterChipDefaults.filterChipColors(
                                                         selectedContainerColor = AccentSuccess,
-                                                        selectedLabelColor = Color.White
+                                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                                                     )
                                                 )
                                             }
@@ -1407,6 +1413,8 @@ private fun StepTwoSetupMode(
 
         Button(
             onClick = onNext,
+            enabled = (selectedMode != SetupMode.QUICK_SETUP && selectedMode != SetupMode.CURRICULUM) ||
+                (studentProfileNumber(passedCredits) != null && (currentGpa.isBlank() || studentProfileGpa(currentGpa) != null)),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
@@ -1417,13 +1425,13 @@ private fun StepTwoSetupMode(
                 text = "مرحله نهایی: بازبینی و ساخت سیستم‌عامل 🚀",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onPrimary
             )
             Spacer(modifier = Modifier.width(6.dp))
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -1440,9 +1448,10 @@ private fun StepThreeReviewAndConfirm(
     semester: Int,
     mode: SetupMode,
     passedCredits: Int,
-    currentGpa: Double,
+    currentGpa: Double?,
     parsedDrafts: List<ParsedCourseDraft>,
     selectedCourses: List<CurriculumCourseEntity>,
+    isSaving: Boolean,
     onConfirm: () -> Unit
 ) {
     val (
@@ -1551,7 +1560,7 @@ private fun StepThreeReviewAndConfirm(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = "سابقه آکادمیک پایه:", fontSize = 11.5.sp, color = TextSubtleGray)
-                    Text(text = "$passedCredits واحد پاس‌شده · معدل $currentGpa", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = AccentWarning)
+                    Text(text = "$passedCredits واحد پاس‌شده · معدل ${currentGpa ?: "ثبت نشده"}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = AccentWarning)
                 }
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -1595,19 +1604,20 @@ private fun StepThreeReviewAndConfirm(
 
         Button(
             onClick = onConfirm,
+            enabled = !isSaving,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = AccentSuccess)
+            colors = ButtonDefaults.buttonColors(containerColor = AccentPrimary)
         ) {
-            Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+            Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "تأیید نهایی و راه‌اندازی سیستم‌عامل 🚀",
+                text = if (isSaving) "در حال ذخیره‌سازی…" else "ذخیره و ادامه",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onPrimary
             )
         }
     }
@@ -1672,7 +1682,7 @@ private fun SetupOptionCard(
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = if (isSelected) MaterialTheme.colorScheme.onPrimary else AccentPrimary,
                             modifier = Modifier.size(18.dp)
                         )
                     }

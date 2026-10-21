@@ -94,6 +94,7 @@ fun AttendanceRadarScreen(
     onEvaluateAlerts: () -> Unit,
     onOpenCourseWorkspace: ((CourseEntity) -> Unit)? = null,
     onSetAttendance: ((courseName: String, count: Int) -> Unit)? = null,
+    onSetLimit: ((courseName: String, limit: Int) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var selectedFilter by remember { mutableStateOf("all") } // all, warning, safe
@@ -327,6 +328,7 @@ fun AttendanceRadarScreen(
                         courseName = courseName,
                         absentCount = curAbsents,
                         maxAllowed = maxAllowed,
+                        onSetLimit = onSetLimit?.let { action -> { limit -> action(matchedCourse?.id ?: courseName, limit) } },
                         units = matchedCourse?.units ?: 3,
                         onAdd = {
                             onChangeAttendance(courseName, 1)
@@ -604,8 +606,27 @@ fun AttendanceCard(
     units: Int = 3,
     onDirectEdit: (() -> Unit)? = null,
     onOpenWorkspace: (() -> Unit)? = null,
+    onSetLimit: ((Int) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    var editingLimit by remember { mutableStateOf(false) }
+    var limitInput by remember(maxAllowed) { mutableStateOf(maxAllowed.toString()) }
+    if (editingLimit && onSetLimit != null) {
+        val parsed = studentProfileNumber(limitInput)?.takeIf { it in 1..16 }
+        AlertDialog(
+            onDismissRequest = { editingLimit = false }, title = { Text("سقف غیبت $courseName") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("سقف اعلام‌شده توسط استاد یا دانشگاه را وارد کن. این مقدار مبنای هشدارهای برنامه است.")
+                    OutlinedTextField(value = limitInput, onValueChange = { limitInput = it }, label = { Text("تعداد جلسه (۱ تا ۱۶)") },
+                        singleLine = true, isError = parsed == null,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
+                }
+            },
+            confirmButton = { TextButton(enabled = parsed != null, onClick = { onSetLimit(parsed!!); editingLimit = false }) { Text("ذخیره سقف") } },
+            dismissButton = { TextButton(onClick = { editingLimit = false }) { Text("انصراف") } }
+        )
+    }
     val isDanger = absentCount >= maxAllowed
     val isWarning = absentCount == maxAllowed - 1
 
@@ -677,6 +698,7 @@ fun AttendanceCard(
                         fontSize = 10.5.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    if (onSetLimit != null) TextButton(onClick = { limitInput = maxAllowed.toString(); editingLimit = true }) { Text("تنظیم سقف غیبت") }
                 }
 
                 Surface(
@@ -693,7 +715,7 @@ fun AttendanceCard(
                         modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = "$absentCount / $maxAllowed",
+                            text = "$absentCount از $maxAllowed",
                             style = NumericBadgeText,
                             color = when {
                                 isDanger -> MaterialTheme.colorScheme.onErrorContainer

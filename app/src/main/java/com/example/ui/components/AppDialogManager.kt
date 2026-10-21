@@ -177,10 +177,8 @@ fun AppDialogManager(
             EditProfileDialog(
                 profile = profile,
                 onDismiss = dismiss,
-                onSave = { name, stdId, uni, maj, year, sem, passed, active ->
-                    studentViewModel.updateFullProfile(name, stdId, uni, maj, year, sem, passed, active)
-                    dismiss()
-                    Toast.makeText(context, "مشخصات دانشجویی با موفقیت ذخیره شد ✨", Toast.LENGTH_SHORT).show()
+                onSave = { name, stdId, uni, maj, year, sem, passed, active, gpa ->
+                    studentViewModel.updateFullProfile(name, stdId, uni, maj, year, sem, passed, active, gpa, onSaved = dismiss)
                 }
             )
         }

@@ -24,6 +24,45 @@ import org.robolectric.annotation.GraphicsMode
 class AcademicCompletionExperienceTest {
     @get:Rule val rule = createComposeRule()
     private val course = CourseEntity(id = "math", name = "ریاضی مهندسی", colorHex = "#59652F", units = 3)
+    @Test fun unscheduledCoursesRemainReachableForCompletingTheirTimetable() {
+        var edited: String? = null
+        rule.setContent { StudentOsTheme { WeeklyScheduleScreen(listOf(course), onAddCourse = {}, onEditCourse = { edited = it.id }) } }
+        rule.onNodeWithText("1 درس بدون زمان کلاس").assertIsDisplayed()
+        rule.onNodeWithText("تعیین زمان ریاضی مهندسی").performClick()
+        assertEquals(course.id, edited)
+    }
+    @Test fun revisitingSetupPrefillsSummaryAndAcceptsPersianNumbersWithoutResettingThem() {
+        var saved: Pair<Int, Double?>? = null
+        rule.setContent {
+            StudentOsTheme {
+                OnboardingScreen(
+                    onCompleteQuickSetup = { _, _, _, _, _, _, units, gpa, _ -> saved = units to gpa },
+                    initialName = "دانشجو", initialUniversity = "دانشگاه من", initialMajor = "رشته من",
+                    initialEntryYear = 1403, initialSemester = 3, initialPassedCredits = 42, initialGpa = 17.25, revisiting = true
+                )
+            }
+        }
+        rule.onNodeWithText("مرحله بعد: استقرار برنامه ترم 🚀").performScrollTo().performClick()
+        rule.onNode(hasText("معدل کل فعلی (از ۲۰)") and hasSetTextAction()).performScrollTo().assertTextContains("17.25").performTextReplacement("۲۱")
+        rule.onNodeWithText("مرحله نهایی: بازبینی و ساخت سیستم‌عامل 🚀").performScrollTo().assertIsNotEnabled()
+        rule.onNode(hasText("معدل کل فعلی (از ۲۰)") and hasSetTextAction()).performScrollTo().performTextReplacement("۱۸٫۵")
+        rule.onNode(hasText("واحد پاس‌شده") and hasSetTextAction()).performScrollTo().assertTextContains("42").performTextReplacement("۵۴")
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/onboarding-revisit-light.png")
+        rule.onNodeWithText("مرحله نهایی: بازبینی و ساخت سیستم‌عامل 🚀").performScrollTo().performClick()
+        rule.onNodeWithText("ذخیره و ادامه").performScrollTo().performClick()
+        assertEquals(54 to 18.5, saved)
+    }
+    @Test fun customAttendanceLimitIsEditableAndValidatedInLightTheme() {
+        var saved: Int? = null
+        rule.setContent { StudentOsTheme { AttendanceCard("ریاضی", 2, 3, {}, {}, onSetLimit = { saved = it }) } }
+        rule.onNodeWithText("تنظیم سقف غیبت").performClick()
+        val input = rule.onNode(hasText("تعداد جلسه (۱ تا ۱۶)") and hasSetTextAction())
+        input.performTextReplacement("۰")
+        rule.onNodeWithText("ذخیره سقف").assertIsNotEnabled()
+        input.performTextReplacement("۵")
+        rule.onNodeWithText("ذخیره سقف").performClick()
+        assertEquals(5, saved)
+    }
     @Test fun firstGradeSupportsPersianNumbersAndRejectsTotalAboveTwenty() {
         var saved: Pair<Double, Double>? = null
         rule.setContent { StudentOsTheme { RecordGradeDialog(course, null, {}, { _, mid, fin -> saved = mid to fin }) } }

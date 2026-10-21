@@ -803,63 +803,24 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    fun changeAttendance(courseName: String, delta: Int) {
+    fun changeAttendance(courseName: String, delta: Int) = persistAttendance(courseName, delta = delta)
+
+    fun setAttendanceCount(courseName: String, count: Int) = persistAttendance(courseName, count = count)
+
+    fun setAttendanceLimit(courseName: String, limit: Int) = persistAttendance(courseName, limit = limit)
+
+    private fun persistAttendance(identifier: String, delta: Int = 0, count: Int? = null, limit: Int? = null) {
         viewModelScope.launch {
-            val currentList = attendance.value
-            val existing = currentList.find { it.courseName == courseName || it.courseId == courseName }
-            val course = courses.value.find { it.name == courseName || it.id == courseName }
-            val courseId = course?.id ?: existing?.courseId ?: "att_${courseName.hashCode()}"
-            val effectiveCourseName = course?.name ?: existing?.courseName ?: courseName
-            val maxAllowed = if (effectiveCourseName.contains("آزمایشگاه") || effectiveCourseName.contains("کارگاه")) 2 else 3
-            val newCount = ((existing?.absentCount ?: 0) + delta).coerceIn(0, 50)
-
-            val updated = AttendanceEntity(
-                courseId = courseId,
-                courseName = effectiveCourseName,
-                absentCount = newCount,
-                maxAllowed = maxAllowed
-            )
-            repository.updateAttendance(updated)
-
-            if (newCount >= maxAllowed) {
-                addNotification(
-                    "⚠️ اخطار سقف غیبت!",
-                    "تعداد غیبت در درس $effectiveCourseName به سقف مجاز ($newCount از $maxAllowed) رسید.",
-                    isDanger = true
-                )
-            } else if (delta > 0) {
-                addNotification("ثبت غیبت", "یک جلسه غیبت برای درس $effectiveCourseName ثبت شد.")
-            }
-            triggerCloudSync()
-        }
-    }
-
-    fun setAttendanceCount(courseName: String, count: Int) {
-        viewModelScope.launch {
-            val currentList = attendance.value
-            val existing = currentList.find { it.courseName == courseName || it.courseId == courseName }
-            val course = courses.value.find { it.name == courseName || it.id == courseName }
-            val courseId = course?.id ?: existing?.courseId ?: "att_${courseName.hashCode()}"
-            val effectiveCourseName = course?.name ?: existing?.courseName ?: courseName
-            val maxAllowed = if (effectiveCourseName.contains("آزمایشگاه") || effectiveCourseName.contains("کارگاه")) 2 else 3
-            val newCount = count.coerceIn(0, 50)
-
-            val updated = AttendanceEntity(
-                courseId = courseId,
-                courseName = effectiveCourseName,
-                absentCount = newCount,
-                maxAllowed = maxAllowed
-            )
-            repository.updateAttendance(updated)
-
-            if (newCount >= maxAllowed) {
-                addNotification(
-                    "⚠️ اخطار سقف غیبت!",
-                    "تعداد غیبت در درس $effectiveCourseName ($newCount جلسه) ثبت شد.",
-                    isDanger = true
-                )
-            }
-            triggerCloudSync()
+            try {
+                val updated = repository.editAttendance(identifier, delta, count, limit)
+                if (updated.absentCount >= updated.maxAllowed) {
+                    addNotification("اخطار سقف غیبت", "${updated.courseName}: ${updated.absentCount} از ${updated.maxAllowed} جلسه", isDanger = true)
+                }
+                preferencesRepository.recordSuccessfulSave()
+                triggerCloudSync()
+                if (limit != null) _userMessage.emit("سقف غیبت ذخیره شد.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "غیبت ذخیره نشد؛ دوباره تلاش کنید.") }
         }
     }
 
@@ -981,12 +942,13 @@ class StudentViewModel @JvmOverloads constructor(
         persistProfile(profileEntity, goal)
     }
 
-    private fun persistProfile(profileEntity: StudentProfileEntity, goal: Double?) {
+    private fun persistProfile(profileEntity: StudentProfileEntity, goal: Double?, onSaved: () -> Unit = {}) {
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 require(goal == null || (goal.isFinite() && goal in 0.0..20.0)) { "معدل هدف باید بین صفر و بیست باشد." }
                 _optimisticProfile.value = profileEntity
                 repository.updateProfile(profileEntity)
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { onSaved() }
                 if (goal != null) preferencesRepository.saveTargetGpaGoal(goal)
                 preferencesRepository.recordSuccessfulSave()
                 addNotification("ویرایش مشخصات", "اطلاعات پروفایل دانشجویی به‌روزرسانی شد.")
@@ -1010,7 +972,9 @@ class StudentViewModel @JvmOverloads constructor(
         entryYear: Int,
         currentSemester: Int,
         passedUnits: Int,
-        activeUnits: Int
+        activeUnits: Int,
+        declaredGpa: Double? = profile.value.declaredGpa,
+        onSaved: () -> Unit = {}
     ) {
         val current = profile.value
         val updated = current.copy(
@@ -1022,12 +986,13 @@ class StudentViewModel @JvmOverloads constructor(
             currentSemester = currentSemester,
             passedUnits = passedUnits,
             declaredPassedCredits = passedUnits,
+            declaredGpa = declaredGpa,
             activeUnits = activeUnits,
             term = "ترم $currentSemester $major",
             faculty = "دانشکده $major · $activeUnits واحد فعال",
             isOnboardingCompleted = true
         )
-        updateProfile(updated)
+        persistProfile(updated, null, onSaved)
     }
 
     fun saveNotes(notes: String) {
@@ -1044,68 +1009,32 @@ class StudentViewModel @JvmOverloads constructor(
     }
 
     fun completeQuickAcademicSetup(
-        name: String = "دانشجو",
-        studentId: String = "",
-        university: String,
-        major: String,
-        entryYear: Int,
-        currentSemester: Int,
-        passedCredits: Int,
-        currentGpa: Double,
-        selectedCourses: List<com.example.data.local.entity.CurriculumCourseEntity>
+        name: String = "دانشجو", studentId: String = "", university: String, major: String,
+        entryYear: Int, currentSemester: Int, passedCredits: Int, currentGpa: Double?,
+        selectedCourses: List<com.example.data.local.entity.CurriculumCourseEntity>,
+        onSaved: () -> Unit = {}
     ) {
-        val resolvedName = name.ifBlank { "دانشجو" }
-        val totalActiveUnits = selectedCourses.sumOf { it.units }
-
-        // 1. Immediately persist synchronously to SharedPreferences (prevents loss on Samsung Galaxy A73 One UI process kill)
-        preferencesRepository.setOnboardingCompleted(true)
-        preferencesRepository.recordSuccessfulSave()
-
-        // 2. Instantly update in-memory state so UI immediately responds (0ms delay - prevents stale state)
-        _isOnboardingCompleted.value = true
-        _optimisticProfile.value = StudentProfileEntity(
-            id = 1,
-            name = resolvedName,
-            studentId = studentId.trim(),
-            university = university,
-            major = major,
-            entryYear = entryYear,
-            currentSemester = currentSemester,
-            passedUnits = passedCredits,
-            declaredPassedCredits = passedCredits,
-            declaredGpa = currentGpa,
-            activeUnits = totalActiveUnits,
-            term = "ترم $currentSemester $major",
-            faculty = "دانشکده $major · $totalActiveUnits واحد فعال",
-            isOnboardingCompleted = true
-        )
-
-        // 3. Write to Room database and store local backup snapshot
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        if (_isSavingRecord.value) return
+        _isSavingRecord.value = true
+        viewModelScope.launch {
             try {
+                // Setup is also available from settings: never erase existing academic records.
                 repository.completeQuickAcademicSetup(
-                    name = resolvedName,
-                    studentId = studentId,
-                    university = university,
-                    major = major,
-                    entryYear = entryYear,
-                    currentSemester = currentSemester,
-                    passedCredits = passedCredits,
-                    currentGpa = currentGpa,
-                    selectedCourses = selectedCourses
+                    name = name.ifBlank { "دانشجو" }, studentId = studentId,
+                    university = university, major = major, entryYear = entryYear,
+                    currentSemester = currentSemester, passedCredits = passedCredits,
+                    currentGpa = currentGpa, selectedCourses = selectedCourses, replaceExisting = false
                 )
+                _optimisticProfile.value = null
+                preferencesRepository.setOnboardingCompleted(true)
                 preferencesRepository.recordSuccessfulSave()
-                try {
-                    val snapshot = repository.exportFullBackupJson()
-                    LocalDataBackupManager.saveLocalSnapshot(application, snapshot)
-                } catch (e: Throwable) {
-                    e.printStackTrace()
-                }
-                addNotification("پیکربندی موفق", "سیستم‌عامل تحصیلی شما برای ترم $currentSemester $major با موفقیت راه‌اندازی شد.")
-            } catch (e: Throwable) {
-                e.printStackTrace()
-                _userMessage.emit("خطا در ذخیره‌سازی پایگاه داده: ${e.message}")
-            }
+                _isOnboardingCompleted.value = true
+                triggerCloudSync()
+                onSaved()
+                _userMessage.emit("اطلاعات راه‌اندازی ذخیره شد؛ سوابق قبلی حفظ شدند.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "راه‌اندازی ذخیره نشد؛ دوباره تلاش کنید.") }
+            finally { _isSavingRecord.value = false }
         }
     }
 
@@ -1143,42 +1072,26 @@ class StudentViewModel @JvmOverloads constructor(
         entryYear: Int = 1403,
         currentSemester: Int = 1,
         passedCredits: Int = 0,
-        declaredGpa: Double = 0.0
+        declaredGpa: Double = 0.0,
+        onSaved: () -> Unit = {}
     ) {
-        preferencesRepository.setOnboardingCompleted(completed)
-        preferencesRepository.recordSuccessfulSave()
-        _isOnboardingCompleted.value = completed
-
-        val resolvedName = name.ifBlank { "دانشجو" }
-        val opt = StudentProfileEntity(
-            id = 1,
-            name = resolvedName,
-            studentId = studentId.trim(),
-            university = university,
-            major = major,
-            entryYear = entryYear,
-            currentSemester = currentSemester,
-            passedUnits = passedCredits,
-            declaredPassedCredits = passedCredits,
-            declaredGpa = declaredGpa,
-            term = "ترم $currentSemester $major",
-            faculty = "دانشکده $major",
-            isOnboardingCompleted = completed
-        )
-        _optimisticProfile.value = opt
-
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            repository.setOnboardingCompleted(
-                completed = completed,
-                name = resolvedName,
-                studentId = studentId,
-                university = university,
-                major = major,
-                entryYear = entryYear,
-                currentSemester = currentSemester,
-                passedCredits = passedCredits,
-                declaredGpa = declaredGpa
-            )
+        if (_isSavingRecord.value) return
+        _isSavingRecord.value = true
+        viewModelScope.launch {
+            try {
+                repository.setOnboardingCompleted(
+                    completed = completed, name = name.ifBlank { "دانشجو" }, studentId = studentId,
+                    university = university, major = major, entryYear = entryYear,
+                    currentSemester = currentSemester, passedCredits = passedCredits, declaredGpa = declaredGpa
+                )
+                _optimisticProfile.value = null
+                preferencesRepository.setOnboardingCompleted(completed)
+                preferencesRepository.recordSuccessfulSave()
+                _isOnboardingCompleted.value = completed
+                onSaved()
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit("اطلاعات ذخیره نشد؛ دوباره تلاش کنید.") }
+            finally { _isSavingRecord.value = false }
         }
     }
 

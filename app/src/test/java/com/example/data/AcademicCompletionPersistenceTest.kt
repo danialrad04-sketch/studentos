@@ -27,6 +27,57 @@ class AcademicCompletionPersistenceTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
     @Before fun setup() { db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build(); repo = StudentRepository(db.studentDao(), db.curriculumDao(), db) }
     @After fun cleanup() { db.close() }
+    @Test fun revisitingSetupPreservesRecordsAndDoesNotDuplicateCourses() = runBlocking {
+        val dao = db.studentDao()
+        dao.insertProfile(StudentProfileEntity(name = "دانشجو", notes = "جزوه مهم", declaredGpa = 17.25))
+        dao.insertSemester(SemesterEntity(id = "my_term", title = "ترم من", isCurrent = true))
+        repo.saveCourse(CourseEntity(id = "math", name = "ریاضی", courseCode = "101", semesterId = "my_term", units = 3))
+        repo.updateGrade(GradeEntity(courseId = "math", courseName = "ریاضی", finalGrade = 18.0))
+        dao.insertAttendance(AttendanceEntity("math", "ریاضی", 2, 5))
+        val selection = listOf(CurriculumCourseEntity("ref", code = "101", name = "ریاضی", units = 3, courseType = "پایه", recommendedSemester = 1))
+        repeat(2) {
+            repo.completeQuickAcademicSetup(university = "دانشگاه من", major = "رشته من", entryYear = 1403,
+                currentSemester = 3, passedCredits = 42, currentGpa = 17.25, selectedCourses = selection, replaceExisting = false)
+        }
+        assertEquals(listOf("math"), dao.getAllCoursesIncludingArchivedSync().map { it.id })
+        assertEquals(18.0, dao.getAllGradesSync().single().finalGrade, 0.0)
+        assertEquals(2, dao.getAllAttendanceSync().single().absentCount)
+        assertEquals("جزوه مهم", dao.getProfileSync()!!.notes)
+        assertEquals(3, dao.getProfileSync()!!.activeUnits)
+        assertEquals("my_term", dao.getCurrentSemesterSync()!!.id)
+    }
+    @Test fun unscheduledImportDoesNotInventSessionsAndReimportKeepsGradesAndAbsences() = runBlocking {
+        val draft = ParsedCourseDraft(name = "ریاضی", units = 3, courseCode = "101")
+        repo.importParsedCourses(listOf(draft))
+        val dao = db.studentDao()
+        val course = dao.getAllCoursesIncludingArchivedSync().single()
+        assertTrue(dao.getSessionsForCourseSync(course.id).isEmpty())
+        repo.updateGrade(dao.getAllGradesSync().single().copy(finalGrade = 17.0))
+        dao.insertAttendance(AttendanceEntity(course.id, course.name, 2, 5))
+        repo.importParsedCourses(listOf(draft))
+        assertEquals(1, dao.getAllCoursesIncludingArchivedSync().size)
+        assertEquals(17.0, dao.getAllGradesSync().single().finalGrade, 0.0)
+        assertEquals(2, dao.getAllAttendanceSync().single().absentCount)
+        assertEquals(3, dao.getProfileSync()!!.activeUnits)
+    }
+    @Test fun invalidGpaIsRejectedBeforeProfileOrSetupChanges() = runBlocking {
+        val original = StudentProfileEntity(name = "اصلی", declaredGpa = 17.0)
+        repo.updateProfile(original)
+        try { repo.updateProfile(original.copy(declaredGpa = Double.NaN)); fail("Invalid GPA accepted") }
+        catch (_: IllegalArgumentException) { }
+        assertEquals(17.0, db.studentDao().getProfileSync()!!.declaredGpa!!, 0.0)
+    }
+    @Test fun attendanceEditsKeepCustomLimitAndReadTheLatestStoredCount() = runBlocking {
+        repo.saveCourse(CourseEntity(id = "math", name = "ریاضی", units = 3))
+        repo.editAttendance("math", limit = 5)
+        repeat(4) { repo.editAttendance("math", delta = 1) }
+        val updated = repo.editAttendance("math", count = 2)
+        assertEquals(2, updated.absentCount)
+        assertEquals(5, updated.maxAllowed)
+        try { repo.editAttendance("math", limit = 0); fail("Invalid limit accepted") }
+        catch (_: IllegalArgumentException) { }
+        assertEquals(5, db.studentDao().getAttendanceByCourseId("math")!!.maxAllowed)
+    }
     @Test fun firstGradeCanBeInsertedEditedAndZeroPersistsWithoutDuplicates() = runBlocking {
         repo.saveCourse(CourseEntity(id = "math", name = "ریاضی", units = 3, colorHex = "#59652F"))
         val first = GradeEntity(courseId = "math", courseName = "ریاضی", units = 3)

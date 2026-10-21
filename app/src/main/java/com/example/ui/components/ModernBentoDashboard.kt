@@ -164,6 +164,9 @@ fun ModernBentoDashboard(
         )
 
         AcademicJourneyOverview(
+            declaredPassedUnits = passedUnits,
+            declaredGpa = gpa.takeUnless { it == "۰.۰۰" || it == "0.00" || it.isBlank() },
+            onCompleteRecords = { onNavigateTab(AppTab.CURRICULUM) },
             state = academicProgressState,
             targetGpa = targetGpa,
             recommendations = studyRecommendations,

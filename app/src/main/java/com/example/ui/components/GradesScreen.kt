@@ -65,7 +65,6 @@ import androidx.compose.ui.unit.sp
 import com.example.data.local.entity.GradeEntity
 import com.example.ui.theme.Amber500
 import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.Emerald50
 import com.example.ui.theme.Emerald600
 import com.example.ui.theme.NumericBadgeText
@@ -166,7 +165,7 @@ fun GradesScreen(
             border = BorderStroke(
                 1.dp,
                 when {
-                    isHonors -> Emerald600.copy(alpha = 0.6f)
+                    isHonors -> MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.6f)
                     isNormal -> if (isDark) MaterialTheme.colorScheme.outline.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outline
                     else -> MaterialTheme.colorScheme.error.copy(alpha = 0.6f)
                 }
@@ -185,7 +184,7 @@ fun GradesScreen(
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = when {
-                                isHonors -> Emerald600.copy(alpha = 0.16f)
+                                isHonors -> MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.16f)
                                 isNormal -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                                 else -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
                             }
@@ -198,7 +197,7 @@ fun GradesScreen(
                                     imageVector = if (isHonors) Icons.Default.Star else Icons.Default.School,
                                     contentDescription = null,
                                     tint = when {
-                                        isHonors -> Emerald600
+                                        isHonors -> MaterialTheme.studentColors.attendanceSafe
                                         isNormal -> MaterialTheme.colorScheme.primary
                                         else -> MaterialTheme.colorScheme.error
                                     },
@@ -215,7 +214,7 @@ fun GradesScreen(
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = when {
-                                        isHonors -> Emerald600
+                                        isHonors -> MaterialTheme.studentColors.attendanceSafe
                                         isNormal -> MaterialTheme.colorScheme.primary
                                         else -> MaterialTheme.colorScheme.error
                                     }
@@ -255,7 +254,7 @@ fun GradesScreen(
                             Text(
                                 text = "$passedCoursesCount از ${grades.size} درس قبول",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = Emerald600,
+                                color = MaterialTheme.studentColors.attendanceSafe,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
@@ -285,7 +284,7 @@ fun GradesScreen(
                         style = NumericDisplayHero,
                         fontSize = 28.sp,
                         color = when {
-                            isHonors -> Emerald600
+                            isHonors -> MaterialTheme.studentColors.attendanceSafe
                             isNormal -> MaterialTheme.colorScheme.primary
                             else -> MaterialTheme.colorScheme.error
                         }
@@ -487,13 +486,13 @@ private fun CourseGradeCard(
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = if (isPassed) Emerald600.copy(alpha = 0.16f) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)
+                    color = if (isPassed) MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.16f) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)
                 ) {
                     Text(
                         text = if (isPassed) "قبولی قطعی ✅" else "مردود ❌",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (isPassed) Emerald600 else MaterialTheme.colorScheme.error,
+                        color = if (isPassed) MaterialTheme.studentColors.attendanceSafe else MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
@@ -561,10 +560,10 @@ private fun CourseGradeCard(
                     modifier = Modifier
                         .weight(1.2f)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(if (isPassed) Emerald600.copy(alpha = 0.12f) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f))
+                        .background(if (isPassed) MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.12f) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f))
                         .border(
                             0.8.dp,
-                            if (isPassed) Emerald600.copy(alpha = 0.3f) else MaterialTheme.colorScheme.error.copy(alpha = 0.3f),
+                            if (isPassed) MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.3f) else MaterialTheme.colorScheme.error.copy(alpha = 0.3f),
                             RoundedCornerShape(12.dp)
                         )
                         .padding(vertical = 8.dp, horizontal = 10.dp),
@@ -574,7 +573,7 @@ private fun CourseGradeCard(
                         Text(
                             text = "نمره نهایی",
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (isPassed) Emerald600 else MaterialTheme.colorScheme.error,
+                            color = if (isPassed) MaterialTheme.studentColors.attendanceSafe else MaterialTheme.colorScheme.error,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(2.dp))
@@ -582,7 +581,7 @@ private fun CourseGradeCard(
                             text = "${String.format(Locale.US, "%.1f", totalScore)} از ۲۰",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Black,
-                            color = if (isPassed) Emerald600 else MaterialTheme.colorScheme.error
+                            color = if (isPassed) MaterialTheme.studentColors.attendanceSafe else MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -721,8 +720,8 @@ fun EditGradeDialog(
             val totalScore = mid + fin
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = if (totalScore >= 10) Emerald600.copy(alpha = 0.12f) else Rose600.copy(alpha = 0.12f),
-                border = BorderStroke(1.dp, if (totalScore >= 10) Emerald600.copy(alpha = 0.3f) else Rose600.copy(alpha = 0.3f)),
+                color = if (totalScore >= 10) MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.12f) else Rose600.copy(alpha = 0.12f),
+                border = BorderStroke(1.dp, if (totalScore >= 10) MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.3f) else Rose600.copy(alpha = 0.3f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(

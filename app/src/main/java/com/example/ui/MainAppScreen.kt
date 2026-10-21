@@ -212,6 +212,7 @@ fun MainAppScreen(
     // Collect data
     val isAuthInitialized by studentViewModel.isAuthInitialized.collectAsStateWithLifecycle()
     val isOnboardingCompleted by studentViewModel.isOnboardingCompleted.collectAsStateWithLifecycle()
+    val isSavingSetup by studentViewModel.isSavingRecord.collectAsStateWithLifecycle()
     val currentUser by studentViewModel.currentUser.collectAsStateWithLifecycle()
     val guestModeEnabled by studentViewModel.guestModeEnabled.collectAsStateWithLifecycle()
     val courses by studentViewModel.courses.collectAsStateWithLifecycle()
@@ -331,33 +332,34 @@ fun MainAppScreen(
                         modifier = Modifier.testTag("local_onboarding"),
                         initialName = effectiveInitialName,
                         initialStudentId = profile.studentId,
+                        initialPassedCredits = profile.declaredPassedCredits ?: profile.passedUnits,
+                        initialGpa = profile.declaredGpa,
+                        isSaving = isSavingSetup,
+                        revisiting = profile.isOnboardingCompleted,
                         initialUniversity = effectiveInitialUni,
                         initialMajor = effectiveInitialMaj,
                         initialEntryYear = if (profile.entryYear > 0) profile.entryYear else 1403,
                         initialSemester = if (profile.currentSemester > 0) profile.currentSemester else 1,
                         onOpenPrivacyPolicy = { dialogState = AppDialogState.PrivacyPolicy },
                         onCompleteQuickSetup = { name, stdId, uni, maj, yr, sem, passed, gpa, selCourses ->
-                            studentViewModel.completeQuickAcademicSetup(name, stdId, uni, maj, yr, sem, passed, gpa, selCourses)
-                            showOnboardingWizard = false
-                            showAppTourGuide = true
-                            Toast.makeText(context, "سیستم‌عامل تحصیلی با موفقیت راه‌اندازی شد 🚀", Toast.LENGTH_LONG).show()
-                            checkAndRequestNotificationPermission { }
+                            studentViewModel.completeQuickAcademicSetup(name, stdId, uni, maj, yr, sem, passed, gpa, selCourses) {
+                                showOnboardingWizard = false
+                                showAppTourGuide = !profile.isOnboardingCompleted
+                                checkAndRequestNotificationPermission { }
+                            }
                         },
                         onCompleteTextImport = { drafts, name, stdId, uni, maj, yr, sem ->
                             studentViewModel.importParsedCourses(
                                 drafts = drafts,
-                                clearExisting = true,
-                                studentName = name,
-                                studentId = stdId,
-                                university = uni,
-                                major = maj,
-                                entryYear = yr,
-                                currentSemester = sem
+                                clearExisting = false,
+                                studentName = name, studentId = stdId, university = uni, major = maj,
+                                entryYear = yr, currentSemester = sem,
+                                onSaved = {
+                                    showOnboardingWizard = false
+                                    showAppTourGuide = !profile.isOnboardingCompleted
+                                    checkAndRequestNotificationPermission { }
+                                }
                             )
-                            showOnboardingWizard = false
-                            showAppTourGuide = true
-                            Toast.makeText(context, "${drafts.size} درس از برگه انتخاب واحد ثبت شد 📋", Toast.LENGTH_LONG).show()
-                            checkAndRequestNotificationPermission { }
                         },
                         onSkip = { name, stdId, uni, maj, yr, sem ->
                             studentViewModel.setOnboardingCompleted(
@@ -369,10 +371,12 @@ fun MainAppScreen(
                                 entryYear = yr,
                                 currentSemester = sem,
                                 passedCredits = profile.passedUnits,
-                                declaredGpa = profile.declaredGpa ?: 0.0
+                                declaredGpa = profile.declaredGpa ?: 0.0,
+                                onSaved = {
+                                    showOnboardingWizard = false
+                                    checkAndRequestNotificationPermission { }
+                                }
                             )
-                            showOnboardingWizard = false
-                            checkAndRequestNotificationPermission { }
                         }
                     )
                 } else {

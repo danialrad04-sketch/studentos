@@ -228,6 +228,7 @@ fun MainTabContent(
                     onSetAttendance = { name, count ->
                         studentViewModel.setAttendanceCount(name, count)
                     },
+                    onSetLimit = studentViewModel::setAttendanceLimit,
                     onEvaluateAlerts = {
                         val dangerCount = attendance.count { it.absentCount >= it.maxAllowed && it.maxAllowed > 0 }
                         if (dangerCount > 0) {
@@ -240,7 +241,7 @@ fun MainTabContent(
                         } else {
                             studentViewModel.addNotification(
                                 "✅ وضعیت غیبت‌ها مجاز است",
-                                "غیبت‌های ثبت‌شده در کلیه دروس کمتر از سقف قانونی ۳/۱۶ می‌باشد."
+                                "غیبت‌های ثبت‌شده از سقف تنظیم‌شدهٔ هر درس کمتر است."
                             )
                             Toast.makeText(context, "وضعیت غیبت‌ها مجاز است", Toast.LENGTH_SHORT).show()
                         }

@@ -31,7 +31,10 @@ fun AcademicJourneyOverview(
     onOpenPassport: () -> Unit,
     onOpenGrades: () -> Unit,
     onOpenFocus: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    declaredPassedUnits: Int = 0,
+    declaredGpa: String? = null,
+    onCompleteRecords: (() -> Unit)? = null
 ) {
     val progress = when (state) {
         is AcademicProgressUiState.Ready -> state.progress
@@ -81,6 +84,16 @@ fun AcademicJourneyOverview(
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (declaredPassedUnits > 0 || declaredGpa != null) {
+                    Text("اطلاعات اعلام‌شدهٔ شما", style = MaterialTheme.typography.titleSmall)
+                    Text("$declaredPassedUnits واحد گذرانده · معدل ${declaredGpa ?: "ثبت نشده"}",
+                        color = MaterialTheme.colorScheme.onSurface)
+                    Text("تا تعیین چارت رشته، درصد و واحد باقی‌مانده محاسبه نمی‌شود.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                onCompleteRecords?.let { action ->
+                    FilledTonalButton(onClick = action, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("تکمیل چارت و سوابق") }
+                }
             } else {
                 LinearProgressIndicator(
                     progress = { (progress.progressPercentage / 100f).coerceIn(0f, 1f) },
