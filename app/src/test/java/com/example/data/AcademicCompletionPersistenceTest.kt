@@ -27,6 +27,28 @@ class AcademicCompletionPersistenceTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
     @Before fun setup() { db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build(); repo = StudentRepository(db.studentDao(), db.curriculumDao(), db) }
     @After fun cleanup() { db.close() }
+    @Test fun identityChangesCannotKeepAnOldCurriculumOrMatchAnotherUniversity() = runBlocking {
+        db.curriculumDao().insertUniversities(listOf(UniversityEntity("old_uni", "دانشگاه قبلی", "قبلی")))
+        db.curriculumDao().insertMajors(listOf(MajorEntity("old_major", "old_uni", "old_faculty", "دانشکده قبلی", "ریاضی")))
+        val original = StudentProfileEntity(university = "دانشگاه قبلی", major = "ریاضی", universityId = "old_uni",
+            majorId = "old_major", facultyId = "old_faculty", currentSemester = 3, notes = "سوابق شخصی")
+        repeat(2) { mode ->
+            db.studentDao().insertProfile(original)
+            if (mode == 0) repo.setOnboardingCompleted(true, university = "دانشگاه جدید", major = "ریاضی")
+            else repo.importParsedCourses(listOf(ParsedCourseDraft(name = "جبر")), university = "دانشگاه جدید", major = "ریاضی")
+            val saved = db.studentDao().getProfileSync()!!
+            assertNull(saved.universityId)
+            assertNull(saved.majorId)
+            assertNull(saved.facultyId)
+            assertEquals("سوابق شخصی", saved.notes)
+        }
+        db.studentDao().insertProfile(original)
+        repo.setOnboardingCompleted(true, university = "دانشگاه قبلی", major = "رشته جدید")
+        val saved = db.studentDao().getProfileSync()!!
+        assertEquals("old_uni", saved.universityId)
+        assertNull(saved.majorId)
+        assertNull(saved.facultyId)
+    }
     @Test fun revisitingSetupPreservesRecordsAndDoesNotDuplicateCourses() = runBlocking {
         val dao = db.studentDao()
         dao.insertProfile(StudentProfileEntity(name = "دانشجو", notes = "جزوه مهم", declaredGpa = 17.25))

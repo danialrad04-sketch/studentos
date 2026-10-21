@@ -28,6 +28,8 @@ Room persistence, settings, and light/dark rendering. This complements
   of recorded course grades and target GPA. Repository validation rejects
   nonfinite/out-of-range GPA and negative unit counts. Profile editing refreshes
   curriculum reference IDs and closes after successful persistence.
+  Setup/skip/import also clear stale reference IDs when academic identity changes;
+  a major from another university is never substituted for an unknown university.
 - Attendance changes read the latest stored record inside a Room transaction,
   preserve custom limits and avoid lost increments from stale UI state. Each
   course exposes a validated 1–16 session limit; backup already includes this

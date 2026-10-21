@@ -64,7 +64,7 @@ class StudentRepository(
         val preferredMajor = majors.find { it.id == currentProfile?.majorId && it.universityId == universityRow?.id && normalizeReferenceText(it.majorDisplayNameFa) == normalizeReferenceText(major) }
         val majorRow = preferredMajor ?: majors.firstOrNull {
             normalizeReferenceText(it.majorDisplayNameFa) == normalizeReferenceText(major) &&
-                (universityRow == null || it.universityId == universityRow.id)
+                (universityRow != null && it.universityId == universityRow.id)
         }
 
         return Triple(universityRow?.id, majorRow?.id, majorRow?.facultyId)
@@ -430,9 +430,9 @@ class StudentRepository(
             declaredPassedCredits = if (passedCredits > 0) passedCredits else current.declaredPassedCredits,
             declaredGpa = if (declaredGpa > 0.0) declaredGpa else current.declaredGpa,
             term = if (currentSemester > 0 && resolvedMajor.isNotBlank()) "ترم $currentSemester $resolvedMajor" else current.term,
-            universityId = referenceUniversityId ?: current.universityId,
-            facultyId = referenceFacultyId ?: current.facultyId,
-            majorId = referenceMajorId ?: current.majorId,
+            universityId = referenceUniversityId,
+            facultyId = referenceFacultyId,
+            majorId = referenceMajorId,
             updatedAt = System.currentTimeMillis()
         )
         dao.insertProfile(updated)
@@ -641,9 +641,9 @@ class StudentRepository(
                 currentSemester = resolvedSemNum,
                 term = if (resolvedSemNum > 0 && resolvedProfileMajor.isNotBlank()) "ترم $resolvedSemNum $resolvedProfileMajor" else (current?.term ?: ""),
                 faculty = if (resolvedProfileMajor.isNotBlank()) "دانشکده $resolvedProfileMajor · $totalUnits واحد فعال" else (current?.faculty ?: ""),
-                universityId = referenceUniversityId ?: current?.universityId,
-                facultyId = referenceFacultyId ?: current?.facultyId,
-                majorId = referenceMajorId ?: current?.majorId,
+                universityId = referenceUniversityId,
+                facultyId = referenceFacultyId,
+                majorId = referenceMajorId,
                 isOnboardingCompleted = true,
                 updatedAt = System.currentTimeMillis()
             )
