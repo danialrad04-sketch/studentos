@@ -105,6 +105,7 @@ fun ModernBentoDashboard(
     passedUnits: Int = 0,
     gpa: String = "۰.۰۰",
     targetGpa: Double? = null,
+    declaredGpa: Double? = null,
     dailyStudyGoalMinutes: Int = 120,
     studiedTodayMinutes: Int = 0,
     totalRequiredCredits: Int = 0,
@@ -165,7 +166,7 @@ fun ModernBentoDashboard(
 
         AcademicJourneyOverview(
             declaredPassedUnits = passedUnits,
-            declaredGpa = gpa.takeUnless { it == "۰.۰۰" || it == "0.00" || it.isBlank() },
+            declaredGpa = declaredGpa?.let { String.format(Locale.US, "%.2f", it) },
             onCompleteRecords = { onNavigateTab(AppTab.CURRICULUM) },
             state = academicProgressState,
             targetGpa = targetGpa,

@@ -45,6 +45,7 @@ class AcademicCompletionPersistenceTest {
         assertEquals("جزوه مهم", dao.getProfileSync()!!.notes)
         assertEquals(3, dao.getProfileSync()!!.activeUnits)
         assertEquals("my_term", dao.getCurrentSemesterSync()!!.id)
+        assertEquals("ترم من", dao.getCurrentSemesterSync()!!.title)
     }
     @Test fun unscheduledImportDoesNotInventSessionsAndReimportKeepsGradesAndAbsences() = runBlocking {
         val draft = ParsedCourseDraft(name = "ریاضی", units = 3, courseCode = "101")

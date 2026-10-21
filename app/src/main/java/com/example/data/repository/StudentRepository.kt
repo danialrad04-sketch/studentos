@@ -708,18 +708,13 @@ class StudentRepository(
             }
 
             // 2. Mark existing semesters as non-current and insert active current semester
+            val existingSemester = if (replaceExisting) null else dao.getSemesterById(activeSemesterId)
             dao.clearCurrentSemesterFlag()
             dao.insertSemester(
-                SemesterEntity(
-                    id = activeSemesterId,
-                    title = "ترم $currentSemester ($major)",
-                    year = calculatedAcademicYear,
-                    academicYear = calculatedAcademicYear,
-                    semesterNumber = currentSemester,
-                    termNumber = currentSemester,
-                    isCurrent = true,
-                    isArchived = false,
-                    totalUnits = resolvedActiveUnits
+                (existingSemester ?: SemesterEntity(id = activeSemesterId, title = "ترم $currentSemester ($major)")).copy(
+                    year = calculatedAcademicYear, academicYear = calculatedAcademicYear,
+                    semesterNumber = currentSemester, termNumber = currentSemester,
+                    isCurrent = true, isArchived = false, totalUnits = resolvedActiveUnits
                 )
             )
 

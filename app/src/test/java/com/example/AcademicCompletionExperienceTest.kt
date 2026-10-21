@@ -46,7 +46,7 @@ class AcademicCompletionExperienceTest {
         rule.onNode(hasText("معدل کل فعلی (از ۲۰)") and hasSetTextAction()).performScrollTo().assertTextContains("17.25").performTextReplacement("۲۱")
         rule.onNodeWithText("مرحله نهایی: بازبینی و ساخت سیستم‌عامل 🚀").performScrollTo().assertIsNotEnabled()
         rule.onNode(hasText("معدل کل فعلی (از ۲۰)") and hasSetTextAction()).performScrollTo().performTextReplacement("۱۸٫۵")
-        rule.onNode(hasText("واحد پاس‌شده") and hasSetTextAction()).performScrollTo().assertTextContains("42").performTextReplacement("۵۴")
+        rule.onNode(hasText("تعداد واحد پاس‌شده") and hasSetTextAction()).performScrollTo().assertTextContains("42").performTextReplacement("۵۴")
         rule.onRoot().captureRoboImage("build/outputs/visual-review/onboarding-revisit-light.png")
         rule.onNodeWithText("مرحله نهایی: بازبینی و ساخت سیستم‌عامل 🚀").performScrollTo().performClick()
         rule.onNodeWithText("ذخیره و ادامه").performScrollTo().performClick()

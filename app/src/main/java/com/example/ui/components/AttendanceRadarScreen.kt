@@ -613,19 +613,18 @@ fun AttendanceCard(
     var limitInput by remember(maxAllowed) { mutableStateOf(maxAllowed.toString()) }
     if (editingLimit && onSetLimit != null) {
         val parsed = studentProfileNumber(limitInput)?.takeIf { it in 1..16 }
-        AlertDialog(
-            onDismissRequest = { editingLimit = false }, title = { Text("سقف غیبت $courseName") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("سقف اعلام‌شده توسط استاد یا دانشگاه را وارد کن. این مقدار مبنای هشدارهای برنامه است.")
-                    OutlinedTextField(value = limitInput, onValueChange = { limitInput = it }, label = { Text("تعداد جلسه (۱ تا ۱۶)") },
-                        singleLine = true, isError = parsed == null,
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
+        StudentGlassModalSheet(onDismiss = { editingLimit = false }, title = "سقف غیبت $courseName") {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("سقف اعلام‌شده توسط استاد یا دانشگاه را وارد کن. این مقدار مبنای هشدارهای برنامه است.")
+                OutlinedTextField(value = limitInput, onValueChange = { limitInput = it }, label = { Text("تعداد جلسه (۱ تا ۱۶)") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true, isError = parsed == null,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    TextButton(onClick = { editingLimit = false }, modifier = Modifier.weight(1f)) { Text("انصراف") }
+                    Button(enabled = parsed != null, onClick = { onSetLimit(parsed!!); editingLimit = false }, modifier = Modifier.weight(1f)) { Text("ذخیره سقف") }
                 }
-            },
-            confirmButton = { TextButton(enabled = parsed != null, onClick = { onSetLimit(parsed!!); editingLimit = false }) { Text("ذخیره سقف") } },
-            dismissButton = { TextButton(onClick = { editingLimit = false }) { Text("انصراف") } }
-        )
+            }
+        }
     }
     val isDanger = absentCount >= maxAllowed
     val isWarning = absentCount == maxAllowed - 1

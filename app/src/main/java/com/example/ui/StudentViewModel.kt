@@ -1056,7 +1056,7 @@ class StudentViewModel @JvmOverloads constructor(
                 _isOnboardingCompleted.value = true
                 triggerCloudSync()
                 onSaved()
-                _userMessage.emit("${drafts.size} جلسه درس ثبت شد؛ مشخصات و سوابق پیشین حفظ شد.")
+                _userMessage.emit("واردسازی ذخیره شد؛ درس تکراری دوباره افزوده نشد و سوابق پیشین حفظ شد.")
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
             catch (e: Exception) { _userMessage.emit("واردسازی انجام نشد؛ داده‌های پیشین حفظ شد. دوباره تلاش کنید.") }
             finally { _isSavingRecord.value = false }
