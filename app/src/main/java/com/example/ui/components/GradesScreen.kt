@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -79,6 +81,7 @@ import com.example.ui.theme.StudentSpacing
 import com.example.ui.theme.StudentOsGlassTokens
 import java.util.Locale
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun GradesScreen(
     grades: List<GradeEntity>,
@@ -119,7 +122,7 @@ fun GradesScreen(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "نقشه وضعیت نمرات، شبیه‌ساز معدل الف و مدیریت سقف انتخاب واحد",
+                    text = "نمرات ثبت‌شده، تحلیل عملکرد و سناریوی هدف معدل",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -226,7 +229,7 @@ fun GradesScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = if (evaluatedGrades.isEmpty()) "با ثبت نمره، معدل واقعی ترم محاسبه می‌شود." else "معدل بر پایه نمره‌های ثبت‌شده است؛ سقف انتخاب واحد را با مقررات دانشگاه بررسی کنید.",
+                        text = if (evaluatedGrades.isEmpty()) "با ثبت نمره، معدل واقعی ترم محاسبه می‌شود." else "این معدل فقط از نمره‌های ثبت‌شدهٔ ترم جاری محاسبه می‌شود؛ معدل کل اعلام‌شده در پروفایل جداست.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 18.sp
@@ -234,13 +237,13 @@ fun GradesScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.surfaceContainerHigh
                         ) {
                             Text(
-                                text = "سقف مجاز: ${if (isHonors) "۲۴ واحد" else if (isNormal) "۲۰ واحد" else "۱۴ واحد"}",
+                                text = "$evaluatedUnits واحد ارزیابی‌شده",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -252,7 +255,7 @@ fun GradesScreen(
                             color = MaterialTheme.colorScheme.surfaceContainerHigh
                         ) {
                             Text(
-                                text = "$passedCoursesCount از ${grades.size} درس قبول",
+                                text = "$passedCoursesCount از ${evaluatedGrades.size} درس قبول",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.studentColors.attendanceSafe,
                                 fontWeight = FontWeight.Bold,
@@ -274,7 +277,7 @@ fun GradesScreen(
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
                     Text(
-                        text = "معدل کل",
+                        text = "معدل این ترم",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Bold

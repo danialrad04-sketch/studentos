@@ -14,9 +14,10 @@ Room persistence, settings, and light/dark rendering. This complements
   Previously the repository cleared current academic tables. Summary fields are
   prefilled; revisiting does not automatically select an entire term's courses.
 - Text import from the wizard preserves records. Importing the same course in the
-  same semester again skips it by course code/name, keeping its original records.
-  Existing courses can be changed through their course editor. Import is not a
-  bulk overwrite/update operation.
+  same semester again reuses its identity by course code/name, retaining grades
+  and absences while filling provided metadata and missing class sessions. The
+  same session is not added twice. Missing fields preserve previous values; the
+  course editor supports replacing/removing obsolete details.
 - Missing class times remain missing; import no longer fabricates weekdays and
   08:00/10:00 sessions. The schedule lists unscheduled courses with working edit
   actions, so they remain reachable after quick setup or partial import.

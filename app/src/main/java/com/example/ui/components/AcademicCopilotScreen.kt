@@ -661,7 +661,7 @@ private fun CopilotMessageItem(
                     Icon(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = null,
-                        tint = Color.Black,
+                        tint = Color.White,
                         modifier = Modifier.size(17.dp)
                     )
                 }

@@ -549,14 +549,13 @@ class StudentRepository(
                         .thenBy { it.instructor.isNotBlank() }
                 ) ?: groupDrafts.first()
 
-                val courseId = UUID.randomUUID().toString()
                 val itemSemId = if (primaryDraft.targetSemester > 0 && primaryDraft.targetSemester != resolvedSemNum) "sem_${primaryDraft.targetSemester}" else activeSemId
                 // Re-running setup/import must not duplicate a course or reset its records.
-                val alreadyImported = dao.getCoursesBySemesterSync(itemSemId).any {
+                val existingCourse = dao.getCoursesBySemesterSync(itemSemId).firstOrNull {
                     (primaryDraft.courseCode.isNotBlank() && it.courseCode == primaryDraft.courseCode.trim()) ||
                         it.name.trim() == primaryDraft.name.trim()
                 }
-                if (alreadyImported) continue
+                val courseId = existingCourse?.id ?: UUID.randomUUID().toString()
                 val bestProf = groupDrafts.firstOrNull { it.instructor.isNotBlank() }?.instructor ?: primaryDraft.instructor
                 val bestExamDate = groupDrafts.firstOrNull { it.examDate.isNotBlank() }?.examDate ?: primaryDraft.examDate
                 val bestExamTime = groupDrafts.firstOrNull { it.examTime.isNotBlank() }?.examTime ?: primaryDraft.examTime
@@ -564,59 +563,50 @@ class StudentRepository(
                 val bestNotes = groupDrafts.firstOrNull { it.notes.isNotBlank() }?.notes ?: primaryDraft.notes
                 val bestUnits = groupDrafts.maxOf { it.units }
 
-                val entity = CourseEntity(
-                    id = courseId,
+                val entity = (existingCourse ?: CourseEntity(id = courseId, name = primaryDraft.name.trim(),
+                    colorHex = colors[colorIndex % colors.size])).copy(
                     name = primaryDraft.name.trim(),
-                    colorHex = colors[colorIndex % colors.size],
                     units = bestUnits,
                     semesterId = itemSemId,
-                    courseCode = primaryDraft.courseCode,
-                    professor = bestProf,
-                    examDate = bestExamDate,
-                    examTime = bestExamTime,
-                    examLocation = bestExamLoc,
-                    notes = bestNotes
+                    courseCode = primaryDraft.courseCode.trim().ifBlank { existingCourse?.courseCode.orEmpty() },
+                    professor = bestProf.ifBlank { existingCourse?.professor.orEmpty() },
+                    examDate = bestExamDate.ifBlank { existingCourse?.examDate.orEmpty() },
+                    examTime = bestExamTime.ifBlank { existingCourse?.examTime.orEmpty() },
+                    examLocation = bestExamLoc.ifBlank { existingCourse?.examLocation.orEmpty() },
+                    notes = bestNotes.ifBlank { existingCourse?.notes.orEmpty() }
                 )
                 dao.insertCourse(entity)
                 insertedCourses.add(entity)
 
                 // An unknown class time remains unscheduled; never invent a timetable.
-                val validSessions = groupDrafts.filter { it.startTime.isNotBlank() && it.endTime.isNotBlank() }
+                val existingSessions = dao.getSessionsForCourseSync(courseId)
+                val validSessions = groupDrafts.filter { it.dayOfWeek in 0..6 && it.startTime.isNotBlank() && it.endTime.isNotBlank() }
+                    .distinctBy { Triple(it.dayOfWeek, it.startTime, it.endTime) }
+                    .filter { draft -> existingSessions.none { it.day == draft.dayOfWeek && it.start == draft.startTime && it.end == draft.endTime } }
                 if (validSessions.isNotEmpty()) {
-                    val sessions = validSessions.mapIndexed { sIdx, draft ->
+                    val sessions = validSessions.map { draft ->
                         CourseSessionEntity(
-                            id = "sess_${courseId.take(8)}_$sIdx",
+                            id = "sess_${UUID.randomUUID()}",
                             courseId = courseId,
                             day = draft.dayOfWeek.coerceIn(0, 6),
                             start = draft.startTime,
                             end = draft.endTime,
-                            location = draft.location.ifBlank { "دانشکده" }
+                            location = draft.location
                         )
                     }
                     dao.insertCourseSessions(sessions)
                 }
                 colorIndex++
 
-                // Attendance with courseId as primary key (counted once per course)
-                dao.insertAttendance(
-                    AttendanceEntity(
-                        courseId = courseId,
-                        courseName = primaryDraft.name.trim(),
-                        absentCount = 0,
-                        maxAllowed = if (primaryDraft.name.contains("آزمایشگاه") || primaryDraft.name.contains("کارگاه")) 2 else 3
-                    )
-                )
-
-                // Grade with courseId foreign key (counted once per course)
-                dao.insertGrade(
-                    GradeEntity(
-                        courseId = courseId,
-                        courseName = primaryDraft.name.trim(),
-                        units = bestUnits,
-                        midtermGrade = 0.0,
-                        finalGrade = 0.0
-                    )
-                )
+                val existingAttendance = dao.getAttendanceByCourseId(courseId)
+                dao.insertAttendance(existingAttendance?.copy(courseName = entity.name) ?: AttendanceEntity(
+                    courseId = courseId, courseName = entity.name, absentCount = 0,
+                    maxAllowed = if (entity.name.contains("آزمایشگاه") || entity.name.contains("کارگاه")) 2 else 3
+                ))
+                val existingGrade = dao.getGradeByCourseId(courseId)
+                dao.insertGrade(existingGrade?.copy(courseName = entity.name, units = entity.units) ?: GradeEntity(
+                    courseId = courseId, courseName = entity.name, units = entity.units
+                ))
 
                 // Exam if date/time present (created once per course)
                 if (bestExamDate.isNotBlank() || bestExamTime.isNotBlank()) {
@@ -625,9 +615,9 @@ class StudentRepository(
                             id = "exam_$courseId",
                             courseId = courseId,
                             courseName = primaryDraft.name.trim(),
-                            date = bestExamDate,
-                            time = bestExamTime,
-                            location = bestExamLoc
+                            date = entity.examDate,
+                            time = entity.examTime,
+                            location = entity.examLocation
                         )
                     )
                 }

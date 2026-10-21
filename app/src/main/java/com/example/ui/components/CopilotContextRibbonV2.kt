@@ -58,7 +58,7 @@ fun CopilotContextRibbonV2(
                     )
                 }
                 Text(
-                    "Context تحصیلی",
+                    "وضعیت تحصیلی",
                     modifier = Modifier.padding(start = 7.dp),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Black

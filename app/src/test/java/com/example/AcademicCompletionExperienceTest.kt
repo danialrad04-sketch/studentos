@@ -1,5 +1,7 @@
 package com.example
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
@@ -54,7 +56,11 @@ class AcademicCompletionExperienceTest {
     }
     @Test fun customAttendanceLimitIsEditableAndValidatedInLightTheme() {
         var saved: Int? = null
-        rule.setContent { StudentOsTheme { AttendanceCard("ریاضی", 2, 3, {}, {}, onSetLimit = { saved = it }) } }
+        rule.setContent { StudentOsTheme {
+            androidx.compose.material3.Surface(Modifier.fillMaxSize()) {
+                AttendanceCard("ریاضی", 2, 3, {}, {}, onSetLimit = { saved = it })
+            }
+        } }
         rule.onNodeWithText("تنظیم سقف غیبت").performClick()
         val input = rule.onNode(hasText("تعداد جلسه (۱ تا ۱۶)") and hasSetTextAction())
         input.performTextReplacement("۰")
@@ -102,7 +108,7 @@ class AcademicCompletionExperienceTest {
     }
     @Test fun importPreviewCanEditCourseRatherThanOnlyDeleteIt() {
         var result: ParsedCourseDraft? = null
-        val draft = ParsedCourseDraft(name = "نام اشتباه", startTime = "08:00", endTime = "10:00")
+        val draft = ParsedCourseDraft(name = "نام اشتباه", dayOfWeek = 0, startTime = "08:00", endTime = "10:00")
         rule.setContent { StudentOsTheme { ImportDraftEditor(draft, {}, { result = it }) } }
         rule.onNodeWithTag("import_draft_name").performTextReplacement("ریاضی مهندسی")
         rule.onNodeWithTag("save_import_draft").performClick()

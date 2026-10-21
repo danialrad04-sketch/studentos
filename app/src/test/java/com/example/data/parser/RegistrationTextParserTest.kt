@@ -5,6 +5,19 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RegistrationTextParserTest {
+    @Test fun missingScheduleAndPeopleAreNotReplacedWithInventedDefaults() {
+        listOf("ریاضی مهندسی ۳ واحد", "ریاضی مهندسی | ۳ واحد").forEach { input ->
+            val draft = RegistrationTextParser.parse(input).single()
+            assertEquals(-1, draft.dayOfWeek)
+            assertEquals("", draft.dayName)
+            assertEquals("", draft.startTime)
+            assertEquals("", draft.endTime)
+            assertEquals("", draft.instructor)
+            assertEquals("", draft.location)
+            assertTrue("روز کلاس" in draft.missingFields)
+            assertTrue("ساعت کلاس" in draft.missingFields)
+        }
+    }
 
     @Test
     fun testParseStructuredPipeFormat() {
@@ -117,7 +130,7 @@ class RegistrationTextParserTest {
         val course = parsed[0]
         assertEquals("آزمایشگاه ریزپردازنده", course.name)
         assertEquals("مهندس رضایی", course.instructor)
-        assertEquals("دانشکده", course.location) // Graceful fallback
+        assertEquals("", course.location) // An unknown location must stay unknown.
         assertEquals(3, course.dayOfWeek)
         assertEquals("14:00", course.startTime)
         assertEquals("16:00", course.endTime)

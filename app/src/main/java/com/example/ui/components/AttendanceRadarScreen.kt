@@ -1,5 +1,8 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 import com.example.ui.theme.StudentOsColors
 
 import androidx.compose.animation.AnimatedVisibility
@@ -614,16 +617,16 @@ fun AttendanceCard(
     if (editingLimit && onSetLimit != null) {
         val parsed = studentProfileNumber(limitInput)?.takeIf { it in 1..16 }
         StudentGlassModalSheet(onDismiss = { editingLimit = false }, title = "سقف غیبت $courseName") {
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.weight(1f, false).fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("سقف اعلام‌شده توسط استاد یا دانشگاه را وارد کن. این مقدار مبنای هشدارهای برنامه است.")
                 OutlinedTextField(value = limitInput, onValueChange = { limitInput = it }, label = { Text("تعداد جلسه (۱ تا ۱۶)") },
                     modifier = Modifier.fillMaxWidth(), singleLine = true, isError = parsed == null,
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
+            }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     TextButton(onClick = { editingLimit = false }, modifier = Modifier.weight(1f)) { Text("انصراف") }
                     Button(enabled = parsed != null, onClick = { onSetLimit(parsed!!); editingLimit = false }, modifier = Modifier.weight(1f)) { Text("ذخیره سقف") }
                 }
-            }
         }
     }
     val isDanger = absentCount >= maxAllowed

@@ -60,6 +60,14 @@ class AcademicCompletionPersistenceTest {
         assertEquals(17.0, dao.getAllGradesSync().single().finalGrade, 0.0)
         assertEquals(2, dao.getAllAttendanceSync().single().absentCount)
         assertEquals(3, dao.getProfileSync()!!.activeUnits)
+        // A later registration import can fill missing times without losing the grade/limit.
+        val scheduled = draft.copy(dayOfWeek = 2, startTime = "09:00", endTime = "11:00", location = "کلاس ۴")
+        repeat(2) { repo.importParsedCourses(listOf(scheduled)) }
+        assertEquals(course.id, dao.getAllCoursesIncludingArchivedSync().single().id)
+        assertEquals(1, dao.getSessionsForCourseSync(course.id).size)
+        assertEquals("09:00", dao.getSessionsForCourseSync(course.id).single().start)
+        assertEquals(17.0, dao.getAllGradesSync().single().finalGrade, 0.0)
+        assertEquals(5, dao.getAllAttendanceSync().single().maxAllowed)
     }
     @Test fun invalidGpaIsRejectedBeforeProfileOrSetupChanges() = runBlocking {
         val original = StudentProfileEntity(name = "اصلی", declaredGpa = 17.0)

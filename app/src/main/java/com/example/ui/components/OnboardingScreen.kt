@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import com.example.ui.theme.studentColors
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -107,8 +109,9 @@ data class OnboardingColors(
 private fun rememberOnboardingColors(): OnboardingColors {
     val colorScheme = MaterialTheme.colorScheme
     val isDark = colorScheme.surface.luminance() < 0.5f
+    val semantic = MaterialTheme.studentColors
 
-    return remember(isDark, colorScheme) {
+    return remember(isDark, colorScheme, semantic) {
         if (isDark) {
             OnboardingColors(
                 DarkCanvasTop = colorScheme.surface,
@@ -121,8 +124,8 @@ private fun rememberOnboardingColors(): OnboardingColors {
                 AccentPrimary = colorScheme.primary,
                 AccentPrimaryBright = colorScheme.primary,
                 AccentSecondary = colorScheme.tertiary,
-                AccentSuccess = Color(0xFF10B981),
-                AccentWarning = Color(0xFFF59E0B),
+                AccentSuccess = semantic.attendanceSafe,
+                AccentWarning = semantic.attendanceWarning,
                 TextPureWhite = colorScheme.onSurface,
                 TextMutedWhite = colorScheme.onSurfaceVariant,
                 TextSubtleGray = colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
@@ -141,8 +144,8 @@ private fun rememberOnboardingColors(): OnboardingColors {
                 AccentPrimary = colorScheme.primary,
                 AccentPrimaryBright = colorScheme.primary,
                 AccentSecondary = colorScheme.tertiary,
-                AccentSuccess = Color(0xFF059669),
-                AccentWarning = Color(0xFFD97706),
+                AccentSuccess = semantic.attendanceSafe,
+                AccentWarning = semantic.attendanceWarning,
                 TextPureWhite = colorScheme.onSurface,
                 TextMutedWhite = colorScheme.onSurfaceVariant,
                 TextSubtleGray = colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
