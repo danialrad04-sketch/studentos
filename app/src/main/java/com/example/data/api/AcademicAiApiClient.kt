@@ -21,27 +21,19 @@ data class AcademicAiStatus(val enabled: Boolean, val visionEnabled: Boolean, va
 object AcademicAiApiClient {
     private val sessionLock = Mutex()
     private suspend fun call(name: String, data: Map<String, Any> = emptyMap()): Map<*, *> = withTimeout(60_000) {
-        val auth = FirebaseAuth.getInstance()
+        val app = AcademicAiSession.app()
+        val auth = FirebaseAuth.getInstance(app)
         sessionLock.withLock {
-            // Reuse any existing account. Never replace a signed-in student with a guest.
-            if (auth.currentUser == null) {
-                val context = com.google.firebase.FirebaseApp.getInstance().applicationContext
-                val backend = com.example.data.api.backend.BackendApiClient.getInstance(context).tokenStore()
-                // A backend-only account must never be replaced by the Firebase guest listener.
-                check(backend.getAccessToken() == null || backend.getUserId() == null) {
-                    "حساب فعلی از بک‌اند وارد شده است؛ اتصال مدل به این نوع حساب هنوز آماده نیست. تحلیل روی دستگاه در دسترس است."
-                }
-                withTimeout(12_000) { auth.signInAnonymously().awaitResult() }
-            }
+            if (auth.currentUser == null) withTimeout(12_000) { auth.signInAnonymously().awaitResult() }
         }
         check(auth.currentUser != null) { "نشست امن دستیار برقرار نشد؛ دوباره تلاش کن." }
-        FirebaseFunctions.getInstance(com.example.BuildConfig.PREMIUM_FUNCTIONS_REGION).getHttpsCallable(name)
+        FirebaseFunctions.getInstance(app, com.example.BuildConfig.PREMIUM_FUNCTIONS_REGION).getHttpsCallable(name)
             .withTimeout(50, TimeUnit.SECONDS).call(data).awaitResult().data as? Map<*, *>
             ?: error("پاسخ سرویس معتبر نیست؛ دوباره تلاش کن.")
     }
     /** Opening the local assistant does not create an account or require a network connection. */
     suspend fun status(): AcademicAiStatus? {
-        if (FirebaseAuth.getInstance().currentUser == null) return null
+        if (FirebaseAuth.getInstance(AcademicAiSession.app()).currentUser == null) return null
         val data = call("getAcademicAiStatus")
         return AcademicAiStatus(data["enabled"] == true, data["visionEnabled"] == true, data["model"] as? String,
             (data["dailyAiQuotaUsed"] as? Number)?.toInt() ?: 0, (data["maxDailyAiQuota"] as? Number)?.toInt() ?: 0,

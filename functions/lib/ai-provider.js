@@ -1,11 +1,13 @@
 'use strict';
 // OpenAI-compatible transport; provider credentials and model selection stay server-side.
 const core = require('./premium-core');
+const DEFAULT_OPENAI_MODEL = 'gpt-5.4-mini-2026-03-17';
 function config(env) {
-  const model = String(env.AI_MODEL || '').trim();
   let base;
   try { base = new URL(env.AI_API_BASE_URL || 'https://api.openai.com/v1'); } catch (_) { return null; }
-  if (!env.AI_API_KEY || !model || model.length > 160 || /[\r\n]/.test(model) ||
+  const openAi = base.origin === 'https://api.openai.com';
+  const model = String(env.AI_MODEL ?? (openAi ? DEFAULT_OPENAI_MODEL : '')).trim();
+  if (!String(env.AI_API_KEY || '').trim() || !model || model.length > 160 || /[\r\n]/.test(model) ||
       base.protocol !== 'https:' || base.username || base.password || base.search || base.hash ||
       /gemini/i.test(model) || /generativelanguage\.googleapis\.com$/i.test(base.hostname)) return null;
   if (env.AI_ENABLED === 'false' || /gemini/i.test(String(env.AI_VISION_MODEL || ''))) return null;
@@ -13,7 +15,7 @@ function config(env) {
   const tokenParameter = env.AI_TOKEN_PARAMETER || 'max_completion_tokens';
   if (!['max_completion_tokens', 'max_tokens'].includes(tokenParameter)) return null;
   return { model, endpoint: endpoint.endsWith('/chat/completions') ? endpoint : endpoint + '/chat/completions', tokenParameter,
-    vision: env.AI_VISION_ENABLED === 'true', visionModel: String(env.AI_VISION_MODEL || model),
+    vision: env.AI_VISION_ENABLED == null ? openAi && model === DEFAULT_OPENAI_MODEL : env.AI_VISION_ENABLED === 'true', visionModel: String(env.AI_VISION_MODEL || model),
     maxTokens: Math.floor(Math.max(512, Math.min(8192, Number(env.AI_MAX_OUTPUT_TOKENS) || 4096))) };
 }
 const SCHEDULE_PROMPT = 'Read the supplied university timetable image. Return ONLY a JSON array of readable sessions: name, units (integer 1..10), dayOfWeek (0 Saturday through 6 Friday), startTime, endTime (HH:mm), location and instructor. Do not invent unreadable names, dates, times or locations. Omit uncertain rows; use empty strings for unknown instructor/location.';
@@ -71,4 +73,4 @@ async function generateAi(request, env, fetcher = fetch) {
   }
   return { text, model: body.model };
 }
-module.exports = { config, generateAi, SYSTEM_PROMPT };
+module.exports = { config, generateAi, SYSTEM_PROMPT, DEFAULT_OPENAI_MODEL };

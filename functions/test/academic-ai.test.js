@@ -109,3 +109,24 @@ test('vision is explicit, validates sessions and never grants importable invente
   assert.deepEqual(JSON.parse((await service.generate('guest', data)).text), [valid]);
   await assert.rejects(provider.generateAi(core.aiRequest(data), { ...env, AI_VISION_ENABLED: 'false' }), e => e.code === 'failed-precondition');
 });
+
+test('a single owner API key activates the OpenAI chat and image defaults without student configuration', async () => {
+  const keyOnly = { AI_API_KEY: 'private-owner-test-only' };
+  const cfg = provider.config(keyOnly);
+  assert.equal(cfg.model, 'gpt-5.4-mini-2026-03-17');
+  assert.equal(cfg.endpoint, 'https://api.openai.com/v1/chat/completions');
+  assert.equal(cfg.vision, true);
+  let calls = 0;
+  const service = new AcademicAiService(new MemoryFirestore(), keyOnly, async (url, options) => {
+    calls++;
+    assert.equal(url, cfg.endpoint);
+    assert.equal(options.headers.authorization, 'Bearer ' + keyOnly.AI_API_KEY);
+    assert.equal(JSON.parse(options.body).model, cfg.model);
+    return response(answer());
+  }, () => now);
+  const result = await service.generate('automatic-installation-identity', request());
+  assert.equal(calls, 1); assert.equal(result.subscriptionRequired, false);
+  assert.equal(provider.config({ AI_API_KEY: ' ' }), null);
+  assert.equal(provider.config({ ...keyOnly, AI_API_BASE_URL: 'https://custom.example/v1' }), null);
+  assert.equal(provider.config({ ...keyOnly, AI_ENABLED: 'false' }), null);
+});
