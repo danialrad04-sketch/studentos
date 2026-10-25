@@ -2,70 +2,28 @@ package com.example.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.data.local.entity.CourseEntity
 import com.example.data.local.relation.CourseWithSessions
+import com.example.data.local.util.DateTimeNormalizer
+import com.example.domain.engine.NextClassEngine
+import com.example.domain.util.JalaliCalendarUtil
 import com.example.ui.models.AppTab
+import kotlinx.coroutines.delay
 import java.util.Calendar
+import java.util.Locale
 
-private data class LiveActivityCourseInfo(
-    val name: String,
-    val start: String,
-    val end: String,
-    val location: String
-)
-
-/**
- * 2026 Apple Dynamic Island / Samsung Now Bar - Live Academic Activity Capsule
- * Floats at the top of Student OS providing real-time ambient status,
- * live class alerts, and expandable quick actions.
- */
+/** Home status comes only from recorded sessions and the running focus timer. */
 @Composable
 fun DynamicIslandLiveActivity(
     courses: List<CourseEntity> = emptyList(),
@@ -73,228 +31,72 @@ fun DynamicIslandLiveActivity(
     pomodoroSeconds: Int,
     isPomodoroRunning: Boolean,
     onNavigateTab: (AppTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    nowMillisOverride: Long? = null
 ) {
-    var isExpanded by remember { mutableStateOf(false) }
-
-    val pulseTransition = rememberInfiniteTransition(label = "pulse")
-    val pulseAlpha by pulseTransition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pill_pulse"
-    )
-
-    // Calculate nearest course session today
-    val now = Calendar.getInstance()
-    val dayOfWeek = now.get(Calendar.DAY_OF_WEEK)
-    val dayIndex = when (dayOfWeek) {
-        Calendar.SATURDAY -> 0
-        Calendar.SUNDAY -> 1
-        Calendar.MONDAY -> 2
-        Calendar.TUESDAY -> 3
-        Calendar.WEDNESDAY -> 4
-        else -> 0
-    }
-    val allSessionItems = remember(coursesWithSessions, courses) {
-        if (coursesWithSessions.isNotEmpty()) {
-            coursesWithSessions.flatMap { cws ->
-                cws.sessions.map { s ->
-                    Triple(s.day, s.start, LiveActivityCourseInfo(cws.course.name, s.start, s.end, s.location))
-                }
-            }
-        } else {
-            courses.map { c ->
-                Triple(0, "08:00", LiveActivityCourseInfo(c.name, "08:00", "10:00", c.examLocation))
-            }
+    var isExpanded by rememberSaveable { mutableStateOf(false) }
+    var liveNow by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(nowMillisOverride) {
+        if (nowMillisOverride == null) while (true) {
+            liveNow = System.currentTimeMillis()
+            // Class schedules have minute precision. Refresh on the next minute,
+            // including a day rollover, without a perpetual decorative animation.
+            delay(60_000L - liveNow % 60_000L)
         }
     }
-    val todayCourses = allSessionItems
-        .filter { it.first == dayIndex }
-        .sortedWith(compareBy({ com.example.data.local.util.DateTimeNormalizer.timeToMinutes(it.second) }, { it.third.name }))
-        .map { it.third }
-    val nextCourse = todayCourses.firstOrNull() ?: allSessionItems.firstOrNull()?.third
-
-    val pomodoroMin = pomodoroSeconds / 60
-    val pomodoroSec = pomodoroSeconds % 60
-    val pomodoroTimeStr = String.format("%02d:%02d", pomodoroMin, pomodoroSec)
-
-    val isDark = MaterialTheme.colorScheme.background.red < 0.2f
-    val pillContainerColor = if (isDark) {
-        Color(0xFF161C2D).copy(alpha = 0.88f)
-    } else {
-        MaterialTheme.colorScheme.surface
+    val now = Calendar.getInstance().apply { timeInMillis = nowMillisOverride ?: liveNow }
+    val minute = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
+    val next = NextClassEngine.next(coursesWithSessions, now.get(Calendar.DAY_OF_WEEK) % 7, minute)
+    val hasCourses = courses.any { !it.isArchived } || coursesWithSessions.any { !it.isArchived }
+    val title = when {
+        isPomodoroRunning -> "تمرکز فعال پومودورو"
+        next?.isOngoing == true -> "در کلاس: ${next.course.name}"
+        next != null -> "کلاس بعدی: ${next.course.name}"
+        hasCourses -> "زمان کلاس‌ها ثبت نشده"
+        else -> "هنوز کلاسی ثبت نشده"
     }
-    val pillBorderBrush = if (isDark) {
-        Brush.linearGradient(listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.04f)))
-    } else {
-        Brush.linearGradient(listOf(Color.Black.copy(alpha = 0.08f), Color.Black.copy(alpha = 0.03f)))
+    val badge = when {
+        isPomodoroRunning -> String.format(Locale.US, "%02d:%02d مانده", pomodoroSeconds.coerceAtLeast(0) / 60, pomodoroSeconds.coerceAtLeast(0) % 60)
+        next?.isOngoing == true -> "${DateTimeNormalizer.timeToMinutes(next.session.end) - minute} دقیقه تا پایان"
+        next?.daysAhead == 0 -> "${DateTimeNormalizer.timeToMinutes(next.session.start) - minute} دقیقه تا شروع"
+        next?.daysAhead == 1 -> "فردا، ${next.session.start}"
+        next != null -> "${next.daysAhead} روز دیگر"
+        else -> "ثبت برنامه"
     }
-
     Card(
-        shape = RoundedCornerShape(if (isExpanded) 24.dp else 30.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = pillContainerColor
-        ),
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.dp,
-            brush = pillBorderBrush
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 6.dp else 2.dp),
-        modifier = modifier
-            .fillMaxWidth()
-            .animateContentSize(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            )
-            .tactileClickable(pressedScale = 0.98f) {
-                isExpanded = !isExpanded
-            }
+        modifier = modifier.fillMaxWidth().testTag("live_activity").animateContentSize()
+            .semantics { stateDescription = if (isExpanded) "جزئیات باز است" else "نمای خلاصه" }
+            .tactileClickable { isExpanded = !isExpanded },
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shape = MaterialTheme.shapes.extraLarge
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp)
-        ) {
-            // Compact State (Dynamic Island Pill)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Right status with live indicator & title
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // Pulsing Neon Dot
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF10B981).copy(alpha = pulseAlpha))
-                            .border(1.5.dp, Color(0xFF34D399), CircleShape)
-                    )
-
-                    Column {
-                        Text(
-                            text = if (isPomodoroRunning) "تمرکز فعال پومودورو"
-                            else if (nextCourse != null) "${nextCourse.name} • ${nextCourse.location.ifEmpty { "۱۰۷ فنی" }}"
-                            else "وضعیت زنده: بدون کلاس فوری",
-                            fontSize = 12.5.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-                // Left Pill Badge (Remaining Time)
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color(0xFFF59E0B).copy(alpha = 0.18f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF59E0B).copy(alpha = 0.35f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = if (isPomodoroRunning) "$pomodoroTimeStr مانده"
-                            else if (isExpanded) "بستن ✕"
-                            else "۲۴:۱۸ مانده",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Black,
-                            color = if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706)
-                        )
-                    }
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(title, Modifier.weight(1f), style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Surface(color = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    shape = MaterialTheme.shapes.large, modifier = Modifier.widthIn(max = 136.dp)) {
+                    Text(badge, Modifier.padding(horizontal = 10.dp, vertical = 6.dp).testTag("live_activity_badge"),
+                        style = MaterialTheme.typography.labelMedium)
                 }
             }
-
-            // Expanded State (Rich Briefing Drawer)
-            AnimatedVisibility(
-                visible = isExpanded,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    if (nextCourse != null) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = nextCourse.name,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "زمان: ${nextCourse.start} الی ${nextCourse.end} · مکان: ${nextCourse.location.ifEmpty { "کلاس ۱۰۷ دانشکده مهندسی" }}",
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-
-                            Surface(
-                                shape = RoundedCornerShape(14.dp),
-                                color = Color(0xFF2563EB),
-                                modifier = Modifier.tactileClickable {
-                                    isExpanded = false
-                                    onNavigateTab(AppTab.SCHEDULE)
-                                }
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "برنامه کامل",
-                                        fontSize = 11.5.sp,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Default.ChevronRight,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            }
-                        }
+            AnimatedVisibility(isExpanded) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HorizontalDivider()
+                    if (next != null) {
+                        Text("${JalaliCalendarUtil.getWeekdayName(next.session.day)} · ${next.session.start} تا ${next.session.end}",
+                            style = MaterialTheme.typography.bodyMedium)
+                        Text(next.session.location.ifBlank { "مکان کلاس ثبت نشده" },
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     } else {
-                        Text(
-                            text = "امروز درس دیگری در برنامه کلاسی ثبت نشده است. می‌توانید به مرور جزوات بپردازید.",
-                            fontSize = 11.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Text("برای نمایش کلاس بعدی، روز و ساعت کلاس را در برنامه ثبت کن.",
+                            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-
-                    Spacer(modifier = Modifier.height(6.dp))
+                    TextButton(onClick = { isExpanded = false; onNavigateTab(AppTab.SCHEDULE) }, modifier = Modifier.testTag("live_activity_schedule")) {
+                        Text("برنامهٔ کلاس‌ها")
+                    }
                 }
             }
         }

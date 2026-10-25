@@ -135,7 +135,7 @@ jobs:
   release-artifact-validation:
     runs-on: ubuntu-latest
     timeout-minutes: 35
-    needs: [android-quality, backend-quality, instrumented-smoke]
+    # Artifact creation does not publish. All quality jobs still gate overall CI.
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -287,17 +287,11 @@ jobs:
             app/build/outputs/androidTest-results/
           if-no-files-found: ignore
 
-  signed-release-smoke:
+  build-upgrade-baseline:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
-    needs: release-artifact-validation
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - name: Download exact verified APK
-        uses: actions/download-artifact@v4
-        with:
-          name: studentos-bazaar-2.5.0
-          path: bazaar-candidates
       # Pin source because the exact Bazaar binary was not identified by the owner.
       # Building from source avoids relying on expiring Actions artifacts.
       - name: Checkout selected 2012 source baseline
@@ -330,6 +324,37 @@ jobs:
           echo 'Selected source: cc05e963fc9ec3b4a99499c20cf3c36a286b79a4 (2012 / 2.4.2); exact store binary unverified.' > build/signed-release-smoke/baseline.txt
           sha256sum "$RUNNER_TEMP/previous.apk" >> build/signed-release-smoke/baseline.txt
           rm "$KEYSTORE_PATH"
+      - name: Package selected source baseline for this run
+        run: |
+          mkdir -p baseline-output
+          cp "$RUNNER_TEMP/previous.apk" baseline-output/previous.apk
+          cp build/signed-release-smoke/baseline.txt baseline-output/baseline.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: studentos-upgrade-baseline-2012
+          path: baseline-output/
+          if-no-files-found: error
+
+  signed-release-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs: [release-artifact-validation, build-upgrade-baseline]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exact verified APK
+        uses: actions/download-artifact@v4
+        with:
+          name: studentos-bazaar-2.5.0
+          path: bazaar-candidates
+      - name: Download this run's verified 2012 baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: studentos-upgrade-baseline-2012
+          path: baseline-candidates
+      - name: Preserve baseline provenance
+        run: |
+          mkdir -p build/signed-release-smoke
+          cp baseline-candidates/baseline.txt build/signed-release-smoke/baseline.txt
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -348,7 +373,7 @@ jobs:
           disable-animations: true
           force-avd-creation: true
           emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
-          script: python3 scripts/smoke_bazaar_release.py --previous-apk "$RUNNER_TEMP/previous.apk" --candidate-apk bazaar-candidates/StudentOS-2.5.0.apk --output build/signed-release-smoke
+          script: python3 scripts/smoke_bazaar_release.py --previous-apk baseline-candidates/previous.apk --candidate-apk bazaar-candidates/StudentOS-2.5.0.apk --output build/signed-release-smoke
       - name: Upload signed release device evidence
         if: always()
         uses: actions/upload-artifact@v4

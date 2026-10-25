@@ -135,6 +135,9 @@ def main():
     assert 'Success' in adb('install', '-r', args.candidate_apk)
     launch()
     assert_profile()
+    xml = wait_ui(lambda x: 'خانه' in x)
+    assert '۲۴:۱۸ مانده' not in xml, 'Home still displays a fabricated countdown'
+    assert 'هنوز کلاسی ثبت نشده' in xml, 'Empty home status should not invent a class'
     capture(args.output, 'after-upgrade-offline')
     launch()
     assert_profile()

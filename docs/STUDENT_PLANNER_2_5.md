@@ -8,6 +8,9 @@ The signed 2012 artifact at run 39550667751 / artifact 12323339013 was inspected
 
 ## Implemented contracts
 
+- The home live-status banner uses NextClassEngine with recorded sessions, all seven weekdays, elapsed-session filtering and minute/day rollover. Missing schedules and locations remain explicitly unknown; no 08:00 class, room 107 or fixed 24:18 countdown is fabricated. Focus time comes from the actual timer.
+- Independent CI packaging and baseline compilation run concurrently with quality checks; overall workflow success still requires every quality job and the real signed upgrade. Nothing is published by this workflow.
+
 - Tasks store repeat interval (0/1/7/14/30 days), optional Tehran reminder time, and parent occurrence ID in Room schema 11. Migration 10→11 adds defaults without resetting IDs, completion, courses or semesters.
 - Completion reads the current database row and atomically creates at most one child. Overdue repeats skip missed dates while retaining cadence; 30 days means 30 days, not a calendar month. Undo/recomplete retains the existing child. Deleting an occurrence does not delete other occurrences. Archived work cannot spawn a child.
 - WorkManager persists reminders across process death/reboot. Unchanged pending work is retained, changed/deleted/completed/inactive reminders are cancelled, and past times are not newly queued. At delivery the worker reads the latest task and verifies its date/time, active semester/course, notification setting and account generation. Clearing academic/account state changes the generation so reused task IDs cannot receive old-account reminders. Notification taps open Tasks through the existing app gate.
