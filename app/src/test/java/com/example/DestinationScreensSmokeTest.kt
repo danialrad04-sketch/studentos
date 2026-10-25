@@ -76,7 +76,7 @@ open class DestinationScreensSmokeTest {
     @Test fun focus() = screen(AppTab.POMODORO) { PomodoroAndNotesScreen(1500, isRunning = false, onTogglePomodoro = {}, onResetPomodoro = {}, notes = "", onSaveNotes = {}) }
     @Test fun copilot() = screen(AppTab.COPILOT) {
         AcademicCopilotScreen(StudentProfileEntity(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList(),
-            onNavigateTab = {}, onExecuteAction = {}, onOpenPastSemestersDialog = {})
+            onNavigateTab = {}, onExecuteAction = { _, _ -> }, onOpenPastSemestersDialog = {})
     }
     @Test fun intelligence() = screen(AppTab.ACADEMIC_INTELLIGENCE) {
         AcademicIntelligenceScreen(0.0, 0, 0, emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), {})

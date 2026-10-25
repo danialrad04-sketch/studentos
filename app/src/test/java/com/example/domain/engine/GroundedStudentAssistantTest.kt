@@ -55,6 +55,15 @@ class GroundedStudentAssistantTest {
         assertTrue(text.contains("هیچ رویدادی ذخیره نشده"))
         assertEquals(7, Regex("\\*\\*[0-9]{4}/[0-9]{2}/[0-9]{2}\\*\\*").findAll(text).count())
     }
+    @Test fun tomorrowExamQueryNeverReturnsADifferentDaysExam() {
+        val now = java.util.Calendar.getInstance().apply { clear(); set(2026, 9, 25, 12, 0) }.timeInMillis
+        val exams = listOf(ExamItem(id = "a", courseName = "امروز", solarDate = "1405/08/03", time = "15:00", location = "", units = 3),
+            ExamItem(id = "b", courseName = "فردا", solarDate = "1405/08/04", time = "09:00", location = "", units = 3))
+        fun result(rows: List<ExamItem>) = GroundedStudentAssistant.respond("فردا چه امتحانی دارم؟", "chat", profile, listOf(course), emptyList(), emptyList(), emptyList(), emptyList(), rows, now = now)!!.text
+        assertTrue(result(exams).contains("مرور فردا"))
+        assertFalse(result(exams).contains("مرور امروز"))
+        assertTrue(result(exams.take(1)).contains("امتحانی با تاریخ معتبر ثبت نشده"))
+    }
     @Test fun localOnlyNeverCallsModelAndFailureNeverClaimsOnlineSuccess() = runBlocking {
         var calls = 0
         val provider: suspend (String, String, List<Pair<String,String>>, String) -> Result<String> = { _, _, _, _ -> calls++; Result.failure(IllegalStateException("unavailable")) }

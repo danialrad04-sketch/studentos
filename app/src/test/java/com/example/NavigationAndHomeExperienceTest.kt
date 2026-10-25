@@ -83,7 +83,7 @@ class NavigationAndHomeExperienceTest {
         rule.setContent {
             StudentOsTheme {
                 AcademicCopilotScreen(StudentProfileEntity(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList(),
-                    onNavigateTab = {}, onExecuteAction = {}, onOpenPastSemestersDialog = {}, userAccount = account)
+                    onNavigateTab = {}, onExecuteAction = { _, _ -> }, onOpenPastSemestersDialog = {}, userAccount = account)
             }
         }
         rule.onNodeWithTag("copilot_input_field").performTextInput("یادداشت خصوصی حساب اول")

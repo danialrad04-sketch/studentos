@@ -63,8 +63,15 @@ object GroundedStudentAssistant {
             },nav("GRADES","بازکردن کارنامه"))
         }
         if (kind=="exam" || (dataQuestion && (q.contains("امتحان") || q.contains("آزمون")))) {
-            val upcoming=exams.mapNotNull { e -> JalaliCalendarUtil.parse(e.solarDate)?.takeIf { it>=today }?.let { it to e } }.sortedBy { it.first }
-            val next=upcoming.firstOrNull()?.second ?: return message("امتحان آینده‌ای با تاریخ معتبر ثبت نشده است. تاریخ و سرفصل را مشخص کن تا برنامهٔ مرور بر اساس اطلاعات واقعی ساخته شود.",nav("EXAMS","بازکردن امتحان‌ها"))
+            val requestedDate = when { q.contains("فردا") -> add(today, 1); q.contains("امروز") -> today; else -> null }
+            val nowTime = String.format(Locale.US, "%02d:%02d", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))
+            val upcoming=exams.mapNotNull { e -> JalaliCalendarUtil.parse(e.solarDate)?.takeIf { date ->
+                if (requestedDate != null) date == requestedDate else date > today ||
+                    (date == today && (AcademicInputValidator.time(e.time)?.let { it >= nowTime } ?: true))
+            }?.let { it to e } }.sortedWith(compareBy({ it.first }, { AcademicInputValidator.time(it.second.time) ?: "99:99" }))
+            val next=upcoming.firstOrNull()?.second ?: return message(
+                if (requestedDate != null) "برای ${requestedDate.format()} امتحانی با تاریخ معتبر ثبت نشده است؛ این به معنی اطلاع از امتحان‌های خارج از برنامه نیست."
+                else "امتحان آینده‌ای با تاریخ معتبر ثبت نشده است. تاریخ و سرفصل را مشخص کن تا برنامهٔ مرور بر اساس اطلاعات واقعی ساخته شود.",nav("EXAMS","بازکردن امتحان‌ها"))
             return message("**مرور ${next.courseName}**\nتاریخ ثبت‌شده: ${next.solarDate}؛ ساعت: ${next.time.ifBlank { "ثبت نشده" }}.\n\n۱. سرفصل‌ها و نمونه‌سؤال واقعی درس را مشخص کن؛ محتوای جزوه‌ات در اختیار من نیست.\n۲. در یک جلسهٔ ${focusMinutes.coerceIn(5,120)} دقیقه‌ای، بدون نگاه به جزوه مطالب اصلی را بازگو کن.\n۳. یک تمرین حل کن، خطاها را جدا بنویس و در جلسهٔ بعد فقط نقاط ضعیف را مرور کن.\n\nاین پیشنهاد روش مطالعه است؛ در تقویم ذخیره نشده و سرفصل یا سؤال واقعی آزمون را حدس نمی‌زنم.",nav("EXAMS","بازکردن امتحان‌ها"))
         }
         if (dataQuestion && (q.contains("تکلیف") || q.contains("تکالیف") || q.contains("پروژه") || q.contains("تسک"))) return message(buildString {
