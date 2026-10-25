@@ -102,6 +102,26 @@ if (process.env.RUN_BACKEND_INTEGRATION !== '1') {
     assert.equal(taskPull.response.status, 200);
     assert.deepEqual(taskPull.body.payload, plannedTasks);
 
+    const concurrent = await Promise.all(Array.from({ length: 8 }, (_, index) => request('/api/sync/tasks', {
+      method: 'PUT', headers: { authorization: 'Bearer ' + accessToken },
+      body: JSON.stringify({ payload: plannedTasks.map((task) => ({ ...task, title: 'Revision ' + index })), updatedAt: 3000 + index }),
+    })));
+    concurrent.forEach(({ response }) => assert.ok([200, 409].includes(response.status)));
+    const latestTasks = await request('/api/sync/tasks', { headers: { authorization: 'Bearer ' + accessToken } });
+    assert.equal(latestTasks.body.updatedAt, 3007);
+    assert.equal(latestTasks.body.payload[0].title, 'Revision 7');
+    const clearTasks = await request('/api/sync/tasks', {
+      method: 'PUT', headers: { authorization: 'Bearer ' + accessToken },
+      body: JSON.stringify({ payload: [], updatedAt: 4000 }),
+    });
+    assert.equal(clearTasks.response.status, 200);
+    const emptyTasks = await request('/api/sync/tasks', { headers: { authorization: 'Bearer ' + accessToken } });
+    assert.deepEqual(emptyTasks.body.payload, []);
+    const missingPayload = await request('/api/sync/tasks', {
+      method: 'PUT', headers: { authorization: 'Bearer ' + accessToken }, body: JSON.stringify({ updatedAt: 5000 }),
+    });
+    assert.equal(missingPayload.response.status, 400);
+
     const refresh = await request('/api/auth/refresh', {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),

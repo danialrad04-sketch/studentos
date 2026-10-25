@@ -109,7 +109,9 @@ class StudentPlannerPersistenceTest {
         } finally { upgraded.close(); context.deleteDatabase(name) }
     }
     @Test fun accountResetChangesReminderGenerationAndRestartKeepsIt() {
-        val prefs = AppPreferencesRepository.getInstance(context)
+        // Fresh instances share this test's storage; avoid a singleton retained
+        // from a different Robolectric Application between unrelated tests.
+        val prefs = AppPreferencesRepository(context)
         val old = prefs.taskReminderGeneration.value
         prefs.clearAcademicChoices()
         assertNotEquals(old, prefs.taskReminderGeneration.value)

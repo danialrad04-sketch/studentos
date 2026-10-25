@@ -12,6 +12,8 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.example.ui.components.datepicker.JalaliCalendarUtil
 import com.example.ui.components.datepicker.JalaliDatePickerField
@@ -52,7 +54,7 @@ fun AddTaskDialog(courseNames: List<String>, onDismiss: () -> Unit, onSave: (Str
                 if (repeatDays > 0) Text("با انجام این تکلیف، موعد بعدی ساخته می‌شود. موعدهای گذشته رد می‌شوند؛ لغو انجام، نسخهٔ بعدی را حذف نمی‌کند.", style = MaterialTheme.typography.bodySmall)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     Text("یادآور روز تحویل", modifier = Modifier.weight(1f))
-                    Switch(checked = reminderEnabled, onCheckedChange = { reminderEnabled = it }, modifier = Modifier.testTag("task_reminder_switch"))
+                    Switch(checked = reminderEnabled, onCheckedChange = { reminderEnabled = it }, modifier = Modifier.testTag("task_reminder_switch").semantics { contentDescription = "یادآور روز تحویل" })
                 }
                 if (reminderEnabled) OutlinedTextField(value = reminderTime, onValueChange = { reminderTime = it }, label = { Text("ساعت یادآور، مثلاً 09:00") },
                     isError = normalizedTime == null, singleLine = true, modifier = Modifier.fillMaxWidth().testTag("task_reminder_time"),

@@ -27,6 +27,9 @@ class StudentPlannerDeviceTest {
 
     @Test fun repeatingTaskAndReminderSurviveDatabaseCloseAndReopen() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
+        val preferences = com.example.data.repository.AppPreferencesRepository(context)
+        assertEquals(preferences.taskReminderGeneration.value,
+            com.example.data.repository.AppPreferencesRepository(context).taskReminderGeneration.value)
         val name = "device-planner-${java.util.UUID.randomUUID()}.db"
         var db = Room.databaseBuilder(context, AppDatabase::class.java, name).build()
         try {
