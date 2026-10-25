@@ -8,7 +8,7 @@ import time
 import xml.etree.ElementTree as ET
 
 PACKAGE = 'com.aistudio.studentos.appvzk'
-MARKER = 'BZ42'
+MARKER = 'BZ50'
 
 
 def adb(*args):
@@ -155,7 +155,7 @@ def main():
     logs = adb('logcat', '-d', '-s', 'AndroidRuntime:E')
     (args.output / 'android-runtime.log').write_text(logs)
     assert 'FATAL EXCEPTION' not in logs, 'Signed release crashed'
-    (args.output / 'result.txt').write_text('PASS: signed release offline startup, local profile, update from 2.4.1, restart, fresh installation and optional notification refusal.\n')
+    (args.output / 'result.txt').write_text('PASS: signed release offline startup, local profile, update from selected 2.4.2 source baseline, restart, fresh installation and optional notification refusal.\n')
     print('Signed Bazaar release smoke and update checks passed.')
 
 

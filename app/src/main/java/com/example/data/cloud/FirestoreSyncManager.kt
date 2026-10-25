@@ -244,6 +244,11 @@ object FirestoreSyncManager {
                     "courseName" to t.courseName,
                     "dueDate" to t.dueDate,
                     "isCompleted" to t.isCompleted,
+                    "courseId" to t.courseId,
+                    "semesterId" to t.semesterId,
+                    "repeatEveryDays" to t.repeatEveryDays,
+                    "reminderTime" to t.reminderTime,
+                    "recurrenceParentId" to t.recurrenceParentId,
                     "updatedAt" to FieldValue.serverTimestamp()
                 )
                 batch.set(tDoc, map, SetOptions.merge())
@@ -593,22 +598,21 @@ object FirestoreSyncManager {
                         val semesterId = doc.getString("semesterId")
 
                         val existing = localTasks.find { it.id == id || (it.title == title && it.dueDate == dueDate) }
-                        if (existing == null) {
-                            dao.insertTask(
-                                TaskEntity(
-                                    id = if (id > 0L) id else 0L,
-                                    title = title,
-                                    courseName = courseName,
-                                    dueDate = dueDate,
-                                    isCompleted = isCompleted,
-                                    courseId = courseId,
-                                    semesterId = semesterId
-                                )
-                            )
-                            restoredCount++
-                        } else if (existing.isCompleted != isCompleted) {
-                            dao.insertTask(existing.copy(isCompleted = isCompleted))
-                            restoredCount++
+                        val incoming = TaskEntity(
+                            id = existing?.id ?: id.takeIf { it > 0 } ?: 0L,
+                            title = title, courseName = courseName, dueDate = dueDate, isCompleted = isCompleted,
+                            courseId = if (doc.contains("courseId")) courseId else existing?.courseId.orEmpty(),
+                            semesterId = if (doc.contains("semesterId")) semesterId else existing?.semesterId,
+                            repeatEveryDays = doc.getLong("repeatEveryDays")?.takeIf { it in setOf(0L, 1L, 7L, 14L, 30L) }?.toInt() ?: existing?.repeatEveryDays ?: 0,
+                            reminderTime = doc.getString("reminderTime") ?: existing?.reminderTime.orEmpty(),
+                            recurrenceParentId = if (doc.contains("recurrenceParentId")) doc.getLong("recurrenceParentId") else existing?.recurrenceParentId
+                        )
+                        if (runCatching { com.example.domain.engine.TaskPlanningEngine.validate(incoming) }.isSuccess && incoming != existing) {
+                            val sibling = incoming.recurrenceParentId?.let { dao.getNextOccurrence(it) }
+                            if (sibling == null || sibling.id == incoming.id) {
+                                dao.insertTask(incoming)
+                                restoredCount++
+                            }
                         }
                     }
                 }

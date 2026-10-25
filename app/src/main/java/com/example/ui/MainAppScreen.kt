@@ -103,8 +103,14 @@ import java.util.Locale
 @Composable
 fun MainAppScreen(
     studentViewModel: StudentViewModel = viewModel(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    notificationDestinations: kotlinx.coroutines.flow.Flow<String>? = null
 ) {
+    androidx.compose.runtime.LaunchedEffect(notificationDestinations) {
+        notificationDestinations?.collect { destination ->
+            if (destination == "TASKS") studentViewModel.selectTab(AppTab.TASKS)
+        }
+    }
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
 

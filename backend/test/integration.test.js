@@ -86,6 +86,22 @@ if (process.env.RUN_BACKEND_INTEGRATION !== '1') {
     assert.equal(pull.body.payload.name, 'Local User');
     assert.equal(pull.body.updatedAt, 1000);
 
+    // Academic planning metadata must survive the real JSONB backend unchanged.
+    const plannedTasks = [
+      { id: 42, title: 'Weekly exercise', dueDate: '1405/07/01', isCompleted: true,
+        courseId: 'math', semesterId: 'term', repeatEveryDays: 7, reminderTime: '09:30', recurrenceParentId: null },
+      { id: 43, title: 'Weekly exercise', dueDate: '1405/07/08', isCompleted: false,
+        courseId: 'math', semesterId: 'term', repeatEveryDays: 7, reminderTime: '09:30', recurrenceParentId: 42 },
+    ];
+    const taskPush = await request('/api/sync/tasks', {
+      method: 'PUT', headers: { authorization: 'Bearer ' + accessToken },
+      body: JSON.stringify({ payload: plannedTasks, updatedAt: 2000 }),
+    });
+    assert.equal(taskPush.response.status, 200);
+    const taskPull = await request('/api/sync/tasks', { headers: { authorization: 'Bearer ' + accessToken } });
+    assert.equal(taskPull.response.status, 200);
+    assert.deepEqual(taskPull.body.payload, plannedTasks);
+
     const refresh = await request('/api/auth/refresh', {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),

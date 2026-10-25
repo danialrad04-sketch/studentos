@@ -349,16 +349,35 @@ class StudentRepository(
     // Tasks
     // ==========================================
     suspend fun saveTask(task: TaskEntity) = withContext(Dispatchers.IO) {
-        dao.insertTask(task)
+        com.example.domain.engine.TaskPlanningEngine.validate(task)
+        val normalized = task.copy(reminderTime = com.example.domain.util.AcademicInputValidator.time(task.reminderTime).orEmpty())
+        normalized.copy(id = dao.insertTask(normalized))
     }
 
     suspend fun updateTask(task: TaskEntity) = withContext(Dispatchers.IO) {
-        require(task.id > 0 && task.title.isNotBlank() && com.example.domain.util.JalaliCalendarUtil.parse(task.dueDate) != null)
-        dao.updateTask(task)
+        require(task.id != 0L)
+        com.example.domain.engine.TaskPlanningEngine.validate(task)
+        dao.updateTask(task.copy(reminderTime = com.example.domain.util.AcademicInputValidator.time(task.reminderTime).orEmpty()))
     }
 
-    suspend fun toggleTaskCompletion(task: TaskEntity) = withContext(Dispatchers.IO) {
-        dao.updateTask(task.copy(isCompleted = !task.isCompleted))
+    suspend fun toggleTaskCompletion(task: TaskEntity, today: com.example.domain.util.JalaliDate = com.example.domain.util.JalaliCalendarUtil.today()) = withContext(Dispatchers.IO) {
+        val persist: suspend () -> TaskEntity? = {
+            val stored = dao.getTaskById(task.id)
+            if (stored != null) {
+                val updated = stored.copy(isCompleted = !stored.isCompleted)
+                dao.updateTask(updated)
+                val semester = stored.semesterId?.let { dao.getSemesterById(it) }
+                val course = stored.courseId.takeIf { it.isNotBlank() }?.let { dao.getCourseById(it) }
+                if (updated.isCompleted && (stored.semesterId == null || (semester?.isCurrent == true && !semester.isArchived)) &&
+                    (stored.courseId.isBlank() || (course != null && !course.isArchived)) && dao.getNextOccurrence(stored.id) == null) {
+                    com.example.domain.engine.TaskPlanningEngine.nextDate(stored.dueDate, stored.repeatEveryDays, today)?.let { next ->
+                        dao.insertTaskOccurrence(stored.copy(id = 0, dueDate = next, isCompleted = false, recurrenceParentId = stored.id))
+                    }
+                }
+                updated
+            } else null
+        }
+        if (database != null) database.withTransaction { persist() } else persist()
     }
 
     suspend fun deleteTask(task: TaskEntity) = withContext(Dispatchers.IO) {

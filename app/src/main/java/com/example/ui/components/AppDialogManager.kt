@@ -265,8 +265,11 @@ fun AppDialogManager(
                 isSaving = isSaving,
                 onDismiss = dismiss,
                 onSave = { title, cName, date ->
-                    onRequestNotificationPermission()
                     studentViewModel.saveTask(title, cName, date, onSaved = dismiss)
+                },
+                onSavePlanned = { title, name, date, repeat, time ->
+                    if (time.isNotBlank()) onRequestNotificationPermission()
+                    studentViewModel.saveTask(title, name, date, onSaved = dismiss, repeatEveryDays = repeat, reminderTime = time)
                 }
             )
         }
@@ -274,7 +277,11 @@ fun AppDialogManager(
         is AppDialogState.EditTask -> {
             AddTaskDialog(courseNames = (listOf("عمومی") + courses.map { it.name } + dialogState.task.courseName).distinct(),
                 initialTask = dialogState.task, isSaving = isSaving, onDismiss = dismiss,
-                onSave = { title, name, date -> studentViewModel.editTask(dialogState.task, title, name, date, dismiss) })
+                onSave = { title, name, date -> studentViewModel.editTask(dialogState.task, title, name, date, dismiss) },
+                onSavePlanned = { title, name, date, repeat, time ->
+                    if (time.isNotBlank()) onRequestNotificationPermission()
+                    studentViewModel.editTask(dialogState.task, title, name, date, dismiss, repeatEveryDays = repeat, reminderTime = time)
+                })
         }
         is AppDialogState.ExamEditor -> {
             ExamEditorDialog(courses, dialogState.courseId, dismiss,

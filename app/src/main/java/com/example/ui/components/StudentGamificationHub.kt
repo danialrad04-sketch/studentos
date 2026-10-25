@@ -96,6 +96,7 @@ fun StudentGamificationHub(
 
         // 2. Quick Stat Counters Row
         GamificationStatCountersRow(profile = profile)
+        Text("آمار تمرکز و روزهای متوالی از جلسات ثبت‌شده محاسبه می‌شود؛ سوابق حداکثر ۹۰ روز دارای جلسه نگهداری می‌شوند.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
         // 3. Category Filter Chips
         LazyRow(
@@ -353,7 +354,7 @@ private fun GamificationStatCountersRow(
         MiniMetricPill(
             icon = "⏱️",
             title = "تمرکز ثبت‌شده",
-            value = "${profile.focusHoursTotal} ساعت",
+            value = String.format(java.util.Locale.US, "%.1f ساعت", profile.focusHoursTotal),
             modifier = Modifier.weight(1f)
         )
         MiniMetricPill(

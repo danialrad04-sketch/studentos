@@ -111,6 +111,14 @@ object LocalDataBackupManager {
             val payload = payloadAdapter.fromJson(jsonString)
                 ?: return@withContext Result.failure(IllegalArgumentException("Invalid JSON payload format"))
             payload.studySettings?.validate()
+            payload.tasks.forEach { com.example.domain.engine.TaskPlanningEngine.validate(it) }
+            require(payload.tasks.map { it.id }.distinct().size == payload.tasks.size) { "شناسهٔ تکلیف تکراری است." }
+            val parents = payload.tasks.mapNotNull { it.recurrenceParentId }
+            require(parents.distinct().size == parents.size) { "زنجیرهٔ تکلیف تکراری است." }
+            payload.tasks.forEach { task ->
+                val sibling = task.recurrenceParentId?.let { dao.getNextOccurrence(it) }
+                require(sibling == null || sibling.id == task.id) { "زنجیرهٔ تکلیف با اطلاعات فعلی تعارض دارد." }
+            }
 
             curriculumDao?.let { catalog ->
                 catalog.insertUniversities(payload.universities)

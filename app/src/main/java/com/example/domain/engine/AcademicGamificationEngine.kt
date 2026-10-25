@@ -19,15 +19,19 @@ object AcademicGamificationEngine {
         attendanceList: List<AttendanceEntity>,
         grades: List<GradeEntity>,
         passedUnits: Int,
-        pomodoroSecondsTotal: Int = 0
+        pomodoroSecondsTotal: Int = 0,
+        studyHistory: List<com.example.domain.model.StudyDay>? = null,
+        todayKey: String = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
     ): StudentGamificationProfile {
         val completedTasks = tasks.count { it.isCompleted }
         val totalTasks = tasks.size
         val zeroAbsenceCourses = attendanceList.count { it.absentCount == 0 }
-        val focusHours = (pomodoroSecondsTotal.toDouble() / 3600.0)
+        val study = StudyStatisticsEngine.calculate(studyHistory.orEmpty(), todayKey)
+        val focusHours = if (studyHistory != null) study.totalMinutes / 60.0 else pomodoroSecondsTotal.coerceAtLeast(0) / 3600.0
 
-        val totalUnits = grades.sumOf { it.units }
-        val totalScore = grades.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
+        val recordedGrades = grades.filter { it.hasRecordedScore() }
+        val totalUnits = recordedGrades.sumOf { it.units }
+        val totalScore = recordedGrades.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
         val gpa = if (totalUnits > 0) (totalScore / totalUnits.toDouble()).coerceIn(0.0, 20.0) else 0.0
 
         val badges = mutableListOf<AcademicBadge>()
@@ -52,7 +56,7 @@ object AcademicGamificationEngine {
             AcademicBadge(
                 id = "task_master_5",
                 title = "انضباط فولادی",
-                description = "تکمیل 5 تکلیف و تحویل به موقع",
+                description = "تکمیل 5 تکلیف ثبت‌شده",
                 iconEmoji = "📋",
                 category = BadgeCategory.TASK_CRUSHER,
                 tier = BadgeTier.SILVER,
@@ -89,8 +93,8 @@ object AcademicGamificationEngine {
                 category = BadgeCategory.ATTENDANCE_SHIELD,
                 tier = BadgeTier.SILVER,
                 isUnlocked = noCriticalAttendance && attendanceList.isNotEmpty(),
-                progress = if (noCriticalAttendance) 1f else 0.5f,
-                progressText = if (noCriticalAttendance) "100% امن" else "هشدار غیبت",
+                progress = if (attendanceList.isEmpty()) 0f else if (noCriticalAttendance) 1f else 0.5f,
+                progressText = if (attendanceList.isEmpty()) "در انتظار ثبت درس" else if (noCriticalAttendance) "100% امن" else "هشدار غیبت",
                 xpReward = 120
             )
         )
@@ -106,7 +110,7 @@ object AcademicGamificationEngine {
                 tier = BadgeTier.BRONZE,
                 isUnlocked = focusHours >= 2.0,
                 progress = (focusHours.toFloat() / 2f).coerceIn(0f, 1f),
-                progressText = "$focusHours از 2 ساعت",
+                progressText = String.format(java.util.Locale.US, "%.1f از 2 ساعت", focusHours),
                 xpReward = 80
             )
         )
@@ -114,13 +118,13 @@ object AcademicGamificationEngine {
             AcademicBadge(
                 id = "focus_flow_marathon",
                 title = "ماراتن مطالعه علمی",
-                description = "ثبت 10 ساعت مطالعه پیوسته در طول ترم",
+                description = "ثبت 10 ساعت تمرکز در سوابق مطالعهٔ موجود",
                 iconEmoji = "🧠",
                 category = BadgeCategory.STUDY_FOCUS,
                 tier = BadgeTier.PLATINUM,
                 isUnlocked = focusHours >= 10.0,
                 progress = (focusHours.toFloat() / 10f).coerceIn(0f, 1f),
-                progressText = "$focusHours از 10 ساعت",
+                progressText = String.format(java.util.Locale.US, "%.1f از 10 ساعت", focusHours),
                 xpReward = 350
             )
         )
@@ -160,7 +164,7 @@ object AcademicGamificationEngine {
             AcademicBadge(
                 id = "gpa_honors_17",
                 title = "دانشجوی ممتاز (رتبه الف)",
-                description = "دستیابی به معدل ترمیک یا کل بالاتر از 17.00",
+                description = "معدل نمره‌های ثبت‌شدهٔ ترم، حداقل 17.00",
                 iconEmoji = "🏆",
                 category = BadgeCategory.ACADEMIC_EXCELLENCE,
                 tier = BadgeTier.DIAMOND,
@@ -203,9 +207,9 @@ object AcademicGamificationEngine {
             currentXp = currentLevelProgressXp,
             nextLevelXp = nextLevelTargetXp,
             levelTitle = levelTitle,
-            // Daily streak persistence is not modeled yet; do not fabricate a streak.
-            studyStreakDays = 0,
-            bestStreakDays = 0,
+            // History is currently retained for up to 90 recorded days.
+            studyStreakDays = study.currentStreak,
+            bestStreakDays = study.bestStreak,
             focusHoursTotal = focusHours,
             completedTasksCount = completedTasks,
             perfectAttendanceCount = zeroAbsenceCourses,

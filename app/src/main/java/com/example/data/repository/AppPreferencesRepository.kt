@@ -31,6 +31,12 @@ class AppPreferencesRepository(context: Context) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
+    private val _taskReminderGeneration = MutableStateFlow(prefs.getString("task_reminder_generation", null)
+        ?: java.util.UUID.randomUUID().toString().also { check(prefs.edit().putString("task_reminder_generation", it).commit()) })
+    val taskReminderGeneration: StateFlow<String> = _taskReminderGeneration.asStateFlow()
+    private val _studyDate = MutableStateFlow(currentDayKey())
+    val studyDate: StateFlow<String> = _studyDate.asStateFlow()
+
     private val _themeMode = MutableStateFlow(readStoredThemeMode())
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
@@ -126,6 +132,7 @@ class AppPreferencesRepository(context: Context) {
         val day = currentDayKey()
         if (!force && activityDayKey == day) return
         activityDayKey = day
+        _studyDate.value = day
         _studyHistory.value = readStudyHistory()
         _todayFocusMinutes.value = readTodayFocusMinutes()
     }
@@ -206,11 +213,13 @@ class AppPreferencesRepository(context: Context) {
     }
 
     fun clearAcademicChoices() = synchronized(FOCUS_COMPLETION_LOCK) {
+        val generation = java.util.UUID.randomUUID().toString()
         saveTargetGpaGoal(null)
         clearAcceptedStudyPlan()
         saveSemesterPlan(null)
         saveFocusSession(com.example.domain.model.FocusSession())
         check(prefs.edit()
+            .putString("task_reminder_generation", generation)
             .remove("exam_reminder_ids")
             .remove(KEY_DAILY_STUDY_GOAL_MINUTES)
             .remove(KEY_DEFAULT_FOCUS_MINUTES)
@@ -218,6 +227,7 @@ class AppPreferencesRepository(context: Context) {
             .remove(KEY_FOCUS_STATS_MINUTES)
             .remove(KEY_STUDY_HISTORY)
             .commit())
+        _taskReminderGeneration.value = generation
         _examReminderIds.value = emptySet()
         _dailyStudyGoalMinutes.value = 120
         _defaultFocusMinutes.value = 25

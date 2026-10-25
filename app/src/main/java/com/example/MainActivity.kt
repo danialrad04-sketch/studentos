@@ -14,8 +14,18 @@ import com.example.ui.MainAppScreen
 import com.example.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
+  private val notificationDestinations = kotlinx.coroutines.flow.MutableSharedFlow<String>(replay = 1)
+  private fun acceptDestination(intent: android.content.Intent?) {
+    intent?.getStringExtra("destination_tab")?.takeIf { it == "TASKS" }?.let { notificationDestinations.tryEmit(it) }
+  }
+  override fun onNewIntent(intent: android.content.Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    acceptDestination(intent)
+  }
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    acceptDestination(intent)
     enableEdgeToEdge()
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       window.isNavigationBarContrastEnforced = false
@@ -27,7 +37,7 @@ class MainActivity : ComponentActivity() {
     } catch (_: Throwable) {}
 
     setContent {
-      MainAppScreen()
+      MainAppScreen(notificationDestinations = notificationDestinations)
     }
   }
 }

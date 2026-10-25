@@ -282,6 +282,20 @@ class StudentViewModel @JvmOverloads constructor(
     }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    init {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            combine(repository.tasks, repository.courses, repository.currentSemester,
+                notificationsEnabled, preferencesRepository.taskReminderGeneration) { records, currentCourses, semester, enabled, generation ->
+                Triple(records.filter { task -> (task.semesterId == null || task.semesterId == semester?.id) &&
+                    (task.courseId.isBlank() || currentCourses.any { it.id == task.courseId && !it.isArchived }) }, enabled, generation)
+            }.collect { (active, enabled, generation) ->
+                try { com.example.data.local.TaskReminderScheduler.reconcile(getApplication(), active, enabled, generation) }
+                catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                catch (e: Exception) { com.example.util.CrashLogger.recordException(e) }
+            }
+        }
+    }
+
     private val _isOnboardingCompleted = MutableStateFlow(preferencesRepository.isOnboardingCompleted.value)
     val isOnboardingCompleted: StateFlow<Boolean> = _isOnboardingCompleted.asStateFlow()
 
@@ -543,19 +557,24 @@ class StudentViewModel @JvmOverloads constructor(
         emptyList()
     )
 
+    private val studyActivity = combine(studyHistory, preferencesRepository.studyDate) { history, date -> history to date }
+
     // Student Gamification & Academic Badges Profile (Phase v5)
     val gamificationProfile: StateFlow<StudentGamificationProfile> = combine(
         tasks,
         attendance,
         grades,
-        profile
-    ) { tasksList, attendanceList, gradesList, studentProfile ->
+        profile,
+        studyActivity
+    ) { tasksList, attendanceList, gradesList, studentProfile, study ->
         val passed = studentProfile.declaredPassedCredits ?: studentProfile.passedUnits
         AcademicGamificationEngine.calculateGamificationProfile(
             tasks = tasksList,
             attendanceList = attendanceList,
             grades = gradesList,
-            passedUnits = passed
+            passedUnits = passed,
+            studyHistory = study.first,
+            todayKey = study.second
         )
     }.stateIn(
         viewModelScope,
@@ -824,7 +843,7 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    fun saveTask(title: String, courseName: String, dueDate: String, courseId: String? = null, onSaved: () -> Unit = {}) {
+    fun saveTask(title: String, courseName: String, dueDate: String, courseId: String? = null, onSaved: () -> Unit = {}, repeatEveryDays: Int = 0, reminderTime: String = "") {
         if (_isSavingRecord.value) return
         _isSavingRecord.value = true
         viewModelScope.launch {
@@ -834,7 +853,7 @@ class StudentViewModel @JvmOverloads constructor(
                 val resolvedCourse = courses.value.find { if (!courseId.isNullOrBlank()) it.id == courseId else it.name == courseName }
                 val currentSem = repository.getCurrentSemesterSync()
                 repository.saveTask(TaskEntity(title = title.trim(), courseName = resolvedCourse?.name ?: courseName,
-                    dueDate = date.format(), courseId = resolvedCourse?.id.orEmpty(), semesterId = currentSem?.id))
+                    dueDate = date.format(), courseId = resolvedCourse?.id.orEmpty(), semesterId = currentSem?.id, repeatEveryDays = repeatEveryDays, reminderTime = reminderTime))
                 triggerCloudSync()
                 onSaved()
                 _userMessage.emit("تکلیف ذخیره شد.")
@@ -844,14 +863,14 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    fun editTask(task: TaskEntity, title: String, courseName: String, dueDate: String, onSaved: () -> Unit = {}) {
+    fun editTask(task: TaskEntity, title: String, courseName: String, dueDate: String, onSaved: () -> Unit = {}, repeatEveryDays: Int = task.repeatEveryDays, reminderTime: String = task.reminderTime) {
         if (_isSavingRecord.value) return
         _isSavingRecord.value = true
         viewModelScope.launch {
             try {
                 val date = com.example.domain.util.JalaliCalendarUtil.parse(dueDate) ?: error("تاریخ تحویل معتبر نیست.")
                 val course = courses.value.find { it.name == courseName }
-                repository.updateTask(task.copy(title = title.trim(), courseName = courseName, dueDate = date.format(), courseId = course?.id.orEmpty()))
+                repository.updateTask(task.copy(title = title.trim(), courseName = courseName, dueDate = date.format(), courseId = course?.id.orEmpty(), repeatEveryDays = repeatEveryDays, reminderTime = reminderTime))
                 triggerCloudSync()
                 onSaved()
                 _userMessage.emit("تغییرات تکلیف ذخیره شد.")
@@ -889,8 +908,7 @@ class StudentViewModel @JvmOverloads constructor(
                     finalRecordedGpa = finalRecordedGpa
                 )
             )
-            preferencesRepository.clearAcademicChoices()
-            com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
+            clearAcademicReminderState()
             addNotification(
                 "آغاز ترم تحصیلی جدید",
                 "ترم «${result.createdSemester.title}» به عنوان ترم جاری فعال شد و اطلاعات ترم قبلی با موفقیت بایگانی گردید."
@@ -904,11 +922,12 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun toggleTask(task: TaskEntity) {
         viewModelScope.launch {
-            repository.toggleTaskCompletion(task)
-            if (!task.isCompleted) {
-                addNotification("انجام تکلیف", "آفرین! تکلیف «${task.title}» انجام شد.")
-            }
-            triggerCloudSync()
+            try {
+                val saved = repository.toggleTaskCompletion(task) ?: return@launch
+                if (saved.isCompleted) addNotification("انجام تکلیف", "آفرین! تکلیف «${saved.title}» انجام شد.")
+                triggerCloudSync()
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "وضعیت تکلیف ذخیره نشد.") }
         }
     }
 
@@ -1187,11 +1206,18 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
+    private suspend fun clearAcademicReminderState() {
+        // Finish cancelling the old generation before the new generation can enqueue work.
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            com.example.data.local.AcademicReminderWorker.cancelAll(getApplication()).result.get()
+        }
+        preferencesRepository.clearAcademicChoices()
+    }
+
     fun resetToDefaults() {
         viewModelScope.launch {
             repository.resetDefaults()
-            preferencesRepository.clearAcademicChoices()
-            com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
+            clearAcademicReminderState()
             addNotification("بازنشانی سامانه", "کلیه اطلاعات به حالت پیش‌فرض بازگشت.")
         }
     }
@@ -1199,8 +1225,7 @@ class StudentViewModel @JvmOverloads constructor(
     fun loadDemoData() {
         viewModelScope.launch {
             repository.loadRichDemoData()
-            preferencesRepository.clearAcademicChoices()
-            com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
+            clearAcademicReminderState()
             addNotification("حالت دمو فعال شد", "داده‌های کامل و نمونه دانشگاهی بارگذاری شد 🎓")
         }
     }
@@ -1215,8 +1240,7 @@ class StudentViewModel @JvmOverloads constructor(
     ) {
         viewModelScope.launch {
             repository.clearToFreshSlate(name, studentId, university, major, entryYear, currentSemester)
-            preferencesRepository.clearAcademicChoices()
-            com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
+            clearAcademicReminderState()
             addNotification("شروع نو و پاکسازی", "سیستم‌عامل تحصیلی با یک بوم پاک و آماده ثبت دروس شما آماده شد ✨")
         }
     }
@@ -1263,9 +1287,8 @@ class StudentViewModel @JvmOverloads constructor(
             }
             val result = repository.restoreFullBackupJson(jsonString)
             if (result.isSuccess) {
-                preferencesRepository.clearAcademicChoices()
+                clearAcademicReminderState()
                 settings?.let { preferencesRepository.restoreStudySettings(it) }
-                com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
                 preferencesRepository.recordSuccessfulSave()
                 LocalDataBackupManager.saveLocalSnapshot(application, jsonString)
                 _userMessage.emit("داده‌های شما با موفقیت از فایل پشتیبان بازیابی شدند.")
@@ -1441,8 +1464,7 @@ class StudentViewModel @JvmOverloads constructor(
     fun signOutUser() {
         viewModelScope.launch {
             preferencesRepository.setGuestModeEnabled(true)
-            preferencesRepository.clearAcademicChoices()
-            com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
+            clearAcademicReminderState()
             SyncStatusStore.markLocal(application)
             authManager.signOutUser()
             // Clear onboarding preferences
@@ -1464,8 +1486,7 @@ class StudentViewModel @JvmOverloads constructor(
                 _userMessage.emit(result.exceptionOrNull()?.localizedMessage ?: "حذف حساب انجام نشد؛ دوباره وارد حساب شوید و تلاش کنید.")
                 return@launch
             }
-            preferencesRepository.clearAcademicChoices()
-            com.example.data.local.AcademicReminderWorker.cancelAll(getApplication())
+            clearAcademicReminderState()
             SyncStatusStore.markLocal(application)
             preferencesRepository.setGuestModeEnabled(true)
             repository.clearToFreshSlate("دانشجوی جدید", "", "", "", 1403, 1)
