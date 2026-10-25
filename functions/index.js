@@ -55,9 +55,12 @@ exports.verifyBazaarSubscription = secured.https.onCall(async (data, context) =>
 exports.getAcademicAiStatus = aiFunctions.https.onCall((_data, context) => {
   const uid = aiUser(context); return safe(() => academicAi.status(uid));
 });
-exports.generateAcademicAdvice = aiFunctions.https.onCall((data, context) => {
+exports.generateAcademicAssistantReply = aiFunctions.https.onCall((data, context) => {
   const uid = aiUser(context); return safe(() => academicAi.generate(uid, data || {}));
 });
+// Preserve the old callable for existing clients when an operator updates it.
+// New Android clients use the distinct endpoint and never fall back to a legacy Gemini deployment.
+exports.generateAcademicAdvice = exports.generateAcademicAssistantReply;
 
 /**
  * Callable Cloud Function: validateAndApplyPromoCode

@@ -74,6 +74,6 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
   });
   test('callable exports load under the installed Firebase Functions SDK', () => {
     const functions = require('../index');
-    for (const name of ['getPremiumCatalog', 'verifyBazaarSubscription', 'getAcademicAiStatus', 'generateAcademicAdvice', 'submitSupportTicket', 'replySupportTicket', 'closeSupportTicket', 'respondSupportTicket']) assert.equal(typeof functions[name], 'function');
+    for (const name of ['getPremiumCatalog', 'verifyBazaarSubscription', 'getAcademicAiStatus', 'generateAcademicAssistantReply', 'generateAcademicAdvice', 'submitSupportTicket', 'replySupportTicket', 'closeSupportTicket', 'respondSupportTicket']) assert.equal(typeof functions[name], 'function');
   });
 }

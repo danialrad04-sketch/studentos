@@ -50,13 +50,13 @@ object AcademicAiApiClient {
     suspend fun advice(prompt: String, context: String, history: List<Pair<String, String>>, kind: String = "chat"): Result<String> = result {
         require(prompt.trim().length in 1..4000) { "پرسش باید بین ۱ تا ۴۰۰۰ نویسه باشد." }
         require(context.length <= 16000) { "اطلاعات این درخواست بیش از اندازه است." }
-        val data = call("generateAcademicAdvice", mapOf("prompt" to prompt.trim(), "studentContext" to context, "kind" to kind,
+        val data = call("generateAcademicAssistantReply", mapOf("prompt" to prompt.trim(), "studentContext" to context, "kind" to kind,
             "requestId" to UUID.randomUUID().toString(), "history" to history.takeLast(8).map { mapOf("role" to it.first, "text" to it.second.take(3000)) }))
         (data["text"] as? String)?.trim()?.takeIf { it.isNotEmpty() } ?: error("پاسخی از مدل دریافت نشد.")
     }
     suspend fun schedule(bytes: ByteArray, mimeType: String): String {
         require(bytes.isNotEmpty() && bytes.size <= 2_000_000) { "تصویر باید غیرخالی و کوچک‌تر از ۲ مگابایت باشد." }
-        val data = call("generateAcademicAdvice", mapOf("kind" to "schedule", "prompt" to "Read the supplied timetable", "requestId" to UUID.randomUUID().toString(),
+        val data = call("generateAcademicAssistantReply", mapOf("kind" to "schedule", "prompt" to "Read the supplied timetable", "requestId" to UUID.randomUUID().toString(),
             "imageBase64" to android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP), "mimeType" to mimeType))
         return data["text"] as? String ?: error("جلسهٔ قابل خواندنی دریافت نشد.")
     }
