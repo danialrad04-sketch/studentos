@@ -23,6 +23,14 @@ class StudentPlannerPersistenceTest {
     private val context: Context get() = ApplicationProvider.getApplicationContext()
     @Before fun setup() { db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build(); repo = StudentRepository(db.studentDao(), db.curriculumDao(), db) }
     @After fun cleanup() { db.close() }
+    @Test fun assistantCompletionIsIdempotentAndPreservesRecurrence() = runBlocking {
+        val original = repo.saveTask(TaskEntity(title = "تمرین", dueDate = "1405/07/01", repeatEveryDays = 7))
+        repo.markTaskCompleted(original.id, JalaliDate(1405, 7, 1))
+        repo.markTaskCompleted(original.id, JalaliDate(1405, 7, 1))
+        assertTrue(db.studentDao().getTaskById(original.id)!!.isCompleted)
+        assertEquals(2, db.studentDao().getAllTasksSync().size)
+        assertEquals("1405/07/08", db.studentDao().getNextOccurrence(original.id)!!.dueDate)
+    }
     @Test fun completingRepeatingTaskPersistsOneNextOccurrenceAndUndoDoesNotDuplicateIt() = runBlocking {
         val today = JalaliDate(1405, 7, 20)
         val original = repo.saveTask(TaskEntity(title = "تمرین هفتگی", dueDate = "1405/07/01", repeatEveryDays = 7, reminderTime = "۰۹:۳۰"))

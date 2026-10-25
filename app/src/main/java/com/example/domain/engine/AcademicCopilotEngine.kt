@@ -32,57 +32,9 @@ object AcademicCopilotEngine {
         grades: List<GradeEntity>,
         tasks: List<TaskEntity>
     ): CopilotMessage {
-        val totalActiveUnits = courses.sumOf { it.units }.coerceAtLeast(profile.activeUnits)
-        val passedUnits = profile.passedUnits
-        val curriculumTotalUnits = CurriculumSeedData.getCoursesForMajor(profile.major)
-            .sumOf { it.units }
-        val totalRequired = curriculumTotalUnits.takeIf { it > 0 } ?: 0
-        val majorLabel = profile.major.ifBlank { "رشته ثبت نشده" }
-        val universityLabel = profile.university.ifBlank { "دانشگاه ثبت نشده" }
-        val semesterLabel = profile.currentSemester.takeIf { it > 0 }?.let { "ترم $it" } ?: "ترم ثبت نشده"
-        val entryYearLabel = profile.entryYear.takeIf { it > 0 }?.toString() ?: "سال ورود ثبت نشده"
-        val remainingUnits = if (totalRequired > 0) {
-            (totalRequired - passedUnits - totalActiveUnits).coerceAtLeast(0)
-        } else {
-            0
-        }
-        val gpa = computeGpa(grades, profile.declaredGpa)
-
-        val criticalAbsences = attendanceList.count { it.absentCount >= it.maxAllowed && it.maxAllowed > 0 }
-        val pendingTasks = tasks.count { !it.isCompleted }
-
-        val greeting = buildString {
-            append("سلام ${profile.name.ifBlank { "دانشجو" }} عزیز! من دستیار هوشمند دانشگاهی شما (Student OS Copilot) هستم.\n\n")
-            append("📊 **شناسنامه زنده و وضعیت تحصیلی:**\n")
-            append("• **رشته تحصیلی:** $majorLabel ($universityLabel)\n")
-            append("• **ترم جاری:** $semesterLabel ($entryYearLabel)\n")
-            append("• **واحدهای فعال این ترم:** $totalActiveUnits واحد (${courses.size} درس فعال)\n")
-            append(if (totalRequired > 0) "• **واحدهای گذرانده:** $passedUnits از $totalRequired واحد ($remainingUnits واحد تا فراغت از تحصیل)\n" else "• **واحدهای گذرانده:** $passedUnits واحد\n")
-            append("• **معدل کل:** ${String.format(Locale.US, "%.2f", gpa)}\n")
-
-            if (criticalAbsences > 0) {
-                append("• 🚨 **هشدار قانون ۳/۱۶:** $criticalAbsences درس در لبه سقف غیبت قرار دارد!\n")
-            }
-            if (pendingTasks > 0) {
-                append("• 📋 **تکالیف فعال:** $pendingTasks تکلیف باقی‌مانده\n")
-            }
-            append("\nمن بر اساس داده‌های ثبت‌شده در Student OS و قواعد تحصیلی پشتیبانی‌شده راهنمایی می‌کنم؛ اطلاعات ثبت‌نشده را حدس نمی‌زنم. چه کمکی از من برمی‌آید؟")
-        }
-
-        return CopilotMessage(
-            id = UUID.randomUUID().toString(),
-            sender = CopilotSender.COPILOT,
-            text = greeting,
-            timestamp = currentTimeString(),
-            suggestedQuickReplies = listOf(
-                "برنامه امروز من چیست؟",
-                "فردا چه امتحانی دارم؟",
-                "تحلیل سقف غیبت‌های ۳/۱۶",
-                "پیش‌نیازها و دروس ترم بعد",
-                "نمرات من را تحلیل کن."
-            ),
-            confidenceBadge = "مشاور هوشمند تحصیلی ${profile.major}"
-        )
+        return CopilotMessage(UUID.randomUUID().toString(), CopilotSender.COPILOT,
+            "سلام ${profile.name.ifBlank { "دانشجو" }}! می‌توانم از برنامهٔ ثبت‌شده، تکلیف‌ها، نمره‌ها و مطالعه‌ات برای اولویت‌بندی و پیشنهاد قدم بعدی استفاده کنم.\n\nتحلیل اطلاعات شخصی روی دستگاه کار می‌کند. برای توضیح درس و گفت‌وگوی آزاد، پاسخ مدل به اتصال سرویس نیاز دارد. دادهٔ ثبت‌نشده، سرفصل جزوه و زمان آزاد تو را حدس نمی‌زنم. از کجا شروع کنیم؟",
+            currentTimeString(), confidenceBadge = "راهنمای دستیار", suggestedQuickReplies = listOf("برنامه امروز من چیست؟", "تکالیف من را بگو", "نمره‌های ثبت‌شده من را بررسی کن", "برای هفت روز برنامه مطالعه بساز"))
     }
 
     fun processUserQuery(
@@ -798,17 +750,9 @@ object AcademicCopilotEngine {
                     }
                 }
 
-                val firstPending = pending.firstOrNull()
-                val proposal = if (firstPending != null) {
-                    CopilotActionProposal(
-                        id = UUID.randomUUID().toString(),
-                        title = "تکمیل تکلیف: ${firstPending.title}",
-                        description = "علامت‌گذاری این تکلیف به عنوان انجام‌شده",
-                        impactType = ActionImpactType.REQUIRES_CONFIRMATION,
-                        payload = CopilotPayload.CompleteTask(firstPending.id.toString(), firstPending.title),
-                        buttonLabel = "علامت‌گذاری به عنوان انجام‌شده"
-                    )
-                } else null
+                val proposal = GroundedStudentAssistant.completionProposal(query, tasks) ?: CopilotActionProposal(
+                    UUID.randomUUID().toString(), "مشاهدهٔ تکلیف‌ها", "بررسی کارهای ثبت‌شده", ActionImpactType.SAFE_QUERY,
+                    CopilotPayload.NavigateToTab("TASKS"), "بازکردن تکلیف‌ها")
 
                 CopilotMessage(
                     id = UUID.randomUUID().toString(),
@@ -861,106 +805,37 @@ object AcademicCopilotEngine {
         coursesWithSessions: List<CourseWithSessions> = emptyList(),
         curriculumCourses: List<CurriculumCourseEntity> = emptyList(),
         conversationHistory: List<CopilotMessage> = emptyList(),
-        customApiKey: String? = null,
-        kind: String = "chat"
+        kind: String = "chat",
+        studyHistory: List<com.example.domain.model.StudyDay> = emptyList(),
+        dailyGoalMinutes: Int = 120,
+        focusMinutes: Int = 25,
+        localOnly: Boolean = false,
+        adviceProvider: suspend (String, String, List<Pair<String, String>>, String) -> Result<String> = com.example.data.api.AcademicAiApiClient::advice
     ): CopilotMessage {
-        val todayWeekdayIdx = JalaliCalendarUtil.getTodayWeekdayIndex()
-        val todayWeekdayName = JalaliCalendarUtil.getWeekdayName(todayWeekdayIdx)
-        val todayJalali = JalaliCalendarUtil.today().format("/")
-        val tomorrowJalali = JalaliCalendarUtil.tomorrow().format("/")
-
-        val studentContext = buildString {
-            append("نام دانشجو: ${profile.name}\n")
-            append("دانشگاه: ${profile.university}\n")
-            append("رشته: ${profile.major}\n")
-            append("ترم تحصیلی: ترم ${profile.currentSemester} (ورودی ${profile.entryYear})\n")
-            append("واحدهای گذرانده: ${profile.passedUnits}\n")
-            append("معدل کل: ${String.format(Locale.US, "%.2f", computeGpa(grades, profile.declaredGpa))}\n")
-            grades.take(40).forEach { append("نمرهٔ ثبت‌شده: ${it.courseName} ${it.midtermGrade + it.finalGrade}\n") }
-            append("تاریخ امروز: $todayWeekdayName $todayJalali\n")
-            append("تاریخ فردا: $tomorrowJalali\n\n")
-
-            append("دروس فعال این ترم (${courses.size} درس):\n")
-            courses.forEach { c ->
-                val att = attendanceList.find { it.courseId == c.id || it.courseName == c.name }
-                val sessions = coursesWithSessions.find { it.course.id == c.id }?.sessions ?: emptyList()
-                val sessionStr = if (sessions.isNotEmpty()) {
-                    sessions.joinToString("، ") { s -> "${JalaliCalendarUtil.getWeekdayName(s.day)} \u200E${s.start}-${s.end}\u200E (${s.location})" }
-                } else "ساعت در برنامه هفتگی"
-                append("- ${c.name} (${c.units} واحد) | استاد: ${c.professor} | جلسات: $sessionStr | غیبت: ${att?.absentCount ?: 0}/${att?.maxAllowed ?: 3}\n")
-            }
-
-            if (exams.isNotEmpty()) {
-                append("\nامتحانات ثبت‌شده:\n")
-                exams.forEach { e ->
-                    append("- ${e.courseName}: تاریخ ${e.solarDate} ساعت \u200E${e.time}\u200E (${e.location})\n")
-                }
-            }
-
-            val pendingTasks = tasks.filter { !it.isCompleted }
-            if (pendingTasks.isNotEmpty()) {
-                append("\nتکالیف باقی‌مانده:\n")
-                pendingTasks.take(5).forEach { t ->
-                    append("- ${t.title} (درس: ${t.courseName} | موعد: ${t.dueDate})\n")
-                }
-            }
-        }
-
-        // Format recent conversation history (last 6 turns)
-        val historyTurns = conversationHistory.dropLastWhile { it.sender == CopilotSender.USER && it.text.trim() == query.trim() }.takeLast(6).map { msg ->
-            val role = if (msg.sender == CopilotSender.USER) "user" else "model"
-            Pair(role, msg.text)
-        }
-
-        // Request online advice through the authenticated server callable.
-        val geminiResult = com.example.data.api.GeminiApiClient.generateAcademicAdvice(
-            prompt = query,
-            studentContext = studentContext,
-            history = historyTurns,
-            customApiKey = customApiKey,
-            kind = kind
-        )
-
-        if (geminiResult.isSuccess) {
-            val geminiText = geminiResult.getOrNull()
-            if (!geminiText.isNullOrBlank()) {
-                val detectedAction = detectActionProposal(query, geminiText, tasks, courses, profile)
-                val dynamicQuickReplies = generateDynamicQuickReplies(query, geminiText)
-
-                return CopilotMessage(
-                    id = UUID.randomUUID().toString(),
-                    sender = CopilotSender.COPILOT,
-                    text = geminiText,
-                    timestamp = currentTimeString(),
-                    confidenceBadge = "پاسخ آنلاین دستیار تحصیلی",
-                    proposedAction = detectedAction,
-                    suggestedQuickReplies = dynamicQuickReplies
-                )
-            }
-        }
-
-        // Capture failure details and log thoroughly
-        val failureException = geminiResult.exceptionOrNull() ?: IllegalStateException("Gemini returned empty text or failed without explicit exception")
-        Log.e("GeminiApiClient", "Copilot fallback to offline heuristic. Gemini error: ${failureException.message}", failureException)
-        CrashLogger.recordException(failureException)
-
-        // 2. Offline intelligent analytical fallback with real user data
-        val fallbackMsg = processUserQuery(
-            query = query,
-            profile = profile,
-            courses = courses,
-            attendanceList = attendanceList,
-            grades = grades,
-            tasks = tasks,
-            exams = exams,
-            coursesWithSessions = coursesWithSessions,
-            curriculumCourses = curriculumCourses
-        )
-
-        return fallbackMsg.copy(
-            text = "${com.example.data.api.PremiumApiClient.userMessage(failureException)}\n\nتحلیل بر اساس اطلاعات ذخیره‌شده:\n" + fallbackMsg.text,
-            confidenceBadge = "تحلیل آفلاین · پاسخ آنلاین دریافت نشد"
-        )
+        val local = GroundedStudentAssistant.respond(query, kind, profile, courses, coursesWithSessions, attendanceList,
+            grades, tasks, exams, studyHistory, dailyGoalMinutes, focusMinutes)
+        if (localOnly || (kind == "chat" && local != null)) return local ?: CopilotMessage(
+            UUID.randomUUID().toString(), CopilotSender.COPILOT,
+            "در تحلیل روی دستگاه می‌توانم برنامه، تکلیف‌ها، نمره‌های ثبت‌شده و اولویت مطالعه را بررسی کنم. برای توضیح آزاد این پرسش، حالت پاسخ مدل و اتصال سرویس لازم است.",
+            currentTimeString(), confidenceBadge = "تحلیل روی دستگاه · پاسخ مولد دریافت نشده")
+        val studentContext = AcademicAssistantContext.build(profile, courses, coursesWithSessions, attendanceList, grades, tasks, exams,
+            studyHistory, dailyGoalMinutes, focusMinutes, recentLocalAnalysis = conversationHistory.filter {
+                it.responseSource == com.example.domain.model.CopilotResponseSource.LOCAL_ANALYSIS
+            }.map { it.text })
+        val historyTurns = conversationHistory
+            .filter { it.sender == CopilotSender.USER || (it.sender == CopilotSender.COPILOT && it.responseSource == com.example.domain.model.CopilotResponseSource.ONLINE_MODEL) }
+            .dropLastWhile { it.sender == CopilotSender.USER && it.text.trim() == query.trim() }.takeLast(8)
+            .map { (if (it.sender == CopilotSender.USER) "user" else "model") to it.text }
+        val result = adviceProvider(query, studentContext, historyTurns, kind)
+        val answer = result.getOrNull()?.trim()
+        if (!answer.isNullOrBlank()) return CopilotMessage(UUID.randomUUID().toString(), CopilotSender.COPILOT, answer,
+            currentTimeString(), confidenceBadge = "پاسخ مدل آنلاین", responseSource = com.example.domain.model.CopilotResponseSource.ONLINE_MODEL, proposedAction = detectActionProposal(query, answer, tasks, courses, profile),
+            suggestedQuickReplies = generateDynamicQuickReplies(query, answer))
+        val error = com.example.data.api.AcademicAiApiClient.userMessage(result.exceptionOrNull() ?: IllegalStateException("پاسخ مدل خالی بود."))
+        return local?.copy(text = "$error\n\n${local.text}", confidenceBadge = "تحلیل روی دستگاه · پاسخ مدل دریافت نشد", responseSource = com.example.domain.model.CopilotResponseSource.ONLINE_UNAVAILABLE)
+            ?: CopilotMessage(UUID.randomUUID().toString(), CopilotSender.COPILOT,
+                "$error\n\nپاسخ مولد دریافت نشد. می‌توانم بدون اینترنت تکلیف‌ها، برنامهٔ کلاس‌ها یا نمره‌های ثبت‌شده را بررسی کنم.",
+                currentTimeString(), confidenceBadge = "پاسخ مدل دریافت نشد", responseSource = com.example.domain.model.CopilotResponseSource.ONLINE_UNAVAILABLE, suggestedQuickReplies = listOf("برنامه امروز من چیست؟", "تکالیف من را بگو"))
     }
 
     private fun detectActionProposal(
@@ -974,7 +849,7 @@ object AcademicCopilotEngine {
         val t = aiText.lowercase(Locale.ROOT)
 
         return when {
-            q.contains("کارنامه") || q.contains("معدل") || t.contains("شبیه‌ساز نمرات") || q.contains("نمره") -> {
+            q.contains("کارنامه") || q.contains("معدل") || q.contains("نمره") -> {
                 CopilotActionProposal(
                     id = UUID.randomUUID().toString(),
                     title = "ورود به شبیه‌ساز کارنامه و معدل",
@@ -984,7 +859,7 @@ object AcademicCopilotEngine {
                     buttonLabel = "شبیه‌ساز کارنامه"
                 )
             }
-            q.contains("چارت") || q.contains("پیش‌نیاز") || q.contains("ترم بعد") || t.contains("پیش‌نیاز") || q.contains("عقب افتاده") -> {
+            q.contains("چارت") || q.contains("پیش‌نیاز") || q.contains("ترم بعد") || q.contains("عقب افتاده") -> {
                 CopilotActionProposal(
                     id = UUID.randomUUID().toString(),
                     title = "مشاهده درخت پیش‌نیازها و چارت",
@@ -994,7 +869,7 @@ object AcademicCopilotEngine {
                     buttonLabel = "چارت تحصیلی"
                 )
             }
-            q.contains("پومودورو") || q.contains("تمرکز") || q.contains("مطالعه") || t.contains("پومودورو") || q.contains("امتحان") -> {
+            q.contains("پومودورو") || q.contains("تمرکز") || q.contains("مطالعه") || q.contains("امتحان") -> {
                 CopilotActionProposal(
                     id = UUID.randomUUID().toString(),
                     title = "شروع جلسه تمرکز عمیق (پومودورو)",
@@ -1004,11 +879,11 @@ object AcademicCopilotEngine {
                     buttonLabel = "تایمر تمرکز"
                 )
             }
-            q.contains("غیبت") || q.contains("حضور") || t.contains("رادار غیبت") -> {
+            q.contains("غیبت") || q.contains("حضور") -> {
                 CopilotActionProposal(
                     id = UUID.randomUUID().toString(),
                     title = "مشاهده رادار غیبت‌های کلاسی",
-                    description = "بررسی وضعیت قانون ۳/۱۶ و حاشیه امن حضور در جلسات",
+                    description = "بررسی غیبت‌های ثبت‌شده و سقف تنظیم‌شده",
                     impactType = ActionImpactType.SAFE_QUERY,
                     payload = CopilotPayload.NavigateToTab("ATTENDANCE"),
                     buttonLabel = "رادار غیبت‌ها"
@@ -1025,17 +900,9 @@ object AcademicCopilotEngine {
                 )
             }
             q.contains("تکلیف") || q.contains("پروژه") || q.contains("تسک") -> {
-                val pending = tasks.firstOrNull { !it.isCompleted }
-                if (pending != null) {
-                    CopilotActionProposal(
-                        id = UUID.randomUUID().toString(),
-                        title = "تکمیل تکلیف «${pending.title}»",
-                        description = "علامت‌گذاری این تسک به عنوان انجام‌شده",
-                        impactType = ActionImpactType.REQUIRES_CONFIRMATION,
-                        payload = CopilotPayload.CompleteTask(pending.id.toString(), pending.title),
-                        buttonLabel = "تکمیل تکلیف"
-                    )
-                } else null
+                GroundedStudentAssistant.completionProposal(query, tasks) ?: CopilotActionProposal(
+                    UUID.randomUUID().toString(), "مشاهدهٔ تکلیف‌ها", "بررسی کارهای ثبت‌شده", ActionImpactType.SAFE_QUERY,
+                    CopilotPayload.NavigateToTab("TASKS"), "بازکردن تکلیف‌ها")
             }
             else -> null
         }

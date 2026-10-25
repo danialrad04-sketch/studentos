@@ -3,27 +3,16 @@ package com.example.data.api
 import org.json.JSONArray
 
 /** Server-backed academic advice and timetable parsing. No provider keys in the app. */
-object GeminiApiClient {
-    suspend fun generateAcademicAdvice(
-        prompt: String,
-        studentContext: String,
-        history: List<Pair<String, String>> = emptyList(),
-        customApiKey: String? = null,
-        kind: String = "chat"
-    ): Result<String> = PremiumApiClient.result {
-        PremiumApiClient.advice(prompt, studentContext, history, kind)
-    }
-
+object AcademicScheduleAiClient {
     /**
-     * Extracts courses and sessions from schedule photos using the current multimodal Gemini model.
+     * Extracts courses and sessions from schedule photos using the current multimodal configured vision model.
      */
     suspend fun extractScheduleFromImage(
         imageBytes: ByteArray,
-        mimeType: String = "image/jpeg",
-        customApiKey: String? = null
-    ): Result<List<com.example.data.parser.ParsedCourseDraft>> = PremiumApiClient.result {
+        mimeType: String = "image/jpeg"
+    ): Result<List<com.example.data.parser.ParsedCourseDraft>> = AcademicAiApiClient.result {
         require(imageBytes.isNotEmpty()) { "فایل تصویر انتخابی خالی است." }
-        val parsed = parseScheduleJson(PremiumApiClient.schedule(imageBytes, mimeType))
+        val parsed = parseScheduleJson(AcademicAiApiClient.schedule(imageBytes, mimeType))
         check(parsed.isNotEmpty()) { "جدولی از تصویر خوانده نشد؛ تصویر واضح‌تر انتخاب کنید." }
         parsed
     }
@@ -66,7 +55,7 @@ object GeminiApiClient {
                     endTime = endTime,
                     location = location,
                     instructor = instructor,
-                    confidence = 0.70f
+                    confidence = 0f
                 )
             )
         }

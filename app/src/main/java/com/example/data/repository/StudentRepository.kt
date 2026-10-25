@@ -360,11 +360,17 @@ class StudentRepository(
         dao.updateTask(task.copy(reminderTime = com.example.domain.util.AcademicInputValidator.time(task.reminderTime).orEmpty()))
     }
 
-    suspend fun toggleTaskCompletion(task: TaskEntity, today: com.example.domain.util.JalaliDate = com.example.domain.util.JalaliCalendarUtil.today()) = withContext(Dispatchers.IO) {
+    suspend fun toggleTaskCompletion(task: TaskEntity, today: com.example.domain.util.JalaliDate = com.example.domain.util.JalaliCalendarUtil.today()) =
+        setTaskCompletion(task.id, null, today)
+
+    suspend fun markTaskCompleted(id: Long, today: com.example.domain.util.JalaliDate = com.example.domain.util.JalaliCalendarUtil.today()) =
+        setTaskCompletion(id, true, today)
+
+    private suspend fun setTaskCompletion(id: Long, completed: Boolean?, today: com.example.domain.util.JalaliDate) = withContext(Dispatchers.IO) {
         val persist: suspend () -> TaskEntity? = {
-            val stored = dao.getTaskById(task.id)
+            val stored = dao.getTaskById(id)
             if (stored != null) {
-                val updated = stored.copy(isCompleted = !stored.isCompleted)
+                val updated = stored.copy(isCompleted = completed ?: !stored.isCompleted)
                 dao.updateTask(updated)
                 val semester = stored.semesterId?.let { dao.getSemesterById(it) }
                 val course = stored.courseId.takeIf { it.isNotBlank() }?.let { dao.getCourseById(it) }

@@ -797,8 +797,8 @@ class StudentViewModel @JvmOverloads constructor(
     )
 
     // Actions
-    fun saveCourse(course: CourseEntity, sessions: List<CourseSessionEntity> = emptyList(), onSaved: () -> Unit = {}) {
-        if (_isSavingRecord.value) return
+    fun saveCourse(course: CourseEntity, sessions: List<CourseSessionEntity> = emptyList(), onSaved: () -> Unit = {}, onFailed: () -> Unit = {}) {
+        if (_isSavingRecord.value) { onFailed(); return }
         _isSavingRecord.value = true
         viewModelScope.launch {
             try {
@@ -808,7 +808,7 @@ class StudentViewModel @JvmOverloads constructor(
                 onSaved()
                 _userMessage.emit("درس ${course.name} ذخیره شد.")
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
-            catch (e: Exception) { _userMessage.emit("درس ذخیره نشد؛ ورودی‌ها را بررسی و دوباره تلاش کنید.") }
+            catch (e: Exception) { onFailed(); _userMessage.emit("درس ذخیره نشد؛ ورودی‌ها را بررسی و دوباره تلاش کنید.") }
             finally { _isSavingRecord.value = false }
         }
     }
@@ -843,8 +843,8 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    fun saveTask(title: String, courseName: String, dueDate: String, courseId: String? = null, onSaved: () -> Unit = {}, repeatEveryDays: Int = 0, reminderTime: String = "") {
-        if (_isSavingRecord.value) return
+    fun saveTask(title: String, courseName: String, dueDate: String, courseId: String? = null, onSaved: () -> Unit = {}, repeatEveryDays: Int = 0, reminderTime: String = "", onFailed: () -> Unit = {}) {
+        if (_isSavingRecord.value) { onFailed(); return }
         _isSavingRecord.value = true
         viewModelScope.launch {
             try {
@@ -858,7 +858,7 @@ class StudentViewModel @JvmOverloads constructor(
                 onSaved()
                 _userMessage.emit("تکلیف ذخیره شد.")
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
-            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "تکلیف ذخیره نشد؛ دوباره تلاش کنید.") }
+            catch (e: Exception) { onFailed(); _userMessage.emit(e.localizedMessage ?: "تکلیف ذخیره نشد؛ دوباره تلاش کنید.") }
             finally { _isSavingRecord.value = false }
         }
     }
@@ -894,7 +894,8 @@ class StudentViewModel @JvmOverloads constructor(
         termNumber: Int,
         newCourses: List<CourseEntity> = emptyList(),
         finalRecordedGpa: Double? = null,
-        onSuccess: () -> Unit = {}
+        onSuccess: () -> Unit = {},
+        onFailed: () -> Unit = {}
     ) {
         viewModelScope.launch {
             try {
@@ -916,7 +917,7 @@ class StudentViewModel @JvmOverloads constructor(
             triggerCloudSync()
             onSuccess()
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
-            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "انتقال ترم انجام نشد؛ داده‌های پیشین حفظ شد.") }
+            catch (e: Exception) { onFailed(); _userMessage.emit(e.localizedMessage ?: "انتقال ترم انجام نشد؛ داده‌های پیشین حفظ شد.") }
         }
     }
 
@@ -1146,24 +1147,33 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    fun executeCopilotPayload(payload: com.example.domain.model.CopilotPayload) {
+    fun executeCopilotPayload(payload: com.example.domain.model.CopilotPayload, onResult: (Boolean) -> Unit = {}) {
+        val ownerGeneration = preferencesRepository.taskReminderGeneration.value
         viewModelScope.launch {
             try {
+                require(ownerGeneration == preferencesRepository.taskReminderGeneration.value) { "نشست تغییر کرده؛ درخواست را دوباره بررسی کن." }
+                var delegated = false
                 when (payload) {
-                    is com.example.domain.model.CopilotPayload.AddTask -> saveTask(payload.title, payload.courseName, payload.dueDate)
+                    is com.example.domain.model.CopilotPayload.AddTask -> {
+                        delegated = true
+                        saveTask(payload.title, payload.courseName, payload.dueDate, onSaved = { onResult(true) }, onFailed = { onResult(false) })
+                    }
                     is com.example.domain.model.CopilotPayload.CompleteTask -> {
-                        val task = tasks.value.find { it.id.toString() == payload.taskId }
-                            ?: tasks.value.filter { it.title == payload.taskTitle }.singleOrNull()
+                        val task = (if (payload.taskId.isNotBlank()) tasks.value.find { it.id.toString() == payload.taskId }
+                            else tasks.value.filter { it.title == payload.taskTitle }.singleOrNull())
                             ?: error("تکلیف مشخصی پیدا نشد؛ آن را از صفحه کارها انتخاب کنید.")
-                        if (!task.isCompleted) repository.updateTask(task.copy(isCompleted = true))
+                        repository.markTaskCompleted(task.id) ?: error("تکلیف حذف شده است؛ درخواست تازه‌ای بفرست.")
                         triggerCloudSync()
                         _userMessage.emit("تکلیف انجام‌شده ثبت شد.")
                     }
                     is com.example.domain.model.CopilotPayload.ChangeCurrentSemester -> {
                         require(payload.newSemesterIndex in 1..20)
                         val current = profile.value
-                        if (current.currentSemester != payload.newSemesterIndex) startNewSemester(
-                            "ترم ${payload.newSemesterIndex}", current.entryYear + (payload.newSemesterIndex - 1) / 2, payload.newSemesterIndex)
+                        if (current.currentSemester != payload.newSemesterIndex) {
+                            delegated = true
+                            startNewSemester("ترم ${payload.newSemesterIndex}", current.entryYear + (payload.newSemesterIndex - 1) / 2, payload.newSemesterIndex,
+                                onSuccess = { onResult(true) }, onFailed = { onResult(false) })
+                        }
                     }
                     is com.example.domain.model.CopilotPayload.UpdatePastSemesterSummary -> {
                         require(payload.semesterIndex in 1..20 && payload.units in 0..40)
@@ -1195,14 +1205,16 @@ class StudentViewModel @JvmOverloads constructor(
                         require(day >= 0 && payload.units in 1..10 && payload.courseName.isNotBlank() && start != null && end != null && start < end) { "نام، واحد، روز یا ساعت درس معتبر نیست." }
                         require(courses.value.none { CourseIdentityNormalizer.normalize(it.name) == CourseIdentityNormalizer.normalize(payload.courseName) }) { "این درس ثبت شده؛ آن را در برنامه کلاسی ویرایش کنید." }
                         val id = java.util.UUID.randomUUID().toString()
+                        delegated = true
                         saveCourse(CourseEntity(id = id, name = payload.courseName.trim(), colorHex = "#59652F", units = payload.units),
-                            listOf(CourseSessionEntity(courseId = id, day = day, start = start, end = end, location = "")))
+                            listOf(CourseSessionEntity(courseId = id, day = day, start = start, end = end, location = "")), onSaved = { onResult(true) }, onFailed = { onResult(false) })
                     }
-                    is com.example.domain.model.CopilotPayload.NavigateToTab -> runCatching { AppTab.valueOf(payload.tabName) }.getOrNull()?.let { selectTab(it) }
+                    is com.example.domain.model.CopilotPayload.NavigateToTab -> selectTab(AppTab.valueOf(payload.tabName))
                     is com.example.domain.model.CopilotPayload.SimulateGpaTarget -> selectTab(AppTab.GRADES)
                 }
+                if (!delegated) onResult(true)
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
-            catch (e: Exception) { _userMessage.emit(e.localizedMessage ?: "این فرمان اجرا نشد؛ دوباره بررسی کنید.") }
+            catch (e: Exception) { onResult(false); _userMessage.emit(e.localizedMessage ?: "این فرمان اجرا نشد؛ دوباره بررسی کنید.") }
         }
     }
 

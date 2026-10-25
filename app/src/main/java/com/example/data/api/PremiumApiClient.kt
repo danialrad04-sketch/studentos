@@ -38,17 +38,9 @@ object PremiumApiClient {
     }
     suspend fun verify(originalJson: String, signature: String): SubscriptionDetails =
         subscription(call("verifyBazaarSubscription", mapOf("originalJson" to originalJson, "dataSignature" to signature)))
-    suspend fun advice(prompt: String, context: String, history: List<Pair<String, String>>, kind: String = "chat"): String {
-        val result = call("generateAcademicAdvice", mapOf("kind" to kind, "prompt" to prompt.take(4000), "studentContext" to context.take(16000),
-            "requestId" to UUID.randomUUID().toString(), "history" to history.takeLast(6).map { mapOf("role" to it.first, "text" to it.second.take(3000)) }))
-        return result["text"] as? String ?: error("پاسخی دریافت نشد؛ دوباره تلاش کنید.")
-    }
-    suspend fun schedule(bytes: ByteArray, mimeType: String): String {
-        require(bytes.size <= 2_000_000) { "حجم تصویر زیاد است؛ تصویری کوچک‌تر از ۲ مگابایت انتخاب کنید." }
-        val result = call("generateAcademicAdvice", mapOf("kind" to "schedule", "prompt" to "Extract timetable", "requestId" to UUID.randomUUID().toString(),
-            "imageBase64" to android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP), "mimeType" to mimeType))
-        return result["text"] as? String ?: error("جدول قابل خواندن دریافت نشد.")
-    }
+    suspend fun advice(prompt: String, context: String, history: List<Pair<String, String>>, kind: String = "chat"): String =
+        AcademicAiApiClient.advice(prompt, context, history, kind).getOrThrow()
+    suspend fun schedule(bytes: ByteArray, mimeType: String): String = AcademicAiApiClient.schedule(bytes, mimeType)
     fun userMessage(error: Throwable): String = when (error) {
         is com.google.firebase.functions.FirebaseFunctionsException -> when (error.code) {
             com.google.firebase.functions.FirebaseFunctionsException.Code.UNAUTHENTICATED -> "برای دسترسی آنلاین وارد حساب خود شوید."

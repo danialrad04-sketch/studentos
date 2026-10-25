@@ -150,13 +150,16 @@ fun MainTabContent(
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         studentViewModel.selectTab(targetTab)
                     },
-                    onExecuteAction = { payload ->
-                        studentViewModel.executeCopilotPayload(payload)
+                    onExecuteAction = { payload, completed ->
+                        studentViewModel.executeCopilotPayload(payload, completed)
                     },
                     onOpenPastSemestersDialog = onOpenPastSemestersDialog,
                     userAccount = userAccount,
                     onOpenPremium = onOpenPremium,
-                    onSubscriptionLoaded = studentViewModel::applyVerifiedSubscription
+                    onSubscriptionLoaded = studentViewModel::applyVerifiedSubscription,
+                    studyHistory = studentViewModel.studyHistory.collectAsStateWithLifecycle().value,
+                    dailyGoalMinutes = dailyStudyGoalMinutes,
+                    focusMinutes = studentViewModel.defaultFocusMinutes.collectAsStateWithLifecycle().value
                 )
             }
             AppTab.ACADEMIC_INTELLIGENCE -> {

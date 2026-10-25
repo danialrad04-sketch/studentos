@@ -34,13 +34,13 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
   });
   test('real Firestore transactions prevent concurrent receipt transfer and duplicate AI charging', async () => {
     const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
-    const env = { BAZAAR_RSA_PUBLIC_KEY: publicKey.export({ format: 'der', type: 'spki' }).toString('base64'), BAZAAR_API_SECRET: 'emulator-only', BILLING_TOKEN_ENCRYPTION_KEY: crypto.randomBytes(32).toString('base64'), GEMINI_SERVER_API_KEY: 'emulator-only' };
+    const env = { BAZAAR_RSA_PUBLIC_KEY: publicKey.export({ format: 'der', type: 'spki' }).toString('base64'), BAZAAR_API_SECRET: 'emulator-only', BILLING_TOKEN_ENCRYPTION_KEY: crypto.randomBytes(32).toString('base64'), AI_API_KEY: 'emulator-only', AI_MODEL: 'emulator-model' };
     const now = Date.now();
     function signed(uid) {
       const originalJson = JSON.stringify({ packageName: core.PACKAGE, productId: core.PLANS[0].productId, purchaseState: 0, purchaseToken: 'emulator-only-token', developerPayload: 'studentos:' + uid });
       return { originalJson, dataSignature: crypto.sign('RSA-SHA1', Buffer.from(originalJson), privateKey).toString('base64') };
     }
-    const fetcher = async url => ({ status: 200, ok: true, json: async () => url.includes('cafebazaar') ? { subscriptions: [{ kind: 'androidpublisher#subscriptionPurchase', sku: core.PLANS[0].productId, validUntilTimestampMsec: now + 86400000, linkedSubscriptionToken: 'same-stable-subscription', autoRenewing: true }] } : { candidates: [{ content: { parts: [{ text: 'پاسخ تست' }] } }] } });
+    const fetcher = async url => ({ status: 200, ok: true, json: async () => url.includes('cafebazaar') ? { subscriptions: [{ kind: 'androidpublisher#subscriptionPurchase', sku: core.PLANS[0].productId, validUntilTimestampMsec: now + 86400000, linkedSubscriptionToken: 'same-stable-subscription', autoRenewing: true }] } : { choices: [{ finish_reason: 'stop', message: { content: 'پاسخ تست' } }] } });
     const service = new PremiumService(db, env, fetcher, () => now);
     const purchases = await Promise.allSettled([service.verify('purchase-a', signed('purchase-a')), service.verify('purchase-b', signed('purchase-b'))]);
     assert.equal(purchases.filter(r => r.status === 'fulfilled').length, 1);
@@ -74,6 +74,6 @@ if (!process.env.FIRESTORE_EMULATOR_HOST) {
   });
   test('callable exports load under the installed Firebase Functions SDK', () => {
     const functions = require('../index');
-    for (const name of ['getPremiumCatalog', 'verifyBazaarSubscription', 'generateAcademicAdvice', 'submitSupportTicket', 'replySupportTicket', 'closeSupportTicket', 'respondSupportTicket']) assert.equal(typeof functions[name], 'function');
+    for (const name of ['getPremiumCatalog', 'verifyBazaarSubscription', 'getAcademicAiStatus', 'generateAcademicAdvice', 'submitSupportTicket', 'replySupportTicket', 'closeSupportTicket', 'respondSupportTicket']) assert.equal(typeof functions[name], 'function');
   });
 }

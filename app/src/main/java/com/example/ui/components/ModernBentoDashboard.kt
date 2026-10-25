@@ -656,7 +656,7 @@ private fun TodayScheduleAndAiSection(courses: List<CourseEntity>, coursesWithSe
         AcademicCard(onClick = onOpenCopilot, modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("همراه هوشمند مطالعه", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("اولویت‌های خود را مرور کنید؛ برای برنامهٔ هفت‌روزه و مرور امتحان از ابزارهای Student Pro کمک بگیرید.", style = MaterialTheme.typography.bodyLarge)
+                Text("اولویت‌های خود را مرور کنید؛ برای پیشنهاد هفت‌روزه و مرور امتحان از دستیار تحصیلی کمک بگیرید.", style = MaterialTheme.typography.bodyLarge)
                 Text("بازکردن دستیار", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
         }

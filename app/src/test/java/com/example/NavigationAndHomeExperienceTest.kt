@@ -79,7 +79,7 @@ class NavigationAndHomeExperienceTest {
     }
 
     @Test fun changingAccountClearsTheUnsentConversationInput() {
-        var account by mutableStateOf(UserAccount(uid = "first-local-account"))
+        var account by mutableStateOf(UserAccount(uid = "first-local-account", isGuest = false))
         rule.setContent {
             StudentOsTheme {
                 AcademicCopilotScreen(StudentProfileEntity(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList(),
@@ -87,7 +87,7 @@ class NavigationAndHomeExperienceTest {
             }
         }
         rule.onNodeWithTag("copilot_input_field").performTextInput("یادداشت خصوصی حساب اول")
-        rule.runOnIdle { account = UserAccount(uid = "second-local-account") }
+        rule.runOnIdle { account = UserAccount(uid = "second-local-account", isGuest = false) }
         rule.waitForIdle()
         val input = rule.onNodeWithTag("copilot_input_field").fetchSemanticsNode()
             .config[androidx.compose.ui.semantics.SemanticsProperties.EditableText].text

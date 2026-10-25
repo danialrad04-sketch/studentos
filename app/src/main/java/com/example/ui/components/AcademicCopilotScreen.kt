@@ -59,10 +59,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -70,6 +72,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.listSaver
+import com.example.domain.model.CopilotResponseSource
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -133,47 +138,69 @@ fun AcademicCopilotScreen(
     primaryPriority: com.example.domain.model.AcademicPriorityItem? = null,
     planningCollisions: List<com.example.domain.model.AcademicPlanningCollision> = emptyList(),
     onNavigateTab: (AppTab) -> Unit,
-    onExecuteAction: (CopilotPayload) -> Unit,
+    onExecuteAction: (CopilotPayload, (Boolean) -> Unit) -> Unit,
     onOpenPastSemestersDialog: () -> Unit,
     userAccount: com.example.domain.model.UserAccount = com.example.domain.model.UserAccount(),
     onOpenPremium: () -> Unit = {},
     onSubscriptionLoaded: (com.example.domain.model.SubscriptionDetails) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    studyHistory: List<com.example.domain.model.StudyDay> = emptyList(),
+    dailyGoalMinutes: Int = 120,
+    focusMinutes: Int = 25,
+    adviceProvider: suspend (String, String, List<Pair<String, String>>, String) -> Result<String> = com.example.data.api.AcademicAiApiClient::advice,
+    statusProvider: suspend () -> com.example.data.api.AcademicAiStatus? = com.example.data.api.AcademicAiApiClient::status
 ) {
     val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
-    var requestJob by remember(userAccount.uid) { mutableStateOf<Job?>(null) }
-    DisposableEffect(userAccount.uid) {
-        onDispose { requestJob?.cancel() }
+    val epoch by com.example.data.repository.AppPreferencesRepository.getInstance(androidx.compose.ui.platform.LocalContext.current)
+        .taskReminderGeneration.collectAsState()
+    // Anonymous network authentication must not erase or cancel a local guest conversation.
+    val conversationKey = (if (userAccount.isGuest) "local_guest" else userAccount.uid) + ":" + epoch
+    val conversationSaver = remember(conversationKey) {
+        listSaver<androidx.compose.runtime.snapshots.SnapshotStateList<CopilotMessage>, String>(
+            save = { rows -> listOf(conversationKey) + rows.takeLast(24).map { row ->
+                org.json.JSONObject().put("id", row.id).put("sender", row.sender.name).put("text", row.text.take(12000))
+                    .put("time", row.timestamp).put("badge", row.confidenceBadge.orEmpty())
+                    .put("source", row.responseSource?.name.orEmpty()).toString()
+            } },
+            restore = { rows -> mutableStateListOf<CopilotMessage>().apply {
+                if (rows.firstOrNull() == conversationKey) rows.drop(1).forEach { json -> runCatching {
+                    val item = org.json.JSONObject(json)
+                    add(CopilotMessage(item.getString("id"), CopilotSender.valueOf(item.getString("sender")), item.getString("text"), item.getString("time"),
+                        confidenceBadge = item.optString("badge").ifBlank { null },
+                        responseSource = runCatching { CopilotResponseSource.valueOf(item.optString("source")) }.getOrNull()))
+                    // Mutation proposals are intentionally not replayed after recreation.
+                } }
+            } }
+        )
     }
-    val messages = remember(userAccount.uid) {
+    val messages = rememberSaveable(conversationKey, saver = conversationSaver) {
         mutableStateListOf<CopilotMessage>().apply {
-            add(
-                AcademicCopilotEngine.generateWelcomeMessage(
-                    profile = profile,
-                    courses = courses,
-                    attendanceList = attendanceList,
-                    grades = grades,
-                    tasks = tasks
-                )
-            )
+            add(AcademicCopilotEngine.generateWelcomeMessage(profile, courses, attendanceList, grades, tasks))
         }
     }
-
-    var inputText by remember(userAccount.uid) { mutableStateOf("") }
-    var isAiLoading by remember(userAccount.uid) { mutableStateOf(false) }
-    var mode by remember(userAccount.uid) { mutableStateOf("chat") }
-    var onlineStatus by remember(userAccount.uid) { mutableStateOf<com.example.domain.model.PremiumStatus?>(null) }
-    var connectionMessage by remember(userAccount.uid) { mutableStateOf<String?>(null) }
-    suspend fun refreshOnlineStatus() {
-        if (userAccount.isGuest) return
-        val result = com.example.data.api.PremiumApiClient.result { com.example.data.api.PremiumApiClient.catalog() }
-        result.onSuccess { onlineStatus = it; onSubscriptionLoaded(it.subscription); connectionMessage = null }
-            .onFailure { connectionMessage = com.example.data.api.PremiumApiClient.userMessage(it) }
+    var requestJob by remember(conversationKey) { mutableStateOf<Job?>(null) }
+    DisposableEffect(conversationKey) { onDispose { requestJob?.cancel() } }
+    val inputSaver = remember(conversationKey) {
+        listSaver<androidx.compose.runtime.MutableState<String>, String>(
+            save = { listOf(conversationKey, it.value) },
+            restore = { mutableStateOf(if (it.firstOrNull() == conversationKey) it.getOrNull(1).orEmpty() else "") })
     }
-    LaunchedEffect(userAccount.uid) { refreshOnlineStatus() }
+    var inputText by rememberSaveable(conversationKey, saver = inputSaver) { mutableStateOf("") }
+    var isAiLoading by remember(conversationKey) { mutableStateOf(false) }
+    var mode by rememberSaveable(conversationKey) { mutableStateOf("chat") }
+    var localOnly by rememberSaveable(conversationKey) { mutableStateOf(false) }
+    var onlineStatus by remember(conversationKey) { mutableStateOf<com.example.data.api.AcademicAiStatus?>(null) }
+    var connectionMessage by remember(conversationKey) { mutableStateOf<String?>(null) }
+    val applyingActions = remember(conversationKey) { mutableStateListOf<String>() }
+    suspend fun refreshOnlineStatus() {
+        com.example.data.api.AcademicAiApiClient.result { statusProvider() }
+            .onSuccess { onlineStatus = it; connectionMessage = null }
+            .onFailure { connectionMessage = com.example.data.api.AcademicAiApiClient.userMessage(it) }
+    }
+    LaunchedEffect(conversationKey, localOnly) { if (!localOnly) refreshOnlineStatus() }
 
     val sendMessage: (String) -> Unit = { query ->
         if (query.isNotBlank() && !isAiLoading) {
@@ -203,31 +230,20 @@ fun AcademicCopilotScreen(
                         coursesWithSessions = coursesWithSessions,
                         curriculumCourses = curriculumCourses,
                         conversationHistory = messages.toList(),
-                        kind = mode
+                        kind = mode, studyHistory = studyHistory, dailyGoalMinutes = dailyGoalMinutes,
+                        focusMinutes = focusMinutes, localOnly = localOnly, adviceProvider = adviceProvider
                     )
                     messages.add(responseMsg)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    val fallback = AcademicCopilotEngine.processUserQuery(
-                        query = query,
-                        profile = profile,
-                        courses = courses,
-                        attendanceList = attendanceList,
-                        grades = grades,
-                        tasks = tasks,
-                        exams = exams,
-                        coursesWithSessions = coursesWithSessions,
-                        curriculumCourses = curriculumCourses
-                    )
-                    messages.add(fallback.copy(
-                        text = "${com.example.data.api.PremiumApiClient.userMessage(e)}\n\nتحلیل بر اساس اطلاعات ذخیره‌شده:\n${fallback.text}",
-                        confidenceBadge = "تحلیل آفلاین · پاسخ آنلاین دریافت نشد"
-                    ))
+                    messages.add(CopilotMessage(UUID.randomUUID().toString(), CopilotSender.COPILOT,
+                        com.example.data.api.AcademicAiApiClient.userMessage(e), time,
+                        confidenceBadge = "پاسخ مدل دریافت نشد", responseSource = CopilotResponseSource.ONLINE_UNAVAILABLE))
                 } finally {
                     isAiLoading = false
                     if (currentCoroutineContext().isActive) {
-                        refreshOnlineStatus()
+                        if (!localOnly) refreshOnlineStatus()
                         try {
                             if (messages.isNotEmpty()) listState.animateScrollToItem(messages.size - 1)
                         } catch (e: CancellationException) { throw e }
@@ -247,21 +263,28 @@ fun AcademicCopilotScreen(
     ) {
         Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("دستیار تحصیلی", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            val quota = onlineStatus?.subscription ?: userAccount.subscription
-            Text(if (userAccount.isGuest && !com.example.ui.ReleaseAccessPolicy.onlineAccountEntryEnabled) "تحلیل آفلاین آماده است؛ پاسخ آنلاین فعلاً برای حالت بدون حساب فعال نیست."
-                else if (userAccount.isGuest) "تحلیل آفلاین آماده است؛ برای پاسخ آنلاین وارد حساب شوید."
-                else if (onlineStatus?.aiEnabled == true) "آنلاین · ${quota.remainingAiQuota} از ${quota.maxDailyAiQuota} پاسخ امروز باقی مانده"
-                else if (onlineStatus != null) "پاسخ آنلاین فعلاً در دسترس نیست؛ تحلیل آفلاین آماده است."
-                else connectionMessage ?: "در حال بررسی دسترسی آنلاین…", style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.testTag("ai_service_status"))
-            if (com.example.ui.ReleaseAccessPolicy.bazaarBillingEnabled && (!userAccount.isGuest || com.example.ui.ReleaseAccessPolicy.onlineAccountEntryEnabled)) TextButton(onClick = onOpenPremium, modifier = Modifier.heightIn(min = 48.dp)) {
-                Text(if (userAccount.isGuest) "ورود و امکانات آنلاین" else if (quota.isProOrHigher) "مدیریت اشتراک پرو" else "مشاهدهٔ امکانات Student Pro")
+            Text(when {
+                localOnly -> "تحلیل روی دستگاه · بدون ارسال اطلاعات به مدل"
+                onlineStatus?.enabled == true -> "درخواست پاسخ مدل فعال است · ${onlineStatus!!.remaining} از ${onlineStatus!!.limit} درخواست امروز باقی مانده"
+                connectionMessage != null -> connectionMessage!!
+                onlineStatus != null -> "سرویس پاسخ مدل هنوز آماده نیست؛ تحلیل روی دستگاه کار می‌کند."
+                else -> "تحلیل روی دستگاه آماده است؛ اتصال پاسخ مدل هنگام درخواست بررسی می‌شود."
+            }, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("ai_service_status"))
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("فقط تحلیل روی دستگاه", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                Switch(localOnly, { localOnly = it; if (it) requestJob?.cancel() }, Modifier.testTag("ai_local_only"))
+            }
+            Text("همهٔ حالت‌ها بدون خرید اشتراک‌اند. برای پاسخ مدل، بخشی از اطلاعات تحصیلی ثبت‌شده همراه پرسش ارسال می‌شود.",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (isAiLoading) TextButton(onClick = { requestJob?.cancel() }, modifier = Modifier.testTag("ai_cancel")) { Text("توقف انتظار پاسخ") }
+            if (!isAiLoading && messages.lastOrNull()?.responseSource == CopilotResponseSource.ONLINE_UNAVAILABLE) {
+                TextButton(onClick = { messages.lastOrNull { it.sender == CopilotSender.USER }?.text?.let { sendMessage(it) } }, modifier = Modifier.testTag("ai_retry")) { Text("تلاش دوباره") }
             }
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(listOf("chat" to "گفت‌وگو", "coach" to "مربی هفت‌روزه", "exam" to "مرور امتحان", "review" to "تحلیل پیشرفت")) { tool ->
                     FilterChip(selected = mode == tool.first, onClick = {
-                        if (tool.first != "chat" && !quota.isProOrHigher) onOpenPremium()
-                        else {
+                        run {
                             mode = tool.first
                             inputText = when (mode) {
                                 "coach" -> "براساس کلاس‌ها، امتحان‌ها و تکالیف من، یک برنامهٔ مطالعهٔ قابل اجرا برای هفت روز آینده بساز."
@@ -294,26 +317,23 @@ fun AcademicCopilotScreen(
             items(messages, key = { it.id }) { msg ->
                 CopilotMessageItem(
                     message = msg,
+                    isProcessing = msg.proposedAction?.id in applyingActions,
                     onQuickReplyClicked = { sendMessage(it) },
                     onApplyAction = { proposal ->
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        val index = messages.indexOf(msg)
-                        if (index != -1) {
-                            messages[index] = msg.copy(isActionApplied = true)
-                        }
-                        if (proposal.payload is CopilotPayload.NavigateToTab) {
-                            when (proposal.payload.tabName) {
-                                "CURRICULUM" -> onNavigateTab(AppTab.CURRICULUM)
-                                "PASSPORT" -> onNavigateTab(AppTab.PASSPORT)
-                                "GRADES" -> onNavigateTab(AppTab.GRADES)
-                                "POMODORO" -> onNavigateTab(AppTab.POMODORO)
-                                "TASKS" -> onNavigateTab(AppTab.TASKS)
-                                "ATTENDANCE" -> onNavigateTab(AppTab.ATTENDANCE)
-                                "GAMIFICATION" -> onNavigateTab(AppTab.GAMIFICATION)
-                                else -> onNavigateTab(AppTab.DASHBOARD)
+                        if (proposal.id !in applyingActions) {
+                            applyingActions.add(proposal.id)
+                            fun complete(ok: Boolean) {
+                                applyingActions.remove(proposal.id)
+                                val index = messages.indexOfFirst { it.id == msg.id }
+                                if (index >= 0 && ok) messages[index] = messages[index].copy(isActionApplied = true)
+                                if (!ok) messages.add(CopilotMessage(UUID.randomUUID().toString(), CopilotSender.COPILOT,
+                                    "تغییر ذخیره نشد؛ پیام خطا را بررسی کن و دوباره تلاش کن.", SimpleDateFormat("HH:mm", Locale.US).format(Date())))
                             }
-                        } else {
-                            onExecuteAction(proposal.payload)
+                            if (proposal.payload is CopilotPayload.NavigateToTab) {
+                                val target = runCatching { AppTab.valueOf(proposal.payload.tabName) }.getOrNull()
+                                if (target != null) { onNavigateTab(target); complete(true) } else complete(false)
+                            } else onExecuteAction(proposal.payload, ::complete)
                         }
                     },
                     onDismissAction = {
@@ -413,7 +433,7 @@ fun AcademicCopilotScreen(
             ) {
                 OutlinedTextField(
                     value = inputText,
-                    onValueChange = { inputText = it },
+                    onValueChange = { inputText = it.take(4000) },
                     placeholder = {
                         Text(
                             "از دستیار بپرس؛ مثلاً امروز از کجا شروع کنم؟",
@@ -440,6 +460,7 @@ fun AcademicCopilotScreen(
                     enabled = inputText.isNotBlank() && !isAiLoading,
                     modifier = Modifier
                         .size(48.dp)
+                        .testTag("ai_send")
                         .clip(RoundedCornerShape(16.dp)),
                     shape = RoundedCornerShape(16.dp),
                     color = if (inputText.isNotBlank() && !isAiLoading) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
@@ -634,7 +655,8 @@ private fun CopilotMessageItem(
     message: CopilotMessage,
     onQuickReplyClicked: (String) -> Unit,
     onApplyAction: (CopilotActionProposal) -> Unit,
-    onDismissAction: () -> Unit
+    onDismissAction: () -> Unit,
+    isProcessing: Boolean = false
 ) {
     val isUser = message.sender == CopilotSender.USER
 
@@ -712,7 +734,7 @@ private fun CopilotMessageItem(
                 Column {
                     // Badge if available
                     if (!isUser && message.confidenceBadge != null) {
-                        val isOffline = message.confidenceBadge.contains("آفلاین")
+                        val isOffline = message.responseSource != CopilotResponseSource.ONLINE_MODEL
                         val badgeColor = if (isOffline) MaterialTheme.studentColors.attendanceWarning else MaterialTheme.colorScheme.primary
                         val badgeBg = badgeColor.copy(alpha = 0.10f)
                         val badgeIcon = if (isOffline) Icons.Default.CloudOff else Icons.Default.AutoAwesome
@@ -806,6 +828,7 @@ private fun CopilotMessageItem(
             CopilotActionProposalCard(
                 proposal = message.proposedAction,
                 isApplied = message.isActionApplied,
+                isProcessing = isProcessing,
                 onApply = { onApplyAction(message.proposedAction) },
                 onDismiss = onDismissAction
             )
@@ -848,7 +871,8 @@ private fun CopilotActionProposalCard(
     proposal: CopilotActionProposal,
     isApplied: Boolean,
     onApply: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    isProcessing: Boolean = false
 ) {
     var showConfirmation by remember(proposal.id) { mutableStateOf(false) }
     val requiresConfirmation = proposal.requiresExplicitConfirmation
@@ -856,7 +880,7 @@ private fun CopilotActionProposalCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 112.dp, max = 236.dp)
+            .heightIn(min = 112.dp)
             .padding(start = 40.dp, top = 4.dp, bottom = 4.dp),
         shape = StudentShapeTokens.Card,
         colors = CardDefaults.cardColors(
@@ -942,7 +966,7 @@ private fun CopilotActionProposalCard(
                     )
                     Spacer(modifier = Modifier.width(StudentSpacing.Xs))
                     Text(
-                        text = "تغییرات با موفقیت اعمال شد",
+                        text = if (proposal.payload is CopilotPayload.NavigateToTab) "صفحهٔ درخواستی باز شد" else "تغییرات با موفقیت ذخیره شد",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = AcademicOlive
@@ -954,11 +978,12 @@ private fun CopilotActionProposalCard(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onDismiss) {
+                    TextButton(onClick = onDismiss, enabled = !isProcessing) {
                         Text("رد پیشنهاد", fontSize = 11.sp)
                     }
                     Spacer(modifier = Modifier.width(StudentSpacing.Sm))
                     Button(
+                        enabled = !isProcessing,
                         onClick = {
                             if (requiresConfirmation) {
                                 showConfirmation = true
@@ -977,7 +1002,7 @@ private fun CopilotActionProposalCard(
                         )
                     ) {
                         Text(
-                            if (requiresConfirmation) "تأیید و اعمال" else proposal.buttonLabel,
+                            if (isProcessing) "در حال ذخیره…" else if (requiresConfirmation) "تأیید و اعمال" else proposal.buttonLabel,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )

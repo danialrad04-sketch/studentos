@@ -135,14 +135,14 @@ fun SubscriptionUpgradeDialog(
                     if (!status.salesEnabled && !billing.busy) Text(if (userAccount.isGuest) "برای مشاهدهٔ قیمت و خرید، وارد حساب خود شوید." else "خرید اشتراک فعلاً در دسترس نیست. پس از فعال‌شدن فروش، قیمت و طرح‌ها از بازار دریافت می‌شوند.", style = MaterialTheme.typography.bodyLarge)
                     if (status.salesEnabled) Text("قیمت نهایی در صفحهٔ پرداخت بازار نمایش داده می‌شود. قبل از تأیید پرداخت، مبلغ و شرایط تمدید را بررسی کنید.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                StudentSettingsGroup("امکانات پرو") {
+                StudentSettingsGroup("دستیار بدون نیاز به اشتراک") {
                     PremiumFeature("مربی مطالعهٔ هفت‌روزه", "تنظیم اولویت‌ها و زمان مطالعه با توجه به برنامهٔ واقعی شما", Icons.Rounded.EventNote)
                     HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    PremiumFeature("۵۰ پاسخ آنلاین در روز", "مشاورهٔ درسی، مرور امتحان و تحلیل پیشرفت با اطلاعات تحصیلی شما", Icons.Rounded.ChatBubbleOutline)
+                    PremiumFeature("پاسخ مدل با سهمیهٔ رایگان", "نیازمند سرویس فعال؛ سهمیهٔ واقعی در صفحهٔ دستیار نمایش داده می‌شود", Icons.Rounded.ChatBubbleOutline)
                     HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    PremiumFeature("۱۰ اسکن برنامه در روز", "تبدیل عکس برنامهٔ کلاسی به جدول؛ پیش از ثبت، نتیجه را بررسی و تأیید کنید", Icons.Rounded.DocumentScanner)
+                    PremiumFeature("خواندن اختیاری تصویر", "نیازمند سرویس پشتیبان تصویر؛ نتیجه پیش از ثبت به تأیید شما نیاز دارد", Icons.Rounded.DocumentScanner)
                 }
-                Text("طرح رایگان: ۵ پاسخ آنلاین و یک اسکن روزانه پس از ورود. برنامهٔ کلاسی، تکالیف و اطلاعات ذخیره‌شدهٔ شما همچنان در دسترس‌اند.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("تحلیل روی دستگاه و حالت‌های مربی، امتحان و پیشرفت به خرید اشتراک نیاز ندارند. پاسخ مدل به آماده‌بودن سرویس و سهمیهٔ روزانه وابسته است.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 billing.message?.let { Text(it, Modifier.testTag("billing_message"), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface) }
                 OutlinedButton(onClick = onRestore, enabled = billing.connected && !billing.busy && !userAccount.isGuest, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("restore_purchase")) {
                     Icon(Icons.Rounded.Restore, null); Spacer(Modifier.width(8.dp)); Text("بازیابی خرید قبلی")
