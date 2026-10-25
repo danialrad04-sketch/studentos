@@ -35,7 +35,8 @@ class AcademicAssistantScreenTest {
         } } }
         rule.onNodeWithTag("ai_local_only").performClick()
         for (mode in listOf("coach", "exam", "review", "chat")) {
-            rule.onNodeWithTag("ai_mode_$mode").performScrollTo().performClick()
+            rule.onAllNodes(hasScrollToIndexAction())[0].performScrollToIndex(listOf("chat", "coach", "exam", "review").indexOf(mode))
+            rule.onNodeWithTag("ai_mode_$mode").performClick()
             rule.onNodeWithTag("ai_mode_$mode").assertIsSelected()
         }
         rule.onNodeWithTag("copilot_input_field").performTextReplacement("تکالیف من را بگو")
