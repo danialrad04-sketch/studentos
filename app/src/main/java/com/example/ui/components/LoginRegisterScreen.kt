@@ -223,7 +223,7 @@ fun LoginRegisterScreen(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "ورود مستقیم بدون لاگین 🚀",
+                                text = "ورود مستقیم بدون لاگین",
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp

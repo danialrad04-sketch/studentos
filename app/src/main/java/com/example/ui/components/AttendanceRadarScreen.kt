@@ -314,7 +314,7 @@ fun AttendanceRadarScreen(
         if (filteredCourseNames.isEmpty()) {
             ActionableEmptyState(
                 icon = Icons.AutoMirrored.Filled.Rule,
-                title = if (selectedFilter == "danger") "وضعیت تمامی دروس امن است 🟢" else "هیچ درسی برای این فیلتر ثبت نشده است",
+                title = if (selectedFilter == "danger") "وضعیت تمامی دروس امن است" else "هیچ درسی برای این فیلتر ثبت نشده است",
                 description = if (selectedFilter == "danger") "خوشبختانه غیبت‌های هیچ درسی به مرز بحرانی نرسیده است." else "می‌توانید فیلتر را به حالت «همه» بازگردانید.",
                 primaryActionTitle = if (selectedFilter != "all") "مشاهده همه دروس" else null,
                 onPrimaryAction = if (selectedFilter != "all") { { selectedFilter = "all" } } else null

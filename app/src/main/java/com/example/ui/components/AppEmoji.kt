@@ -26,17 +26,20 @@ import kotlin.math.roundToInt
 enum class AppEmojiType(val cell: Int) {
     HOME(0), BOOK(1), CALENDAR(2), CHECK(3), MORE(4), COPILOT(5),
     GRAD_CAP(6), BOLT(7), PLUS(8), POMODORO(9), SPARKLE(10), FIRE(11),
-    TARGET(12), TROPHY(13), MEDAL(14), WARNING(15), BELL(16), CHART(17)
+    TARGET(12), TROPHY(13), MEDAL(14), WARNING(15), BELL(16), CHART(17),
+    SETTINGS(18), PROFILE(19), HELP(20), NOTES(21), HISTORY(22), CURRICULUM(23)
 }
 
 // The theme decodes the atlas once and shares it across every sticker instance.
 val LocalStudentStickerAtlas = staticCompositionLocalOf<ImageBitmap?> { null }
+val LocalStudentCompanionAtlas = staticCompositionLocalOf<ImageBitmap?> { null }
 
 @Composable
 @Suppress("UNUSED_PARAMETER") // Retain existing call sites without reintroducing colored emoji tiles.
 fun AppEmoji(type: AppEmojiType, modifier: Modifier = Modifier, size: Dp = 32.dp,
     shapeRadiusRatio: Float = 0.28f, elevation: Dp = 0.dp) {
-    val atlas = LocalStudentStickerAtlas.current ?: ImageBitmap.imageResource(R.drawable.student_sticker_atlas)
+    val atlas = if (type.cell >= 18) LocalStudentCompanionAtlas.current ?: ImageBitmap.imageResource(R.drawable.student_sticker_companions)
+        else LocalStudentStickerAtlas.current ?: ImageBitmap.imageResource(R.drawable.student_sticker_atlas)
     val painter = remember(atlas, type) { StudentStickerPainter(atlas, type.cell) }
     Image(painter, contentDescription = null, modifier = modifier.size(size), contentScale = ContentScale.Fit)
 }
@@ -51,9 +54,14 @@ private val StudentStickerBounds = arrayOf(
     IntRect(39,1475,293,1702), IntRect(322,1471,568,1701), IntRect(613,1459,844,1692)
 )
 
+private val StudentCompanionBounds = arrayOf(
+    IntRect(66,64,490,486), IntRect(572,73,964,466), IntRect(1064,82,1479,466),
+    IntRect(63,554,503,943), IntRect(589,549,973,946), IntRect(1047,544,1488,952)
+)
+
 /** Display one illustration with transparent breathing room and its original aspect ratio. */
 private class StudentStickerPainter(private val atlas: ImageBitmap, cell: Int) : Painter() {
-    private val region = StudentStickerBounds[cell]
+    private val region = if (cell >= 18) StudentCompanionBounds[cell - 18] else StudentStickerBounds[cell]
     private val source = IntSize(region.width, region.height)
     override val intrinsicSize = Size(source.width.toFloat(), source.height.toFloat())
     override fun DrawScope.onDraw() {
@@ -73,12 +81,13 @@ internal fun studentDestinationSticker(tab: com.example.ui.models.AppTab): AppEm
     com.example.ui.models.AppTab.ACADEMIC_INTELLIGENCE -> AppEmojiType.CHART
     com.example.ui.models.AppTab.PASSPORT -> AppEmojiType.GRAD_CAP
     com.example.ui.models.AppTab.AGENDA, com.example.ui.models.AppTab.SCHEDULE -> AppEmojiType.CALENDAR
-    com.example.ui.models.AppTab.NOTES, com.example.ui.models.AppTab.HISTORY -> AppEmojiType.BOOK
+    com.example.ui.models.AppTab.NOTES -> AppEmojiType.NOTES
+    com.example.ui.models.AppTab.HISTORY -> AppEmojiType.HISTORY
     com.example.ui.models.AppTab.ATTENDANCE, com.example.ui.models.AppTab.TASKS -> AppEmojiType.CHECK
     com.example.ui.models.AppTab.EXAMS -> AppEmojiType.TARGET
     com.example.ui.models.AppTab.GRADES -> AppEmojiType.CHART
     com.example.ui.models.AppTab.SEMESTER_PLANNER -> AppEmojiType.GRAD_CAP
-    com.example.ui.models.AppTab.CURRICULUM -> AppEmojiType.MORE
+    com.example.ui.models.AppTab.CURRICULUM -> AppEmojiType.CURRICULUM
     com.example.ui.models.AppTab.POMODORO -> AppEmojiType.POMODORO
     com.example.ui.models.AppTab.GAMIFICATION -> AppEmojiType.TROPHY
 }

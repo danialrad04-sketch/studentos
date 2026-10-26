@@ -101,10 +101,10 @@ fun GradesScreen(
     val evaluatedUnits = evaluatedGrades.sumOf { it.units }
     val totalWeightedScore = evaluatedGrades.sumOf { (it.midtermGrade + it.finalGrade) * it.units }
     val gpa = if (evaluatedUnits > 0) totalWeightedScore / evaluatedUnits else 0.0
-    val gpaFormatted = String.format(Locale.US, "%.2f", gpa)
+    val gpaFormatted = if (evaluatedGrades.isEmpty()) "—" else String.format(Locale.US, "%.2f", gpa)
 
     val isHonors = gpa >= 17.0
-    val isNormal = gpa in 12.0..<17.0
+    val isNormal = evaluatedGrades.isEmpty() || gpa in 12.0..<17.0
     val passedCoursesCount = grades.count { (it.midtermGrade + it.finalGrade) >= 10.0 }
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -146,7 +146,7 @@ fun GradesScreen(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "پاسپورت تحصیلی 📸",
+                        text = "پاسپورت تحصیلی",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -311,6 +311,9 @@ fun GradesScreen(
             onApplySimulation = {}
         )
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ExamScorePlannerCard()
         Spacer(modifier = Modifier.height(16.dp))
 
         // Section Title: Course Grade Cards
@@ -779,34 +782,61 @@ fun EditGradeDialog(
     }
 }
 
-/**
- * Phase 18: Grade What-If Simulator (شبیه‌ساز سناریوهای نمره و حداقل‌های معدل الف)
- * Real-time dynamic simulator calculating required remaining final exam points
- * to achieve honors status (GPA >= 17.0) or custom target GPA.
- */
+/** Read-only, weighted goal planning. No simulation writes academic records. */
 @Composable
+@Suppress("UNUSED_PARAMETER") // Preserve older callers; simulation deliberately has no write action.
 fun GradeWhatIfSimulatorCard(
     grades: List<GradeEntity>, totalUnits: Int,
     onApplySimulation: (List<Triple<GradeEntity, Double, Double>>) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var target by remember { mutableStateOf(17f) }
-    val units = grades.sumOf { it.units }
-    val midAverage = if (units > 0) grades.sumOf { it.midtermGrade * it.units } / units else 0.0
-    Card(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
+    var target by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(17f) }
+    var expanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    val result = com.example.domain.engine.GradeGoalEngine.calculate(grades.map {
+        com.example.domain.engine.GradeGoalCourse(it.units, if (it.hasRecordedScore()) it.midtermGrade + it.finalGrade else null)
+    }, target.toDouble())
+    val palette = com.example.ui.theme.studentStickerColors(AppEmojiType.TARGET)
+    val status = when {
+        result.totalUnits == 0 -> "برای محاسبه، یک درس با تعداد واحد معتبر اضافه کنید."
+        result.remainingUnits == 0 -> if (result.achievable) "با نمره‌های فعلی به این هدف رسیده‌اید." else "همهٔ نمره‌ها ثبت شده‌اند؛ معدل فعلی به این هدف نمی‌رسد."
+        !result.achievable -> "این هدف با نمره‌های فعلی دست‌یافتنی نیست؛ هدف پایین‌تری انتخاب کنید."
+        result.requiredAverage == 0.0 -> "حتی با صفر در درس‌های باقی‌مانده، این هدف حفظ می‌شود."
+        else -> "میانگین لازم در درس‌های بدون نمره: ${String.format(Locale.US, "%.2f", result.requiredAverage)} از ۲۰"
+    }
+    val summary = "هدف معدل: ${String.format(Locale.US, "%.1f", target)} از ۲۰\n$status\n${result.remainingUnits} واحد بدون نمره از ${result.totalUnits} واحد\nفرض محاسبه: مجموع نمره‌های ثبت‌شده ثابت است."
+    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+    var copied by remember { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(summary) { copied = false }
+    Card(modifier.fillMaxWidth().testTag("grade_goal_planner"), shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = palette.container, contentColor = palette.ink)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("شبیه‌ساز هدف معدل", style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                AppEmoji(AppEmojiType.TARGET, size = 40.dp)
+                Text("برنامهٔ رسیدن به معدل", style = MaterialTheme.typography.titleMedium)
+            }
             Text("هدف: ${String.format(Locale.US, "%.1f", target)} از ۲۰", style = MaterialTheme.typography.bodyLarge)
-            Slider(value = target, onValueChange = { target = it }, valueRange = 10f..20f, steps = 19)
-            if (units == 0) Text("ابتدا یک درس ثبت کنید تا پیش‌بینی وزن‌دار در دسترس باشد.", style = MaterialTheme.typography.bodyMedium)
-            else {
-                Text("برای هدف انتخاب‌شده، میانگین بخش باقی‌مانده حدود ${String.format(Locale.US, "%.2f", (target - midAverage).coerceAtLeast(0.0))} نمره لازم است.", style = MaterialTheme.typography.bodyMedium)
-                grades.forEach { grade ->
-                    Text("${grade.courseName}: حدود ${String.format(Locale.US, "%.1f", (target - grade.midtermGrade).coerceIn(0.0, 20.0 - grade.midtermGrade.coerceIn(0.0, 20.0)))} نمره پس از میان‌ترم", style = MaterialTheme.typography.bodySmall)
+            Slider(value = target, onValueChange = { target = it }, valueRange = 10f..20f, steps = 19,
+                modifier = Modifier.testTag("grade_goal_target"))
+            Text(status, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold,
+                modifier = Modifier.testTag("grade_goal_result"))
+            if (result.totalUnits > 0) {
+                Text("${result.remainingUnits} واحد بدون نمره از ${result.totalUnits} واحد", style = MaterialTheme.typography.bodyMedium)
+                Text("بیشترین معدل ممکن: ${String.format(Locale.US, "%.2f", result.maximumAverage)}", style = MaterialTheme.typography.bodyMedium)
+                OutlinedButton(onClick = { expanded = !expanded }) { Text(if (expanded) "بستن جزئیات محاسبه" else "جزئیات محاسبه") }
+                if (expanded) {
+                    grades.forEach { grade ->
+                        Text("${grade.courseName} · ${grade.units} واحد · " +
+                            if (grade.hasRecordedScore()) "مجموع ثبت‌شده: ${String.format(Locale.US, "%.2f", grade.midtermGrade + grade.finalGrade)}" else "بدون نمره",
+                            style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                OutlinedButton(onClick = { clipboard.setText(androidx.compose.ui.text.AnnotatedString(summary)); copied = true }) {
+                    Text(if (copied) "خلاصه کپی شد" else "کپی خلاصهٔ هدف")
                 }
             }
-            Text("این یک سناریوی فرضی است و نمره‌های ثبت‌شده را تغییر نمی‌دهد. بارم هر درس را با استاد تطبیق دهید.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (result.invalidCourses > 0) Text("${result.invalidCourses} درس با واحد یا نمرهٔ نامعتبر از محاسبه کنار گذاشته شد؛ اطلاعاتشان را اصلاح کنید.", style = MaterialTheme.typography.bodySmall)
+            Text("مجموع نمره‌های ثبت‌شده ثابت فرض می‌شود؛ نمرهٔ درس‌های باقی‌مانده از ۲۰ محاسبه شده است. برای نمره‌های میان‌ترمِ ناقص، ابتدا اطلاعات را تکمیل کنید. این سناریو سوابق شما را تغییر نمی‌دهد.",
+                style = MaterialTheme.typography.bodySmall)
         }
     }
 }

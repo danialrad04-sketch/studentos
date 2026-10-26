@@ -180,7 +180,7 @@ jobs:
           test -s "$AAB"
           "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner" verify --verbose "$APK"
           BADGING="$("$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/aapt" dump badging "$APK")"
-          echo "$BADGING" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='2015' versionName='2.6.1'"
+          echo "$BADGING" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='2016' versionName='2.7.0'"
           EXPECTED_SHA256="a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950"
           EXPECTED_SHA1="b25fe31884ec18a96ae09e6fc0070fd20717a766"
           KEY_SHA256="$(keytool -list -v -keystore "$KEYSTORE_PATH" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" | awk -F': ' '/SHA256:/{print $2; exit}' | tr -d ':' | tr '[:upper:]' '[:lower:]')"
@@ -201,7 +201,7 @@ jobs:
       - name: Audit final packaged permissions and production policy
         run: |
           python3 scripts/check_bazaar_release.py app/build/outputs/apk/release/app-release.apk \
-            --version-code 2015 --version-name 2.6.1 --output bazaar-output/release-evidence.json
+            --version-code 2016 --version-name 2.7.0 --output bazaar-output/release-evidence.json
 
       - name: Prepare the verified Cafe Bazaar upload pair
         env:
@@ -210,20 +210,20 @@ jobs:
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
-          cp app/build/outputs/apk/release/app-release.apk bazaar-output/StudentOS-2.6.1.apk
-          cp app/build/outputs/bundle/release/app-release.aab bazaar-output/StudentOS-2.6.1.aab
-          bash scripts/generate_bazaar_bin.sh bazaar-output/StudentOS-2.6.1.aab bazaar-output/StudentOS-2.6.1.bin
-          cp docs/BAZAAR_COMPLIANCE_2_6_1.md bazaar-output/README-BAZAAR.md
-          cp docs/BAZAAR_SUBMISSION_2_6_1_FA.md bazaar-output/BAZAAR-SUBMISSION-FA.md
+          cp app/build/outputs/apk/release/app-release.apk bazaar-output/StudentOS-2.7.0.apk
+          cp app/build/outputs/bundle/release/app-release.aab bazaar-output/StudentOS-2.7.0.aab
+          bash scripts/generate_bazaar_bin.sh bazaar-output/StudentOS-2.7.0.aab bazaar-output/StudentOS-2.7.0.bin
+          cp docs/BAZAAR_COMPLIANCE_2_7_0.md bazaar-output/README-BAZAAR.md
+          cp docs/BAZAAR_SUBMISSION_2_7_0_FA.md bazaar-output/BAZAAR-SUBMISSION-FA.md
           cd bazaar-output
-          sha256sum StudentOS-2.6.1.apk StudentOS-2.6.1.aab StudentOS-2.6.1.bin > SHA256SUMS.txt
-          zip CafeBazaar-2.6.1.zip StudentOS-2.6.1.aab StudentOS-2.6.1.bin README-BAZAAR.md BAZAAR-SUBMISSION-FA.md release-evidence.json SHA256SUMS.txt
-          unzip -t CafeBazaar-2.6.1.zip
+          sha256sum StudentOS-2.7.0.apk StudentOS-2.7.0.aab StudentOS-2.7.0.bin > SHA256SUMS.txt
+          zip CafeBazaar-2.7.0.zip StudentOS-2.7.0.aab StudentOS-2.7.0.bin README-BAZAAR.md BAZAAR-SUBMISSION-FA.md release-evidence.json SHA256SUMS.txt
+          unzip -t CafeBazaar-2.7.0.zip
 
       - name: Upload Cafe Bazaar package (not published)
         uses: actions/upload-artifact@v4
         with:
-          name: studentos-bazaar-2.6.1
+          name: studentos-bazaar-2.7.0
           path: bazaar-output/
           if-no-files-found: error
           retention-days: 30
@@ -344,7 +344,7 @@ jobs:
       - name: Download exact verified APK
         uses: actions/download-artifact@v4
         with:
-          name: studentos-bazaar-2.6.1
+          name: studentos-bazaar-2.7.0
           path: bazaar-candidates
       - name: Download this run's verified 2012 baseline
         uses: actions/download-artifact@v4
@@ -373,7 +373,7 @@ jobs:
           disable-animations: true
           force-avd-creation: true
           emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
-          script: python3 scripts/smoke_bazaar_release.py --previous-apk baseline-candidates/previous.apk --candidate-apk bazaar-candidates/StudentOS-2.6.1.apk --output build/signed-release-smoke
+          script: python3 scripts/smoke_bazaar_release.py --previous-apk baseline-candidates/previous.apk --candidate-apk bazaar-candidates/StudentOS-2.7.0.apk --output build/signed-release-smoke
       - name: Upload signed release device evidence
         if: always()
         uses: actions/upload-artifact@v4

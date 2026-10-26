@@ -270,7 +270,7 @@ private fun PassportHeaderCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "اشتراک شناسنامه و خروجی استوری / مدرک 📸",
+                        text = "اشتراک شناسنامه و خروجی استوری / مدرک",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )

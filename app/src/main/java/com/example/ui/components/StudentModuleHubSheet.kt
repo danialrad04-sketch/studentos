@@ -6,8 +6,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.material3.*
+import com.example.ui.theme.studentStickerColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.ui.models.AppTab
@@ -27,8 +30,9 @@ fun StudentModuleHubSheet(currentTab: AppTab, onSelectTab: (AppTab) -> Unit, onD
             items(tabs, key = { it.name }) { tab ->
                 Card(
                     onClick = { onSelectTab(tab); dismiss() },
-                    colors = CardDefaults.cardColors(containerColor = if (tab == currentTab) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh),
-                    modifier = Modifier.fillMaxWidth()
+                    border = if (tab == currentTab) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+                    colors = CardDefaults.cardColors(containerColor = studentStickerColors(studentDestinationSticker(tab)).container, contentColor = studentStickerColors(studentDestinationSticker(tab)).ink),
+                    modifier = Modifier.fillMaxWidth().semantics { selected = tab == currentTab }
                 ) {
                     Row(Modifier.heightIn(min = 80.dp).padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         AppEmoji(studentDestinationSticker(tab), size = 36.dp)

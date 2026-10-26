@@ -680,7 +680,7 @@ private fun StepOneAcademicIdentity(
                         )
                         TextButton(onClick = { isCustomUniInput = !isCustomUniInput }) {
                             Text(
-                                text = if (isCustomUniInput) "انتخاب از لیست 📋" else "تایپ دستی نام دانشگاه ✍️",
+                                text = if (isCustomUniInput) "انتخاب از لیست" else "تایپ دستی نام دانشگاه",
                                 fontSize = 10.5.sp,
                                 color = AccentSecondary
                             )
@@ -761,7 +761,7 @@ private fun StepOneAcademicIdentity(
                         )
                         TextButton(onClick = { isCustomMajorInput = !isCustomMajorInput }) {
                             Text(
-                                text = if (isCustomMajorInput || !supportsReferenceMajorCatalog) "انتخاب از فهرست رشته‌ها" else "تایپ رشته دلخواه ✍️",
+                                text = if (isCustomMajorInput || !supportsReferenceMajorCatalog) "انتخاب از فهرست رشته‌ها" else "تایپ رشته دلخواه",
                                 fontSize = 10.5.sp,
                                 color = AccentSecondary
                             )
@@ -804,7 +804,7 @@ private fun StepOneAcademicIdentity(
                                 onClick = { selectedFacultyIndex = 0 },
                                 label = {
                                     Text(
-                                        text = "همه رشته‌ها 🌐",
+                                        text = "همه رشته‌ها",
                                         fontSize = 10.5.sp,
                                         fontWeight = if (selectedFacultyIndex == 0) FontWeight.Bold else FontWeight.Normal,
                                         color = if (selectedFacultyIndex == 0) MaterialTheme.colorScheme.onPrimary else TextMutedWhite
@@ -831,7 +831,7 @@ private fun StepOneAcademicIdentity(
                                     onClick = { selectedFacultyIndex = idx + 1 },
                                     label = {
                                         Text(
-                                            text = "${fac.iconEmoji} ${fac.name}",
+                                            text = fac.name,
                                             fontSize = 10.5.sp,
                                             fontWeight = if (isFacSelected) FontWeight.Bold else FontWeight.Normal,
                                             color = if (isFacSelected) MaterialTheme.colorScheme.onPrimary else TextMutedWhite
@@ -997,7 +997,7 @@ private fun StepOneAcademicIdentity(
             colors = ButtonDefaults.buttonColors(containerColor = AccentPrimary)
         ) {
             Text(
-                text = "مرحله بعد: استقرار برنامه ترم 🚀",
+                text = "مرحله بعد: استقرار برنامه ترم",
                 fontSize = 13.5.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary
@@ -1074,7 +1074,7 @@ private fun StepTwoSetupMode(
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             // Option 1: Quick Academic Setup
             SetupOptionCard(
-                title = "⚡ شروع سریع",
+                title = "شروع سریع",
                 description = "با وارد کردن خلاصه سوابق، اطلاعات پایه تحصیلی آماده می‌شود؛ هیچ کلاس، امتحان یا نمره‌ای بدون ثبت شما ساخته نمی‌شود.",
                 icon = Icons.Default.Speed,
                 isSelected = selectedMode == SetupMode.QUICK_SETUP,
@@ -1131,7 +1131,7 @@ private fun StepTwoSetupMode(
 
             // Option 2: Paste Text
             SetupOptionCard(
-                title = "📋 چسباندن متن برگه انتخاب واحد (Paste Text)",
+                title = "چسباندن متن برگه انتخاب واحد (Paste Text)",
                 description = "متن کپی‌شده از سامane گلستان یا سیستم سمیاد را اینجا قرار دهید تا ساعات و نام دروس به صورت خودکار استخراج شوند.",
                 icon = Icons.Default.ContentPaste,
                 isSelected = selectedMode == SetupMode.PASTE_TEXT,
@@ -1215,7 +1215,7 @@ private fun StepTwoSetupMode(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "✓ ${parsedDrafts.size} درس استخراج شد (قابل ویرایش دستی)",
+                                    text = "${parsedDrafts.size} درس استخراج شد (قابل ویرایش دستی)",
                                     fontSize = 11.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = AccentSuccess
@@ -1328,7 +1328,7 @@ private fun StepTwoSetupMode(
 
             // Option 3: Screenshot Import (OCR)
             SetupOptionCard(
-                title = "📸 ایمپورت از اسکرین‌شات انتخاب واحد (OCR)",
+                title = "ایمپورت از اسکرین‌شات انتخاب واحد (OCR)",
                 description = "تصویر برگه انتخاب واحد یا کارنامه گلستان را انتخاب کنید تا دوره‌ها هوشمندانه استخراج گردند.",
                 icon = Icons.Default.Image,
                 isSelected = selectedMode == SetupMode.SCREENSHOT_OCR,
@@ -1364,7 +1364,7 @@ private fun StepTwoSetupMode(
 
             // Option 4: Pick from Curriculum
             SetupOptionCard(
-                title = "📚 انتخاب دروس از چارت تحصیلی مصوب",
+                title = "انتخاب دروس از چارت تحصیلی مصوب",
                 description = "دروس استاندارد سرفصل مصوب وزارت علوم برای ترم را با یک کلیک علامت بزنید.",
                 icon = Icons.AutoMirrored.Filled.LibraryBooks,
                 isSelected = selectedMode == SetupMode.CURRICULUM,
@@ -1425,7 +1425,7 @@ private fun StepTwoSetupMode(
             colors = ButtonDefaults.buttonColors(containerColor = AccentPrimary)
         ) {
             Text(
-                text = "مرحله نهایی: بازبینی و ساخت سیستم‌عامل 🚀",
+                text = "مرحله نهایی: بازبینی و ساخت سیستم‌عامل",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary

@@ -253,7 +253,7 @@ fun PastSemestersHistoryDialog(
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Text(
-                                            text = "🌱 شما دانشجوی ترم ۱ (نوورود) هستید",
+                                            text = "شما دانشجوی ترم ۱ (نوورود) هستید",
                                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                                             color = Emerald600
                                         )

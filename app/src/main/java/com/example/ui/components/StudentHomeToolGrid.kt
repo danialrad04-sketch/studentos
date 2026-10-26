@@ -3,6 +3,7 @@ package com.example.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import com.example.ui.theme.studentStickerColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,12 +16,12 @@ import com.example.ui.models.AppTab
 @Composable
 internal fun StudentHomeToolGrid(onNavigate: (AppTab) -> Unit) {
     val tools = listOf(
-        Triple(AppTab.COPILOT, "دستیار", AppEmojiType.COPILOT),
-        Triple(AppTab.EXAMS, "امتحان‌ها", AppEmojiType.CALENDAR),
+        Triple(AppTab.COPILOT, "دستیار", studentDestinationSticker(AppTab.COPILOT)),
+        Triple(AppTab.EXAMS, "امتحان‌ها", studentDestinationSticker(AppTab.EXAMS)),
         Triple(AppTab.POMODORO, "تمرکز", AppEmojiType.POMODORO),
         Triple(AppTab.ATTENDANCE, "حضور و غیاب", AppEmojiType.CHECK),
-        Triple(AppTab.CURRICULUM, "چارت درسی", AppEmojiType.BOOK),
-        Triple(AppTab.HISTORY, "ترم‌های قبل", AppEmojiType.GRAD_CAP)
+        Triple(AppTab.CURRICULUM, "چارت درسی", studentDestinationSticker(AppTab.CURRICULUM)),
+        Triple(AppTab.HISTORY, "ترم‌های قبل", studentDestinationSticker(AppTab.HISTORY))
     )
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val columns = when {
@@ -34,8 +35,9 @@ internal fun StudentHomeToolGrid(onNavigate: (AppTab) -> Unit) {
                     row.forEach { (tab, label, sticker) ->
                         Surface(onClick = { onNavigate(tab) }, modifier = Modifier.weight(1f).heightIn(min = 64.dp)
                             .testTag("home_tool_${tab.name}"), shape = MaterialTheme.shapes.medium,
-                            color = MaterialTheme.colorScheme.surface,
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                            color = studentStickerColors(sticker).container,
+                            contentColor = studentStickerColors(sticker).ink,
+                            border = BorderStroke(1.dp, studentStickerColors(sticker).ink.copy(alpha = 0.15f))) {
                             Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                 AppEmoji(sticker, size = 32.dp)
