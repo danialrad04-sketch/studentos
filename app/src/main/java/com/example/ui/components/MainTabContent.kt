@@ -80,6 +80,10 @@ fun MainTabContent(
     onRequestNotificationPermission: () -> Unit = {},
     onOpenPremium: () -> Unit = {}
 ) {
+    val calendarLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("text/calendar"),
+        studentViewModel::writePendingCalendar
+    )
     AnimatedContent(
         targetState = selectedTab,
         transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -131,6 +135,22 @@ fun MainTabContent(
                     onOpenOcrImport = onOpenOcrImport,
                     onOpenAppTour = onOpenAppTour
                 )
+            }
+            AppTab.AGENDA -> {
+                val busy by studentViewModel.calendarExportBusy.collectAsStateWithLifecycle()
+                StudentAgendaScreen(coursesWithSessions,tasks,exams,
+                    onOpenTask={task->onEditTask?.invoke(task) ?: studentViewModel.selectTab(AppTab.TASKS)},
+                    onOpenCourse={id->courses.find{it.id==id}?.let(onOpenCourseWorkspace)},
+                    onOpenExams={studentViewModel.selectTab(AppTab.EXAMS)},onAddTask=onOpenAddTask,
+                    onExport={week->studentViewModel.prepareCalendarExport(week){calendarLauncher.launch(it)}},exportBusy=busy)
+            }
+            AppTab.NOTES -> {
+                val notes by studentViewModel.studyNotes.collectAsStateWithLifecycle()
+                val noteCourses by studentViewModel.notebookCourses.collectAsStateWithLifecycle()
+                val generation by studentViewModel.workspaceGeneration.collectAsStateWithLifecycle()
+                val user by studentViewModel.currentUser.collectAsStateWithLifecycle()
+                StudyNotesScreen(notes,noteCourses,user.uid+":"+generation,
+                    studentViewModel::saveStudyNote,studentViewModel::archiveStudyNote)
             }
             AppTab.COPILOT -> {
                 val currCourses by studentViewModel.curriculumCourses.collectAsStateWithLifecycle()

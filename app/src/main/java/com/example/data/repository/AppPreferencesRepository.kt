@@ -61,6 +61,9 @@ class AppPreferencesRepository(context: Context) {
     private val _dataLossWarningDismissed = MutableStateFlow(readDataLossWarningDismissed())
     val dataLossWarningDismissed: StateFlow<Boolean> = _dataLossWarningDismissed.asStateFlow()
 
+    val calendarExportIdentity: String = prefs.getString("calendar_export_identity", null)
+        ?: java.util.UUID.randomUUID().toString().also { prefs.edit().putString("calendar_export_identity", it).apply() }
+
     private val _customGeminiApiKey = MutableStateFlow(readStoredCustomGeminiApiKey())
     val customGeminiApiKey: StateFlow<String> = _customGeminiApiKey.asStateFlow()
 

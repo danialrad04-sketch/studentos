@@ -1,5 +1,6 @@
 package com.example.ui
 
+import com.example.ui.theme.studentWorkspaceBackground
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -410,14 +411,17 @@ fun MainAppScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.background),
+                            .studentWorkspaceBackground(),
                         contentAlignment = Alignment.TopCenter
                     ) {
+                        AnimatedContent(targetState = selectedTab,
+                            transitionSpec = { fadeIn(animationSpec=tween(220)) togetherWith fadeOut(animationSpec=tween(160)) },
+                            label = "destination_viewport") { visibleTab ->
                         Column(
                             modifier = Modifier
-                                .fillMaxSize()
                                 .widthIn(max = 840.dp)
-                                .verticalScroll(rememberScrollState())
+                                .fillMaxSize()
+                                .then(if (visibleTab in setOf(AppTab.COPILOT, AppTab.SEMESTER_PLANNER, AppTab.HISTORY)) Modifier else Modifier.verticalScroll(rememberScrollState()))
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             val totalCurriculumUnits = when (val state = academicProgressState) {
@@ -427,7 +431,7 @@ fun MainAppScreen(
                             }
 
                             // Show Header and Live Activity ONLY on Dashboard for a clean, focused view on other tabs
-                            if (selectedTab == AppTab.DASHBOARD) {
+                            if (visibleTab == AppTab.DASHBOARD) {
                                 // Apple Dynamic Island / Live Activity Top Capsule
                                 DynamicIslandLiveActivity(
                                     courses = courses,
@@ -455,7 +459,7 @@ fun MainAppScreen(
                             } else {
                                 SubScreenHeaderSection(
                                     onOpenMenu = { showAppMenu = true },
-                                    currentTab = selectedTab,
+                                    currentTab = visibleTab,
                                     onBackToDashboard = {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         studentViewModel.selectTab(AppTab.DASHBOARD)
@@ -488,17 +492,8 @@ fun MainAppScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        // Tab Content decomposed into MainTabContent with animated transition
-                        AnimatedContent(
-                            targetState = selectedTab,
-                            transitionSpec = {
-                                (fadeIn(animationSpec = tween(220)) + slideInVertically { height -> height / 24 }) togetherWith
-                                        (fadeOut(animationSpec = tween(160)) + slideOutVertically { height -> -height / 24 })
-                            },
-                            label = "MainTabTransition"
-                        ) { targetTab ->
                             MainTabContent(
-                                selectedTab = targetTab,
+                                selectedTab = visibleTab,
                                 courses = courses,
                                 coursesWithSessions = coursesWithSessions,
                                 attendance = attendance,
@@ -551,7 +546,7 @@ fun MainAppScreen(
                                 onOpenPremium = { dialogState = AppDialogState.Upgrade }
                             )
                         }
-                        } // scrolling destination column
+                        } // destination animation
                     } // destination content box
                     } // StudentAppScaffold
                     } // StudentNavigationDrawer

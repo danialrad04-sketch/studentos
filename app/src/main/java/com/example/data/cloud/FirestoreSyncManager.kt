@@ -276,6 +276,7 @@ object FirestoreSyncManager {
                     "courseId" to (n.courseId ?: ""),
                     "title" to n.title,
                     "content" to n.content,
+                    "isArchived" to n.isArchived,
                     "updatedAt" to n.updatedAt
                 )
                 batch.set(nDoc, map, SetOptions.merge())
@@ -684,7 +685,8 @@ object FirestoreSyncManager {
                                     courseId = courseId,
                                     title = title,
                                     content = content,
-                                    updatedAt = if (cloudUpdatedAt > 0L) cloudUpdatedAt else System.currentTimeMillis()
+                                    updatedAt = if (cloudUpdatedAt > 0L) cloudUpdatedAt else System.currentTimeMillis(),
+                                    isArchived = doc.getBoolean("isArchived") ?: (localNote?.isArchived ?: false)
                                 )
                             )
                             restoredCount++

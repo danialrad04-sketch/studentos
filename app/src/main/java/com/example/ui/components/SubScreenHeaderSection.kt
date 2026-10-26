@@ -1,6 +1,8 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
@@ -33,7 +35,10 @@ fun SubScreenHeaderSection(
 ) {
     var expanded by remember { mutableStateOf(false) }
     Row(
-        modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier.fillMaxWidth().padding(vertical = 4.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow, MaterialTheme.shapes.large)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
+            .padding(horizontal = 4.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onBackToDashboard) {
@@ -56,8 +61,10 @@ fun SubScreenHeaderSection(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        IconButton(onClick = onOpenSearch) {
-            Icon(Icons.Default.Search, "جستجوی سریع", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (onOpenMenu == null) {
+            IconButton(onClick = onOpenSearch) {
+                Icon(Icons.Default.Search, "جستجوی سریع", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         if (onOpenMenu != null) {
             IconButton(onClick = onOpenMenu) {
@@ -69,6 +76,9 @@ fun SubScreenHeaderSection(
                 Icon(Icons.Default.MoreVert, "گزینه‌های صفحه", tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                if (onOpenMenu != null) {
+                    DropdownMenuItem(text = { Text("جستجوی سریع") }, onClick = { expanded = false; onOpenSearch() })
+                }
                 DropdownMenuItem(
                     text = { Text(if (notifCount > 0) "اعلان‌ها ($notifCount)" else "اعلان‌ها") },
                     onClick = { expanded = false; onOpenNotifications() }
@@ -83,6 +93,8 @@ fun SubScreenHeaderSection(
 /** Shared page context used throughout the academic workspace. */
 internal fun studentDestinationDescription(tab: AppTab): String = when (tab) {
     AppTab.DASHBOARD -> "نمای امروز و قدم بعدی"
+    AppTab.AGENDA -> "کلاس، امتحان و تکلیف در یک هفته"
+    AppTab.NOTES -> "نکته‌ها و خلاصه‌های درس، همیشه همراهت"
     AppTab.SCHEDULE -> "زمان و مکان کلاس‌ها"
     AppTab.TASKS -> "از برنامه تا انجام"
     AppTab.EXAMS -> "موعدها و یادآورهای امتحان"

@@ -139,6 +139,8 @@ fun StudentNavigationDrawer(
 
 internal fun studentDestinationIcon(tab: AppTab) = when (tab) {
     AppTab.DASHBOARD -> Icons.Rounded.Home
+    AppTab.AGENDA -> Icons.Rounded.DateRange
+    AppTab.NOTES -> Icons.Rounded.Description
     AppTab.SCHEDULE -> Icons.Rounded.CalendarMonth
     AppTab.TASKS -> Icons.Rounded.CheckCircle
     AppTab.GRADES -> Icons.Rounded.BarChart

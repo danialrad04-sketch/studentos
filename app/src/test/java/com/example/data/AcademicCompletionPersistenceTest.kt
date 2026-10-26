@@ -261,7 +261,7 @@ class AcademicCompletionPersistenceTest {
             }).build())
         helper.writableDatabase
         helper.close()
-        val upgraded = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(AppDatabase.MIGRATION_9_10, AppDatabase.MIGRATION_10_11).allowMainThreadQueries().build()
+        val upgraded = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(AppDatabase.MIGRATION_9_10, AppDatabase.MIGRATION_10_11, AppDatabase.MIGRATION_11_12).allowMainThreadQueries().build()
         try {
             val grades = upgraded.studentDao().getAllGradesSync().sortedBy { it.id }
             assertEquals(2, grades.size)

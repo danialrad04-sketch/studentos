@@ -405,6 +405,33 @@ class StudentRepository(
         dao.insertNote(note.copy(updatedAt = System.currentTimeMillis()))
     }
 
+    /** Optimistic note edits preserve concurrent sync updates and archive state. */
+    suspend fun saveStudyNote(note: NoteEntity, creating: Boolean): NoteEntity = withContext(Dispatchers.IO) {
+        val save: suspend () -> NoteEntity = {
+            require(note.id.isNotBlank() && note.id.length <= 128) { "شناسهٔ یادداشت معتبر نیست." }
+            require(note.title.trim().length in 1..180 && note.content.isNotBlank() && note.content.length <= 30000) { "عنوان و متن یادداشت را بررسی کنید." }
+            val existing = dao.getNoteById(note.id)
+            check(if (creating) existing == null else existing != null && existing.updatedAt == note.updatedAt) { "یادداشت تغییر کرده است؛ متن را نگه دارید و نسخهٔ تازه را باز کنید." }
+            check(existing?.isArchived != true) { "ابتدا یادداشت را از بایگانی برگردانید." }
+            val courseId = note.courseId?.ifBlank { null }
+            require(courseId == null || dao.getCourseById(courseId) != null || existing?.courseId == courseId) { "درس انتخاب‌شده پیدا نشد." }
+            val saved = note.copy(title = note.title.trim(), courseId = courseId, isArchived = false,
+                updatedAt = maxOf(System.currentTimeMillis(), (existing?.updatedAt ?: 0L) + 1))
+            dao.insertNote(saved); saved
+        }
+        if (database != null) database.withTransaction { save() } else save()
+    }
+
+    suspend fun setNoteArchived(note: NoteEntity, archived: Boolean): NoteEntity = withContext(Dispatchers.IO) {
+        val save: suspend () -> NoteEntity = {
+            val existing = dao.getNoteById(note.id)
+            check(existing != null && existing.updatedAt == note.updatedAt) { "نسخهٔ یادداشت تغییر کرده؛ دوباره آن را بررسی کنید." }
+            val saved = existing.copy(isArchived = archived, updatedAt = maxOf(System.currentTimeMillis(), existing.updatedAt + 1))
+            dao.insertNote(saved); saved
+        }
+        if (database != null) database.withTransaction { save() } else save()
+    }
+
     suspend fun deleteNote(id: String) = withContext(Dispatchers.IO) {
         dao.deleteNote(id)
     }

@@ -211,8 +211,8 @@ fun AttendanceRadarScreen(
                     .fillMaxWidth()
                     .padding(bottom = 12.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(Rose500.copy(alpha = 0.12f))
-                    .border(1.dp, Rose600.copy(alpha = 0.6f), RoundedCornerShape(18.dp))
+                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .border(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.6f), RoundedCornerShape(18.dp))
                     .padding(14.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -233,13 +233,13 @@ fun AttendanceRadarScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "اخطار ماده ۳۵: در آستانه حذف آموزشی در $dangerCount درس!",
+                            text = "سقف غیبت تنظیم‌شده در $dangerCount درس رسیده است",
                             fontWeight = FontWeight.Black,
                             fontSize = 12.5.sp,
                             color = MaterialTheme.studentColors.attendanceCritical
                         )
                         Text(
-                            text = "تعداد غیبت‌های شما در این دروس به سقف قانونی دانشگاه رسیده است.",
+                            text = "این هشدار بر اساس سقف ثبت‌شدهٔ خودت است؛ مقررات هر درس را با آموزش بررسی کن.",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

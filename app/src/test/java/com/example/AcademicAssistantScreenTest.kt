@@ -35,7 +35,7 @@ class AcademicAssistantScreenTest {
         } } }
         rule.onNodeWithTag("ai_local_only").performClick()
         for (mode in listOf("coach", "exam", "review", "chat")) {
-            rule.onAllNodes(hasScrollToIndexAction())[0].performScrollToIndex(listOf("chat", "coach", "exam", "review").indexOf(mode))
+            rule.onNodeWithTag("ai_modes").performScrollToIndex(listOf("chat", "coach", "exam", "review").indexOf(mode))
             rule.onNodeWithTag("ai_mode_$mode").performClick()
             rule.onNodeWithTag("ai_mode_$mode").assertIsSelected()
         }

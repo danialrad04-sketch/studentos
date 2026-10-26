@@ -164,6 +164,8 @@ fun ModernBentoDashboard(
             onStartFocus = startFocus
         )
 
+        StudentWorkspaceShortcuts(onNavigateTab)
+
         AcademicJourneyOverview(
             declaredPassedUnits = passedUnits,
             declaredGpa = declaredGpa?.let { String.format(Locale.US, "%.2f", it) },

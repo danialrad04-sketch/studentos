@@ -1015,6 +1015,79 @@ class StudentViewModel @JvmOverloads constructor(
         persistProfile(updated, null, onSaved)
     }
 
+    private data class PendingCalendar(val owner: String, val generation: String, val data: String)
+    private var pendingCalendar: PendingCalendar? = null
+    private val _calendarExportBusy = MutableStateFlow(false)
+    val calendarExportBusy = _calendarExportBusy.asStateFlow()
+
+    fun prepareCalendarExport(week: com.example.domain.engine.StudentAgendaEngine.Week, onReady: (String) -> Unit) {
+        if (_calendarExportBusy.value) return
+        val owner = currentUser.value.uid
+        val generation = workspaceGeneration.value
+        _calendarExportBusy.value = true
+        viewModelScope.launch {
+            try {
+                val data = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                    com.example.domain.engine.AcademicCalendarWriter.write(week.events, "$calendarExportIdentity:$owner:$generation")
+                }
+                check(owner == currentUser.value.uid && generation == workspaceGeneration.value)
+                pendingCalendar = PendingCalendar(owner, generation, data)
+                onReady("StudentOS-week-${week.start.format("-")}.ics")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit("فایل تقویم آماده نشد؛ دوباره تلاش کنید.") }
+            finally { _calendarExportBusy.value = false }
+        }
+    }
+
+    fun writePendingCalendar(uri: android.net.Uri?) {
+        val request = pendingCalendar
+        pendingCalendar = null
+        if (uri == null) return
+        viewModelScope.launch {
+            try {
+                check(request != null && request.owner == currentUser.value.uid && request.generation == workspaceGeneration.value)
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    getApplication<android.app.Application>().contentResolver.openOutputStream(uri, "wt")?.use { output ->
+                        output.write(request.data.toByteArray(Charsets.UTF_8))
+                    } ?: error("دسترسی به فایل برقرار نشد.")
+                }
+                _userMessage.emit("فایل تقویم ذخیره شد؛ برای افزودن رویدادها آن را در تقویم وارد کنید.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { _userMessage.emit("فایل تقویم ذخیره نشد؛ دوباره خروجی بگیرید.") }
+        }
+    }
+
+    val notebookCourses = repository.allCoursesIncludingArchived.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val studyNotes = repository.notes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val workspaceGeneration = preferencesRepository.taskReminderGeneration
+    val calendarExportIdentity = preferencesRepository.calendarExportIdentity
+
+    fun saveStudyNote(note: com.example.data.local.entity.NoteEntity, creating: Boolean, onResult: (Boolean) -> Unit) {
+        val generation = workspaceGeneration.value
+        viewModelScope.launch {
+            try {
+                check(generation == workspaceGeneration.value) { "نشست تغییر کرده؛ یادداشت را دوباره باز کنید." }
+                repository.saveStudyNote(note, creating)
+                triggerCloudSync(); onResult(true)
+                _userMessage.emit("یادداشت ذخیره شد.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { onResult(false); _userMessage.emit(e.localizedMessage ?: "یادداشت ذخیره نشد؛ دوباره تلاش کنید.") }
+        }
+    }
+
+    fun archiveStudyNote(note: com.example.data.local.entity.NoteEntity, archived: Boolean, onResult: (Boolean) -> Unit) {
+        val generation = workspaceGeneration.value
+        viewModelScope.launch {
+            try {
+                check(generation == workspaceGeneration.value) { "نشست تغییر کرده؛ دوباره بررسی کنید." }
+                repository.setNoteArchived(note, archived)
+                triggerCloudSync(); onResult(true)
+                _userMessage.emit(if (archived) "یادداشت بایگانی شد." else "یادداشت بازیابی شد.")
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { onResult(false); _userMessage.emit(e.localizedMessage ?: "تغییر یادداشت ذخیره نشد.") }
+        }
+    }
+
     fun saveNotes(notes: String) {
         viewModelScope.launch {
             try {
