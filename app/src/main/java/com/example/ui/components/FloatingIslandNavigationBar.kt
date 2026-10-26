@@ -8,22 +8,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.ui.models.AppTab
 
 private data class NavItem(
     val tab: AppTab?,
-    val outlineIcon: ImageVector,
-    val selectedIcon: ImageVector,
     val label: String
 )
 
@@ -38,14 +32,14 @@ fun FloatingIslandNavigationBar(
     var showAllModulesSheet by remember { mutableStateOf(false) }
     val items = remember {
         listOf(
-            NavItem(AppTab.DASHBOARD, Icons.Outlined.Home, Icons.Rounded.Home, "خانه"),
-            NavItem(AppTab.SCHEDULE, Icons.Outlined.CalendarMonth, Icons.Rounded.CalendarMonth, "برنامه"),
-            NavItem(AppTab.TASKS, Icons.Outlined.CheckCircle, Icons.Rounded.CheckCircle, "کارها"),
-            NavItem(AppTab.GRADES, Icons.Outlined.BarChart, Icons.Rounded.BarChart, "کارنامه"),
-            NavItem(null, Icons.Outlined.GridView, Icons.Rounded.GridView, "بیشتر")
+            NavItem(AppTab.DASHBOARD, "خانه"),
+            NavItem(AppTab.SCHEDULE, "برنامه"),
+            NavItem(AppTab.TASKS, "کارها"),
+            NavItem(AppTab.GRADES, "کارنامه"),
+            NavItem(null, "بیشتر")
         )
     }
-    Surface(color = MaterialTheme.colorScheme.background) {
+    Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
     NavigationBar(
         modifier = modifier.widthIn(max = 600.dp).fillMaxWidth().testTag("primary_navigation"),
@@ -61,7 +55,7 @@ fun FloatingIslandNavigationBar(
                     item.tab?.let(onTabSelected) ?: run { onOpenMore?.invoke() ?: run { showAllModulesSheet = true } }
                 },
                 icon = {
-                    Icon(if (selected) item.selectedIcon else item.outlineIcon, contentDescription = null, modifier = Modifier.size(23.dp))
+                    AppEmoji(item.tab?.let(::studentDestinationSticker) ?: AppEmojiType.MORE, size = 32.dp)
                 },
                 label = {
                     Text(item.label, style = MaterialTheme.typography.labelMedium, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)

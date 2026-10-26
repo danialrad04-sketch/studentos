@@ -131,11 +131,8 @@ fun NotificationDialog(
                                     .padding(12.dp),
                                 verticalAlignment = Alignment.Top
                             ) {
-                                Text(
-                                    text = if (isDanger) "🚨" else "📌",
-                                    fontSize = 16.sp,
-                                    modifier = Modifier.padding(top = 1.dp)
-                                )
+                                AppEmoji(if (isDanger) AppEmojiType.WARNING else AppEmojiType.BELL,
+                                    modifier = Modifier.padding(top = 1.dp), size = 28.dp)
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Row(

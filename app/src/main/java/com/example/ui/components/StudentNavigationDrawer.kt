@@ -64,7 +64,7 @@ fun StudentNavigationDrawer(
                     Column(if (shortWindow) Modifier.fillMaxSize().verticalScroll(rememberScrollState()) else Modifier.fillMaxSize()) {
                         Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 16.dp, top = 12.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                             Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primaryContainer) {
-                                Icon(Icons.Rounded.School, null, Modifier.padding(9.dp).size(22.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                                AppEmoji(AppEmojiType.GRAD_CAP, Modifier.padding(7.dp), size = 32.dp)
                             }
                             Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
                                 Text("Student OS", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
@@ -90,13 +90,13 @@ fun StudentNavigationDrawer(
                                     NavigationDrawerItem(
                                         modifier = Modifier.testTag("drawer_${tab.name}"),
                                         label = { Text(tab.title, style = MaterialTheme.typography.bodyMedium, fontWeight = if (selectedTab == tab) FontWeight.Bold else FontWeight.Normal) },
-                                        icon = { Icon(studentDestinationIcon(tab), null, Modifier.size(22.dp)) },
+                                        icon = { AppEmoji(studentDestinationSticker(tab), size = 32.dp) },
                                         selected = selectedTab == tab,
                                         shape = RoundedCornerShape(12.dp),
                                         colors = NavigationDrawerItemDefaults.colors(
-                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            selectedContainerColor = com.example.ui.theme.studentStickerColors(studentDestinationSticker(tab)).container,
                                             selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                            selectedTextColor = com.example.ui.theme.studentStickerColors(studentDestinationSticker(tab)).ink
                                         ),
                                         onClick = { select { onSelectTab(tab) } }
                                     )
@@ -109,15 +109,15 @@ fun StudentNavigationDrawer(
                         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             NavigationDrawerItem(
                                 label = { Column { Text(profile.name.ifBlank { user.displayName.ifBlank { "دانشجو" } }, fontWeight = FontWeight.Bold); Text("حساب کاربری", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } },
-                                icon = { Icon(Icons.Rounded.AccountCircle, null) }, selected = false,
+                                icon = { AppEmoji(AppEmojiType.PROFILE, size = 32.dp) }, selected = false,
                                 badge = { if (user.isGuest) Text("مهمان", style = MaterialTheme.typography.labelSmall) },
                                 onClick = { select(onOpenAccount) }
                             )
                             val settingsItem: @Composable (Modifier) -> Unit = { itemModifier ->
-                                NavigationDrawerItem(modifier = itemModifier, label = { Text("تنظیمات", style = MaterialTheme.typography.labelLarge) }, icon = { Icon(Icons.Rounded.Settings, null, Modifier.size(20.dp)) }, selected = false, onClick = { select(onOpenSettings) })
+                                NavigationDrawerItem(modifier = itemModifier, label = { Text("تنظیمات", style = MaterialTheme.typography.labelLarge) }, icon = { AppEmoji(AppEmojiType.SETTINGS, size = 28.dp) }, selected = false, onClick = { select(onOpenSettings) })
                             }
                             val supportItem: @Composable (Modifier) -> Unit = { itemModifier ->
-                                NavigationDrawerItem(modifier = itemModifier, label = { Text("پشتیبانی", style = MaterialTheme.typography.labelLarge) }, icon = { Icon(Icons.AutoMirrored.Rounded.HelpOutline, null, Modifier.size(20.dp)) }, selected = false, onClick = { select(onOpenSupport) })
+                                NavigationDrawerItem(modifier = itemModifier, label = { Text("پشتیبانی", style = MaterialTheme.typography.labelLarge) }, icon = { AppEmoji(AppEmojiType.HELP, size = 28.dp) }, selected = false, onClick = { select(onOpenSupport) })
                             }
                             if (LocalDensity.current.fontScale >= 1.3f) {
                                 settingsItem(Modifier.fillMaxWidth())
@@ -135,23 +135,4 @@ fun StudentNavigationDrawer(
             content = content
         )
     }
-}
-
-internal fun studentDestinationIcon(tab: AppTab) = when (tab) {
-    AppTab.DASHBOARD -> Icons.Rounded.Home
-    AppTab.AGENDA -> Icons.Rounded.DateRange
-    AppTab.NOTES -> Icons.Rounded.Description
-    AppTab.SCHEDULE -> Icons.Rounded.CalendarMonth
-    AppTab.TASKS -> Icons.Rounded.CheckCircle
-    AppTab.GRADES -> Icons.Rounded.BarChart
-    AppTab.EXAMS -> Icons.Rounded.Event
-    AppTab.ATTENDANCE -> Icons.Rounded.FactCheck
-    AppTab.COPILOT -> Icons.Rounded.AutoAwesome
-    AppTab.ACADEMIC_INTELLIGENCE -> Icons.Rounded.Insights
-    AppTab.POMODORO -> Icons.Rounded.Timer
-    AppTab.GAMIFICATION -> Icons.Rounded.EmojiEvents
-    AppTab.HISTORY -> Icons.Rounded.History
-    AppTab.PASSPORT -> Icons.Rounded.Badge
-    AppTab.SEMESTER_PLANNER -> Icons.Rounded.Route
-    AppTab.CURRICULUM -> Icons.Rounded.AccountTree
 }

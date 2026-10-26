@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.res.imageResource
 import com.example.R
 import com.example.ui.components.LocalStudentStickerAtlas
+import com.example.ui.components.LocalStudentCompanionAtlas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.CardDefaults
@@ -94,8 +95,8 @@ private val LightColorScheme = lightColorScheme(
     surfaceContainerLowest = StudentSurfaceLight,
     surfaceContainerLow = StudentCanvasLight,
     surfaceContainer = StudentSurfaceVariantLight,
-    surfaceContainerHigh = Color(0xFFE7EDF3),
-    surfaceContainerHighest = Color(0xFFDCE5EE),
+    surfaceContainerHigh = Color(0xFFECE8DA),
+    surfaceContainerHighest = Color(0xFFE2DECE),
     inverseSurface = Color(0xFF0F172A),
     inverseOnSurface = Color(0xFFF8FAFC),
     inversePrimary = StudentPrimaryDark,
@@ -204,11 +205,13 @@ fun StudentOsTheme(
     }
 
     val stickerAtlas = ImageBitmap.imageResource(R.drawable.student_sticker_atlas)
+    val companionAtlas = ImageBitmap.imageResource(R.drawable.student_sticker_companions)
     val semanticColors = if (darkTheme) DarkStudentSemanticColors else LightStudentSemanticColors
 
     CompositionLocalProvider(
         LocalStudentSemanticColors provides semanticColors,
         LocalStudentStickerAtlas provides stickerAtlas,
+        LocalStudentCompanionAtlas provides companionAtlas,
         LocalLayoutDirection provides LayoutDirection.Rtl
     ) {
         MaterialTheme(

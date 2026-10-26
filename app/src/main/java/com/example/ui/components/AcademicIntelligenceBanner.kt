@@ -127,7 +127,7 @@ fun AcademicIntelligenceBanner(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         StudentCardBody(
-                            text = "💡 راهکار پیشنهادی: ${topRisk.recommendedAction}",
+                            text = "راهکار پیشنهادی: ${topRisk.recommendedAction}",
                             maxLines = 2,
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Medium,

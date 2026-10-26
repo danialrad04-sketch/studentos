@@ -419,7 +419,7 @@ fun WeeklyScheduleScreen(
                         }
 
                         Text(
-                            text = "زنده 🟢",
+                            text = "زنده",
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -448,7 +448,7 @@ fun WeeklyScheduleScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(text = "☕", fontSize = 28.sp)
+                            Text(text = "", fontSize = 28.sp)
                             Text(
                                 text = "در این روز کلاسی ثبت نشده است.",
                                 fontSize = 13.sp,
@@ -674,7 +674,7 @@ fun CourseCard(
                                 border = androidx.compose.foundation.BorderStroke(0.8.dp, MaterialTheme.studentColors.attendanceCritical.copy(alpha = 0.5f))
                             ) {
                                 Text(
-                                    text = "⚠️ تداخل زمانی",
+                                    text = "تداخل زمانی",
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.studentColors.attendanceCritical,
@@ -702,7 +702,7 @@ fun CourseCard(
                         // Professor or Location badge
                         if (course.professor.isNotBlank()) {
                             Text(
-                                text = "👨‍🏫 ${course.professor}",
+                                text = "${course.professor}",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Medium,
@@ -711,7 +711,7 @@ fun CourseCard(
                             )
                         } else if (displayLoc.isNotBlank()) {
                             Text(
-                                text = "📍 $displayLoc",
+                                text = "$displayLoc",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Medium,
@@ -1072,7 +1072,7 @@ fun WeeklyGridMatrixView(
                                         val sessionLoc = item.session.location
                                         if (sessionLoc.isNotBlank()) {
                                             Text(
-                                                text = "📍 $sessionLoc",
+                                                text = "$sessionLoc",
                                                 fontSize = 9.sp,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 maxLines = 1,

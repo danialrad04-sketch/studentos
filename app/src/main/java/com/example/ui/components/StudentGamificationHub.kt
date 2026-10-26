@@ -130,7 +130,7 @@ fun StudentGamificationHub(
                     onClick = { selectedCategory = category },
                     label = {
                         Text(
-                            text = "${category.icon} ${category.title} ($countInCat)",
+                            text = "${category.title} ($countInCat)",
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                             )
@@ -163,7 +163,7 @@ fun StudentGamificationHub(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(text = "🎖️", style = MaterialTheme.typography.headlineMedium)
+                    AppEmoji(AppEmojiType.MEDAL, size = 48.dp)
                     Text(
                         text = "هیچ مدالی در این دسته‌بندی وجود ندارد",
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
@@ -283,7 +283,7 @@ private fun StudentLevelAndStreakHeroCard(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Text(text = "🔥", style = MaterialTheme.typography.titleSmall)
+                            AppEmoji(AppEmojiType.FIRE, size = 28.dp)
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     text = "${profile.studyStreakDays} روز",
@@ -346,19 +346,19 @@ private fun GamificationStatCountersRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         MiniMetricPill(
-            icon = "🏆",
+            icon = AppEmojiType.TROPHY,
             title = "مدال‌های فتح‌شده",
             value = "$unlockedCount از ${profile.badges.size}",
             modifier = Modifier.weight(1f)
         )
         MiniMetricPill(
-            icon = "⏱️",
+            icon = AppEmojiType.POMODORO,
             title = "تمرکز ثبت‌شده",
             value = String.format(java.util.Locale.US, "%.1f ساعت", profile.focusHoursTotal),
             modifier = Modifier.weight(1f)
         )
         MiniMetricPill(
-            icon = "📋",
+            icon = AppEmojiType.CHECK,
             title = "تکالیف تحویلی",
             value = "${profile.completedTasksCount} مورد",
             modifier = Modifier.weight(1f)
@@ -368,7 +368,7 @@ private fun GamificationStatCountersRow(
 
 @Composable
 private fun MiniMetricPill(
-    icon: String,
+    icon: AppEmojiType,
     title: String,
     value: String,
     modifier: Modifier = Modifier
@@ -387,7 +387,7 @@ private fun MiniMetricPill(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            Text(text = icon, style = MaterialTheme.typography.titleMedium)
+            AppEmoji(icon, size = 28.dp)
             Text(
                 text = value,
                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Black),
@@ -457,7 +457,14 @@ private fun AcademicBadgeCard(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = badge.iconEmoji, style = MaterialTheme.typography.titleLarge)
+                    AppEmoji(when (badge.category) {
+                        BadgeCategory.STUDY_FOCUS -> AppEmojiType.POMODORO
+                        BadgeCategory.ATTENDANCE_SHIELD -> AppEmojiType.CHECK
+                        BadgeCategory.TASK_CRUSHER -> AppEmojiType.NOTES
+                        BadgeCategory.CURRICULUM_PIONEER -> AppEmojiType.CURRICULUM
+                        BadgeCategory.EXAM_MASTER -> AppEmojiType.TARGET
+                        BadgeCategory.ACADEMIC_EXCELLENCE -> AppEmojiType.TROPHY
+                    }, size = 36.dp)
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))

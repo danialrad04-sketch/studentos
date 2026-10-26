@@ -41,7 +41,7 @@ fun StudyNotesScreen(notes:List<NoteEntity>,courses:List<CourseEntity>,ownerKey:
     Column(modifier.fillMaxWidth().testTag("study_notes_screen"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment=Alignment.CenterVertically,
             horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-            AppEmoji(AppEmojiType.BOOK,size=44.dp)
+            AppEmoji(AppEmojiType.NOTES,size=44.dp)
             Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
                 Text("خلاصه‌ها و نکته‌های درسی",style=MaterialTheme.typography.titleSmall)
                 Text("ذخیره روی دستگاه؛ همراه پشتیبان",style=MaterialTheme.typography.bodySmall,

@@ -280,7 +280,7 @@ fun SemesterTimelineCard(
 
                     Spacer(modifier = Modifier.height(8.dp))
                     StudentCardBody(
-                        text = "💡 تقویم آموزشی: تاریخ رسمی آغاز نیم‌سال اول دانشگاه‌ها ۱ مهرماه است و فرآیند ثبت نمرات تا اوایل بهمن ادامه دارد.",
+                        text = "تقویم آموزشی: تاریخ رسمی آغاز نیم‌سال اول دانشگاه‌ها ۱ مهرماه است و فرآیند ثبت نمرات تا اوایل بهمن ادامه دارد.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2

@@ -287,7 +287,7 @@ private fun AnalyticsKpiSection(
             BentoKpiTile(
                 title = "معدل کل",
                 value = displayGpa,
-                subtitle = targetGpa?.let { "هدف ثبت‌شده: ${String.format(Locale.US, "%.2f", it)} 🎯" } ?: "هدف معدل ثبت نشده",
+                subtitle = targetGpa?.let { "هدف ثبت‌شده: ${String.format(Locale.US, "%.2f", it)}" } ?: "هدف معدل ثبت نشده",
                 emojiType = AppEmojiType.CHART,
                 accentColor = MaterialTheme.colorScheme.secondary,
                 onClick = onNavigateToGrades,
@@ -315,7 +315,7 @@ private fun AnalyticsKpiSection(
             BentoKpiTile(
                 title = "حضور و غیاب",
                 value = displayAttendance,
-                subtitle = if (dangerCourses > 0) "$dangerCourses هشدار غیبت!" else if (attendanceList.isEmpty()) "هنوز داده‌ای ثبت نشده" else "وضعیت پایدار 🛡️",
+                subtitle = if (dangerCourses > 0) "$dangerCourses هشدار غیبت!" else if (attendanceList.isEmpty()) "هنوز داده‌ای ثبت نشده" else "وضعیت پایدار",
                 emojiType = AppEmojiType.CALENDAR,
                 accentColor = if (dangerCourses > 0) StudentOsColors.CrimsonRose else MaterialTheme.colorScheme.primary,
                 onClick = onNavigateToAttendance,
@@ -919,7 +919,7 @@ private fun AttendanceRadarBentoTile(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = if (hasDanger) "🚨" else "🛡️", fontSize = 16.sp)
+                        AppEmoji(if (hasDanger) AppEmojiType.WARNING else AppEmojiType.CHECK, size = 24.dp)
                     }
 
                     Text(
@@ -1004,7 +1004,7 @@ private fun MicroPomodoroBentoTile(
                             .background(MaterialTheme.studentColors.studyFocus.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "⏱️", fontSize = 16.sp)
+                        AppEmoji(AppEmojiType.POMODORO, size = 24.dp)
                     }
 
                     // Direct interactive mini play/pause
@@ -1124,7 +1124,7 @@ private fun AcademicPulseBentoTile(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "📜 شناسنامه تحصیلی",
+                        text = "شناسنامه تحصیلی",
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.studentColors.passedUnitBadge
@@ -1226,7 +1226,7 @@ private fun TasksSprintBentoTile(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "📋 تکالیف و تسک‌ها",
+                        text = "تکلیف‌ها",
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -1260,7 +1260,7 @@ private fun TasksSprintBentoTile(
                         )
                     } else {
                         Text(
-                            text = "همه تکالیف انجام شده‌اند 🎉",
+                            text = "همه تکلیف‌ها انجام شده‌اند",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.studentColors.passedUnitBadge

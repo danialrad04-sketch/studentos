@@ -2,13 +2,6 @@ package com.example.ui.components
 
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Rule
-import androidx.compose.material.icons.filled.Alarm
-import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CheckBox
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -35,24 +28,20 @@ fun AppBottomNavigation(
         tonalElevation = 3.dp
     ) {
         val primaryNavTabs = listOf(
-            AppTab.SCHEDULE to Icons.Default.CalendarMonth,
-            AppTab.ATTENDANCE to Icons.AutoMirrored.Filled.Rule,
-            AppTab.TASKS to Icons.Default.CheckBox,
-            AppTab.EXAMS to Icons.Default.Alarm,
-            AppTab.GRADES to Icons.Default.Analytics
+            AppTab.SCHEDULE,
+            AppTab.ATTENDANCE,
+            AppTab.TASKS,
+            AppTab.EXAMS,
+            AppTab.GRADES
         )
 
-        primaryNavTabs.forEach { (tab, icon) ->
+        primaryNavTabs.forEach { tab ->
             val isSelected = selectedTab == tab
             NavigationBarItem(
                 selected = isSelected,
                 onClick = { onTabSelected(tab) },
                 icon = {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = tab.title,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    AppEmoji(studentDestinationSticker(tab), size = 32.dp)
                 },
                 label = {
                     Text(

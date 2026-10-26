@@ -39,7 +39,7 @@ class StudentVisualRefinementTest {
                         row.forEach { type ->
                             Surface(Modifier.weight(1f),shape=MaterialTheme.shapes.medium,color=MaterialTheme.colorScheme.surfaceContainerLow) {
                                 Column(Modifier.padding(6.dp),horizontalAlignment=Alignment.CenterHorizontally) {
-                                    AppEmoji(type,size=72.dp)
+                                    AppEmoji(type,size=56.dp)
                                     Text(type.name,style=MaterialTheme.typography.labelSmall)
                                 }
                             }

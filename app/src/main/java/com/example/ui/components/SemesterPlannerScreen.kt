@@ -454,7 +454,7 @@ fun SemesterPlannerScreen(
                         verticalArrangement = Arrangement.spacedBy(StudentOsSpacing.md)
                     ) {
                         Text(
-                            text = "💡 درسی برای برنامه‌ریزی یافت نشد",
+                            text = "درسی برای برنامه‌ریزی یافت نشد",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )

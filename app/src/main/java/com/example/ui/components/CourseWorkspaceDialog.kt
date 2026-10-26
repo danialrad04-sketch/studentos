@@ -975,7 +975,7 @@ fun CourseWorkspaceDialog(
                             border = androidx.compose.foundation.BorderStroke(1.dp, if (isDarkWorkspace) Color(0x33FFFFFF) else Color(0xFFCBD5E1))
                         ) {
                             Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(text = "🔗 فایل‌ها و مراجع درسی فعال:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(text = "فایل‌ها و مراجع درسی فعال:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(imageVector = Icons.Default.Description, contentDescription = null, tint = courseColor, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
@@ -1000,7 +1000,7 @@ fun CourseWorkspaceDialog(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
                         ) {
                             Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(text = "📊 تحلیل حجم و زمان مطالعه بهینه (Workload)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text(text = "تحلیل حجم و زمان مطالعه بهینه (Workload)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 val estimatedStudy = course.units * 2.0
                                 Text(
                                     text = "این درس دارای ${course.units} واحد است. برآورد استاندارد برای تسلط کامل، حدود $estimatedStudy ساعت مطالعه در هفته است.",

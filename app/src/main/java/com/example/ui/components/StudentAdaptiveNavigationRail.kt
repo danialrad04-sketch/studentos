@@ -6,14 +6,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CheckBox
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.SmartToy
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
@@ -45,13 +37,13 @@ fun StudentAdaptiveNavigationRail(
     var showAllModulesSheet by remember { mutableStateOf(false) }
 
     val destinations = listOf(
-        AppTab.DASHBOARD to Icons.Default.Home,
-        AppTab.SCHEDULE to Icons.Default.CalendarMonth,
-        AppTab.TASKS to Icons.Default.CheckBox,
-        AppTab.GRADES to Icons.Default.Analytics,
-        AppTab.COPILOT to Icons.Default.SmartToy
+        AppTab.DASHBOARD,
+        AppTab.SCHEDULE,
+        AppTab.TASKS,
+        AppTab.GRADES,
+        AppTab.COPILOT
     )
-    val isSecondaryTab = destinations.none { it.first == selectedTab }
+    val isSecondaryTab = destinations.none { it == selectedTab }
     val itemColors = NavigationRailItemDefaults.colors(
         indicatorColor = MaterialTheme.colorScheme.primaryContainer,
         selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -70,12 +62,12 @@ fun StudentAdaptiveNavigationRail(
         }
     ) {
         Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(StudentSpacing.Xs)) {
-            destinations.forEach { (tab, icon) ->
+            destinations.forEach { tab ->
                 NavigationRailItem(
                     colors = itemColors,
                     selected = selectedTab == tab,
                     onClick = { onTabSelected(tab) },
-                    icon = { Icon(icon, contentDescription = tab.title) },
+                    icon = { AppEmoji(studentDestinationSticker(tab), size = 32.dp) },
                     label = { Text(tab.title.split(" ").firstOrNull() ?: tab.title) }
                 )
             }
@@ -85,7 +77,7 @@ fun StudentAdaptiveNavigationRail(
                 modifier = Modifier.testTag("rail_more"),
                 selected = isSecondaryTab,
                 onClick = { onOpenMore?.invoke() ?: run { showAllModulesSheet = true } },
-                icon = { Icon(Icons.Default.MoreHoriz, contentDescription = "بیشتر") },
+                icon = { AppEmoji(AppEmojiType.MORE, size = 32.dp) },
                 label = { Text("بیشتر") }
             )
         }
