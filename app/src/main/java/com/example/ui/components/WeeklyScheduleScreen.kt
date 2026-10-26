@@ -226,7 +226,7 @@ fun WeeklyScheduleScreen(
                             Text(
                                 text = "برنامه هفتگی و انتخاب واحد",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Black,
+                                fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -249,7 +249,7 @@ fun WeeklyScheduleScreen(
                         }
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "مرتب‌سازی هوشمند به وقت شروع · مدیریت تداخل و حذف/اضافه",
+                            text = "کلاس‌ها به ترتیب ساعت شروع",
                             fontSize = 10.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -372,7 +372,7 @@ fun WeeklyScheduleScreen(
                                 Text(
                                     text = dayName,
                                     fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Black else FontWeight.SemiBold,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                                     color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -641,7 +641,7 @@ fun CourseCard(
                     ) {
                         Text(
                             text = course.name,
-                            fontWeight = FontWeight.Black,
+                            fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
@@ -744,7 +744,7 @@ fun CourseCard(
                             text = "\u200E$displayStart - $displayEnd\u200E",
                             style = NumericDisplayStat,
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Black,
+                            fontWeight = FontWeight.Bold,
                             color = accentColor
                         )
                     }
@@ -847,7 +847,7 @@ fun CourseCard(
                 Text(
                     text = "حذف درس از برنامه هفتگی",
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Black
+                    fontWeight = FontWeight.Bold
                 )
             },
             text = {

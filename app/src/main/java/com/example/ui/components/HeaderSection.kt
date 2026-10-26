@@ -10,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -29,13 +30,15 @@ fun HeaderSection(
     onOpenSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+    val showSearch = maxWidth >= 400.dp && LocalDensity.current.fontScale < 1.3f
+    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onOpenMenu) { Icon(Icons.Rounded.Menu, "باز کردن منوی برنامه") }
         Column(Modifier.weight(1f).padding(horizontal = 4.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text("Student OS", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("همراه دانشجو", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(if (profile.name.isBlank()) "برنامهٔ دانشجویی من" else "سلام، ${profile.name.trim().substringBefore(' ')}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        IconButton(onClick = onOpenSearch) { Icon(Icons.Rounded.Search, "جست‌وجوی سریع") }
+        if (showSearch) IconButton(onClick = onOpenSearch) { Icon(Icons.Rounded.Search, "جست‌وجوی سریع") }
         IconButton(onClick = onOpenNotifications) {
             BadgedBox(badge = { if (notifCount > 0) Badge { Text(if (notifCount > 99) "۹۹+" else notifCount.toString()) } }) {
                 Icon(Icons.Rounded.NotificationsNone, "اعلان‌ها")
@@ -44,5 +47,6 @@ fun HeaderSection(
         FilledTonalIconButton(onClick = onOpenAccount, shape = CircleShape, colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer), modifier = Modifier.semantics { contentDescription = "حساب کاربری" }) {
             Text(profile.name.trim().firstOrNull()?.toString() ?: "د", style = MaterialTheme.typography.titleMedium)
         }
+    }
     }
 }

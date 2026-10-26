@@ -37,7 +37,8 @@ function main(args = process.argv.slice(2), options = {}) {
   const cli = path.join(root, 'functions/node_modules/firebase-tools/lib/bin/firebase.js');
   log('Firebase: ' + project + ' | OpenAI: ' + DEFAULT_OPENAI_MODEL);
   log('مالک یک‌بار Anonymous Auth و App Check مناسب نسخهٔ بازار را در Firebase فعال می‌کند؛ کاربران هیچ تنظیمی ندارند.');
-  log('راهنما: docs/AI_SETUP_FA.md | حالت بررسی هیچ فایل یا تنظیم ابری را تغییر نمی‌دهد.');
+  log('پیش‌نیاز مدیر: حساب OpenAI API دارای اعتبار مصرف و Firebase با طرح Blaze؛ اشتراک ChatGPT کافی نیست.');
+  log('راهنمای شروع: docs/AI_OWNER_QUICKSTART_FA.md | حالت بررسی هیچ فایل یا تنظیم ابری را تغییر نمی‌دهد.');
   if (!deploy) return { project, deploy: false };
   if (!fs.existsSync(cli)) throw Error('ابتدا npm --prefix functions ci --ignore-scripts --no-audit --no-fund را اجرا کن.');
   const configFile = path.join(root, 'functions/.env.' + project);

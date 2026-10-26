@@ -432,7 +432,16 @@ fun MainAppScreen(
 
                             // Show Header and Live Activity ONLY on Dashboard for a clean, focused view on other tabs
                             if (visibleTab == AppTab.DASHBOARD) {
-                                // Apple Dynamic Island / Live Activity Top Capsule
+                                HeaderSection(
+                                    profile = profile,
+                                    notifCount = notifications.size,
+                                    onOpenMenu = { showAppMenu = true },
+                                    onOpenAccount = { dialogState = AppDialogState.Auth },
+                                    onOpenSearch = { dialogState = AppDialogState.CommandCenter },
+                                    onOpenNotifications = { dialogState = AppDialogState.Notifications }
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
                                 DynamicIslandLiveActivity(
                                     courses = courses,
                                     coursesWithSessions = coursesWithSessions,
@@ -446,16 +455,6 @@ fun MainAppScreen(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                HeaderSection(
-                                    profile = profile,
-                                    notifCount = notifications.size,
-                                    onOpenMenu = { showAppMenu = true },
-                                    onOpenAccount = { dialogState = AppDialogState.Auth },
-                                    onOpenSearch = { dialogState = AppDialogState.CommandCenter },
-                                    onOpenNotifications = { dialogState = AppDialogState.Notifications }
-                                )
-
-                                Spacer(modifier = Modifier.height(8.dp))
                             } else {
                                 SubScreenHeaderSection(
                                     onOpenMenu = { showAppMenu = true },

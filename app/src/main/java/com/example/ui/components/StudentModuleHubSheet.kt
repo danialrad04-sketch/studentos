@@ -15,7 +15,7 @@ import com.example.ui.models.AppTab
 /** Reusable fallback hub; the production app opens the identity/settings drawer from More. */
 @Composable
 fun StudentModuleHubSheet(currentTab: AppTab, onSelectTab: (AppTab) -> Unit, onDismiss: () -> Unit) {
-    StudentGlassModalSheet(onDismiss, title = "فضای تحصیلی", subtitle = "همهٔ ابزارهای برنامه", maxWidth = 640.dp) {
+    StudentGlassModalSheet(onDismiss, title = "ابزارها", subtitle = "درس، برنامه و سوابق", maxWidth = 640.dp) {
         val dismiss = LocalStudentModalDismiss.current ?: onDismiss
         LazyVerticalGrid(
             columns = GridCells.Adaptive(180.dp),
@@ -31,7 +31,7 @@ fun StudentModuleHubSheet(currentTab: AppTab, onSelectTab: (AppTab) -> Unit, onD
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(Modifier.heightIn(min = 80.dp).padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Icon(studentDestinationIcon(tab), null, tint = MaterialTheme.colorScheme.primary)
+                        AppEmoji(studentDestinationSticker(tab), size = 36.dp)
                         Text(tab.title, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                 }

@@ -32,6 +32,7 @@ fun AcademicJourneyOverview(
     onOpenGrades: () -> Unit,
     onOpenFocus: () -> Unit,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
     declaredPassedUnits: Int = 0,
     declaredGpa: String? = null,
     onCompleteRecords: (() -> Unit)? = null
@@ -54,6 +55,58 @@ fun AcademicJourneyOverview(
         else -> "ثبت نشده"
     }
     val plannedMinutes = recommendations.sumOf { it.recommendedDurationMinutes }
+
+    if (compact) {
+        AcademicCard(modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    AppEmoji(AppEmojiType.GRAD_CAP, size = 38.dp)
+                    Text("پیشرفت تحصیلی", modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold)
+                    TextButton(onClick = onOpenPassport) { Text("جزئیات") }
+                }
+                if (progress == null) {
+                    Text(when (state) {
+                        is AcademicProgressUiState.Error -> state.message
+                        AcademicProgressUiState.Loading -> "در حال محاسبه…"
+                        else -> "چارت و سوابق را اضافه کن تا پیشرفتت محاسبه شود."
+                    }, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (declaredPassedUnits > 0 || declaredGpa != null) Text(
+                        "اطلاعات اعلامی: $declaredPassedUnits واحد · معدل ${declaredGpa ?: "ثبت نشده"}",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    onCompleteRecords?.let { action ->
+                        FilledTonalButton(onClick = action, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("تکمیل سوابق") }
+                    }
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("${progress.progressPercentage.toInt().coerceIn(0,100)}٪", style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold)
+                        LinearProgressIndicator(progress = { (progress.progressPercentage / 100f).coerceIn(0f,1f) },
+                            modifier = Modifier.weight(1f).height(6.dp), color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest)
+                    }
+                    FlowRow(Modifier.fillMaxWidth(), maxItemsInEachRow = if (LocalDensity.current.fontScale >= 1.3f) 1 else 3,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("گذرانده" to progress.passedCredits, "این ترم" to progress.currentCredits,
+                            "باقی‌مانده" to progress.remainingCredits).forEach { (label,value) ->
+                            Surface(Modifier.weight(1f), shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                                Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text("$value واحد", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                    Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
+                    Text((if (progress.gpaState is GpaState.PartiallyCalculated) "معدل این ترم: " else "معدل ثبت‌شده: ") + gpaLabel,
+                        style = MaterialTheme.typography.bodyMedium)
+                    Text(confidenceLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (dailyStudyGoalMinutes > 0) Text("مطالعهٔ امروز: $studiedTodayMinutes از $dailyStudyGoalMinutes دقیقه",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        return
+    }
 
     Card(
         modifier = modifier.fillMaxWidth(),

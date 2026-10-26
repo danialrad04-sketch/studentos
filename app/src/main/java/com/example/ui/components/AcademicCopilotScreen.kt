@@ -277,23 +277,22 @@ fun AcademicCopilotScreen(
         ) {
             item(key = "assistant_context") {
         Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("دستیار تحصیلی", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(when {
                 localOnly -> "تحلیل روی دستگاه · بدون ارسال اطلاعات به مدل"
-                onlineStatus?.enabled == true -> "درخواست پاسخ مدل فعال است · ${onlineStatus!!.remaining} از ${onlineStatus!!.limit} درخواست امروز باقی مانده"
+                onlineStatus?.enabled == true -> "پاسخ آنلاین آماده است · ${onlineStatus!!.remaining} از ${onlineStatus!!.limit} درخواست امروز باقی مانده"
                 connectionMessage != null -> connectionMessage!!
                 onlineStatus != null -> "سرویس پاسخ مدل هنوز آماده نیست؛ تحلیل روی دستگاه کار می‌کند."
-                else -> "تحلیل روی دستگاه آماده است؛ اتصال پاسخ مدل هنگام درخواست بررسی می‌شود."
+                else -> "می‌توانی از اطلاعات درسی‌ات بپرسی. اتصال آنلاین هنگام ارسال بررسی می‌شود."
             }, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag("ai_service_status"))
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("فقط تحلیل روی دستگاه", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                 Switch(localOnly, { localOnly = it; if (it) requestJob?.cancel() }, Modifier.testTag("ai_local_only"))
             }
-            Text("همهٔ حالت‌ها بدون خرید اشتراک‌اند. برای پاسخ مدل، بخشی از اطلاعات تحصیلی ثبت‌شده همراه پرسش ارسال می‌شود.",
+            Text("برای پاسخ آنلاین، پرسش و بخشی از اطلاعات درسی به سرویس مدل ارسال می‌شود. اشتراک لازم نیست.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             LazyRow(modifier = Modifier.testTag("ai_modes"), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(listOf("chat" to "گفت‌وگو", "coach" to "مربی هفت‌روزه", "exam" to "مرور امتحان", "review" to "تحلیل پیشرفت")) { tool ->
+                items(listOf("chat" to "گفت‌وگو", "coach" to "برنامهٔ هفته", "exam" to "مرور امتحان", "review" to "تحلیل پیشرفت")) { tool ->
                     FilterChip(selected = mode == tool.first, onClick = {
                         run {
                             mode = tool.first
@@ -555,7 +554,7 @@ private fun CopilotContextHudHeader(
                             Text(
                                 text = "دستیار تخصصی سیستم‌عامل تحصیلی",
                                 fontSize = 12.5.sp,
-                                fontWeight = FontWeight.Black,
+                                fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
@@ -656,7 +655,7 @@ private fun CopilotContextHudHeader(
 private fun HudPill(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = label, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(text = value, fontSize = 11.sp, fontWeight = FontWeight.Black, color = color)
+        Text(text = value, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = color)
     }
 }
 

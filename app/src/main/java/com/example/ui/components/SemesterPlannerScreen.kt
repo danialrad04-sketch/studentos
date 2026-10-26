@@ -104,7 +104,7 @@ fun SemesterPlannerScreen(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
-                        text = "برنامه‌ریزی هوشمند دروس بر پایه پیش‌نیازها و سقف واحد",
+                        text = "انتخاب درس با توجه به پیش‌نیاز و سقف واحد",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -459,7 +459,7 @@ fun SemesterPlannerScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "جهت ارائه سناریوهای هوشمند ترم، ابتدا وضعیت پیشرفت چارت خود را در برگه شناسنامه تحصیلی بررسی نمایید.",
+                            text = "اول چارت و سوابق درسی‌ات را در شناسنامهٔ تحصیلی تکمیل کن.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center

@@ -1,202 +1,84 @@
 package com.example.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Rule
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Alarm
-import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.Apps
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.FlashOn
-import androidx.compose.material.icons.filled.Grade
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.HourglassTop
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.ShowChart
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.R
+import kotlin.math.min
+import kotlin.math.roundToInt
 
-enum class AppEmojiType {
-    HOME,
-    BOOK,
-    CALENDAR,
-    CHECK,
-    MORE,
-    COPILOT,
-    GRAD_CAP,
-    BOLT,
-    PLUS,
-    POMODORO,
-    SPARKLE,
-    FIRE,
-    TARGET,
-    TROPHY,
-    MEDAL,
-    WARNING,
-    BELL,
-    CHART
+/** Stable illustration identifiers, independent of enum reordering. */
+enum class AppEmojiType(val cell: Int) {
+    HOME(0), BOOK(1), CALENDAR(2), CHECK(3), MORE(4), COPILOT(5),
+    GRAD_CAP(6), BOLT(7), PLUS(8), POMODORO(9), SPARKLE(10), FIRE(11),
+    TARGET(12), TROPHY(13), MEDAL(14), WARNING(15), BELL(16), CHART(17)
 }
 
+// The theme decodes the atlas once and shares it across every sticker instance.
+val LocalStudentStickerAtlas = staticCompositionLocalOf<ImageBitmap?> { null }
+
 @Composable
-fun AppEmoji(
-    type: AppEmojiType,
-    modifier: Modifier = Modifier,
-    size: Dp = 32.dp,
-    shapeRadiusRatio: Float = 0.28f,
-    elevation: Dp = 0.dp
-) {
-    val radius = size * shapeRadiusRatio
-    val shape = RoundedCornerShape(radius)
+@Suppress("UNUSED_PARAMETER") // Retain existing call sites without reintroducing colored emoji tiles.
+fun AppEmoji(type: AppEmojiType, modifier: Modifier = Modifier, size: Dp = 32.dp,
+    shapeRadiusRatio: Float = 0.28f, elevation: Dp = 0.dp) {
+    val atlas = LocalStudentStickerAtlas.current ?: ImageBitmap.imageResource(R.drawable.student_sticker_atlas)
+    val painter = remember(atlas, type) { StudentStickerPainter(atlas, type.cell) }
+    Image(painter, contentDescription = null, modifier = modifier.size(size), contentScale = ContentScale.Fit)
+}
 
-    val (brush, iconContent) = when (type) {
-        AppEmojiType.HOME -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFF3B82F6), Color(0xFF1D4ED8))),
-            @Composable {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("🏠", fontSize = (size.value * 0.55f).sp)
-                }
-            }
-        )
-        AppEmojiType.BOOK -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFF818CF8), Color(0xFF59652F))),
-            @Composable {
-                Text("📖", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.CALENDAR -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFF38BDF8), Color(0xFF0284C7))),
-            @Composable {
-                Text("📅", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.CHECK -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFF34D399), Color(0xFF059669))),
-            @Composable {
-                Text("✅", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.MORE -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFF94A3B8), Color(0xFF64748B))),
-            @Composable {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("•••", color = Color.White, fontSize = (size.value * 0.42f).sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Black)
-                }
-            }
-        )
-        AppEmojiType.COPILOT -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFFC0CD8C), Color(0xFF06B6D4))),
-            @Composable {
-                Text("🤖", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.GRAD_CAP -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFF0EA5E9), Color(0xFF1E40AF))),
-            @Composable {
-                Text("🎓", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.BOLT -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFF3B82F6), Color(0xFF1D4ED8))),
-            @Composable {
-                Text("⚡", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.PLUS -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFF10B981), Color(0xFF047857))),
-            @Composable {
-                Text("➕", fontSize = (size.value * 0.52f).sp)
-            }
-        )
-        AppEmojiType.POMODORO -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFFC0CD8C), Color(0xFF59652F))),
-            @Composable {
-                Text("⏱️", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.SPARKLE -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFFC0CD8C), Color(0xFF59652F))),
-            @Composable {
-                Text("✨", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.FIRE -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFFFBBF24), Color(0xFFEA580C))),
-            @Composable {
-                Text("🔥", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.TARGET -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFF34D399), Color(0xFF0D9488))),
-            @Composable {
-                Text("🎯", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.TROPHY -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFFFCD34D), Color(0xFFD97706))),
-            @Composable {
-                Text("🏆", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.MEDAL -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFFFDE047), Color(0xFFCA8A04))),
-            @Composable {
-                Text("🎖️", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.WARNING -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFFF59E0B), Color(0xFFD97706))),
-            @Composable {
-                Text("⚠️", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.BELL -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFFFB7185), Color(0xFFE11D48))),
-            @Composable {
-                Text("🔔", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-        AppEmojiType.CHART -> Pair(
-            Brush.verticalGradient(listOf(Color(0xFF22D3EE), Color(0xFF0284C7))),
-            @Composable {
-                Text("📈", fontSize = (size.value * 0.55f).sp)
-            }
-        )
-    }
+/** Measured artwork bounds: the generated sheet has slightly staggered rows. No pixel editing. */
+private val StudentStickerBounds = arrayOf(
+    IntRect(44,67,284,287), IntRect(313,96,576,291), IntRect(617,77,833,297),
+    IntRect(41,340,289,585), IntRect(335,352,557,571), IntRect(604,357,849,575),
+    IntRect(34,630,299,840), IntRect(369,616,534,849), IntRect(616,626,840,842),
+    IntRect(46,869,290,1146), IntRect(347,895,540,1107), IntRect(632,884,828,1129),
+    IntRect(43,1178,298,1426), IntRect(325,1166,566,1429), IntRect(647,1173,819,1422),
+    IntRect(39,1475,293,1702), IntRect(322,1471,568,1701), IntRect(613,1459,844,1692)
+)
 
-    Box(
-        modifier = modifier
-            .size(size)
-            .then(if (elevation > 0.dp) Modifier.shadow(elevation, shape) else Modifier)
-            .clip(shape)
-            .background(brush),
-        contentAlignment = Alignment.Center
-    ) {
-        iconContent()
+/** Display one illustration with transparent breathing room and its original aspect ratio. */
+private class StudentStickerPainter(private val atlas: ImageBitmap, cell: Int) : Painter() {
+    private val region = StudentStickerBounds[cell]
+    private val source = IntSize(region.width, region.height)
+    override val intrinsicSize = Size(source.width.toFloat(), source.height.toFloat())
+    override fun DrawScope.onDraw() {
+        val scale = 0.9f * min(size.width / source.width, size.height / source.height)
+        val destination = IntSize((source.width * scale).roundToInt().coerceAtLeast(1),
+            (source.height * scale).roundToInt().coerceAtLeast(1))
+        drawImage(atlas, srcOffset = IntOffset(region.left, region.top), srcSize = source,
+            dstOffset = IntOffset(((size.width-destination.width)/2).roundToInt(), ((size.height-destination.height)/2).roundToInt()),
+            dstSize = destination, filterQuality = FilterQuality.High)
     }
+}
+
+/** Illustrations are decorative; the destination title remains the accessible label. */
+internal fun studentDestinationSticker(tab: com.example.ui.models.AppTab): AppEmojiType = when(tab) {
+    com.example.ui.models.AppTab.DASHBOARD -> AppEmojiType.HOME
+    com.example.ui.models.AppTab.COPILOT -> AppEmojiType.COPILOT
+    com.example.ui.models.AppTab.ACADEMIC_INTELLIGENCE -> AppEmojiType.CHART
+    com.example.ui.models.AppTab.PASSPORT -> AppEmojiType.GRAD_CAP
+    com.example.ui.models.AppTab.AGENDA, com.example.ui.models.AppTab.SCHEDULE -> AppEmojiType.CALENDAR
+    com.example.ui.models.AppTab.NOTES, com.example.ui.models.AppTab.HISTORY -> AppEmojiType.BOOK
+    com.example.ui.models.AppTab.ATTENDANCE, com.example.ui.models.AppTab.TASKS -> AppEmojiType.CHECK
+    com.example.ui.models.AppTab.EXAMS -> AppEmojiType.TARGET
+    com.example.ui.models.AppTab.GRADES -> AppEmojiType.CHART
+    com.example.ui.models.AppTab.SEMESTER_PLANNER -> AppEmojiType.GRAD_CAP
+    com.example.ui.models.AppTab.CURRICULUM -> AppEmojiType.MORE
+    com.example.ui.models.AppTab.POMODORO -> AppEmojiType.POMODORO
+    com.example.ui.models.AppTab.GAMIFICATION -> AppEmojiType.TROPHY
 }

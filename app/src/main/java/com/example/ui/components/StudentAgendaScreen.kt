@@ -28,6 +28,7 @@ fun StudentAgendaScreen(sessions:List<CourseWithSessions>,tasks:List<TaskEntity>
     onExport:(StudentAgendaEngine.Week)->Unit,exportBusy:Boolean=false,modifier:Modifier=Modifier) {
     var today by remember { mutableStateOf(JalaliCalendarUtil.today()) }
     LaunchedEffect(Unit){while(true){delay(60000);today=JalaliCalendarUtil.today()}}
+    var showCalendarHelp by rememberSaveable { mutableStateOf(false) }
     var selectedDate by rememberSaveable { mutableStateOf("today") }
     var offset by rememberSaveable { mutableIntStateOf(0) };var filter by rememberSaveable { mutableStateOf("all") }
     var rowLimit by remember(offset,filter) { mutableIntStateOf(12) }
@@ -38,8 +39,6 @@ fun StudentAgendaScreen(sessions:List<CourseWithSessions>,tasks:List<TaskEntity>
     val visible=week.events.filter{filter=="all" || it.kind.name==filter}
     Column(modifier.fillMaxWidth().testTag("student_agenda_screen"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         AcademicCard(Modifier.fillMaxWidth()) { Column(Modifier.padding(18.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
-            Text("هفته‌ات در یک نگاه",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
-            Text("کلاس‌ها الگوی هفتگی‌اند؛ تعطیلی و پایان ترم ثبت نشده است.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             Text("${start.toPersianDigits()} تا ${week.days.last().toPersianDigits()}",style=MaterialTheme.typography.titleMedium)
             Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp),verticalAlignment=Alignment.CenterVertically) {
                 IconButton(onClick=onAddTask,modifier=Modifier.testTag("agenda_add")){Icon(Icons.Rounded.Add,"افزودن تکلیف")}
@@ -54,7 +53,8 @@ fun StudentAgendaScreen(sessions:List<CourseWithSessions>,tasks:List<TaskEntity>
             OutlinedButton(onClick={onExport(week)},enabled=!exportBusy && week.events.isNotEmpty(),modifier=Modifier.fillMaxWidth().testTag("agenda_export")) {
                 Icon(Icons.Rounded.FileDownload,null);Spacer(Modifier.width(8.dp));Text(if(exportBusy)"در حال آماده‌سازی…"else"ذخیرهٔ تقویم کامل این هفته")
             }
-            Text("فایل را پس از ذخیره در تقویمت وارد کن. فقط همین هفته صادر می‌شود و خودکار به‌روز نمی‌شود؛ ساعت‌ها بر مبنای تهران‌اند.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("کلاس‌ها از الگوی هفتگی‌اند؛ تعطیلی و پایان ترم ثبت نشده.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            TextButton(onClick={showCalendarHelp=true},modifier=Modifier.testTag("agenda_calendar_help")){Text("دربارهٔ خروجی تقویم")}
         } }
         Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             (listOf("all" to "همه")+StudentAgendaEngine.Kind.entries.map{it.name to it.title}).forEach { (id,title)->
@@ -106,4 +106,8 @@ fun StudentAgendaScreen(sessions:List<CourseWithSessions>,tasks:List<TaskEntity>
         if(week.invalidRecords>0) Text("${week.invalidRecords} مورد دارای تاریخ یا ساعت نامعتبر است؛ اطلاعات نامشخص را در کلاس‌ها یا امتحان‌ها اصلاح کن.",color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.bodySmall)
         Button(onClick=onAddTask,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Icon(Icons.Rounded.Add,null);Spacer(Modifier.width(8.dp));Text("افزودن تکلیف")}
     }
+    if(showCalendarHelp) AlertDialog(onDismissRequest={showCalendarHelp=false},title={Text("خروجی تقویم")},
+        text={Text("فایل را پس از ذخیره در تقویم دلخواهت وارد کن. همهٔ رویدادهای همین هفته صادر می‌شوند و فایل خودکار به‌روز نمی‌شود. ساعت‌ها بر مبنای تهران‌اند. کلاس‌ها از الگوی ثبت‌شده ساخته می‌شوند؛ تعطیلی و پایان ترم در آن‌ها لحاظ نشده است.")},
+        confirmButton={TextButton(onClick={showCalendarHelp=false}){Text("متوجه شدم")}})
+
 }

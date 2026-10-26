@@ -197,7 +197,7 @@ fun CourseWorkspaceDialog(
                                 Text(
     course.name,
     style = MaterialTheme.typography.headlineSmall,
-    fontWeight = FontWeight.Black,
+    fontWeight = FontWeight.Bold,
     maxLines = 1,
     overflow = TextOverflow.Ellipsis
 )
@@ -314,7 +314,7 @@ fun CourseWorkspaceDialog(
                                 Text(
                                     text = course.name,
                                     fontSize = 18.sp,
-                                    fontWeight = FontWeight.Black,
+                                    fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -334,7 +334,7 @@ fun CourseWorkspaceDialog(
                                 Text(
                                     text = "${course.units} واحد تخصصی",
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.Black,
+                                    fontWeight = FontWeight.Bold,
                                     color = courseColor,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                 )
@@ -606,7 +606,7 @@ fun CourseWorkspaceDialog(
                                 Text(
                                     text = String.format(java.util.Locale.US, "%.1f", score),
                                     fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.Black,
+                                    fontWeight = FontWeight.Bold,
                                     color = if (score >= 17.0) MaterialTheme.studentColors.passedUnitBadge else courseColor,
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                 )
@@ -669,7 +669,7 @@ fun CourseWorkspaceDialog(
                                 Icon(Icons.AutoMirrored.Filled.TrendingUp, contentDescription = null, tint = courseColor, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "شبیه‌ساز هوشمند سناریوهای نمره (Grade Simulator)",
+                                    text = "پیش‌بینی نمره و معدل",
                                     fontSize = 12.5.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -738,7 +738,7 @@ fun CourseWorkspaceDialog(
                                     Text(
                                         text = String.format(java.util.Locale.US, "%.1f", predictedTotal),
                                         fontSize = 18.sp,
-                                        fontWeight = FontWeight.Black,
+                                        fontWeight = FontWeight.Bold,
                                         color = if (isPassing) MaterialTheme.studentColors.passedUnitBadge else MaterialTheme.studentColors.attendanceCritical
                                     )
                                 }
@@ -1085,7 +1085,7 @@ fun CourseWorkspaceDialog(
                 Text(
                     text = "حذف و اضافه · حذف درس «${course.name}»",
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Black,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )

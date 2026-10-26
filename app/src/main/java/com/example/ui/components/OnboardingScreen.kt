@@ -561,7 +561,7 @@ private fun StepOneAcademicIdentity(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "راه‌اندازی هوشمند دستیار تحصیلی",
+            text = "اطلاعات تحصیلی",
             fontSize = 20.sp,
             fontWeight = FontWeight.ExtraBold,
             color = TextPureWhite
@@ -1346,13 +1346,13 @@ private fun StepTwoSetupMode(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "💡 پردازش هوشمند تصویر انتخاب واحد",
+                            text = "خواندن برگهٔ انتخاب واحد",
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = AccentSecondary
                         )
                         Text(
-                            text = "سامانه با پردازش متن تصویر جدول دروس انتخابی، کلاس‌ها را به صورت خودکار در دیتابیس ثبت می‌کند. همچنین امکان استفاده از کپی متن گلستان نیز مهیاست.",
+                            text = "تصویر جدول درس‌ها یا متن کپی‌شده از سامانهٔ دانشگاه را وارد کن. نتیجه را پیش از ثبت بررسی می‌کنی.",
                             fontSize = 10.5.sp,
                             color = TextMutedWhite,
                             textAlign = TextAlign.Center,

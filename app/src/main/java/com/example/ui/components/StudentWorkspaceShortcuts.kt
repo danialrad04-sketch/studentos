@@ -19,26 +19,26 @@ import com.example.ui.models.AppTab
 @Composable
 fun StudentWorkspaceShortcuts(onNavigate:(AppTab)->Unit,modifier:Modifier=Modifier) {
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        val stacked=maxWidth<340.dp || LocalDensity.current.fontScale>=1.3f
+        val stacked=maxWidth<300.dp || LocalDensity.current.fontScale>=1.3f
         val card: @Composable (AppTab,String,Modifier)->Unit={tab,subtitle,cardModifier->
             val colors=MaterialTheme.colorScheme
-            val ink=if(tab==AppTab.AGENDA)colors.onPrimaryContainer else colors.onSecondaryContainer
+            val ink=colors.onSurface
             Surface(onClick={onNavigate(tab)},modifier=cardModifier.heightIn(min=108.dp).testTag("home_${tab.name}").semantics { role=Role.Button },
-                shape=MaterialTheme.shapes.large,color=if(tab==AppTab.AGENDA)colors.primaryContainer else colors.secondaryContainer,
+                shape=MaterialTheme.shapes.large,color=colors.surface,
                 contentColor=ink,border=BorderStroke(1.dp,colors.outlineVariant)) {
-                Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
-                    Icon(if(tab==AppTab.AGENDA)Icons.Rounded.DateRange else Icons.Rounded.Description,null,tint=ink)
-                    Text(tab.title,style=MaterialTheme.typography.titleMedium)
+                Column(Modifier.padding(14.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+                    AppEmoji(if(tab==AppTab.AGENDA)AppEmojiType.CALENDAR else AppEmojiType.BOOK, size=36.dp)
+                    Text(if(tab==AppTab.AGENDA)"برنامهٔ هفته"else"یادداشت‌ها",style=MaterialTheme.typography.titleSmall)
                     Text(subtitle,style=MaterialTheme.typography.bodySmall,color=ink.copy(alpha=0.9f))
                 }
             }
         }
         if(stacked) Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {
-            card(AppTab.AGENDA,"رویدادهای هفته و خروجی تقویم",Modifier.fillMaxWidth())
-            card(AppTab.NOTES,"نکته‌ها و خلاصه‌های درسی",Modifier.fillMaxWidth())
+            card(AppTab.AGENDA,"کلاس‌ها و کارهای هفته",Modifier.fillMaxWidth())
+            card(AppTab.NOTES,"خلاصه‌های هر درس",Modifier.fillMaxWidth())
         } else Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-            card(AppTab.AGENDA,"رویدادهای هفته و خروجی تقویم",Modifier.weight(1f))
-            card(AppTab.NOTES,"نکته‌ها و خلاصه‌های درسی",Modifier.weight(1f))
+            card(AppTab.AGENDA,"کلاس‌ها و کارهای هفته",Modifier.weight(1f))
+            card(AppTab.NOTES,"خلاصه‌های هر درس",Modifier.weight(1f))
         }
     }
 }

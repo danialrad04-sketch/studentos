@@ -86,29 +86,19 @@ fun StudentTodayCommandStrip(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                ) {
-                    Icon(
-                        Icons.Default.Event,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(8.dp).size(18.dp)
-                    )
-                }
+                AppEmoji(AppEmojiType.CALENDAR, size = 38.dp)
                 Column(Modifier.weight(1f)) {
                     Text(
                         "امروز",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Black
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
                         when {
-                            dangerAttendance > 0 -> dangerAttendance.toString() + " درس به توجه فوری نیاز دارد."
-                            openTasks > 0 -> openTasks.toString() + " کار باز داری؛ یکی را جلو بینداز."
-                            snapshot.nextCourseName != null -> "کلاس بعدی امروز را از دست نده."
-                            else -> "برنامه امروز سبک است؛ برای جلو افتادن وقت خوبی است."
+                            dangerAttendance > 0 -> dangerAttendance.toString() + " درس با هشدار غیبت؛ بررسی کن."
+                            openTasks > 0 -> openTasks.toString() + " تکلیف انجام‌نشده داری."
+                            snapshot.nextCourseName != null -> "کلاس بعدی امروز در برنامه ثبت شده است."
+                            else -> "برای امروز چیزی ثبت نشده است."
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -124,7 +114,7 @@ fun StudentTodayCommandStrip(
             ) {
                 TodaySignal(Icons.Default.CheckCircle, openTasks.toString(), "کار باز", MaterialTheme.colorScheme.secondary, Modifier.weight(1f))
                 TodaySignal(Icons.Default.CalendarToday, snapshot.todaySessionCount.toString(), "کلاس امروز", MaterialTheme.colorScheme.primary, Modifier.weight(1f))
-                TodaySignal(Icons.Default.Event, dangerAttendance.toString(), "غیبت بحرانی", MaterialTheme.colorScheme.error, Modifier.weight(1f))
+                TodaySignal(Icons.Default.Event, dangerAttendance.toString(), "هشدار غیبت", if (dangerAttendance > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant, Modifier.weight(1f))
             }
 
             if (snapshot.nextCourseName != null) {
@@ -148,7 +138,7 @@ fun StudentTodayCommandStrip(
                             Text(
                                 courseName,
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Black,
+                                fontWeight = FontWeight.Bold,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -209,8 +199,7 @@ private fun TodaySignal(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         Column(
             Modifier.padding(vertical = 9.dp),
@@ -218,7 +207,7 @@ private fun TodaySignal(
         ) {
             Icon(icon, null, tint = accent, modifier = Modifier.size(16.dp))
             Spacer(Modifier.size(3.dp))
-            Text(value, fontWeight = FontWeight.Black)
+            Text(value, fontWeight = FontWeight.Bold)
             Text(
                 label,
                 style = MaterialTheme.typography.labelSmall,

@@ -53,13 +53,7 @@ fun SubScreenHeaderSection(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            Text(
-                studentDestinationDescription(currentTab),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+
         }
         if (onOpenMenu == null) {
             IconButton(onClick = onOpenSearch) {
