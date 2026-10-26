@@ -164,9 +164,29 @@ fun ModernBentoDashboard(
             onStartFocus = startFocus
         )
 
+        if (primaryPriority != null || tasks.any { !it.isCompleted } || exams.isNotEmpty()) AcademicPriorityActionCardV2(
+            courses = courses,
+            coursesWithSessions = coursesWithSessions,
+            attendance = attendanceList,
+            tasks = tasks,
+            exams = exams,
+            priorityOverride = primaryPriority,
+            onNavigateTab = onNavigateTab,
+            onStartFocus = startFocus
+        )
+
         StudentWorkspaceShortcuts(onNavigateTab)
 
+        if (studyRecommendations.isNotEmpty()) StudyPlanPreviewCardV2(
+            recommendations = studyRecommendations.take(1),
+            acceptedRecommendationIds = acceptedStudyPlanIds,
+            onAcceptRecommendation = onAcceptStudyPlan,
+            onStartRecommendation = onStartStudyPlan,
+            onStartFocus = startFocus
+        )
+
         AcademicJourneyOverview(
+            compact = true,
             declaredPassedUnits = passedUnits,
             declaredGpa = declaredGpa?.let { String.format(Locale.US, "%.2f", it) },
             onCompleteRecords = { onNavigateTab(AppTab.CURRICULUM) },
@@ -180,101 +200,10 @@ fun ModernBentoDashboard(
             onOpenFocus = startFocus
         )
 
-        // 2. HERO GRADIENT CARD ("کلاس بعدی")
-        NextClassLiveBentoTile(
-            courses = courses,
-            coursesWithSessions = coursesWithSessions,
-            onOpenWorkspace = { course ->
-                onOpenCourseWorkspace?.invoke(course) ?: onNavigateTab(AppTab.SCHEDULE)
-            },
-            onOpenSchedule = { onNavigateTab(AppTab.SCHEDULE) }
-        )
-
-
-        if (primaryPriority != null || tasks.any { !it.isCompleted } || exams.isNotEmpty()) AcademicPriorityActionCardV2(
-            courses = courses,
-            coursesWithSessions = coursesWithSessions,
-            attendance = attendanceList,
-            tasks = tasks,
-            exams = exams,
-            priorityOverride = primaryPriority,
-            onNavigateTab = onNavigateTab,
-            onStartFocus = startFocus
-        )
-
-        if (studyRecommendations.isNotEmpty()) StudyPlanPreviewCardV2(
-            recommendations = studyRecommendations,
-            acceptedRecommendationIds = acceptedStudyPlanIds,
-            onAcceptRecommendation = onAcceptStudyPlan,
-            onStartRecommendation = onStartStudyPlan,
-            onStartFocus = startFocus
-        )
-
-        AcademicSectionHeader("برنامه و کارهای من", subtitle = "ابزارهای روزمره، در دسترس و مرتب")
-        listOf(
-            Triple("برنامه هفتگی", Icons.Default.CalendarToday, AppTab.SCHEDULE), Triple("امتحانات", Icons.Default.School, AppTab.EXAMS),
-            Triple("تکالیف", Icons.Default.CheckCircle, AppTab.TASKS), Triple("تمرکز و مطالعه", Icons.Default.HourglassTop, AppTab.POMODORO)
-        ).chunked(if (LocalDensity.current.fontScale >= 1.3f) 1 else 2).forEach { row ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                row.forEach { (title, icon, tab) ->
-                    QuickActionSquareTile(title, icon, { onNavigateTab(tab) }, Modifier.weight(1f))
-                }
-            }
+        AcademicSectionHeader("ابزارها")
+        StudentHomeToolGrid { tab ->
+            if (tab == AppTab.COPILOT && onOpenCopilot != null) onOpenCopilot() else onNavigateTab(tab)
         }
-        // 3. QUICK OPERATIONS 5 CIRCLES (سنتر, تسک, حضور, پومودورو, کوپایلوت)
-        StudentOperationsHubCard(
-            onOpenCommandCenter = { onOpenCommandCenter?.invoke() ?: onNavigateTab(AppTab.COPILOT) },
-            onQuickAddTask = { onQuickAddTask?.invoke() ?: onNavigateTab(AppTab.TASKS) },
-            onQuickAttendance = { onNavigateTab(AppTab.ATTENDANCE) },
-            onQuickPomodoro = startFocus,
-            onOpenCopilot = { onOpenCopilot?.invoke() ?: onNavigateTab(AppTab.COPILOT) },
-            onOpenOcrImport = { onOpenOcrImport?.invoke() ?: onNavigateTab(AppTab.SCHEDULE) }
-        )
-
-        // 4. SPLIT 2-CARD ROW: برنامه امروز (Today's Schedule) & هوش مصنوعی (AI Advice)
-        TodayScheduleAndAiSection(
-            courses = courses,
-            coursesWithSessions = coursesWithSessions,
-            onOpenSchedule = { onNavigateTab(AppTab.SCHEDULE) },
-            onOpenCopilot = { onOpenCopilot?.invoke() ?: onNavigateTab(AppTab.COPILOT) }
-        )
-
-        // 5. COURSE STATUS LIST CARD ("وضعیت درس‌ها")
-        CourseStatusListSection(
-            courses = courses,
-            coursesWithSessions = coursesWithSessions,
-            tasks = tasks,
-            attendance = attendanceList,
-            onOpenAll = { onNavigateTab(AppTab.SCHEDULE) },
-            onOpenCourse = { course ->
-                if (onOpenCourseWorkspace != null) {
-                    onOpenCourseWorkspace(course)
-                } else {
-                    onNavigateTab(AppTab.SCHEDULE)
-                }
-            }
-        )
-
-        // 6. GAMIFICATION / STREAK BANNER
-        if (gamificationProfile != null) {
-            BentoGamificationBanner(
-                profile = gamificationProfile,
-                onClick = { onNavigateTab(AppTab.GAMIFICATION) }
-            )
-        }
-
-        // 7. EXTRA CURRICULUM & EXAMS QUICK ACTION BANNER
-        val chartUnitsText = when (academicProgressState) {
-            is com.example.ui.models.AcademicProgressUiState.Ready -> "${academicProgressState.progress.totalRequiredCredits} واحد مصوب"
-            is com.example.ui.models.AcademicProgressUiState.Partial -> "${academicProgressState.progress.totalRequiredCredits} واحد مصوب"
-            else -> "اطلاعات چارت ثبت نشده"
-        }
-
-        CurriculumAndExamActionBanner(
-            chartUnitsText = chartUnitsText,
-            onOpenCurriculum = { onNavigateTab(AppTab.CURRICULUM) },
-            onOpenExams = { onNavigateTab(AppTab.EXAMS) }
-        )
         onOpenAppTour?.let { openTour ->
             TextButton(onClick = openTour, modifier = Modifier.fillMaxWidth()) {
                 Text("راهنمای استفاده از Student OS")
@@ -462,7 +391,7 @@ private fun BentoKpiTile(
                 text = value,
                 style = NumericDisplayStat,
                 fontSize = 22.sp,
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
@@ -592,7 +521,7 @@ private fun NextClassLiveBentoTile(
                 Text(
                     text = featuredCourse?.name ?: "هنوز جلسه‌ای در برنامه ثبت نشده",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Black,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -833,7 +762,7 @@ private fun ModernCourseCard(
         ) {
             Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.primaryContainer) {
                 Column(Modifier.widthIn(min = 54.dp).padding(horizontal = 8.dp, vertical = 9.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(course.units.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    Text(course.units.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     Text("واحد", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
             }
@@ -1005,7 +934,7 @@ private fun AttendanceRadarBentoTile(
                     Text(
                         text = "$totalAbsences جلسه",
                         fontSize = 21.sp,
-                        fontWeight = FontWeight.Black,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
@@ -1101,7 +1030,7 @@ private fun MicroPomodoroBentoTile(
                     Text(
                         text = timeFormatted,
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.Black,
+                        fontWeight = FontWeight.Bold,
                         color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(2.dp))
@@ -1217,7 +1146,7 @@ private fun AcademicPulseBentoTile(
                         Text(
                             text = displayValue,
                             fontSize = 24.sp,
-                            fontWeight = FontWeight.Black,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(

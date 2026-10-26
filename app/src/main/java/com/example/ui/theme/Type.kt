@@ -210,7 +210,7 @@ object StudentTextTokens {
     val MetaText = TextStyle(
         fontFamily = VazirmatnFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 11.5.sp,
+        fontSize = 12.sp,
         lineHeight = 18.sp,
         letterSpacing = 0.sp
     )
@@ -218,8 +218,8 @@ object StudentTextTokens {
     val BadgeText = TextStyle(
         fontFamily = VazirmatnFontFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
+        fontSize = 12.sp,
+        lineHeight = 18.sp,
         letterSpacing = 0.sp
     )
 
@@ -235,7 +235,7 @@ object StudentTextTokens {
         fontFamily = JetBrainsMonoFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
-        lineHeight = 16.sp,
+        lineHeight = 18.sp,
         letterSpacing = 0.2.sp
     )
 }

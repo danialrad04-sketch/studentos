@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -92,65 +94,27 @@ fun AcademicPriorityActionCardV2(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, accent.copy(alpha = 0.22f))
     ) {
-        Row(
-            Modifier.fillMaxWidth().padding(13.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(11.dp),
-                color = accent.copy(alpha = 0.10f)
-            ) {
-                Icon(
-                    when (priority.kind) {
-                        AcademicPriorityKind.CRITICAL_ATTENDANCE -> Icons.Default.WarningAmber
-                        AcademicPriorityKind.OVERDUE_TASK -> Icons.Default.CheckCircle
-                        AcademicPriorityKind.EXAM_TODAY -> Icons.Default.Event
-                        AcademicPriorityKind.TASK_TODAY -> Icons.Default.CalendarToday
-                        else -> Icons.Default.Bolt
-                    },
-                    contentDescription = null,
-                    tint = accent,
-                    modifier = Modifier.padding(8.dp).size(18.dp)
-                )
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                AppEmoji(when (priority.kind) {
+                    AcademicPriorityKind.CRITICAL_ATTENDANCE -> AppEmojiType.WARNING
+                    AcademicPriorityKind.EXAM_TODAY -> AppEmojiType.TARGET
+                    else -> AppEmojiType.CHECK
+                }, size = 30.dp)
+                Text("پیشنهاد بعدی", style = MaterialTheme.typography.labelLarge, color = accent)
             }
-
-            Column(Modifier.weight(1f)) {
-                StudentCardMeta(
-                    "الان مهم‌تر از همه",
-                    color = accent,
-                    fontWeight = FontWeight.Black
-                )
-                StudentCardTitle(
-                    priority.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Black
-                )
-                StudentCardBody(
-                    priority.reason,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2
-                )
-            }
-
-            if (priority.kind == AcademicPriorityKind.OPEN_TASK ||
-                priority.kind == AcademicPriorityKind.EXAM_LINKED_TASK
-            ) {
-                OutlinedButton(
-                    onClick = onStartFocus,
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Icon(Icons.Default.PlayArrow, null, Modifier.size(16.dp))
-                    Spacer(Modifier.size(4.dp))
-                    Text("تمرکز")
+            Text(priority.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(priority.reason, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (priority.kind == AcademicPriorityKind.OPEN_TASK || priority.kind == AcademicPriorityKind.EXAM_LINKED_TASK) {
+                OutlinedButton(onClick = onStartFocus, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    shape = MaterialTheme.shapes.medium) {
+                    Icon(Icons.Default.PlayArrow, null, Modifier.size(18.dp))
+                    Spacer(Modifier.size(6.dp)); Text("شروع تمرکز")
                 }
             } else if (destination != null) {
-                Button(
-                    onClick = { onNavigateTab(destination) },
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("باز کردن")
+                FilledTonalButton(onClick = { onNavigateTab(destination) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), shape = MaterialTheme.shapes.medium) {
+                    Text("باز کردن ${destination.title}")
                 }
             }
         }

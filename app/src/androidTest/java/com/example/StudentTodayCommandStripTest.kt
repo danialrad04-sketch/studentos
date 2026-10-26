@@ -51,7 +51,7 @@ class StudentTodayCommandStripTest {
         assertTrue(composeRule.onAllNodesWithText("امروز").fetchSemanticsNodes().isNotEmpty())
         assertTrue(composeRule.onAllNodesWithText("کار باز").fetchSemanticsNodes().isNotEmpty())
         assertTrue(composeRule.onAllNodesWithText("کلاس امروز").fetchSemanticsNodes().isNotEmpty())
-        assertTrue(composeRule.onAllNodesWithText("غیبت بحرانی").fetchSemanticsNodes().isNotEmpty())
+        assertTrue(composeRule.onAllNodesWithText("هشدار غیبت").fetchSemanticsNodes().isNotEmpty())
         assertTrue(composeRule.onAllNodesWithText("شروع تمرکز").fetchSemanticsNodes().isNotEmpty())
         assertTrue(composeRule.onAllNodesWithText("کارها").fetchSemanticsNodes().isNotEmpty())
         assertTrue(composeRule.onAllNodesWithText("1").fetchSemanticsNodes().isNotEmpty())

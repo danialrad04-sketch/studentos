@@ -14,21 +14,21 @@ enum class AppTab(
     val iconEmoji: String
 ) {
     DASHBOARD("خانه", "⚡"),
-    COPILOT("دستیار هوشمند", "🤖"),
-    ACADEMIC_INTELLIGENCE("هوش تحصیلی", "🧠"),
+    COPILOT("دستیار تحصیلی", "🤖"),
+    ACADEMIC_INTELLIGENCE("وضعیت تحصیلی", "🧠"),
     PASSPORT("شناسنامه تحصیلی", "📜"),
     AGENDA("برنامهٔ هفته", "📅"),
-    NOTES("دفتر یادداشت درسی", "📝"),
-    SCHEDULE("برنامه کلاسی", "🗓️"),
+    NOTES("یادداشت‌ها", "📝"),
+    SCHEDULE("کلاس‌ها", "🗓️"),
     ATTENDANCE("حضور و غیاب", "🚨"),
-    TASKS("تکالیف و پروژه", "📋"),
-    EXAMS("امتحانات پایان‌ترم", "🎯"),
-    GRADES("کارنامه و شبیه‌ساز", "📈"),
+    TASKS("تکلیف‌ها", "📋"),
+    EXAMS("امتحان‌ها", "🎯"),
+    GRADES("نمره‌ها و معدل", "📈"),
     SEMESTER_PLANNER("برنامه‌ریز ترم", "🧭"),
-    CURRICULUM("چارت تحصیلی", "🗺️"),
+    CURRICULUM("چارت درسی", "🗺️"),
     POMODORO("تمرکز", "⏱️"),
-    GAMIFICATION("مدال‌ها و دستاوردها", "🏆"),
-    HISTORY("سوابق ترم‌ها", "📚")
+    GAMIFICATION("دستاوردها", "🏆"),
+    HISTORY("ترم‌های قبل", "📚")
 }
 
 data class SystemNotification(

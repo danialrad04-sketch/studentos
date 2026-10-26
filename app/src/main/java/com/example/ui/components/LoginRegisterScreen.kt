@@ -191,7 +191,7 @@ fun LoginRegisterScreen(
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "همیار هوشمند، منسجم و همیشگی دوران تحصیلی شما",
+                    text = "درس‌ها، کارها و سوابق تحصیلی در یک‌جا",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
@@ -225,7 +225,7 @@ fun LoginRegisterScreen(
                             Text(
                                 text = "ورود مستقیم بدون لاگین 🚀",
                                 style = MaterialTheme.typography.titleSmall.copy(
-                                    fontWeight = FontWeight.Black,
+                                    fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp
                                 ),
                                 color = MaterialTheme.colorScheme.onPrimaryContainer

@@ -12,6 +12,20 @@ import org.junit.Test
 /** Exercises the production viewport, including the chat's finite list and actual IME. */
 class MainWorkspaceDeviceTest {
     @get:Rule val rule=createAndroidComposeRule<MainActivity>()
+    private var previousImeSetting: String? = null
+    @org.junit.Before fun enableSoftwareKeyboardForThisScenario() {
+        previousImeSetting = shell("settings get secure show_ime_with_hard_keyboard").trim().takeIf { it == "0" || it == "1" }
+        shell("settings put secure show_ime_with_hard_keyboard 1")
+    }
+    @org.junit.After fun restoreSoftwareKeyboardSetting() {
+        val previous = previousImeSetting
+        shell(if (previous == null) "settings delete secure show_ime_with_hard_keyboard"
+            else "settings put secure show_ime_with_hard_keyboard $previous")
+    }
+    private fun shell(command: String): String {
+        val descriptor = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command)
+        return android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).bufferedReader().use { it.readText() }
+    }
     @Test fun chatComposerAndNewWorkspacePagesRemainReachableInTheActualApp() {
         rule.waitUntil(30000) { rule.onAllNodesWithTag("local_onboarding").fetchSemanticsNodes().isNotEmpty() || rule.onAllNodesWithTag("primary_navigation").fetchSemanticsNodes().isNotEmpty() }
         AppPreferencesRepository.getInstance(rule.activity).setNotificationsEnabled(false)
@@ -25,9 +39,18 @@ class MainWorkspaceDeviceTest {
         rule.runOnIdle{vm.selectTab(AppTab.COPILOT)}
         rule.waitUntil(15000){rule.onAllNodesWithTag("copilot_input_field").fetchSemanticsNodes().isNotEmpty()}
         rule.onNodeWithTag("copilot_input_field").performClick().performTextInput("پرسش آزمون")
+        val activity = rule.activity
+        rule.activityRule.scenario.onActivity {
+            androidx.core.view.WindowCompat.getInsetsController(it.window,it.window.decorView)
+                .show(androidx.core.view.WindowInsetsCompat.Type.ime())
+        }
+        rule.waitUntil(15000) {
+            androidx.core.view.ViewCompat.getRootWindowInsets(activity.window.decorView)
+                ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true
+        }
         rule.onNodeWithTag("ai_send").assertIsDisplayed()
         rule.onNodeWithTag("copilot_input_field").assertIsDisplayed()
-        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        hideKeyboardAndAwaitWindowFocus()
         rule.runOnIdle{vm.selectTab(AppTab.AGENDA)}
         rule.waitUntil(15000){rule.onAllNodesWithTag("student_agenda_screen").fetchSemanticsNodes().isNotEmpty()}
         rule.runOnIdle{vm.selectTab(AppTab.NOTES)}
@@ -39,7 +62,7 @@ class MainWorkspaceDeviceTest {
         rule.waitUntil(15000){rule.onAllNodesWithTag("note_save").fetchSemanticsNodes().isEmpty()}
         rule.waitUntil(15000){rule.onAllNodesWithText("یادداشت روی دستگاه").fetchSemanticsNodes().isNotEmpty()}
         rule.onNodeWithText("یادداشت روی دستگاه").assertExists()
-        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        hideKeyboardAndAwaitWindowFocus()
         AppTab.entries.forEach { tab ->
             rule.runOnIdle { vm.selectTab(tab) }
             rule.waitUntil(15000) { rule.onAllNodesWithText(tab.title).fetchSemanticsNodes().isNotEmpty() }
@@ -48,4 +71,17 @@ class MainWorkspaceDeviceTest {
         }
 
     }
+    private fun hideKeyboardAndAwaitWindowFocus() {
+        val activity = rule.activity
+        rule.activityRule.scenario.onActivity {
+            androidx.core.view.WindowCompat.getInsetsController(it.window,it.window.decorView)
+                .hide(androidx.core.view.WindowInsetsCompat.Type.ime())
+        }
+        rule.waitUntil(15000) {
+            val imeVisible = androidx.core.view.ViewCompat.getRootWindowInsets(activity.window.decorView)
+                ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true
+            !imeVisible && activity.hasWindowFocus()
+        }
+    }
+
 }

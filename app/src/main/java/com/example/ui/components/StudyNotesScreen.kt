@@ -39,11 +39,19 @@ fun StudyNotesScreen(notes:List<NoteEntity>,courses:List<CourseEntity>,ownerKey:
             (q.isBlank() || com.example.domain.engine.GroundedStudentAssistant.normalize(n.title+" "+n.content+" "+courses.find { it.id==n.courseId }?.name.orEmpty()).lowercase().contains(q)) }.sortedByDescending { it.updatedAt }
     }
     Column(modifier.fillMaxWidth().testTag("study_notes_screen"),verticalArrangement=Arrangement.spacedBy(12.dp)) {
-        AcademicCard(Modifier.fillMaxWidth()) { Column(Modifier.padding(18.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-            Text("دفتر یادداشت درسی",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold)
-            Text("نکته‌ها، فرمول‌ها و خلاصهٔ درس‌ها؛ ذخیره روی دستگاه و قابل نگهداری در پشتیبان.",style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
-            Button(onClick={editorToken=prefix+"new:"+UUID.randomUUID()},Modifier.testTag("note_add")) { Icon(Icons.Rounded.Add,null);Spacer(Modifier.width(8.dp));Text("یادداشت تازه") }
-        } }
+        Row(Modifier.fillMaxWidth(), verticalAlignment=Alignment.CenterVertically,
+            horizontalArrangement=Arrangement.spacedBy(12.dp)) {
+            AppEmoji(AppEmojiType.BOOK,size=44.dp)
+            Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(4.dp)) {
+                Text("خلاصه‌ها و نکته‌های درسی",style=MaterialTheme.typography.titleSmall)
+                Text("ذخیره روی دستگاه؛ همراه پشتیبان",style=MaterialTheme.typography.bodySmall,
+                    color=MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        FilledTonalButton(onClick={editorToken=prefix+"new:"+UUID.randomUUID()},
+            Modifier.fillMaxWidth().heightIn(min=48.dp).testTag("note_add")) {
+            Icon(Icons.Rounded.Add,null);Spacer(Modifier.width(8.dp));Text("یادداشت تازه")
+        }
         OutlinedTextField(search,{search=it.take(200)},label={Text("جست‌وجو در عنوان، متن و درس")},leadingIcon={Icon(Icons.Rounded.Search,null)},singleLine=true,modifier=Modifier.fillMaxWidth().testTag("notes_search"))
         Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             FilterChip(!archived,{archived=false},label={Text("یادداشت‌ها (${notes.count{!it.isArchived}})")},modifier=Modifier.testTag("notes_active"))

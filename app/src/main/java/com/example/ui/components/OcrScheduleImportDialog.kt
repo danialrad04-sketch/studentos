@@ -283,7 +283,7 @@ fun OcrScheduleImportDialog(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "خطا در پردازش هوشمند تصویر",
+                                        text = "تصویر خوانده نشد",
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onErrorContainer
@@ -367,7 +367,7 @@ fun OcrScheduleImportDialog(
                         ) {
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("در حال ارسال و تحلیل هوشمند مشخصات دروس از تصویر...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("در حال خواندن جدول درس‌ها…", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 } else {

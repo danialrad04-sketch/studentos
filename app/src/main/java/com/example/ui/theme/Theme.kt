@@ -1,6 +1,10 @@
 package com.example.ui.theme
 
 import android.os.Build
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.res.imageResource
+import com.example.R
+import com.example.ui.components.LocalStudentStickerAtlas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.CardDefaults
@@ -199,10 +203,12 @@ fun StudentOsTheme(
         else -> LightColorScheme
     }
 
+    val stickerAtlas = ImageBitmap.imageResource(R.drawable.student_sticker_atlas)
     val semanticColors = if (darkTheme) DarkStudentSemanticColors else LightStudentSemanticColors
 
     CompositionLocalProvider(
         LocalStudentSemanticColors provides semanticColors,
+        LocalStudentStickerAtlas provides stickerAtlas,
         LocalLayoutDirection provides LayoutDirection.Rtl
     ) {
         MaterialTheme(

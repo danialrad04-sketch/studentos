@@ -181,7 +181,7 @@ fun PomodoroAndNotesScreen(
                     Text(
                         text = timeFormatted,
                         fontSize = 58.sp,
-                        fontWeight = FontWeight.Black,
+                        fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
                         color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                         letterSpacing = 2.sp
@@ -233,7 +233,7 @@ fun PomodoroAndNotesScreen(
                             modifier = Modifier.size(18.dp).padding(end = 4.dp)
                         )
                         Text(
-                            text = if (isRunning) "مکث تمرکز" else "شروع تمرکز عمیق",
+                            text = if (isRunning) "مکث تمرکز" else "شروع تمرکز",
                             fontSize = 12.5.sp,
                             fontWeight = FontWeight.Bold
                         )
