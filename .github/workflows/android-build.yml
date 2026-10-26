@@ -213,8 +213,8 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk bazaar-output/StudentOS-2.6.0.apk
           cp app/build/outputs/bundle/release/app-release.aab bazaar-output/StudentOS-2.6.0.aab
           bash scripts/generate_bazaar_bin.sh bazaar-output/StudentOS-2.6.0.aab bazaar-output/StudentOS-2.6.0.bin
-          cp docs/BAZAAR_COMPLIANCE_2_5_0.md bazaar-output/README-BAZAAR.md
-          cp docs/BAZAAR_SUBMISSION_2_5_0_FA.md bazaar-output/BAZAAR-SUBMISSION-FA.md
+          cp docs/BAZAAR_COMPLIANCE_2_6_0.md bazaar-output/README-BAZAAR.md
+          cp docs/BAZAAR_SUBMISSION_2_6_0_FA.md bazaar-output/BAZAAR-SUBMISSION-FA.md
           cd bazaar-output
           sha256sum StudentOS-2.6.0.apk StudentOS-2.6.0.aab StudentOS-2.6.0.bin > SHA256SUMS.txt
           zip CafeBazaar-2.6.0.zip StudentOS-2.6.0.aab StudentOS-2.6.0.bin README-BAZAAR.md BAZAAR-SUBMISSION-FA.md release-evidence.json SHA256SUMS.txt
