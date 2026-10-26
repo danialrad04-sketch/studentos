@@ -94,8 +94,10 @@ class NavigationAndHomeExperienceTest {
         assertEquals("", input)
     }
 
-    @Test fun newStudentHasWorkingScheduleAndCopilotEntriesWithoutCallbacks() {
+    @Test fun newStudentEntriesKeepDefaultRoutesAndTheCustomAssistantAction() {
         var selected: AppTab? = null
+        var customOpened = false
+        var customCopilot by mutableStateOf<(() -> Unit)?>(null)
         rule.setContent {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 StudentOsTheme {
@@ -103,7 +105,8 @@ class NavigationAndHomeExperienceTest {
                         ModernBentoDashboard(
                             courses = emptyList(), attendanceList = emptyList(), tasks = emptyList(), grades = emptyList(),
                             pomodoroSeconds = 1500, isPomodoroRunning = false, onTogglePomodoro = {},
-                            onNavigateTab = { selected = it }, modifier = Modifier.verticalScroll(rememberScrollState())
+                            onNavigateTab = { selected = it }, onOpenCopilot = customCopilot,
+                            modifier = Modifier.verticalScroll(rememberScrollState())
                         )
                     }
                 }
@@ -111,8 +114,11 @@ class NavigationAndHomeExperienceTest {
         }
         rule.onNodeWithText("افزودن درس و برنامه").performScrollTo().performClick()
         assertEquals(AppTab.SCHEDULE, selected)
-        rule.onNodeWithText("از دستیار تحصیلی بپرس").performScrollTo().performClick()
+        rule.onNodeWithTag("home_tool_COPILOT").performScrollTo().performClick()
         assertEquals(AppTab.COPILOT, selected)
+        rule.runOnIdle { selected = null; customCopilot = { customOpened = true } }
+        rule.onNodeWithTag("home_tool_COPILOT").performScrollTo().performClick()
+        rule.runOnIdle { assertTrue(customOpened); assertEquals(null, selected) }
         rule.onRoot().captureRoboImage("build/outputs/visual-review/home-new-student-rtl.png")
     }
 }

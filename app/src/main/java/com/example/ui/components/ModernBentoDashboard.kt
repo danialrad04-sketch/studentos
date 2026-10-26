@@ -201,7 +201,9 @@ fun ModernBentoDashboard(
         )
 
         AcademicSectionHeader("ابزارها")
-        StudentHomeToolGrid(onNavigateTab)
+        StudentHomeToolGrid { tab ->
+            if (tab == AppTab.COPILOT && onOpenCopilot != null) onOpenCopilot() else onNavigateTab(tab)
+        }
         onOpenAppTour?.let { openTour ->
             TextButton(onClick = openTour, modifier = Modifier.fillMaxWidth()) {
                 Text("راهنمای استفاده از Student OS")
