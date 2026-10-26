@@ -18,7 +18,7 @@ import com.example.data.local.entity.StudentProfileEntity
 fun EditProfileDialog(
     profile: StudentProfileEntity,
     onDismiss: () -> Unit,
-    onSave: (String, String, String, String, Int, Int, Int, Int) -> Unit
+    onSave: (String, String, String, String, Int, Int, Int, Int, Double?) -> Unit
 ) {
     var name by rememberSaveable { mutableStateOf(profile.name) }
     var studentId by rememberSaveable { mutableStateOf(profile.studentId) }
@@ -28,8 +28,10 @@ fun EditProfileDialog(
     var semester by rememberSaveable { mutableStateOf(profile.currentSemester.takeIf { it > 0 }?.toString().orEmpty()) }
     var passed by rememberSaveable { mutableStateOf(profile.passedUnits.toString()) }
     var active by rememberSaveable { mutableStateOf(profile.activeUnits.toString()) }
+    var gpa by rememberSaveable { mutableStateOf(profile.declaredGpa?.toString().orEmpty()) }
+    val parsedGpa = studentProfileGpa(gpa)
     val numbers = listOf(year, semester, passed, active).map(::studentProfileNumber)
-    val valid = name.isNotBlank() && numbers.all { it != null }
+    val valid = name.isNotBlank() && numbers.all { it != null } && (gpa.isBlank() || parsedGpa != null)
     StudentSettingsPage("پروفایل دانشجویی", onDismiss) {
         Column(Modifier.fillMaxSize().padding(horizontal = 20.dp).testTag("profile_editor")) {
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -43,13 +45,20 @@ fun EditProfileDialog(
                 ProfileTextField("سال ورود", year, { year = it }, numeric = true, isError = numbers[0] == null)
                 ProfileTextField("نیم‌سال جاری", semester, { semester = it }, numeric = true, isError = numbers[1] == null)
                 ProfileTextField("واحدهای گذرانده", passed, { passed = it }, numeric = true, isError = numbers[2] == null)
+                OutlinedTextField(
+                    value = gpa, onValueChange = { gpa = it }, label = { Text("معدل کل اعلام‌شده (اختیاری)") },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    isError = gpa.isNotBlank() && parsedGpa == null,
+                    supportingText = { Text(if (gpa.isNotBlank() && parsedGpa == null) "عددی از صفر تا ۲۰ وارد کن" else "خلاصهٔ کارنامهٔ قبلی؛ نمرات درس‌ها و معدل هدف را تغییر نمی‌دهد.") }
+                )
                 ProfileTextField("واحدهای ترم جاری", active, { active = it }, numeric = true, isError = numbers[3] == null)
                 Spacer(Modifier.height(8.dp))
             }
             Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("انصراف") }
                 Button(
-                    onClick = { onSave(name.trim(), studentId.trim(), university.trim(), major.trim(), numbers[0]!!, numbers[1]!!, numbers[2]!!, numbers[3]!!) },
+                    onClick = { onSave(name.trim(), studentId.trim(), university.trim(), major.trim(), numbers[0]!!, numbers[1]!!, numbers[2]!!, numbers[3]!!, parsedGpa) },
                     enabled = valid, modifier = Modifier.weight(1.4f).heightIn(min = 48.dp).testTag("save_profile")
                 ) { Text("ذخیره مشخصات") }
             }
@@ -74,3 +83,11 @@ internal fun studentProfileNumber(raw: String): Int? {
     val normalized = raw.trim().map { ch -> if (ch.isDigit()) Character.getNumericValue(ch).toString() else ch.toString() }.joinToString("")
     return normalized.toIntOrNull()?.takeIf { it >= 0 }
 }
+
+internal fun studentProfileGpa(raw: String): Double? = raw.trim().map { ch ->
+    when {
+        ch == '٫' -> '.'
+        ch.isDigit() -> Character.forDigit(Character.getNumericValue(ch), 10)
+        else -> ch
+    }
+}.joinToString("").toDoubleOrNull()?.takeIf { it.isFinite() && it in 0.0..20.0 }

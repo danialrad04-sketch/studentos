@@ -77,6 +77,8 @@ fun PomodoroAndNotesScreen(
     notes: String,
     onSaveNotes: (String) -> Unit,
     studyRecommendations: List<StudySessionRecommendation> = emptyList(),
+    studyHistory: List<com.example.domain.model.StudyDay> = emptyList(),
+    dailyStudyGoalMinutes: Int = 120,
     modifier: Modifier = Modifier
 ) {
     val minutes = secondsRemaining / 60
@@ -87,16 +89,7 @@ fun PomodoroAndNotesScreen(
 
     var localNotes by remember(notes) { mutableStateOf(notes) }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "ai_pulse")
-    val aiGlowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = 0.85f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1400, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "ai_glow"
-    )
+    val aiGlowAlpha = 0.45f
 
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         // AI Deep Work Copilot Bento Card
@@ -292,6 +285,8 @@ fun PomodoroAndNotesScreen(
                 }
             }
         }
+
+        StudyActivityJournal(studyHistory, dailyStudyGoalMinutes)
 
         // AI Study Session Recommendations (Phase 28)
         if (studyRecommendations.isNotEmpty()) {

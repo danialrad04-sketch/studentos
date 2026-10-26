@@ -12,7 +12,8 @@ import androidx.room.PrimaryKey
     tableName = "tasks",
     indices = [
         Index(value = ["courseId"]),
-        Index(value = ["semesterId"])
+        Index(value = ["semesterId"]),
+        Index(value = ["recurrenceParentId"], unique = true)
     ]
 )
 data class TaskEntity(
@@ -22,5 +23,8 @@ data class TaskEntity(
     val dueDate: String,
     val isCompleted: Boolean = false,
     val courseId: String = "",
-    val semesterId: String? = null
+    val semesterId: String? = null,
+    @androidx.room.ColumnInfo(defaultValue = "0") val repeatEveryDays: Int = 0,
+    @androidx.room.ColumnInfo(defaultValue = "''") val reminderTime: String = "",
+    @androidx.room.ColumnInfo(defaultValue = "NULL") val recurrenceParentId: Long? = null
 )

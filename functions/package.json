@@ -6,9 +6,10 @@
   },
   "main": "index.js",
   "scripts": {
-    "check": "node --check index.js && node --check lib/premium-core.js && node --check lib/premium-service.js && node --check lib/support-service.js",
+    "check": "node --check index.js && node --check lib/premium-core.js && node --check lib/premium-service.js && node --check lib/support-service.js && node --check lib/ai-provider.js && node --check lib/ai-service.js && node --check scripts/setup-openai.js",
     "test": "node --test test/*.test.js",
-    "test:emulator": "firebase emulators:exec --project demo-studentos-premium --only firestore \"node --test test/firebase.test.js\""
+    "test:emulator": "firebase emulators:exec --project demo-studentos-premium --only firestore \"node --test test/firebase.test.js\"",
+    "ai:setup": "node scripts/setup-openai.js"
   },
   "dependencies": {
     "firebase-admin": "^14.5.0",

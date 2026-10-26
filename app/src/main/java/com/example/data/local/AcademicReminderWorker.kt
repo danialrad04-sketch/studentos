@@ -47,6 +47,6 @@ class AcademicReminderWorker(context: Context, parameters: WorkerParameters) : C
             WorkManager.getInstance(context).enqueueUniqueWork(FOCUS_WORK, ExistingWorkPolicy.REPLACE, request)
         }
         fun cancelFocus(context: Context) { WorkManager.getInstance(context).cancelUniqueWork(FOCUS_WORK) }
-        fun cancelAll(context: Context) { WorkManager.getInstance(context).cancelAllWorkByTag(TAG) }
+        fun cancelAll(context: Context): androidx.work.Operation = WorkManager.getInstance(context).cancelAllWorkByTag(TAG)
     }
 }

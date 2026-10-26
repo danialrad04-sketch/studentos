@@ -124,7 +124,7 @@ class SettingsExperienceTest {
         rule.onNodeWithTag("student_modal").captureRoboImage("build/outputs/visual-review/task-form-short-dark-large-text.png")
     }
     @Test fun profileFormKeepsSaveReachable() {
-        rule.setContent { StudentOsTheme(darkTheme = false) { EditProfileDialog(profile, {}, { _, _, _, _, _, _, _, _ -> }) } }
+        rule.setContent { StudentOsTheme(darkTheme = false) { EditProfileDialog(profile, {}, { _, _, _, _, _, _, _, _, _ -> }) } }
         rule.onNodeWithTag("profile_editor").captureRoboImage("build/outputs/visual-review/profile-form.png")
         rule.onNodeWithTag("save_profile").assertIsDisplayed()
     }
@@ -134,7 +134,7 @@ class SettingsExperienceTest {
     }
     @Test fun profileAcceptsPersianNumbersAndRejectsInvalidInput() {
         var passed: Int? = null
-        rule.setContent { StudentOsTheme(darkTheme = false) { EditProfileDialog(profile, {}, { _, _, _, _, _, _, units, _ -> passed = units }) } }
+        rule.setContent { StudentOsTheme(darkTheme = false) { EditProfileDialog(profile, {}, { _, _, _, _, _, _, units, _, _ -> passed = units }) } }
         val field = rule.onNode(hasText("واحدهای گذرانده") and hasSetTextAction())
         field.performScrollTo().performTextClearance()
         field.performTextInput("-۱")

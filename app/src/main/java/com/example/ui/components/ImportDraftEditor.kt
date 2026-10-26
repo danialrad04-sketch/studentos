@@ -31,7 +31,7 @@ fun ImportDraftEditor(draft: ParsedCourseDraft, onDismiss: () -> Unit, onSave: (
     var examTime by rememberSaveable(draft.tempId) { mutableStateOf(draft.examTime) }
     var examLocation by rememberSaveable(draft.tempId) { mutableStateOf(draft.examLocation) }
     val edited = draft.copy(name = name.trim(), units = DateTimeNormalizer.normalizeDigits(units).toIntOrNull() ?: 0,
-        dayOfWeek = day, dayName = JalaliCalendarUtil.getWeekdayName(day), startTime = AcademicInputValidator.time(start) ?: start,
+        dayOfWeek = day, dayName = if (day in 0..6) JalaliCalendarUtil.getWeekdayName(day) else "", startTime = AcademicInputValidator.time(start) ?: start,
         endTime = AcademicInputValidator.time(end) ?: end, instructor = instructor.trim(), location = location.trim(),
         examDate = JalaliCalendarUtil.parse(examDate)?.format() ?: examDate.trim(), examTime = AcademicInputValidator.time(examTime) ?: examTime.trim(), examLocation = examLocation.trim())
     val issues = AcademicInputValidator.draftIssues(edited)

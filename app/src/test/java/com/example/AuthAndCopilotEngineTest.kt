@@ -16,7 +16,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.junit.Assume.assumeTrue
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -160,81 +159,17 @@ class AuthAndCopilotEngineTest {
 
         val message = AcademicCopilotEngine.processUserQueryAsync(
             query = "برای فارغ‌التحصیلی چند واحد دیگه نیاز دارم؟",
+            adviceProvider = { _, _, _, _ -> Result.failure(IllegalStateException("offline")) },
             profile = sampleProfile,
             courses = emptyList(),
             attendanceList = emptyList(),
             grades = emptyList(),
             tasks = emptyList(),
-            exams = emptyList(),
-            customApiKey = null
+            exams = emptyList()
         )
 
         assertNotNull(message)
         assertTrue(message.text.isNotBlank())
-    }
-
-    @Test
-    fun testRealGeminiCopilotFiveQueries() = runBlocking {
-        assumeTrue(
-            "Live Gemini tests are opt-in. Set RUN_LIVE_AI_TESTS=1 to execute them.",
-            System.getenv("RUN_LIVE_AI_TESTS") == "1"
-        )
-        val sampleProfile = StudentProfileEntity(
-            id = 1,
-            name = "امیرحسین",
-            studentId = "40112345",
-            major = "مهندسی کامپیوتر",
-            university = "دانشگاه صنعتی امیرکبیر",
-            entryYear = 1401,
-            currentSemester = 6,
-            passedUnits = 85,
-            activeUnits = 18,
-            declaredGpa = 17.2,
-            term = "ترم ۶"
-        )
-        val courses = listOf(
-            CourseEntity(id = "c1", name = "سیستم‌های عامل", units = 3, colorHex = "#3B82F6"),
-            CourseEntity(id = "c2", name = "طراحی الگوریتم", units = 3, colorHex = "#10B981")
-        )
-        val attendance = listOf(
-            AttendanceEntity(courseId = "c1", courseName = "سیستم‌های عامل", absentCount = 2, maxAllowed = 3),
-            AttendanceEntity(courseId = "c2", courseName = "طراحی الگوریتم", absentCount = 0, maxAllowed = 3)
-        )
-        val exams = listOf(
-            ExamItem(id = "e1", courseName = "سیستم‌های عامل", solarDate = "1403/03/20", time = "09:00", location = "تالار ابوریحان", units = 3)
-        )
-
-        val questions = listOf(
-            "چقدر دیگه غیبت دارم؟",
-            "برنامه مطالعه برای امتحان بده",
-            "بهترین روش برای تسلط بر مفاهیم مدیریت حافظه در سیستم عامل چیست؟",
-            "تفاوت کارشناسی ارشد آموزش‌محور و پژوهش‌محور در دانشگاه‌های سراسری چیست؟",
-            "برای ورود به بازار کار توسعه نرم‌افزار در طول دوران دانشجویی چه مهارت‌های عملی را پیشنهاد می‌کنی؟"
-        )
-
-        for ((index, q) in questions.withIndex()) {
-            val response = AcademicCopilotEngine.processUserQueryAsync(
-                query = q,
-                profile = sampleProfile,
-                courses = courses,
-                attendanceList = attendance,
-                grades = emptyList(),
-                tasks = emptyList(),
-                exams = exams
-            )
-            println("=== QUERY ${index + 1}: $q ===")
-            println("Badge: ${response.confidenceBadge}")
-            println("Response: ${response.text}\n")
-            assertNotNull(response.text)
-            assertTrue(response.text.isNotBlank())
-            assertTrue(
-                "Expected live AI badge or academic badge but got: ${response.confidenceBadge}",
-                response.confidenceBadge?.contains("Gemini") == true ||
-                response.confidenceBadge?.contains("هوش مصنوعی") == true ||
-                response.confidenceBadge?.contains("آکادمیک") == true ||
-                response.confidenceBadge?.contains("آفلاین") == true
-            )
-        }
     }
 
     @Test

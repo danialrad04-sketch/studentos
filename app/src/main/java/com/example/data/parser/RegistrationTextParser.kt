@@ -14,12 +14,12 @@ data class ParsedCourseDraft(
     val name: String,
     val units: Int = 3,
     val targetSemester: Int = 0, // 0 = unassigned / current semester, 1..10 = specific semester
-    val instructor: String = "استاد دانشکده",
-    val dayOfWeek: Int = 0, // 0 = شنبه, ..., 5 = پنج‌شنبه
-    val dayName: String = "شنبه",
-    val startTime: String = "08:00",
-    val endTime: String = "10:00",
-    val location: String = "دانشکده",
+    val instructor: String = "",
+    val dayOfWeek: Int = -1, // 0 = شنبه, ..., 5 = پنج‌شنبه
+    val dayName: String = "",
+    val startTime: String = "",
+    val endTime: String = "",
+    val location: String = "",
     val courseCode: String = "",
     val examDate: String = "",
     val examTime: String = "",
@@ -147,12 +147,12 @@ object RegistrationTextParser {
 
         var units = 3
         var targetSemester = 0
-        var dayOfWeek = 0
-        var dayName = "شنبه"
-        var startTime = "08:00"
-        var endTime = "10:00"
-        var instructor = "استاد دانشکده"
-        var location = "دانشکده"
+        var dayOfWeek = -1
+        var dayName = ""
+        var startTime = ""
+        var endTime = ""
+        var instructor = ""
+        var location = ""
         var courseCode = ""
         var examDate = ""
         var examTime = ""
@@ -202,7 +202,7 @@ object RegistrationTextParser {
 
             // Location / Room (e.g. "کلاس ۱۰۲" or "آمفی‌تئاتر")
             if (rawPart.contains("کلاس") || rawPart.contains("اتاق") || rawPart.contains("تالار") || rawPart.contains("دانشکده") || rawPart.contains("سالن") || rawPart.contains("آزمایشگاه")) {
-                location = if (rawPart.contains("نامشخص")) "دانشکده" else rawPart.trim()
+                location = if (rawPart.contains("نامشخص")) "" else rawPart.trim()
             }
 
             // Exam info (e.g. "امتحان: 1403/10/20 ساعت 09:00")
@@ -217,6 +217,9 @@ object RegistrationTextParser {
                 }
             }
         }
+
+        if (dayOfWeek < 0) missing.add("روز کلاس")
+        if (startTime.isBlank() || endTime.isBlank()) missing.add("ساعت کلاس")
 
         val state = if (missing.isNotEmpty()) DraftValidationState.INCOMPLETE
         else if (issues.isNotEmpty()) DraftValidationState.NEEDS_REVIEW
@@ -272,8 +275,8 @@ object RegistrationTextParser {
         }
 
         // 1. Detect and parse Weekday
-        var dayOfWeek = 0
-        var dayName = "شنبه"
+        var dayOfWeek = -1
+        var dayName = ""
         var foundDay = false
         for ((key, pair) in dayPatterns) {
             if (text.contains(key)) {
@@ -288,8 +291,8 @@ object RegistrationTextParser {
         }
 
         // 2. Detect Times (Digit or Word format e.g. "۱۰ تا ۱۲" or "ده تا دوازده")
-        var startTime = "08:00"
-        var endTime = "10:00"
+        var startTime = ""
+        var endTime = ""
         val timeDigitMatch = Regex("""(\d{1,2}(?::\d{2})?)\s*(?:تا|-|الی)\s*(\d{1,2}(?::\d{2})?)""").find(normalizedDigitsText)
         if (timeDigitMatch != null) {
             startTime = DateTimeNormalizer.normalizeTime(timeDigitMatch.groupValues[1])
@@ -320,7 +323,7 @@ object RegistrationTextParser {
         }
 
         // 4. Location Extraction
-        var location = "دانشکده"
+        var location = ""
         var matchedLocationRaw: String? = null
 
         val hasExplicitUnknownLocation = Regex("""(?<=^|\s)(?:کلاس|اتاق|تالار|سالن|مکان|محل برگزاری)\s*[:：]?\s*نامشخص""").containsMatchIn(text)
@@ -339,7 +342,7 @@ object RegistrationTextParser {
         }
 
         // 5. Instructor Extraction (Capturing multi-word names like دکتر سیامک علیپور)
-        var instructor = "استاد دانشکده"
+        var instructor = ""
         var matchedInstructorRaw: String? = null
         val stopTokens = setOf(
             "واحد", "cr", "units",

@@ -36,6 +36,8 @@ enum class CopilotSender {
     SYSTEM
 }
 
+enum class CopilotResponseSource { LOCAL_ANALYSIS, ONLINE_MODEL, ONLINE_UNAVAILABLE }
+
 data class CopilotMessage(
     val id: String,
     val sender: CopilotSender,
@@ -45,5 +47,6 @@ data class CopilotMessage(
     val isActionApplied: Boolean = false,
     val isActionDismissed: Boolean = false,
     val suggestedQuickReplies: List<String> = emptyList(),
-    val confidenceBadge: String? = null
+    val confidenceBadge: String? = null,
+    val responseSource: CopilotResponseSource? = null
 )

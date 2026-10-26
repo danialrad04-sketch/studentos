@@ -24,7 +24,16 @@ interface TaskDao {
     fun getTasksBySemester(semesterId: String): Flow<List<TaskEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTask(task: TaskEntity)
+    suspend fun insertTask(task: TaskEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertTaskOccurrence(task: TaskEntity): Long
+
+    @Query("SELECT * FROM tasks WHERE id = :id LIMIT 1")
+    suspend fun getTaskById(id: Long): TaskEntity?
+
+    @Query("SELECT * FROM tasks WHERE recurrenceParentId = :id LIMIT 1")
+    suspend fun getNextOccurrence(id: Long): TaskEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllTasks(tasks: List<TaskEntity>)

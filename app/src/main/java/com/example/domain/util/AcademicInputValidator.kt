@@ -29,10 +29,11 @@ object AcademicInputValidator {
     fun draftIssues(draft: ParsedCourseDraft): List<String> = buildList {
         if (draft.name.isBlank()) add("نام درس را وارد کنید.")
         if (draft.units !in 1..10) add("تعداد واحد باید بین ۱ تا ۱۰ باشد.")
-        if (draft.dayOfWeek !in 0..6) add("روز کلاس را مشخص کنید.")
+        val hasClassTime = draft.startTime.isNotBlank() || draft.endTime.isNotBlank()
+        if (draft.dayOfWeek !in -1..6 || (hasClassTime && draft.dayOfWeek < 0)) add("روز کلاس را مشخص کنید.")
         val start = time(draft.startTime)
         val end = time(draft.endTime)
-        if (start == null || end == null || start >= end) add("ساعت پایان کلاس باید بعد از شروع باشد.")
+        if (hasClassTime && (start == null || end == null || start >= end)) add("ساعت پایان کلاس باید بعد از شروع باشد.")
         if (draft.examDate.isNotBlank() && JalaliCalendarUtil.parse(draft.examDate) == null) add("تاریخ امتحان معتبر نیست.")
         if (draft.examTime.isNotBlank() && time(draft.examTime) == null) add("ساعت امتحان معتبر نیست.")
         if (draft.examDate.isBlank() != draft.examTime.isBlank()) add("تاریخ و ساعت امتحان را با هم وارد کنید یا هر دو را خالی بگذارید.")

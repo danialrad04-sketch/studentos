@@ -12,7 +12,14 @@ const db = getFirestore();
 const premiumCore = require('./lib/premium-core');
 const { PremiumService } = require('./lib/premium-service');
 const premium = new PremiumService(db);
-const secured = functions.runWith({ enforceAppCheck: true, timeoutSeconds: 60, memory: '256MB', maxInstances: 10, secrets: ['BAZAAR_API_SECRET', 'BAZAAR_RSA_PUBLIC_KEY', 'BILLING_TOKEN_ENCRYPTION_KEY', 'GEMINI_SERVER_API_KEY'] });
+const secured = functions.runWith({ enforceAppCheck: true, timeoutSeconds: 60, memory: '256MB', maxInstances: 10, secrets: ['BAZAAR_API_SECRET', 'BAZAAR_RSA_PUBLIC_KEY', 'BILLING_TOKEN_ENCRYPTION_KEY'] });
+const { AcademicAiService } = require('./lib/ai-service');
+const academicAi = new AcademicAiService(db);
+const aiFunctions = functions.runWith({ enforceAppCheck: true, timeoutSeconds: 55, memory: '256MB', maxInstances: 10, secrets: ['AI_API_KEY'] });
+function aiUser(context) {
+  if (!context.auth?.uid) throw new functions.https.HttpsError('unauthenticated', 'نشست امن دستیار برقرار نشد؛ دوباره تلاش کنید.');
+  return context.auth.uid;
+}
 function member(context) {
   if (!context.auth || context.auth.token.firebase?.sign_in_provider === 'anonymous') throw new functions.https.HttpsError('unauthenticated', 'ابتدا وارد حساب خود شوید؛ اطلاعات مهمان روی دستگاه باقی می‌ماند.');
   return context.auth.uid;
@@ -39,16 +46,21 @@ exports.respondSupportTicket = supportFunctions.https.onCall((data, context) => 
 
 exports.getPremiumCatalog = secured.https.onCall(async (_data, context) => {
   const uid = member(context);
-  return safe(async () => ({ plans: premiumCore.plans(process.env), salesEnabled: premiumCore.ready(process.env, uid), rsaPublicKey: process.env.BAZAAR_RSA_PUBLIC_KEY || '', aiEnabled: !!process.env.GEMINI_SERVER_API_KEY, ...await premium.status(uid) }));
+  return safe(async () => ({ plans: premiumCore.plans(process.env), salesEnabled: premiumCore.ready(process.env, uid), rsaPublicKey: process.env.BAZAAR_RSA_PUBLIC_KEY || '', aiEnabled: !!require('./lib/ai-provider').config(process.env), ...await premium.status(uid) }));
 });
 exports.verifyBazaarSubscription = secured.https.onCall(async (data, context) => {
   const uid = member(context);
   return safe(() => premium.verify(uid, data || {}));
 });
-exports.generateAcademicAdvice = secured.https.onCall(async (data, context) => {
-  const uid = member(context);
-  return safe(() => premium.generate(uid, data || {}));
+exports.getAcademicAiStatus = aiFunctions.https.onCall((_data, context) => {
+  const uid = aiUser(context); return safe(() => academicAi.status(uid));
 });
+exports.generateAcademicAssistantReply = aiFunctions.https.onCall((data, context) => {
+  const uid = aiUser(context); return safe(() => academicAi.generate(uid, data || {}));
+});
+// Preserve the old callable for existing clients when an operator updates it.
+// New Android clients use the distinct endpoint and never fall back to a legacy Gemini deployment.
+exports.generateAcademicAdvice = exports.generateAcademicAssistantReply;
 
 /**
  * Callable Cloud Function: validateAndApplyPromoCode

@@ -18,8 +18,8 @@ android {
     buildConfigField("String", "PREMIUM_FUNCTIONS_REGION", "\"us-central1\"")
     minSdk = 24
     targetSdk = 36
-    versionCode = providers.gradleProperty("VERSION_CODE").orElse("2012").get().toInt()
-    versionName = providers.gradleProperty("VERSION_NAME").orElse("2.4.2").get()
+    versionCode = providers.gradleProperty("VERSION_CODE").orElse("2014").get().toInt()
+    versionName = providers.gradleProperty("VERSION_NAME").orElse("2.6.0").get()
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -151,6 +151,7 @@ dependencies {
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)
   testImplementation(libs.junit)
+  testImplementation("androidx.work:work-testing:2.10.0")
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.robolectric)
   testImplementation(libs.roborazzi)

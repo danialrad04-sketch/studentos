@@ -19,5 +19,6 @@ data class NoteEntity(
     val courseId: String? = null,
     val title: String = "",
     val content: String = "",
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    @androidx.room.ColumnInfo(defaultValue = "0") val isArchived: Boolean = false
 )

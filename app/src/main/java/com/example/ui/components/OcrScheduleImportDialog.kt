@@ -86,7 +86,7 @@ import com.example.ui.theme.BrandIndigo600
 import com.example.ui.theme.Emerald600
 import com.example.ui.theme.Rose600
 import androidx.compose.ui.platform.LocalContext
-import com.example.data.api.GeminiApiClient
+import com.example.data.api.AcademicScheduleAiClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -139,7 +139,7 @@ fun OcrScheduleImportDialog(
         }
     }
 
-    // Real OCR processing using GeminiApiClient vision model
+    // Real OCR processing using AcademicScheduleAiClient vision model
     LaunchedEffect(selectedImageUri, isProcessingOcr) {
         val uri = selectedImageUri
         if (isProcessingOcr && uri != null) {
@@ -164,7 +164,7 @@ fun OcrScheduleImportDialog(
                     return@LaunchedEffect
                 }
                 val mimeType = context.contentResolver.getType(uri) ?: "image/jpeg"
-                val result = GeminiApiClient.extractScheduleFromImage(bytes, mimeType)
+                val result = AcademicScheduleAiClient.extractScheduleFromImage(bytes, mimeType)
                 if (result.isSuccess) {
                     val courses = result.getOrNull().orEmpty()
                     if (courses.isEmpty()) {

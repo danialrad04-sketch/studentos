@@ -26,3 +26,7 @@ functions/.env.*
 !functions/.env.example
 functions/.secret.local
 *-debug.log
+
+# Local backend installs and Python verification caches
+backend/node_modules/
+__pycache__/

@@ -64,9 +64,7 @@ import com.example.domain.model.BadgeTier
 import com.example.domain.model.StudentGamificationProfile
 import com.example.ui.theme.Amber500
 import com.example.ui.theme.Amber600
-import com.example.ui.theme.BrandIndigo600
 import com.example.ui.theme.CyanNeon
-import com.example.ui.theme.Emerald600
 import com.example.ui.theme.Rose600
 import com.example.ui.theme.studentColors
 
@@ -98,6 +96,7 @@ fun StudentGamificationHub(
 
         // 2. Quick Stat Counters Row
         GamificationStatCountersRow(profile = profile)
+        Text("آمار تمرکز و روزهای متوالی از جلسات ثبت‌شده محاسبه می‌شود؛ سوابق حداکثر ۹۰ روز دارای جلسه نگهداری می‌شوند.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
         // 3. Category Filter Chips
         LazyRow(
@@ -118,8 +117,8 @@ fun StudentGamificationHub(
                     },
                     shape = RoundedCornerShape(10.dp),
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = BrandIndigo600,
-                        selectedLabelColor = Color.White
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                     )
                 )
             }
@@ -139,8 +138,8 @@ fun StudentGamificationHub(
                     },
                     shape = RoundedCornerShape(10.dp),
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = BrandIndigo600,
-                        selectedLabelColor = Color.White
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                     )
                 )
             }
@@ -225,31 +224,26 @@ private fun StudentLevelAndStreakHeroCard(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 // Top Row: Level Title & Streak Pill
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(CircleShape)
-                                .background(
-                                    Brush.linearGradient(
-                                        listOf(BrandIndigo600, MaterialTheme.colorScheme.primary)
-                                    )
-                                ),
+                                .background(MaterialTheme.colorScheme.primary),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = "L${profile.level}",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Column {
+                        Column(Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = profile.levelTitle,
@@ -260,7 +254,7 @@ private fun StudentLevelAndStreakHeroCard(
                                 Icon(
                                     imageVector = Icons.Default.MilitaryTech,
                                     contentDescription = null,
-                                    tint = Amber500,
+                                    tint = MaterialTheme.studentColors.streakFire,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -308,9 +302,9 @@ private fun StudentLevelAndStreakHeroCard(
 
                 // XP Progress Bar
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
                             text = "امتیاز تجربه آکادمیک (XP)",
@@ -318,9 +312,9 @@ private fun StudentLevelAndStreakHeroCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "${profile.currentXp} / ${profile.nextLevelXp} XP تا لول بعدی",
+                            text = "${profile.currentXp} از ${profile.nextLevelXp} امتیاز تا سطح بعد",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = BrandIndigo600
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
 
@@ -330,7 +324,7 @@ private fun StudentLevelAndStreakHeroCard(
                             .fillMaxWidth()
                             .height(8.dp)
                             .clip(RoundedCornerShape(4.dp)),
-                        color = BrandIndigo600,
+                        color = MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         strokeCap = StrokeCap.Round
                     )
@@ -360,7 +354,7 @@ private fun GamificationStatCountersRow(
         MiniMetricPill(
             icon = "⏱️",
             title = "تمرکز ثبت‌شده",
-            value = "${profile.focusHoursTotal} ساعت",
+            value = String.format(java.util.Locale.US, "%.1f ساعت", profile.focusHoursTotal),
             modifier = Modifier.weight(1f)
         )
         MiniMetricPill(
@@ -415,11 +409,11 @@ private fun AcademicBadgeCard(
     modifier: Modifier = Modifier
 ) {
     val tierColor = when (badge.tier) {
-        BadgeTier.BRONZE -> Amber600
-        BadgeTier.SILVER -> MaterialTheme.colorScheme.outline
-        BadgeTier.GOLD -> Amber500
-        BadgeTier.PLATINUM -> CyanNeon
-        BadgeTier.DIAMOND -> BrandIndigo600
+        BadgeTier.BRONZE -> MaterialTheme.colorScheme.tertiary
+        BadgeTier.SILVER -> MaterialTheme.colorScheme.onSurfaceVariant
+        BadgeTier.GOLD -> MaterialTheme.studentColors.streakFire
+        BadgeTier.PLATINUM -> MaterialTheme.colorScheme.secondary
+        BadgeTier.DIAMOND -> MaterialTheme.colorScheme.primary
     }
 
     Card(
@@ -510,7 +504,7 @@ private fun AcademicBadgeCard(
                                 .weight(1f)
                                 .height(4.dp)
                                 .clip(RoundedCornerShape(2.dp)),
-                            color = if (badge.isUnlocked) Emerald600 else MaterialTheme.colorScheme.primary,
+                            color = if (badge.isUnlocked) MaterialTheme.studentColors.attendanceSafe else MaterialTheme.colorScheme.primary,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                             strokeCap = StrokeCap.Round
                         )
@@ -533,7 +527,7 @@ private fun AcademicBadgeCard(
                 if (badge.isUnlocked) {
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = Emerald600.copy(alpha = 0.12f)
+                        color = MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.12f)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -543,13 +537,13 @@ private fun AcademicBadgeCard(
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
                                 contentDescription = null,
-                                tint = Emerald600,
+                                tint = MaterialTheme.studentColors.attendanceSafe,
                                 modifier = Modifier.size(12.dp)
                             )
                             Text(
                                 text = "فعال",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = Emerald600
+                                color = MaterialTheme.studentColors.attendanceSafe
                             )
                         }
                     }

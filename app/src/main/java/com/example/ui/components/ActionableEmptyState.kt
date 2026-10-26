@@ -119,7 +119,7 @@ fun ActionableEmptyState(
                         ) {
                             Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(text = primaryActionTitle, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                            Text(text = primaryActionTitle, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -131,7 +131,7 @@ fun ActionableEmptyState(
                         ) {
                             Icon(imageVector = Icons.Default.ContentPaste, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(text = secondaryActionTitle, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            Text(text = secondaryActionTitle, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                         }
                     }
 
@@ -139,11 +139,11 @@ fun ActionableEmptyState(
                         OutlinedButton(
                             onClick = onTertiaryAction,
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth().height(40.dp)
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                         ) {
                             Icon(imageVector = Icons.AutoMirrored.Filled.LibraryBooks, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(text = tertiaryActionTitle, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            Text(text = tertiaryActionTitle, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }

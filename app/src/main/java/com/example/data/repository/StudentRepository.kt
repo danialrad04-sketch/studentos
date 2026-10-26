@@ -64,7 +64,7 @@ class StudentRepository(
         val preferredMajor = majors.find { it.id == currentProfile?.majorId && it.universityId == universityRow?.id && normalizeReferenceText(it.majorDisplayNameFa) == normalizeReferenceText(major) }
         val majorRow = preferredMajor ?: majors.firstOrNull {
             normalizeReferenceText(it.majorDisplayNameFa) == normalizeReferenceText(major) &&
-                (universityRow == null || it.universityId == universityRow.id)
+                (universityRow != null && it.universityId == universityRow.id)
         }
 
         return Triple(universityRow?.id, majorRow?.id, majorRow?.facultyId)
@@ -316,6 +316,26 @@ class StudentRepository(
         dao.insertAttendance(attendanceEntity)
     }
 
+    /** Read and write together so rapid taps do not lose an increment or reset a custom limit. */
+    suspend fun editAttendance(identifier: String, delta: Int = 0, count: Int? = null, limit: Int? = null): AttendanceEntity = withContext(Dispatchers.IO) {
+        require(limit == null || limit in 1..16) { "سقف غیبت باید بین ۱ و ۱۶ جلسه باشد." }
+        val persist: suspend () -> AttendanceEntity = {
+            val records = dao.getAllAttendanceSync()
+            val course = dao.getAllCoursesIncludingArchivedSync().find { it.id == identifier || it.name == identifier }
+            val existing = records.find { it.courseId == (course?.id ?: identifier) }
+                ?: records.find { it.courseName == identifier }
+            require(course != null || existing != null) { "درس پیدا نشد." }
+            val name = course?.name ?: existing!!.courseName
+            val fallbackLimit = if (name.contains("آزمایشگاه") || name.contains("کارگاه")) 2 else 3
+            AttendanceEntity(
+                courseId = course?.id ?: existing!!.courseId, courseName = name,
+                absentCount = (count ?: ((existing?.absentCount ?: 0) + delta)).coerceIn(0, 50),
+                maxAllowed = limit ?: existing?.maxAllowed?.takeIf { it > 0 } ?: fallbackLimit
+            ).also { dao.insertAttendance(it) }
+        }
+        if (database != null) database.withTransaction { persist() } else persist()
+    }
+
     suspend fun updateGrade(grade: GradeEntity) = withContext(Dispatchers.IO) {
         require(grade.midtermGrade.isFinite() && grade.finalGrade.isFinite() && grade.midtermGrade >= 0 && grade.finalGrade >= 0 && grade.midtermGrade + grade.finalGrade <= 20) { "مجموع نمره باید بین صفر و ۲۰ باشد." }
         val persist = suspend {
@@ -329,16 +349,41 @@ class StudentRepository(
     // Tasks
     // ==========================================
     suspend fun saveTask(task: TaskEntity) = withContext(Dispatchers.IO) {
-        dao.insertTask(task)
+        com.example.domain.engine.TaskPlanningEngine.validate(task)
+        val normalized = task.copy(reminderTime = com.example.domain.util.AcademicInputValidator.time(task.reminderTime).orEmpty())
+        normalized.copy(id = dao.insertTask(normalized))
     }
 
     suspend fun updateTask(task: TaskEntity) = withContext(Dispatchers.IO) {
-        require(task.id > 0 && task.title.isNotBlank() && com.example.domain.util.JalaliCalendarUtil.parse(task.dueDate) != null)
-        dao.updateTask(task)
+        require(task.id != 0L)
+        com.example.domain.engine.TaskPlanningEngine.validate(task)
+        dao.updateTask(task.copy(reminderTime = com.example.domain.util.AcademicInputValidator.time(task.reminderTime).orEmpty()))
     }
 
-    suspend fun toggleTaskCompletion(task: TaskEntity) = withContext(Dispatchers.IO) {
-        dao.updateTask(task.copy(isCompleted = !task.isCompleted))
+    suspend fun toggleTaskCompletion(task: TaskEntity, today: com.example.domain.util.JalaliDate = com.example.domain.util.JalaliCalendarUtil.today()) =
+        setTaskCompletion(task.id, null, today)
+
+    suspend fun markTaskCompleted(id: Long, today: com.example.domain.util.JalaliDate = com.example.domain.util.JalaliCalendarUtil.today()) =
+        setTaskCompletion(id, true, today)
+
+    private suspend fun setTaskCompletion(id: Long, completed: Boolean?, today: com.example.domain.util.JalaliDate) = withContext(Dispatchers.IO) {
+        val persist: suspend () -> TaskEntity? = {
+            val stored = dao.getTaskById(id)
+            if (stored != null) {
+                val updated = stored.copy(isCompleted = completed ?: !stored.isCompleted)
+                dao.updateTask(updated)
+                val semester = stored.semesterId?.let { dao.getSemesterById(it) }
+                val course = stored.courseId.takeIf { it.isNotBlank() }?.let { dao.getCourseById(it) }
+                if (updated.isCompleted && (stored.semesterId == null || (semester?.isCurrent == true && !semester.isArchived)) &&
+                    (stored.courseId.isBlank() || (course != null && !course.isArchived)) && dao.getNextOccurrence(stored.id) == null) {
+                    com.example.domain.engine.TaskPlanningEngine.nextDate(stored.dueDate, stored.repeatEveryDays, today)?.let { next ->
+                        dao.insertTaskOccurrence(stored.copy(id = 0, dueDate = next, isCompleted = false, recurrenceParentId = stored.id))
+                    }
+                }
+                updated
+            } else null
+        }
+        if (database != null) database.withTransaction { persist() } else persist()
     }
 
     suspend fun deleteTask(task: TaskEntity) = withContext(Dispatchers.IO) {
@@ -360,6 +405,33 @@ class StudentRepository(
         dao.insertNote(note.copy(updatedAt = System.currentTimeMillis()))
     }
 
+    /** Optimistic note edits preserve concurrent sync updates and archive state. */
+    suspend fun saveStudyNote(note: NoteEntity, creating: Boolean): NoteEntity = withContext(Dispatchers.IO) {
+        val save: suspend () -> NoteEntity = {
+            require(note.id.isNotBlank() && note.id.length <= 128) { "شناسهٔ یادداشت معتبر نیست." }
+            require(note.title.trim().length in 1..180 && note.content.isNotBlank() && note.content.length <= 30000) { "عنوان و متن یادداشت را بررسی کنید." }
+            val existing = dao.getNoteById(note.id)
+            check(if (creating) existing == null else existing != null && existing.updatedAt == note.updatedAt) { "یادداشت تغییر کرده است؛ متن را نگه دارید و نسخهٔ تازه را باز کنید." }
+            check(existing?.isArchived != true) { "ابتدا یادداشت را از بایگانی برگردانید." }
+            val courseId = note.courseId?.ifBlank { null }
+            require(courseId == null || dao.getCourseById(courseId) != null || existing?.courseId == courseId) { "درس انتخاب‌شده پیدا نشد." }
+            val saved = note.copy(title = note.title.trim(), courseId = courseId, isArchived = false,
+                updatedAt = maxOf(System.currentTimeMillis(), (existing?.updatedAt ?: 0L) + 1))
+            dao.insertNote(saved); saved
+        }
+        if (database != null) database.withTransaction { save() } else save()
+    }
+
+    suspend fun setNoteArchived(note: NoteEntity, archived: Boolean): NoteEntity = withContext(Dispatchers.IO) {
+        val save: suspend () -> NoteEntity = {
+            val existing = dao.getNoteById(note.id)
+            check(existing != null && existing.updatedAt == note.updatedAt) { "نسخهٔ یادداشت تغییر کرده؛ دوباره آن را بررسی کنید." }
+            val saved = existing.copy(isArchived = archived, updatedAt = maxOf(System.currentTimeMillis(), existing.updatedAt + 1))
+            dao.insertNote(saved); saved
+        }
+        if (database != null) database.withTransaction { save() } else save()
+    }
+
     suspend fun deleteNote(id: String) = withContext(Dispatchers.IO) {
         dao.deleteNote(id)
     }
@@ -376,7 +448,10 @@ class StudentRepository(
     }
 
     suspend fun updateProfile(profile: StudentProfileEntity) = withContext(Dispatchers.IO) {
-        dao.insertProfile(profile.copy(updatedAt = System.currentTimeMillis()))
+        require(profile.passedUnits >= 0 && profile.activeUnits >= 0) { "تعداد واحد نمی‌تواند منفی باشد." }
+        require(profile.declaredGpa == null || (profile.declaredGpa.isFinite() && profile.declaredGpa in 0.0..20.0)) { "معدل باید بین صفر و بیست باشد." }
+        val (universityId, majorId, facultyId) = resolveReferenceIds(profile.university, profile.major)
+        dao.insertProfile(profile.copy(universityId = universityId, majorId = majorId, facultyId = facultyId, updatedAt = System.currentTimeMillis()))
     }
 
     suspend fun setOnboardingCompleted(
@@ -407,9 +482,9 @@ class StudentRepository(
             declaredPassedCredits = if (passedCredits > 0) passedCredits else current.declaredPassedCredits,
             declaredGpa = if (declaredGpa > 0.0) declaredGpa else current.declaredGpa,
             term = if (currentSemester > 0 && resolvedMajor.isNotBlank()) "ترم $currentSemester $resolvedMajor" else current.term,
-            universityId = referenceUniversityId ?: current.universityId,
-            facultyId = referenceFacultyId ?: current.facultyId,
-            majorId = referenceMajorId ?: current.majorId,
+            universityId = referenceUniversityId,
+            facultyId = referenceFacultyId,
+            majorId = referenceMajorId,
             updatedAt = System.currentTimeMillis()
         )
         dao.insertProfile(updated)
@@ -526,8 +601,13 @@ class StudentRepository(
                         .thenBy { it.instructor.isNotBlank() }
                 ) ?: groupDrafts.first()
 
-                val courseId = UUID.randomUUID().toString()
                 val itemSemId = if (primaryDraft.targetSemester > 0 && primaryDraft.targetSemester != resolvedSemNum) "sem_${primaryDraft.targetSemester}" else activeSemId
+                // Re-running setup/import must not duplicate a course or reset its records.
+                val existingCourse = dao.getCoursesBySemesterSync(itemSemId).firstOrNull {
+                    (primaryDraft.courseCode.isNotBlank() && it.courseCode == primaryDraft.courseCode.trim()) ||
+                        it.name.trim() == primaryDraft.name.trim()
+                }
+                val courseId = existingCourse?.id ?: UUID.randomUUID().toString()
                 val bestProf = groupDrafts.firstOrNull { it.instructor.isNotBlank() }?.instructor ?: primaryDraft.instructor
                 val bestExamDate = groupDrafts.firstOrNull { it.examDate.isNotBlank() }?.examDate ?: primaryDraft.examDate
                 val bestExamTime = groupDrafts.firstOrNull { it.examTime.isNotBlank() }?.examTime ?: primaryDraft.examTime
@@ -535,74 +615,50 @@ class StudentRepository(
                 val bestNotes = groupDrafts.firstOrNull { it.notes.isNotBlank() }?.notes ?: primaryDraft.notes
                 val bestUnits = groupDrafts.maxOf { it.units }
 
-                val entity = CourseEntity(
-                    id = courseId,
+                val entity = (existingCourse ?: CourseEntity(id = courseId, name = primaryDraft.name.trim(),
+                    colorHex = colors[colorIndex % colors.size])).copy(
                     name = primaryDraft.name.trim(),
-                    colorHex = colors[colorIndex % colors.size],
                     units = bestUnits,
                     semesterId = itemSemId,
-                    courseCode = primaryDraft.courseCode,
-                    professor = bestProf,
-                    examDate = bestExamDate,
-                    examTime = bestExamTime,
-                    examLocation = bestExamLoc,
-                    notes = bestNotes
+                    courseCode = primaryDraft.courseCode.trim().ifBlank { existingCourse?.courseCode.orEmpty() },
+                    professor = bestProf.ifBlank { existingCourse?.professor.orEmpty() },
+                    examDate = bestExamDate.ifBlank { existingCourse?.examDate.orEmpty() },
+                    examTime = bestExamTime.ifBlank { existingCourse?.examTime.orEmpty() },
+                    examLocation = bestExamLoc.ifBlank { existingCourse?.examLocation.orEmpty() },
+                    notes = bestNotes.ifBlank { existingCourse?.notes.orEmpty() }
                 )
                 dao.insertCourse(entity)
                 insertedCourses.add(entity)
 
-                // Insert sessions for this logical course (ensure at least 1 session exists)
-                val validSessions = groupDrafts.filter { it.startTime.isNotBlank() && it.endTime.isNotBlank() }
+                // An unknown class time remains unscheduled; never invent a timetable.
+                val existingSessions = dao.getSessionsForCourseSync(courseId)
+                val validSessions = groupDrafts.filter { it.dayOfWeek in 0..6 && it.startTime.isNotBlank() && it.endTime.isNotBlank() }
+                    .distinctBy { Triple(it.dayOfWeek, it.startTime, it.endTime) }
+                    .filter { draft -> existingSessions.none { it.day == draft.dayOfWeek && it.start == draft.startTime && it.end == draft.endTime } }
                 if (validSessions.isNotEmpty()) {
-                    val sessions = validSessions.mapIndexed { sIdx, draft ->
+                    val sessions = validSessions.map { draft ->
                         CourseSessionEntity(
-                            id = "sess_${courseId.take(8)}_$sIdx",
+                            id = "sess_${UUID.randomUUID()}",
                             courseId = courseId,
                             day = draft.dayOfWeek.coerceIn(0, 6),
                             start = draft.startTime,
                             end = draft.endTime,
-                            location = draft.location.ifBlank { "دانشکده" }
+                            location = draft.location
                         )
                     }
                     dao.insertCourseSessions(sessions)
-                } else {
-                    // Create default scheduled slot based on index
-                    val day = (colorIndex % 5)
-                    val start = if (colorIndex % 2 == 0) "08:00" else "10:00"
-                    val end = if (colorIndex % 2 == 0) "10:00" else "12:00"
-                    dao.insertCourseSession(
-                        CourseSessionEntity(
-                            id = "sess_${courseId.take(8)}_0",
-                            courseId = courseId,
-                            day = day,
-                            start = start,
-                            end = end,
-                            location = "دانشکده"
-                        )
-                    )
                 }
                 colorIndex++
 
-                // Attendance with courseId as primary key (counted once per course)
-                dao.insertAttendance(
-                    AttendanceEntity(
-                        courseId = courseId,
-                        courseName = primaryDraft.name.trim(),
-                        absentCount = 0,
-                        maxAllowed = if (primaryDraft.name.contains("آزمایشگاه") || primaryDraft.name.contains("کارگاه")) 2 else 3
-                    )
-                )
-
-                // Grade with courseId foreign key (counted once per course)
-                dao.insertGrade(
-                    GradeEntity(
-                        courseId = courseId,
-                        courseName = primaryDraft.name.trim(),
-                        units = bestUnits,
-                        midtermGrade = 0.0,
-                        finalGrade = 0.0
-                    )
-                )
+                val existingAttendance = dao.getAttendanceByCourseId(courseId)
+                dao.insertAttendance(existingAttendance?.copy(courseName = entity.name) ?: AttendanceEntity(
+                    courseId = courseId, courseName = entity.name, absentCount = 0,
+                    maxAllowed = if (entity.name.contains("آزمایشگاه") || entity.name.contains("کارگاه")) 2 else 3
+                ))
+                val existingGrade = dao.getGradeByCourseId(courseId)
+                dao.insertGrade(existingGrade?.copy(courseName = entity.name, units = entity.units) ?: GradeEntity(
+                    courseId = courseId, courseName = entity.name, units = entity.units
+                ))
 
                 // Exam if date/time present (created once per course)
                 if (bestExamDate.isNotBlank() || bestExamTime.isNotBlank()) {
@@ -611,9 +667,9 @@ class StudentRepository(
                             id = "exam_$courseId",
                             courseId = courseId,
                             courseName = primaryDraft.name.trim(),
-                            date = bestExamDate,
-                            time = bestExamTime,
-                            location = bestExamLoc
+                            date = entity.examDate,
+                            time = entity.examTime,
+                            location = entity.examLocation
                         )
                     )
                 }
@@ -637,9 +693,9 @@ class StudentRepository(
                 currentSemester = resolvedSemNum,
                 term = if (resolvedSemNum > 0 && resolvedProfileMajor.isNotBlank()) "ترم $resolvedSemNum $resolvedProfileMajor" else (current?.term ?: ""),
                 faculty = if (resolvedProfileMajor.isNotBlank()) "دانشکده $resolvedProfileMajor · $totalUnits واحد فعال" else (current?.faculty ?: ""),
-                universityId = referenceUniversityId ?: current?.universityId,
-                facultyId = referenceFacultyId ?: current?.facultyId,
-                majorId = referenceMajorId ?: current?.majorId,
+                universityId = referenceUniversityId,
+                facultyId = referenceFacultyId,
+                majorId = referenceMajorId,
                 isOnboardingCompleted = true,
                 updatedAt = System.currentTimeMillis()
             )
@@ -661,20 +717,32 @@ class StudentRepository(
         entryYear: Int,
         currentSemester: Int,
         passedCredits: Int,
-        currentGpa: Double,
-        selectedCourses: List<CurriculumCourseEntity>
+        currentGpa: Double?,
+        selectedCourses: List<CurriculumCourseEntity>,
+        replaceExisting: Boolean = true
     ) = withContext(Dispatchers.IO) {
         require(university.isNotBlank()) { "دانشگاه باید مشخص شده باشد." }
         require(major.isNotBlank()) { "رشته باید مشخص شده باشد." }
         require(entryYear > 0) { "سال ورود باید مشخص شده باشد." }
         require(currentSemester > 0) { "ترم جاری باید مشخص شده باشد." }
+        require(passedCredits >= 0) { "واحد گذرانده نمی‌تواند منفی باشد." }
+        require(currentGpa == null || (currentGpa.isFinite() && currentGpa in 0.0..20.0)) { "معدل باید بین صفر و بیست باشد." }
 
         val totalActiveUnits = selectedCourses.sumOf { it.units }
-        val activeSemesterId = "sem_$currentSemester"
+        val activeSemesterId = if (replaceExisting) "sem_$currentSemester" else
+            dao.getCurrentSemesterSync()?.id ?: "sem_$currentSemester"
         val calculatedAcademicYear = entryYear + ((currentSemester - 1) / 2)
         val (universityId, majorId, facultyId) = resolveReferenceIds(university, major)
 
         val performSetup: suspend () -> Unit = {
+            val previousProfile = dao.getProfileSync() ?: StudentProfileEntity()
+            val existingCourses = if (replaceExisting) emptyList() else dao.getAllCoursesIncludingArchivedSync()
+            val coursesToAdd = selectedCourses.filter { selected ->
+                existingCourses.none { existing -> existing.semesterId == activeSemesterId &&
+                    ((selected.code.isNotBlank() && existing.courseCode == selected.code) || existing.name == selected.name) }
+            }
+            val resolvedActiveUnits = if (replaceExisting) totalActiveUnits else
+                existingCourses.filter { it.semesterId == activeSemesterId }.sumOf { it.units } + coursesToAdd.sumOf { it.units }
             // 1. Seed complete curriculum catalog for this major if needed
             val fullCurriculum = CurriculumSeedData.getCoursesForMajor(major)
             if (fullCurriculum.isNotEmpty()) {
@@ -682,23 +750,18 @@ class StudentRepository(
             }
 
             // 2. Mark existing semesters as non-current and insert active current semester
+            val existingSemester = if (replaceExisting) null else dao.getSemesterById(activeSemesterId)
             dao.clearCurrentSemesterFlag()
             dao.insertSemester(
-                SemesterEntity(
-                    id = activeSemesterId,
-                    title = "ترم $currentSemester ($major)",
-                    year = calculatedAcademicYear,
-                    academicYear = calculatedAcademicYear,
-                    semesterNumber = currentSemester,
-                    termNumber = currentSemester,
-                    isCurrent = true,
-                    isArchived = false,
-                    totalUnits = totalActiveUnits
+                (existingSemester ?: SemesterEntity(id = activeSemesterId, title = "ترم $currentSemester ($major)")).copy(
+                    year = calculatedAcademicYear, academicYear = calculatedAcademicYear,
+                    semesterNumber = currentSemester, termNumber = currentSemester,
+                    isCurrent = true, isArchived = false, totalUnits = resolvedActiveUnits
                 )
             )
 
             // 3. Update student profile
-            val updatedProfile = StudentProfileEntity(
+            val updatedProfile = previousProfile.copy(
                 id = 1,
                 name = name.ifBlank { "دانشجو" },
                 studentId = studentId.trim(),
@@ -709,9 +772,9 @@ class StudentRepository(
                 passedUnits = passedCredits,
                 declaredPassedCredits = passedCredits,
                 declaredGpa = currentGpa,
-                activeUnits = totalActiveUnits,
+                activeUnits = resolvedActiveUnits,
                 term = "ترم $currentSemester $major",
-                faculty = "دانشکده $major · $totalActiveUnits واحد فعال ترم جاری",
+                faculty = "دانشکده $major · $resolvedActiveUnits واحد فعال ترم جاری",
                 isOnboardingCompleted = true,
                 universityId = universityId,
                 facultyId = facultyId,
@@ -725,15 +788,17 @@ class StudentRepository(
             // 5. Populate active enrolled courses for current semester.
             // Always replace the current local course set; an empty selection means
             // an intentionally empty semester, not "keep whatever was there before".
-            dao.clearCourses()
-            dao.clearCourseSessions()
-            dao.clearAttendance()
-            dao.clearGrades()
-            dao.clearExams()
+            if (replaceExisting) {
+                dao.clearCourses()
+                dao.clearCourseSessions()
+                dao.clearAttendance()
+                dao.clearGrades()
+                dao.clearExams()
+            }
 
             if (selectedCourses.isNotEmpty()) {
                 val colors = listOf("#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#C0CD8C", "#0EA5E9", "#C0CD8C")
-                selectedCourses.forEachIndexed { index, cc ->
+                coursesToAdd.forEachIndexed { index, cc ->
                     val courseId = UUID.randomUUID().toString()
 
                     val course = CourseEntity(

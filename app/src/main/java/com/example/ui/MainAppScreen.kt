@@ -1,5 +1,6 @@
 package com.example.ui
 
+import com.example.ui.theme.studentWorkspaceBackground
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -103,8 +104,14 @@ import java.util.Locale
 @Composable
 fun MainAppScreen(
     studentViewModel: StudentViewModel = viewModel(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    notificationDestinations: kotlinx.coroutines.flow.Flow<String>? = null
 ) {
+    androidx.compose.runtime.LaunchedEffect(notificationDestinations) {
+        notificationDestinations?.collect { destination ->
+            if (destination == "TASKS") studentViewModel.selectTab(AppTab.TASKS)
+        }
+    }
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
 
@@ -212,6 +219,7 @@ fun MainAppScreen(
     // Collect data
     val isAuthInitialized by studentViewModel.isAuthInitialized.collectAsStateWithLifecycle()
     val isOnboardingCompleted by studentViewModel.isOnboardingCompleted.collectAsStateWithLifecycle()
+    val isSavingSetup by studentViewModel.isSavingRecord.collectAsStateWithLifecycle()
     val currentUser by studentViewModel.currentUser.collectAsStateWithLifecycle()
     val guestModeEnabled by studentViewModel.guestModeEnabled.collectAsStateWithLifecycle()
     val courses by studentViewModel.courses.collectAsStateWithLifecycle()
@@ -239,6 +247,8 @@ fun MainAppScreen(
     val planningCollisions by studentViewModel.planningCollisions.collectAsStateWithLifecycle()
     val syncStatus by studentViewModel.syncStatus.collectAsStateWithLifecycle()
     val acceptedStudyPlanIds by studentViewModel.acceptedStudyPlanIds.collectAsStateWithLifecycle()
+    val dailyStudyGoalMinutes by studentViewModel.dailyStudyGoalMinutes.collectAsStateWithLifecycle()
+    val studiedTodayMinutes by studentViewModel.todayFocusMinutes.collectAsStateWithLifecycle()
 
     // Dynamic weighted GPA: calculates accurately from evaluated grades, or falls back to declared GPA from setup
     val evaluatedGrades = grades.filter { it.hasRecordedScore() }
@@ -329,33 +339,34 @@ fun MainAppScreen(
                         modifier = Modifier.testTag("local_onboarding"),
                         initialName = effectiveInitialName,
                         initialStudentId = profile.studentId,
+                        initialPassedCredits = profile.declaredPassedCredits ?: profile.passedUnits,
+                        initialGpa = profile.declaredGpa,
+                        isSaving = isSavingSetup,
+                        revisiting = profile.isOnboardingCompleted,
                         initialUniversity = effectiveInitialUni,
                         initialMajor = effectiveInitialMaj,
                         initialEntryYear = if (profile.entryYear > 0) profile.entryYear else 1403,
                         initialSemester = if (profile.currentSemester > 0) profile.currentSemester else 1,
                         onOpenPrivacyPolicy = { dialogState = AppDialogState.PrivacyPolicy },
                         onCompleteQuickSetup = { name, stdId, uni, maj, yr, sem, passed, gpa, selCourses ->
-                            studentViewModel.completeQuickAcademicSetup(name, stdId, uni, maj, yr, sem, passed, gpa, selCourses)
-                            showOnboardingWizard = false
-                            showAppTourGuide = true
-                            Toast.makeText(context, "سیستم‌عامل تحصیلی با موفقیت راه‌اندازی شد 🚀", Toast.LENGTH_LONG).show()
-                            checkAndRequestNotificationPermission { }
+                            studentViewModel.completeQuickAcademicSetup(name, stdId, uni, maj, yr, sem, passed, gpa, selCourses) {
+                                showOnboardingWizard = false
+                                showAppTourGuide = !profile.isOnboardingCompleted
+                                checkAndRequestNotificationPermission { }
+                            }
                         },
                         onCompleteTextImport = { drafts, name, stdId, uni, maj, yr, sem ->
                             studentViewModel.importParsedCourses(
                                 drafts = drafts,
-                                clearExisting = true,
-                                studentName = name,
-                                studentId = stdId,
-                                university = uni,
-                                major = maj,
-                                entryYear = yr,
-                                currentSemester = sem
+                                clearExisting = false,
+                                studentName = name, studentId = stdId, university = uni, major = maj,
+                                entryYear = yr, currentSemester = sem,
+                                onSaved = {
+                                    showOnboardingWizard = false
+                                    showAppTourGuide = !profile.isOnboardingCompleted
+                                    checkAndRequestNotificationPermission { }
+                                }
                             )
-                            showOnboardingWizard = false
-                            showAppTourGuide = true
-                            Toast.makeText(context, "${drafts.size} درس از برگه انتخاب واحد ثبت شد 📋", Toast.LENGTH_LONG).show()
-                            checkAndRequestNotificationPermission { }
                         },
                         onSkip = { name, stdId, uni, maj, yr, sem ->
                             studentViewModel.setOnboardingCompleted(
@@ -367,10 +378,12 @@ fun MainAppScreen(
                                 entryYear = yr,
                                 currentSemester = sem,
                                 passedCredits = profile.passedUnits,
-                                declaredGpa = profile.declaredGpa ?: 0.0
+                                declaredGpa = profile.declaredGpa ?: 0.0,
+                                onSaved = {
+                                    showOnboardingWizard = false
+                                    checkAndRequestNotificationPermission { }
+                                }
                             )
-                            showOnboardingWizard = false
-                            checkAndRequestNotificationPermission { }
                         }
                     )
                 } else {
@@ -398,14 +411,17 @@ fun MainAppScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.background),
+                            .studentWorkspaceBackground(),
                         contentAlignment = Alignment.TopCenter
                     ) {
+                        AnimatedContent(targetState = selectedTab,
+                            transitionSpec = { fadeIn(animationSpec=tween(220)) togetherWith fadeOut(animationSpec=tween(160)) },
+                            label = "destination_viewport") { visibleTab ->
                         Column(
                             modifier = Modifier
-                                .fillMaxSize()
                                 .widthIn(max = 840.dp)
-                                .verticalScroll(rememberScrollState())
+                                .fillMaxSize()
+                                .then(if (visibleTab in setOf(AppTab.COPILOT, AppTab.SEMESTER_PLANNER, AppTab.HISTORY)) Modifier else Modifier.verticalScroll(rememberScrollState()))
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             val totalCurriculumUnits = when (val state = academicProgressState) {
@@ -415,7 +431,7 @@ fun MainAppScreen(
                             }
 
                             // Show Header and Live Activity ONLY on Dashboard for a clean, focused view on other tabs
-                            if (selectedTab == AppTab.DASHBOARD) {
+                            if (visibleTab == AppTab.DASHBOARD) {
                                 // Apple Dynamic Island / Live Activity Top Capsule
                                 DynamicIslandLiveActivity(
                                     courses = courses,
@@ -443,7 +459,7 @@ fun MainAppScreen(
                             } else {
                                 SubScreenHeaderSection(
                                     onOpenMenu = { showAppMenu = true },
-                                    currentTab = selectedTab,
+                                    currentTab = visibleTab,
                                     onBackToDashboard = {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         studentViewModel.selectTab(AppTab.DASHBOARD)
@@ -476,17 +492,8 @@ fun MainAppScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
 
-                        // Tab Content decomposed into MainTabContent with animated transition
-                        AnimatedContent(
-                            targetState = selectedTab,
-                            transitionSpec = {
-                                (fadeIn(animationSpec = tween(220)) + slideInVertically { height -> height / 24 }) togetherWith
-                                        (fadeOut(animationSpec = tween(160)) + slideOutVertically { height -> -height / 24 })
-                            },
-                            label = "MainTabTransition"
-                        ) { targetTab ->
                             MainTabContent(
-                                selectedTab = targetTab,
+                                selectedTab = visibleTab,
                                 courses = courses,
                                 coursesWithSessions = coursesWithSessions,
                                 attendance = attendance,
@@ -507,6 +514,8 @@ fun MainAppScreen(
                                 primaryPriority = academicPriorities.firstOrNull(),
                                 planningCollisions = planningCollisions,
                                 acceptedStudyPlanIds = acceptedStudyPlanIds,
+                                dailyStudyGoalMinutes = dailyStudyGoalMinutes,
+                                studiedTodayMinutes = studiedTodayMinutes,
                                 onAcceptStudyPlan = { studentViewModel.acceptStudyRecommendation(it) },
                                 pomodoroSeconds = pomodoroSeconds,
                                 isPomodoroRunning = isPomodoroRunning,
@@ -537,7 +546,7 @@ fun MainAppScreen(
                                 onOpenPremium = { dialogState = AppDialogState.Upgrade }
                             )
                         }
-                        } // scrolling destination column
+                        } // destination animation
                     } // destination content box
                     } // StudentAppScaffold
                     } // StudentNavigationDrawer

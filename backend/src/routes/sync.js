@@ -77,7 +77,7 @@ router.put('/:dataType', async (req, res) => {
   }
   const parsed = z
     .object({
-      payload: z.any(),
+      payload: z.any().refine((value) => value !== undefined),
       updatedAt: z.number().int().nonnegative(),
     })
     .safeParse(req.body);
@@ -94,27 +94,29 @@ router.put('/:dataType', async (req, res) => {
   }
 
   try {
-    const existing = await pool.query(
-      'SELECT updated_at FROM user_data WHERE user_id = $1 AND data_type = $2',
-      [req.userId, dataType]
+    // node-postgres encodes JavaScript arrays as PostgreSQL arrays unless we
+    // serialize explicitly. Every academic list must be stored as JSONB.
+    // Enforce LWW in the upsert itself so concurrent writers cannot roll back
+    // a newer snapshot after both passed a separate SELECT check.
+    const write = await pool.query(
+      `INSERT INTO user_data (user_id, data_type, payload, updated_at)
+       VALUES ($1, $2, $3::jsonb, $4)
+       ON CONFLICT (user_id, data_type)
+       DO UPDATE SET payload = EXCLUDED.payload, updated_at = EXCLUDED.updated_at
+       WHERE user_data.updated_at < EXCLUDED.updated_at
+       RETURNING updated_at`,
+      [req.userId, dataType, JSON.stringify(payload), updatedAt]
     );
-
-    if (existing.rows[0] && Number(existing.rows[0].updated_at) >= updatedAt) {
-      // Server already has an equal-or-newer version — tell the client so
-      // it can pull and reconcile instead of assuming its push "won".
+    if (write.rowCount === 0) {
+      const current = await pool.query(
+        'SELECT updated_at FROM user_data WHERE user_id = $1 AND data_type = $2',
+        [req.userId, dataType]
+      );
       return res.status(409).json({
         error: 'STALE_WRITE',
-        serverUpdatedAt: Number(existing.rows[0].updated_at),
+        serverUpdatedAt: Number(current.rows[0]?.updated_at || 0),
       });
     }
-
-    await pool.query(
-      `INSERT INTO user_data (user_id, data_type, payload, updated_at)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (user_id, data_type)
-       DO UPDATE SET payload = EXCLUDED.payload, updated_at = EXCLUDED.updated_at`,
-      [req.userId, dataType, payload, updatedAt]
-    );
     return res.json({ ok: true, updatedAt });
   } catch (err) {
     console.error('[sync/push]', err);

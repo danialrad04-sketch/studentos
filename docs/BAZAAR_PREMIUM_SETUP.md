@@ -1,4 +1,6 @@
-# Student Pro / Cafe Bazaar — 2.3.0
+# Student Pro / Cafe Bazaar — راهنمای قرارداد پرداخت
+
+> دستیار در مسیر جدید بدون نیاز به اشتراک کار می‌کند. برای تنظیم مدل مستقل از Gemini به [AI_SETUP_FA.md](AI_SETUP_FA.md) مراجعه کنید. سیاست فروش عمومی فعلی همچنان غیرفعال است.
 
 این نسخه قرارداد پرداخت را به Firebase Functions وصل می‌کند. هیچ کلیک، کد داخلی، توکن تأییدنشده یا پاسخ صرفاً موفق SDK دسترسی پولی ایجاد نمی‌کند. ریلیز منتشرشدهٔ 2.2.0 تغییر نمی‌کند.
 
@@ -49,18 +51,17 @@
 
 از حسابی که همین پروژهٔ Firebase برنامه را مدیریت می‌کند استفاده کنید. فایل google-services.json همان پروژه و امضای تولید موجود حفظ می‌شوند. Functions در `us-central1` فراخوانی می‌شوند؛ اگر منطقهٔ استقرار قبلی متفاوت است مقدار `PREMIUM_FUNCTIONS_REGION` در Gradle را با منطقهٔ استقرار یکسان کنید.
 
-چهار مقدار زیر فقط در Firebase Secret Manager ثبت می‌شوند؛ آن‌ها را در چت، مخزن، فایل `.env` برنامه یا صفحهٔ حساب کاربران وارد نکنید:
+سه مقدار پرداخت زیر فقط در Firebase Secret Manager ثبت می‌شوند؛ آن‌ها را در چت، مخزن، فایل `.env` برنامه یا صفحهٔ حساب کاربران وارد نکنید:
 
 ```sh
 npx firebase-tools@15.32.1 functions:secrets:set BAZAAR_API_SECRET --project YOUR_PROJECT_ID
 npx firebase-tools@15.32.1 functions:secrets:set BAZAAR_RSA_PUBLIC_KEY --project YOUR_PROJECT_ID
 npx firebase-tools@15.32.1 functions:secrets:set BILLING_TOKEN_ENCRYPTION_KEY --project YOUR_PROJECT_ID
-npx firebase-tools@15.32.1 functions:secrets:set GEMINI_SERVER_API_KEY --project YOUR_PROJECT_ID
 ```
 
 کلید رمزگذاری باید ۳۲ بایت تصادفی به صورت Base64 باشد. این کلید را پس از ثبت خریدها خودسرانه عوض نکنید؛ چرخش آن نیاز به رمزگذاری مجدد توکن‌های ذخیره‌شده دارد.
 
-`functions/.env.example` را به `functions/.env.YOUR_PROJECT_ID` کپی کنید. فروش ابتدا `false` می‌ماند. مدل فعلی پیش‌فرض سرور `gemini-3.5-flash-lite` است؛ مدل و هزینه/ظرفیت آن را از https://ai.google.dev/gemini-api/docs/models و حساب Google بررسی کنید. کلید Google هرگز به کلاینت برگردانده نمی‌شود. Firebase Functions و API مدل باید روی همین پروژه فعال و حساب صورتحساب آماده باشند.
+`functions/.env.example` را به `functions/.env.YOUR_PROJECT_ID` کپی کنید. فروش ابتدا `false` می‌ماند. راه‌اندازی مدل، کلید `AI_API_KEY` و سهمیهٔ رایگان دستیار مستقل از پرداخت است و در راهنمای AI توضیح داده شده است. Firebase Functions نیازمند حساب صورتحساب آماده است.
 
 ```sh
 npm --prefix functions ci
@@ -69,7 +70,7 @@ npx firebase-tools@15.32.1 deploy --only functions,firestore:rules --project YOU
 
 App Check برای توابع جدید اجباری است. **آن را برای حل خطای نصب بازار خاموش نکنید.** تنظیمات Play Integrity همین package و certificate را برای انتشار خارج از Google Play بررسی کنید؛ الزام‌های PLAY_RECOGNIZED و LICENSED باید با مسیر انتشار بازار سازگار باشند. ثبت Debug Token فقط برای build آزمایشی است. راهنمای رسمی: https://firebase.google.com/docs/app-check/android/play-integrity-provider
 
-TTL روی فیلد `expiresAt` در `aiRequests` و `aiUsage` فعال کنید تا داده‌های حسابداری سهمیه حذف شوند. محتوی گفت‌وگو، عکس و پاسخ در این مجموعه‌ها ذخیره نمی‌شود. ارسال عکس تنها پس از انتخاب و تأیید کاربر است. ساعت بازنشانی سهمیه نیمه‌شب تهران است. خطای provider سهمیهٔ رزروشده را برمی‌گرداند؛ سقف درخواست/پاسخ و timeout و maxInstances محدودند. خریدهای بازار هنگام دریافت وضعیت/درخواست AI، پس از حداکثر پنج دقیقه دوباره بررسی می‌شوند؛ این نسخه ادعای webhook لحظه‌ای بازپرداخت ندارد.
+TTL روی فیلد `expiresAt` در `aiRequests` و `aiUsage` فعال کنید تا داده‌های حسابداری سهمیه حذف شوند. محتوی گفت‌وگو، عکس و پاسخ در این مجموعه‌ها ذخیره نمی‌شود. ارسال عکس تنها پس از انتخاب و تأیید کاربر است. ساعت بازنشانی سهمیه نیمه‌شب تهران است. خطای provider سهمیهٔ رزروشده را برمی‌گرداند؛ سقف درخواست/پاسخ و timeout و maxInstances محدودند. خریدهای بازار هنگام دریافت وضعیت اشتراک، پس از حداکثر پنج دقیقه دوباره بررسی می‌شوند؛ این نسخه ادعای webhook لحظه‌ای بازپرداخت ندارد.
 
 ## پیش از فعال‌سازی فروش
 

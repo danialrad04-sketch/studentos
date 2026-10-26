@@ -335,6 +335,10 @@ fun TaskCard(
                         textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
                     )
 
+                    if (task.repeatEveryDays > 0 || task.reminderTime.isNotBlank()) Text(
+                        listOfNotNull(if (task.repeatEveryDays > 0) "تکرار هر ${task.repeatEveryDays} روز" else null,
+                            if (task.reminderTime.isNotBlank()) "یادآور ${task.reminderTime} · تهران" else null).joinToString(" · "),
+                        style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Row(

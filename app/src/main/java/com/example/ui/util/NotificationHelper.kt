@@ -54,7 +54,8 @@ object NotificationHelper {
         title: String,
         message: String,
         isDanger: Boolean = false,
-        notificationId: Int = System.currentTimeMillis().toInt()
+        notificationId: Int = System.currentTimeMillis().toInt(),
+        destinationTab: String? = null
     ): Boolean {
         if (!com.example.data.repository.AppPreferencesRepository.getInstance(context).notificationsEnabled.value) return false
         initNotificationChannel(context)
@@ -80,10 +81,11 @@ object NotificationHelper {
         try {
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                destinationTab?.let { putExtra("destination_tab", it) }
             }
             val pendingIntent = PendingIntent.getActivity(
                 context,
-                0,
+                notificationId,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0)
             )

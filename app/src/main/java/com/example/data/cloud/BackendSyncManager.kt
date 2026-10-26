@@ -2,6 +2,7 @@ package com.example.data.cloud
 
 import android.content.Context
 import android.util.Log
+import androidx.room.withTransaction
 import com.example.data.api.backend.BackendApiClient
 import com.example.data.api.backend.SyncPushRequest
 import com.example.data.local.AppDatabase
@@ -147,8 +148,14 @@ object BackendSyncManager {
                 val t = Types.newParameterizedType(List::class.java, TaskEntity::class.java)
                 val items = decode<List<TaskEntity>>(payload, t)
                     ?: throw IllegalStateException("Invalid tasks payload; local data preserved")
-                dao.clearTasks()
-                if (items.isNotEmpty()) dao.insertAllTasks(items)
+                items.forEach { com.example.domain.engine.TaskPlanningEngine.validate(it) }
+                require(items.map { it.id }.distinct().size == items.size) { "Duplicate task IDs" }
+                val parents = items.mapNotNull { it.recurrenceParentId }
+                require(parents.distinct().size == parents.size) { "Duplicate task recurrence" }
+                AppDatabase.getDatabase(context).withTransaction {
+                    dao.clearTasks()
+                    if (items.isNotEmpty()) dao.insertAllTasks(items)
+                }
             }
             "notes" -> {
                 val t = Types.newParameterizedType(List::class.java, NoteEntity::class.java)

@@ -70,6 +70,7 @@ import com.example.domain.model.EvaluatedCurriculumCourse
 import com.example.domain.model.GpaState
 import com.example.ui.models.AcademicProgressUiState
 import com.example.ui.models.CurriculumMatchUiState
+import com.example.ui.theme.studentColors
 import com.example.ui.theme.Amber600
 import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.Emerald600
@@ -291,8 +292,8 @@ private fun PassportContent(
         if (note != null) {
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = Amber600.copy(alpha = 0.1f),
-                border = androidx.compose.foundation.BorderStroke(0.8.dp, Amber600.copy(alpha = 0.3f)),
+                color = MaterialTheme.studentColors.attendanceWarning.copy(alpha = 0.1f),
+                border = androidx.compose.foundation.BorderStroke(0.8.dp, MaterialTheme.studentColors.attendanceWarning.copy(alpha = 0.3f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -302,7 +303,7 @@ private fun PassportContent(
                     Icon(
                         imageVector = Icons.Default.Info,
                         contentDescription = "توجه",
-                        tint = Amber600,
+                        tint = MaterialTheme.studentColors.attendanceWarning,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
@@ -359,7 +360,7 @@ private fun KeyMetricsRow(progress: AcademicProgress) {
             title = "باقیمانده",
             value = "${progress.remainingCredits}",
             sub = "واحد",
-            accentColor = Amber600,
+            accentColor = MaterialTheme.studentColors.attendanceWarning,
             modifier = Modifier.weight(1f)
         )
         MetricTile(
@@ -567,12 +568,12 @@ private fun GpaAndConfidenceCard(progress: AcademicProgress) {
                 DataConfidence.CREDIT_ONLY -> Triple(
                     "فقط مجموع واحد (Credit Only)",
                     "واحدهای گذرانده به صورت خوداظهاری ثبت شده؛ ریز دروس ترم‌های قبل وارد نشده است.",
-                    Amber600
+                    MaterialTheme.studentColors.attendanceWarning
                 )
                 DataConfidence.PARTIAL_HISTORY -> Triple(
                     "تاریخچه ناقص (Partial History)",
                     "مجموع واحدهای سوابق دروس با مجموع واحدهای گذرانده مغایرت دارد.",
-                    Amber600
+                    MaterialTheme.studentColors.attendanceWarning
                 )
                 DataConfidence.UNKNOWN -> Triple(
                     "نامشخص (Unknown)",
@@ -678,7 +679,7 @@ private fun CourseReadinessCard(
                     symbol = "◉",
                     label = "ترم جاری",
                     count = output.currentCourses.size,
-                    color = Amber600,
+                    color = MaterialTheme.studentColors.attendanceWarning,
                     modifier = Modifier.weight(1f)
                 )
             }

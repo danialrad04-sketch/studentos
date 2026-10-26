@@ -135,7 +135,7 @@ jobs:
   release-artifact-validation:
     runs-on: ubuntu-latest
     timeout-minutes: 35
-    needs: [android-quality, backend-quality, instrumented-smoke]
+    # Artifact creation does not publish. All quality jobs still gate overall CI.
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -180,7 +180,7 @@ jobs:
           test -s "$AAB"
           "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner" verify --verbose "$APK"
           BADGING="$("$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/aapt" dump badging "$APK")"
-          echo "$BADGING" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='2012' versionName='2.4.2'"
+          echo "$BADGING" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='2014' versionName='2.6.0'"
           EXPECTED_SHA256="a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950"
           EXPECTED_SHA1="b25fe31884ec18a96ae09e6fc0070fd20717a766"
           KEY_SHA256="$(keytool -list -v -keystore "$KEYSTORE_PATH" -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" | awk -F': ' '/SHA256:/{print $2; exit}' | tr -d ':' | tr '[:upper:]' '[:lower:]')"
@@ -201,7 +201,7 @@ jobs:
       - name: Audit final packaged permissions and production policy
         run: |
           python3 scripts/check_bazaar_release.py app/build/outputs/apk/release/app-release.apk \
-            --version-code 2012 --version-name 2.4.2 --output bazaar-output/release-evidence.json
+            --version-code 2014 --version-name 2.6.0 --output bazaar-output/release-evidence.json
 
       - name: Prepare the verified Cafe Bazaar upload pair
         env:
@@ -210,20 +210,20 @@ jobs:
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
-          cp app/build/outputs/apk/release/app-release.apk bazaar-output/StudentOS-2.4.2.apk
-          cp app/build/outputs/bundle/release/app-release.aab bazaar-output/StudentOS-2.4.2.aab
-          bash scripts/generate_bazaar_bin.sh bazaar-output/StudentOS-2.4.2.aab bazaar-output/StudentOS-2.4.2.bin
-          cp docs/BAZAAR_COMPLIANCE_2_4_2.md bazaar-output/README-BAZAAR.md
-          cp docs/BAZAAR_SUBMISSION_2_4_2_FA.md bazaar-output/BAZAAR-SUBMISSION-FA.md
+          cp app/build/outputs/apk/release/app-release.apk bazaar-output/StudentOS-2.6.0.apk
+          cp app/build/outputs/bundle/release/app-release.aab bazaar-output/StudentOS-2.6.0.aab
+          bash scripts/generate_bazaar_bin.sh bazaar-output/StudentOS-2.6.0.aab bazaar-output/StudentOS-2.6.0.bin
+          cp docs/BAZAAR_COMPLIANCE_2_6_0.md bazaar-output/README-BAZAAR.md
+          cp docs/BAZAAR_SUBMISSION_2_6_0_FA.md bazaar-output/BAZAAR-SUBMISSION-FA.md
           cd bazaar-output
-          sha256sum StudentOS-2.4.2.apk StudentOS-2.4.2.aab StudentOS-2.4.2.bin > SHA256SUMS.txt
-          zip CafeBazaar-2.4.2.zip StudentOS-2.4.2.aab StudentOS-2.4.2.bin README-BAZAAR.md BAZAAR-SUBMISSION-FA.md release-evidence.json SHA256SUMS.txt
-          unzip -t CafeBazaar-2.4.2.zip
+          sha256sum StudentOS-2.6.0.apk StudentOS-2.6.0.aab StudentOS-2.6.0.bin > SHA256SUMS.txt
+          zip CafeBazaar-2.6.0.zip StudentOS-2.6.0.aab StudentOS-2.6.0.bin README-BAZAAR.md BAZAAR-SUBMISSION-FA.md release-evidence.json SHA256SUMS.txt
+          unzip -t CafeBazaar-2.6.0.zip
 
       - name: Upload Cafe Bazaar package (not published)
         uses: actions/upload-artifact@v4
         with:
-          name: studentos-bazaar-2.4.2
+          name: studentos-bazaar-2.6.0
           path: bazaar-output/
           if-no-files-found: error
           retention-days: 30
@@ -287,35 +287,93 @@ jobs:
             app/build/outputs/androidTest-results/
           if-no-files-found: ignore
 
+  build-upgrade-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      # Pin source because the exact Bazaar binary was not identified by the owner.
+      # Building from source avoids relying on expiring Actions artifacts.
+      - name: Checkout selected 2012 source baseline
+        uses: actions/checkout@v4
+        with:
+          ref: cc05e963fc9ec3b4a99499c20cf3c36a286b79a4
+          path: baseline-2012
+      - name: Set up baseline JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build and verify selected 2.4.2 baseline
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          KEYSTORE_PATH: ${{ runner.temp }}/baseline-signing.jks
+          STORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+        run: |
+          test -n "$RELEASE_KEYSTORE_BASE64"
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          ./baseline-2012/gradlew -p baseline-2012 assembleRelease -PVERSION_CODE=2012 -PVERSION_NAME=2.4.2 --no-daemon --max-workers=2
+          cp baseline-2012/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/previous.apk"
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          "$BUILD_TOOLS/aapt" dump badging "$RUNNER_TEMP/previous.apk" | grep -F "package: name='com.aistudio.studentos.appvzk' versionCode='2012' versionName='2.4.2'"
+          "$BUILD_TOOLS/apksigner" verify --print-certs "$RUNNER_TEMP/previous.apk" | grep -F 'a335e71031ec78a7961656b2c36d8c53abcb3bdc28e265998cf6053fb94eb950'
+          mkdir -p build/signed-release-smoke
+          echo 'Selected source: cc05e963fc9ec3b4a99499c20cf3c36a286b79a4 (2012 / 2.4.2); exact store binary unverified.' > build/signed-release-smoke/baseline.txt
+          sha256sum "$RUNNER_TEMP/previous.apk" >> build/signed-release-smoke/baseline.txt
+          rm "$KEYSTORE_PATH"
+      - name: Package selected source baseline for this run
+        run: |
+          mkdir -p baseline-output
+          cp "$RUNNER_TEMP/previous.apk" baseline-output/previous.apk
+          cp build/signed-release-smoke/baseline.txt baseline-output/baseline.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: studentos-upgrade-baseline-2012
+          path: baseline-output/
+          if-no-files-found: error
+
   signed-release-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: release-artifact-validation
+    timeout-minutes: 35
+    needs: [release-artifact-validation, build-upgrade-baseline]
     steps:
       - uses: actions/checkout@v4
       - name: Download exact verified APK
         uses: actions/download-artifact@v4
         with:
-          name: studentos-bazaar-2.4.2
+          name: studentos-bazaar-2.6.0
           path: bazaar-candidates
-      - name: Download previous production APK for real upgrade testing
-        run: curl --fail --location --retry 3 https://github.com/danialrad04-sketch/studentos/releases/download/v2.4.1/StudentOS-2.4.1.apk --output "$RUNNER_TEMP/previous.apk"
+      - name: Download this run's verified 2012 baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: studentos-upgrade-baseline-2012
+          path: baseline-candidates
+      - name: Preserve baseline provenance
+        run: |
+          mkdir -p build/signed-release-smoke
+          cp baseline-candidates/baseline.txt build/signed-release-smoke/baseline.txt
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      - name: Test actual signed release offline and update from 2.4.1
+      - name: Test actual signed release offline and update from selected 2.4.2 baseline
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
           target: google_apis
           arch: x86_64
-          profile: pixel_7_pro
+          # Keep the software-rendered emulator within hosted-runner resources.
+          # The previous 1440p Pixel launcher ANR blocked the upgrade test.
+          profile: pixel_2
           avd-name: studentos-release-api35
+          disable-animations: true
           force-avd-creation: true
           emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
-          script: python3 scripts/smoke_bazaar_release.py --previous-apk "$RUNNER_TEMP/previous.apk" --candidate-apk bazaar-candidates/StudentOS-2.4.2.apk --output build/signed-release-smoke
+          script: python3 scripts/smoke_bazaar_release.py --previous-apk baseline-candidates/previous.apk --candidate-apk bazaar-candidates/StudentOS-2.6.0.apk --output build/signed-release-smoke
       - name: Upload signed release device evidence
         if: always()
         uses: actions/upload-artifact@v4

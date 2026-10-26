@@ -17,6 +17,8 @@ enum class AppTab(
     COPILOT("دستیار هوشمند", "🤖"),
     ACADEMIC_INTELLIGENCE("هوش تحصیلی", "🧠"),
     PASSPORT("شناسنامه تحصیلی", "📜"),
+    AGENDA("برنامهٔ هفته", "📅"),
+    NOTES("دفتر یادداشت درسی", "📝"),
     SCHEDULE("برنامه کلاسی", "🗓️"),
     ATTENDANCE("حضور و غیاب", "🚨"),
     TASKS("تکالیف و پروژه", "📋"),

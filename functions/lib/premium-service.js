@@ -52,39 +52,7 @@ class PremiumService {
     return { ...core.entitlement(user, this.clock()), dailyAiQuotaUsed: usage.chat || 0, dailyScanQuotaUsed: usage.schedule || 0 };
   }
   async generate(uid, data) {
-    const request = core.aiRequest(data);
-    if (!this.env.GEMINI_SERVER_API_KEY) core.fail('failed-precondition', 'دستیار آنلاین هنوز فعال نشده است.');
-    const status = await this.status(uid);
-    if (['coach', 'exam', 'review'].includes(request.kind) && status.tier === 'FREE') core.fail('permission-denied', 'ابزارهای مربی مطالعه، مرور امتحان و تحلیل پیشرفت در اشتراک پرو در دسترس‌اند.');
-    const now = this.clock();
-    const day = new Date(now + 210 * 60000).toISOString().slice(0, 10);
-    const field = request.kind === 'schedule' ? 'schedule' : 'chat';
-    const limit = field === 'schedule' ? status.maxDailyScanQuota : status.maxDailyAiQuota;
-    const ref = this.db.collection('aiUsage').doc(core.hash(uid + day));
-    const job = this.db.collection('aiRequests').doc(core.hash(uid + core.requireText(data.requestId, 16, 128)));
-    await this.db.runTransaction(async tx => {
-      const previous = await tx.get(job);
-      const usage = (await tx.get(ref)).data() || {};
-      if (previous.exists) core.fail('already-exists', 'این درخواست قبلاً ارسال شده؛ درخواست تازه‌ای بفرستید.');
-      if ((usage[field] || 0) >= limit) core.fail('resource-exhausted', 'سهمیهٔ امروز تمام شده؛ فردا دوباره در دسترس است.');
-      if (now - (usage.lastAt || 0) < 2000) core.fail('resource-exhausted', 'چند لحظه صبر کنید و دوباره بفرستید.');
-      tx.set(ref, { [field]: (usage[field] || 0) + 1, lastAt: now, expiresAt: new Date(now + 7 * 86400000) }, { merge: true });
-      tx.create(job, { uid, status: 'pending', expiresAt: new Date(now + 86400000) });
-    });
-    try {
-      const response = await core.generateAi(request, this.env, this.fetcher);
-      await job.set({ status: 'completed' }, { merge: true });
-      return { ...response, ...await this.status(uid, false) };
-    } catch (error) {
-      await this.db.runTransaction(async tx => {
-        const state = (await tx.get(job)).data() || {};
-        const usage = (await tx.get(ref)).data() || {};
-        if (state.status !== 'pending') return;
-        tx.set(ref, { [field]: Math.max(0, (usage[field] || 0) - 1) }, { merge: true });
-        tx.set(job, { status: 'failed' }, { merge: true });
-      });
-      throw error;
-    }
+    return new (require('./ai-service').AcademicAiService)(this.db, this.env, this.fetcher, this.clock).generate(uid, data);
   }
 }
 module.exports = { PremiumService };

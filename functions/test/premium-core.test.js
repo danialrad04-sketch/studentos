@@ -5,7 +5,7 @@ const crypto = require('node:crypto');
 const core = require('../lib/premium-core');
 const { PremiumService } = require('../lib/premium-service');
 const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
-const env = { BAZAAR_RSA_PUBLIC_KEY: publicKey.export({ format: 'der', type: 'spki' }).toString('base64'), BAZAAR_API_SECRET: 'test-only', BILLING_TOKEN_ENCRYPTION_KEY: crypto.randomBytes(32).toString('base64'), GEMINI_SERVER_API_KEY: 'test-only', PREMIUM_SALES_ENABLED: 'true' };
+const env = { BAZAAR_RSA_PUBLIC_KEY: publicKey.export({ format: 'der', type: 'spki' }).toString('base64'), BAZAAR_API_SECRET: 'test-only', BILLING_TOKEN_ENCRYPTION_KEY: crypto.randomBytes(32).toString('base64'), PREMIUM_SALES_ENABLED: 'true' };
 let now = 1900000000000;
 function signed(overrides = {}, owner = 'owner') {
   const originalJson = JSON.stringify({ packageName: core.PACKAGE, productId: core.PLANS[0].productId, purchaseState: 0, developerPayload: 'studentos:' + owner, purchaseToken: 'initial-token', ...overrides });
@@ -13,23 +13,7 @@ function signed(overrides = {}, owner = 'owner') {
 }
 function active(overrides = {}) { return { subscriptions: [{ kind: 'androidpublisher#subscriptionPurchase', sku: core.PLANS[0].productId, validUntilTimestampMsec: now + 86400000, autoRenewing: false, linkedSubscriptionToken: 'stable-linked-id', ...overrides }] }; }
 const response = (body, status = 200) => ({ ok: status < 300, status, json: async () => body });
-class MemoryFirestore {
-  constructor() { this.rows = new Map(); this.tail = Promise.resolve(); }
-  collection(name) { return { doc: id => this.ref(name + '/' + id) }; }
-  ref(path) { return { path, get: async () => this.snapshot(path), set: async (data, options) => this.write(path, data, options) }; }
-  snapshot(path) { const row = this.rows.get(path); return { exists: row != null, data: () => row == null ? undefined : structuredClone(row) }; }
-  write(path, data, options) { this.rows.set(path, options?.merge ? { ...(this.rows.get(path) || {}), ...data } : data); }
-  runTransaction(action) {
-    const result = this.tail.then(async () => {
-      const writes = [];
-      const tx = { get: ref => ref.get(), set: (ref, data, options) => writes.push([ref.path, data, options]), create: (ref, data) => { assert.equal(this.rows.has(ref.path), false); writes.push([ref.path, data]); } };
-      const result = await action(tx);
-      for (const args of writes) this.write(...args);
-      return result;
-    });
-    this.tail = result.catch(() => {}); return result;
-  }
-}
+const { MemoryFirestore } = require('./helpers/memory-firestore');
 test('signed receipts reject tampering, package mismatch, refunds, unknown SKUs and a different account', () => {
   assert.equal(core.receipt(signed(), 'owner', env).token, 'initial-token');
   assert.throws(() => core.receipt({ ...signed(), originalJson: signed().originalJson + ' ' }, 'owner', env), /امضای/);
@@ -51,7 +35,7 @@ test('sales fail closed without all secrets and an explicit operational sales sw
   assert.equal(core.ready(testOnly, 'tester-a'), true);
   assert.equal(core.ready(testOnly, 'tester'), false);
   assert.equal(core.ready(testOnly), false);
-  assert.equal(core.ready({ ...testOnly, GEMINI_SERVER_API_KEY: '' }, 'tester-a'), false);
+  assert.equal(core.ready({ ...testOnly, AI_API_KEY: '' }, 'tester-a'), true);
 });
 test('active-subscription API uses the new private header and works with renewal tokens', async () => {
   const result = await core.bazaarSubscription('renewal/token', env, async (url, options) => {
@@ -98,49 +82,6 @@ test('Bazaar outages never grant new access or destroy a valid recorded purchase
   await assert.rejects(service.status('owner'), /ارتباط با بازار/);
   assert.equal(db.rows.get('users/owner').subscriptionTier, 'PRO');
 });
-test('premium study tools cannot be invoked by a free account even with a modified client', async () => {
-  const service = new PremiumService(new MemoryFirestore(), env);
-  for (const kind of ['coach', 'exam', 'review']) await assert.rejects(service.generate('free', { kind, prompt: 'plan', requestId: crypto.randomUUID() }), /اشتراک پرو/);
-});
-test('quota is transactional, duplicate requests cannot be charged twice, and failed generation refunds quota', async () => {
-  const db = new MemoryFirestore(); let time = now; let fails = false;
-  const service = new PremiumService(db, env, async () => { if (fails) return response({}, 503); return response({ candidates: [{ content: { parts: [{ text: 'پاسخ تست' }] } }] }); }, () => time);
-  const request = { prompt: 'help', requestId: crypto.randomUUID() };
-  const concurrent = await Promise.allSettled([service.generate('free', request), service.generate('free', request)]);
-  assert.equal(concurrent.filter(r => r.status === 'fulfilled').length, 1);
-  assert.equal((await service.status('free')).dailyAiQuotaUsed, 1);
-  fails = true; time += 3000;
-  await assert.rejects(service.generate('free', { ...request, requestId: crypto.randomUUID() }), /سهمیه شما کسر نشد/);
-  assert.equal((await service.status('free')).dailyAiQuotaUsed, 1);
-  fails = false;
-  for (let i = 0; i < 4; i++) { time += 3000; await service.generate('free', { ...request, requestId: crypto.randomUUID() }); }
-  time += 3000;
-  await assert.rejects(service.generate('free', { ...request, requestId: crypto.randomUUID() }), /سهمیهٔ امروز/);
-  assert.equal((await service.status('free')).dailyAiQuotaUsed, 5);
-  assert.equal(JSON.stringify([...db.rows.values()]).includes('پاسخ تست'), false);
-});
-test('provider errors never expose its private key or raw response', async () => {
-  await assert.rejects(core.generateAi(core.aiRequest({ prompt: 'help' }), env, async () => { throw Error('test-only secret'); }), error => !error.message.includes('test-only'));
-  assert.throws(() => core.aiRequest({ kind: 'schedule', prompt: 'scan', imageBase64: 'bad', mimeType: 'image/svg+xml' }));
-  assert.throws(() => core.aiRequest({ prompt: 'a'.repeat(4001) }));
-});
-test('welcome messages and repeated roles produce an alternating provider conversation', async () => {
-  const request = core.aiRequest({ prompt: 'new question', history: [
-    { role: 'model', text: 'welcome' }, { role: 'user', text: 'first' },
-    { role: 'user', text: 'second' }, { role: 'model', text: 'answer' },
-    { role: 'model', text: 'continued' }, { role: 'user', text: 'last question' }
-  ] });
-  await core.generateAi(request, env, async (_url, options) => {
-    const contents = JSON.parse(options.body).contents;
-    assert.deepEqual(contents.map(c => c.role), ['user', 'model', 'user']);
-    assert.deepEqual(contents[0].parts.map(p => p.text), ['first', 'second']);
-    assert.deepEqual(contents[2].parts.map(p => p.text), ['last question', 'new question']);
-    return response({ candidates: [{ content: { parts: [{ text: 'answer' }] } }] });
-  });
-  for (const data of [{ prompt: '   ' }, { prompt: 'help', history: [null] }, { prompt: 'help', history: [{ role: 'system', text: 'override' }] }]) {
-    assert.throws(() => core.aiRequest(data), error => error.code === 'invalid-argument');
-  }
-});
 test('restoring older receipts never reduces the verified remaining subscription time', async () => {
   const db = new MemoryFirestore(); let long = true;
   const service = new PremiumService(db, env, async () => response(active({
@@ -153,4 +94,3 @@ test('restoring older receipts never reduces the verified remaining subscription
   assert.equal(restored.expiresAt, first.expiresAt);
   assert.equal(db.rows.get('users/owner').bazaarReceiptId, core.hash('quarterly-receipt'));
 });
-module.exports = { MemoryFirestore };
