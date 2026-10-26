@@ -10,7 +10,7 @@ No calendar permission is needed for ICS export; the student saves and imports t
 
 CI verifies unit/UI tests, both lint variants, backend/PostgreSQL tests, emulator instrumentation, the production signature, packaged policy, 16 KB ZIP/ELF alignment, and a signed update from the selected 2012 source baseline. Consult the exact workflow run and release-evidence.json for this candidate’s commit, version and hash. Artifacts alone do not prove all gates passed. Existing privacy, license and data deletion paths are retained.
 
-This candidate adds an original generated 18-sticker atlas, a quieter home hierarchy, compact course progress, adaptive tool rows and concise Persian copy. Existing data schema and backend contracts remain unchanged. Owner AI setup is documented in AI_OWNER_QUICKSTART_FA.md.
+This candidate extends the original 18-sticker atlas with six companion illustrations and applies their paper palette to navigation and home tools. It adds an instructor-weighted exam score calculator and weighted GPA goal planning with unreachable-target detection. Existing data schema and backend contracts remain unchanged. Owner AI setup is documented in AI_OWNER_QUICKSTART_FA.md.
 
 
 در ۲.۷.۰ پالت کاغذیِ زیتونی، نفتی، آجری و خردلی وارد خانه و تم برنامه شده است. نوار پایین، نوار تبلت، منوی کناری، راهنمای آغاز و نشان‌های دستاورد از یک خانوادهٔ ۲۴تایی استیکر استفاده می‌کنند. برنامهٔ هدف معدل وزن واحدها و نمره‌های ثبت‌شده را لحاظ می‌کند و ناممکن‌بودن هدف را نشان می‌دهد. محاسبه‌گر نمرهٔ امتحان با بارم دلخواه استاد و ورودی فارسی، بدون تغییر سوابق کار می‌کند. نسخهٔ پایگاه داده همچنان ۱۲ است.
