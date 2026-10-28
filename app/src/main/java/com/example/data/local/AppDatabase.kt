@@ -49,9 +49,13 @@ import kotlinx.coroutines.launch
         ProfessorEntity::class,
         ExamEntity::class,
         NoteEntity::class,
+        com.example.data.local.entity.StudyGoalEntity::class,
+        com.example.data.local.entity.StudyAvailabilityEntity::class,
+        com.example.data.local.entity.StudyCompletionEntity::class,
+        com.example.data.local.entity.ReviewCardEntity::class,
         SyncMetadataEntity::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -737,6 +741,17 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS study_goals (courseId TEXT NOT NULL PRIMARY KEY, targetDate TEXT NOT NULL, totalMinutes INTEGER NOT NULL, difficulty INTEGER NOT NULL, enabled INTEGER NOT NULL, updatedAt INTEGER NOT NULL)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS study_availability (weekday INTEGER NOT NULL PRIMARY KEY, startMinute INTEGER NOT NULL, endMinute INTEGER NOT NULL, budgetMinutes INTEGER NOT NULL, updatedAt INTEGER NOT NULL)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS study_completions (id TEXT NOT NULL PRIMARY KEY, courseId TEXT NOT NULL, date TEXT NOT NULL, startMinute INTEGER NOT NULL, plannedMinutes INTEGER NOT NULL, actualMinutes INTEGER NOT NULL, updatedAt INTEGER NOT NULL, isDeleted INTEGER NOT NULL)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_study_completions_courseId ON study_completions(courseId)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS review_cards (id TEXT NOT NULL PRIMARY KEY, courseId TEXT NOT NULL, question TEXT NOT NULL, answer TEXT NOT NULL, dueDate TEXT NOT NULL, intervalDays INTEGER NOT NULL, repetitions INTEGER NOT NULL, lapses INTEGER NOT NULL, lastReviewedDate TEXT NOT NULL, isArchived INTEGER NOT NULL, updatedAt INTEGER NOT NULL)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_review_cards_courseId ON review_cards(courseId)")
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope = CoroutineScope(Dispatchers.IO)): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -744,7 +759,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "student_os_db"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
                     .addCallback(DatabaseCallback(scope))
                     .build()
                 INSTANCE = instance

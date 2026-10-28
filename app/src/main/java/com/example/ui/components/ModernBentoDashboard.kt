@@ -128,6 +128,7 @@ fun ModernBentoDashboard(
     onQuickAddTask: (() -> Unit)? = null,
     onOpenOcrImport: (() -> Unit)? = null,
     onOpenAppTour: (() -> Unit)? = null,
+    learningSummary: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val startFocus: () -> Unit = {
@@ -177,7 +178,8 @@ fun ModernBentoDashboard(
 
         StudentWorkspaceShortcuts(onNavigateTab)
 
-        if (studyRecommendations.isNotEmpty()) StudyPlanPreviewCardV2(
+        if (learningSummary != null) learningSummary()
+        else if (studyRecommendations.isNotEmpty()) StudyPlanPreviewCardV2(
             recommendations = studyRecommendations.take(1),
             acceptedRecommendationIds = acceptedStudyPlanIds,
             onAcceptRecommendation = onAcceptStudyPlan,

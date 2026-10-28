@@ -12,7 +12,7 @@ data class JalaliDate(
 ) : Comparable<JalaliDate> {
 
     fun format(delimiter: String = "/"): String =
-        "%04d%s%02d%s%02d".format(year, delimiter, month, delimiter, day)
+        "%04d%s%02d%s%02d".format(java.util.Locale.US, year, delimiter, month, delimiter, day)
 
     fun toPersianDigits(): String =
         format("/").map { ch ->

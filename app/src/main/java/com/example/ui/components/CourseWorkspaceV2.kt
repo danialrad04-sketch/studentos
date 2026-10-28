@@ -94,6 +94,7 @@ fun CourseWorkspaceDialogV2(
     onStartFocus: () -> Unit,
     onRecordGrade: (() -> Unit)? = null,
     onEditExam: (() -> Unit)? = null,
+    reviewContent: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var showAddTask by remember { mutableStateOf(false) }
@@ -183,6 +184,7 @@ fun CourseWorkspaceDialogV2(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    if (reviewContent != null) item { reviewContent() }
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),

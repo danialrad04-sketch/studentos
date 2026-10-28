@@ -6,6 +6,10 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -29,6 +33,7 @@ import com.example.ui.models.AppTab
 import com.example.ui.models.CurriculumMatchUiState
 import com.example.ui.models.ExamItem
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MainTabContent(
     selectedTab: AppTab,
@@ -80,6 +85,9 @@ fun MainTabContent(
     onRequestNotificationPermission: () -> Unit = {},
     onOpenPremium: () -> Unit = {}
 ) {
+    val learning by studentViewModel.learningWorkspace.collectAsStateWithLifecycle()
+    val adaptivePlan by studentViewModel.adaptiveLearningPlan.collectAsStateWithLifecycle()
+    val learningOwner by studentViewModel.workspaceGeneration.collectAsStateWithLifecycle()
     val calendarLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.CreateDocument("text/calendar"),
         studentViewModel::writePendingCalendar
@@ -93,6 +101,10 @@ fun MainTabContent(
             AppTab.DASHBOARD -> {
                 val targetGpa by studentViewModel.targetGpaGoal.collectAsStateWithLifecycle()
                 ModernBentoDashboard(
+                    learningSummary = {
+                        LearningHomeSummary(learning, adaptivePlan, courses,
+                            studentViewModel::openStudyPlanner, onOpenCourseWorkspace)
+                    },
                     courses = courses,
                     coursesWithSessions = coursesWithSessions,
                     attendanceList = attendance,
@@ -184,7 +196,12 @@ fun MainTabContent(
             }
             AppTab.ACADEMIC_INTELLIGENCE -> {
                 val history by studentViewModel.allSemesters.collectAsStateWithLifecycle()
+                val recordedHistory by studentViewModel.studyHistory.collectAsStateWithLifecycle()
+                val recordedDay by studentViewModel.preferencesRepository.studyDate.collectAsStateWithLifecycle()
                 AcademicIntelligenceScreen(
+                    weeklyReport = {
+                        WeeklyLearningReport(learning, recordedHistory, recordedDay, courses.map { it.id }.toSet(), tasks, studentViewModel::openStudyPlanner)
+                    },
                     semesterHistory = history,
                     gpa = currentTermGpa,
                     passedUnits = profile.passedUnits,
@@ -337,7 +354,29 @@ fun MainTabContent(
             AppTab.POMODORO -> {
                 val session by studentViewModel.focusSession.collectAsStateWithLifecycle()
                 val studyHistory by studentViewModel.studyHistory.collectAsStateWithLifecycle()
-                PomodoroAndNotesScreen(
+                val planner by studentViewModel.learningPanel.collectAsStateWithLifecycle()
+                androidx.compose.runtime.key(learningOwner) {
+                Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                    FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                        FilterChip(!planner,{studentViewModel.learningPanel.value=false},label={Text("تمرکز")})
+                        FilterChip(planner,{studentViewModel.learningPanel.value=true},label={Text("برنامهٔ مطالعه")})
+                    }
+                    if(planner) LearningPlannerScreen(learning,adaptivePlan,courses,
+                        onRetry=studentViewModel::retryLearning,
+                        onSaveGoal={row,done->studentViewModel.learningAction({it.saveGoal(row)},done)},
+                        onSaveAvailability={row,done->studentViewModel.learningAction({it.saveAvailability(row)},done)},
+                        onComplete={block,minutes,done->studentViewModel.learningAction({it.complete(block,minutes)}){ok->if(ok)studentViewModel.releaseLearningBlock(block);done(ok)}},
+                        onUndo={row,done->studentViewModel.learningAction({it.undo(row)},done)},
+                        onFocus={block->
+                            if(!studentViewModel.focusSession.value.isRunning){
+                                studentViewModel.startLearningBlock(block)
+                            } else android.widget.Toast.makeText(context,"ابتدا جلسهٔ تمرکز فعلی را تمام یا متوقف کن.",android.widget.Toast.LENGTH_SHORT).show()
+                        },activeBlock=session.learningBlock,timerRunning=session.isRunning,
+                        onReleaseBlock=studentViewModel::releaseLearningBlock,
+                        onReturnToFocus={studentViewModel.learningPanel.value=false})
+                    else {
+                    if(session.learningBlock!=null) FilledTonalButton(onClick={studentViewModel.learningPanel.value=true},modifier=Modifier.fillMaxWidth()) { Text("ثبت جلسه در برنامهٔ مطالعه") }
+                    PomodoroAndNotesScreen(
                     secondsRemaining = pomodoroSeconds,
                     durationSeconds = session.durationSeconds,
                     focusLabel = session.label,
@@ -357,6 +396,9 @@ fun MainTabContent(
                         studentViewModel.saveNotes(newNotes)
                     }
                 )
+                    }
+                }
+                }
             }
             AppTab.GAMIFICATION -> {
                 StudentGamificationHub(

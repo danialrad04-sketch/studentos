@@ -72,6 +72,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -1054,6 +1056,65 @@ class StudentViewModel @JvmOverloads constructor(
                 _userMessage.emit("فایل تقویم ذخیره شد؛ برای افزودن رویدادها آن را در تقویم وارد کنید.")
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
             catch (e: Exception) { _userMessage.emit("فایل تقویم ذخیره نشد؛ دوباره خروجی بگیرید.") }
+        }
+    }
+
+    private val learningReload = MutableStateFlow(0)
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val learningWorkspace = learningReload.flatMapLatest {
+        combine(repository.dao.observeStudyGoals(), repository.dao.observeStudyAvailability(),
+            repository.dao.observeStudyCompletions(), repository.dao.observeReviewCards()) { goals, free, done, cards ->
+            com.example.ui.models.LearningWorkspaceState(goals, free, done, cards, loaded = true)
+        }.catch { e ->
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            emit(com.example.ui.models.LearningWorkspaceState(loaded = true, error = true))
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), com.example.ui.models.LearningWorkspaceState())
+
+    val learningPanel = MutableStateFlow(false)
+    fun openStudyPlanner() { learningPanel.value = true; selectTab(AppTab.POMODORO) }
+    private val learningClock = kotlinx.coroutines.flow.flow {
+        while (true) { emit(System.currentTimeMillis() / 60000); delay(30000) }
+    }
+    val adaptiveLearningPlan = combine(learningWorkspace, coursesWithSessions, exams, learningClock, focusSession) { state, classes, exams, _, focus ->
+        val ids=classes.map { it.course.id }.toSet()
+        val clock=java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Asia/Tehran"))
+        com.example.domain.engine.AdaptiveLearningEngine.build(com.example.data.repository.learningToday(),
+            state.goals.filter { it.courseId in ids },state.availability,state.completions.filter { it.courseId in ids },
+            classes,exams.map { it.solarDate },clock.get(java.util.Calendar.HOUR_OF_DAY)*60+clock.get(java.util.Calendar.MINUTE), listOfNotNull(focus.learningBlock))
+    }.flowOn(kotlinx.coroutines.Dispatchers.Default).stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),
+        com.example.domain.engine.AdaptiveLearningPlan(emptyList(),emptyMap(),emptySet(),emptySet(),emptyMap()))
+
+    fun retryLearning() { learningReload.value++ }
+
+    fun startLearningBlock(block: com.example.domain.engine.LearningBlock) {
+        if (focusSession.value.isRunning) return
+        val course=courses.value.find { it.id==block.courseId } ?: return
+        setFocusDuration(block.minutes,course.name)
+        preferencesRepository.saveFocusSession(focusSession.value.copy(learningBlock=block))
+        togglePomodoro()
+        learningPanel.value=false
+    }
+    fun releaseLearningBlock(block: com.example.domain.engine.LearningBlock) {
+        val current=focusSession.value
+        if(current.learningBlock?.id==block.id) preferencesRepository.saveFocusSession(current.copy(learningBlock=null))
+    }
+
+    fun learningAction(action: suspend (com.example.data.repository.LearningRepository) -> Unit,
+        onResult: (Boolean) -> Unit = {}) {
+        val generation = preferencesRepository.taskReminderGeneration.value
+        viewModelScope.launch {
+            try {
+                val db = repository.database ?: error("فضای ذخیره‌سازی مطالعه در دسترس نیست.")
+                val learning = com.example.data.repository.LearningRepository(repository.dao, db) {
+                    generation == preferencesRepository.taskReminderGeneration.value
+                }
+                action(learning)
+                // Room commit determines success. Existing startup snapshots and file export include learning tables.
+                runCatching { preferencesRepository.recordSuccessfulSave() }
+                onResult(true)
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (e: Exception) { onResult(false); _userMessage.emit(e.localizedMessage ?: "ذخیره نشد؛ دوباره تلاش کنید.") }
         }
     }
 

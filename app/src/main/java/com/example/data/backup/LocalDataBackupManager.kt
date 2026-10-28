@@ -43,7 +43,11 @@ data class StudentOSBackupPayload(
     val universities: List<com.example.data.local.entity.UniversityEntity> = emptyList(),
     val majors: List<com.example.data.local.entity.MajorEntity> = emptyList(),
     val curriculumVersions: List<com.example.data.local.entity.CurriculumVersionEntity> = emptyList(),
-    val studySettings: com.example.domain.model.StudySettingsSnapshot? = null
+    val studySettings: com.example.domain.model.StudySettingsSnapshot? = null,
+    val studyGoals: List<com.example.data.local.entity.StudyGoalEntity> = emptyList(),
+    val studyAvailability: List<com.example.data.local.entity.StudyAvailabilityEntity> = emptyList(),
+    val studyCompletions: List<com.example.data.local.entity.StudyCompletionEntity> = emptyList(),
+    val reviewCards: List<com.example.data.local.entity.ReviewCardEntity> = emptyList()
 )
 
 /**
@@ -93,6 +97,10 @@ object LocalDataBackupManager {
             professors = dao.getAllProfessorsSync(),
             exams = dao.getAllExamsSync(),
             notes = dao.getAllNotesSync(),
+            studyGoals = dao.studyGoalsSnapshot(),
+            studyAvailability = dao.studyAvailabilitySnapshot(),
+            studyCompletions = dao.studyCompletionsSnapshot(),
+            reviewCards = dao.reviewCardsSnapshot(),
             attempts = dao.getStudentAttemptsSync(),
             curriculumCourses = curriculumDao?.getAllCurriculumCoursesSync() ?: emptyList(),
             universities = curriculumDao?.getAllUniversitiesSync().orEmpty(),
@@ -111,6 +119,16 @@ object LocalDataBackupManager {
             val payload = payloadAdapter.fromJson(jsonString)
                 ?: return@withContext Result.failure(IllegalArgumentException("Invalid JSON payload format"))
             payload.studySettings?.validate()
+            payload.studyGoals.forEach(com.example.domain.engine.LearningValidation::goal)
+            payload.studyAvailability.forEach(com.example.domain.engine.LearningValidation::availability)
+            payload.studyCompletions.forEach(com.example.domain.engine.LearningValidation::completion)
+            payload.reviewCards.forEach(com.example.domain.engine.LearningValidation::card)
+            require(payload.studyGoals.map { it.courseId }.distinct().size==payload.studyGoals.size)
+            require(payload.studyAvailability.map { it.weekday }.distinct().size==payload.studyAvailability.size)
+            require(payload.studyCompletions.map { it.id }.distinct().size==payload.studyCompletions.size)
+            require(payload.reviewCards.map { it.id }.distinct().size==payload.reviewCards.size)
+            val courseIds=(payload.courses.map { it.id }+dao.getAllCoursesIncludingArchivedSync().map { it.id }).toSet()
+            require((payload.studyGoals.map { it.courseId }+payload.studyCompletions.map { it.courseId }+payload.reviewCards.map { it.courseId }).all { it in courseIds }) { "درس مرتبط با اطلاعات مطالعه پیدا نشد." }
             payload.tasks.forEach { com.example.domain.engine.TaskPlanningEngine.validate(it) }
             require(payload.tasks.map { it.id }.distinct().size == payload.tasks.size) { "شناسهٔ تکلیف تکراری است." }
             val parents = payload.tasks.mapNotNull { it.recurrenceParentId }
@@ -140,9 +158,17 @@ object LocalDataBackupManager {
                 curriculumDao.insertCurriculumCourses(payload.curriculumCourses)
             }
 
+            val oldGoals=dao.studyGoalsSnapshot().associateBy { it.courseId }
+            val oldAvailability=dao.studyAvailabilitySnapshot().associateBy { it.weekday }
+            val oldCompletions=dao.studyCompletionsSnapshot().associateBy { it.id }
+            val oldCards=dao.reviewCardsSnapshot().associateBy { it.id }
+            payload.studyGoals.filter { it.updatedAt>(oldGoals[it.courseId]?.updatedAt ?: -1) }.forEach { dao.upsertStudyGoal(it) }
+            payload.studyAvailability.filter { it.updatedAt>(oldAvailability[it.weekday]?.updatedAt ?: -1) }.forEach { dao.upsertStudyAvailability(it) }
+            payload.studyCompletions.filter { it.updatedAt>(oldCompletions[it.id]?.updatedAt ?: -1) }.forEach { dao.upsertStudyCompletion(it) }
+            payload.reviewCards.filter { it.updatedAt>(oldCards[it.id]?.updatedAt ?: -1) }.forEach { dao.upsertReviewCard(it) }
             dao.cleanupOrphans()
             Result.success(1)
-        } catch (e: Throwable) {
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Throwable) {
             e.printStackTrace()
             com.example.util.CrashLogger.recordException(e)
             Result.failure(e)
@@ -160,7 +186,7 @@ object LocalDataBackupManager {
             val file = File(context.filesDir, SNAPSHOT_FILE_NAME)
             file.writeText(json)
             true
-        } catch (e: Throwable) {
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Throwable) {
             e.printStackTrace()
             false
         }
@@ -172,7 +198,7 @@ object LocalDataBackupManager {
             if (file.exists() && file.length() > 10) {
                 file.readText()
             } else null
-        } catch (e: Throwable) {
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Throwable) {
             e.printStackTrace()
             null
         }
