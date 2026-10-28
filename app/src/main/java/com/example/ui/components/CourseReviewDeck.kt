@@ -146,25 +146,32 @@ fun CourseReviewDeck(
                         }
                         if (revealed) {
                             Text("پیش از دیدن پاسخ چقدر یادت بود؟")
-                            FlowRow(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp),
-                            ) {
-                                ReviewRating.entries.forEach { rating ->
-                                    OutlinedButton(
-                                        enabled = !busy,
-                                        onClick = {
-                                            busy = true
-                                            error = false
-                                            onRate(current, rating) { ok ->
-                                                busy = false
-                                                error = !ok
-                                                if (ok) seen = seen + current.id
-                                            }
-                                        },
-                                        modifier = Modifier.testTag("review_rate_${rating.name}"),
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                ReviewRating.entries.chunked(2).forEach { row ->
+                                    Row(
+                                        Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     ) {
-                                        Text(rating.title)
+                                        row.forEach { rating ->
+                                            OutlinedButton(
+                                                enabled = !busy,
+                                                onClick = {
+                                                    busy = true
+                                                    error = false
+                                                    onRate(current, rating) { ok ->
+                                                        busy = false
+                                                        error = !ok
+                                                        if (ok) seen = seen + current.id
+                                                    }
+                                                },
+                                                modifier =
+                                                    Modifier.weight(1f)
+                                                        .heightIn(min = 48.dp)
+                                                        .testTag("review_rate_${rating.name}"),
+                                            ) {
+                                                Text(rating.title)
+                                            }
+                                        }
                                     }
                                 }
                             }
