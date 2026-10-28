@@ -6,5 +6,5 @@ data class LearningBlock(
     val courseId: String,
     val date: String,
     val startMinute: Int,
-    val minutes: Int
+    val minutes: Int,
 ) : java.io.Serializable
