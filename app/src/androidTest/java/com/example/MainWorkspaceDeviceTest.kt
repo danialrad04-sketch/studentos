@@ -22,18 +22,6 @@ class MainWorkspaceDeviceTest {
             }
         shell("settings put secure show_ime_with_hard_keyboard 1")
         shell("wm dismiss-keyguard")
-        // System setup/keyboard windows can retain focus on a freshly booted emulator.
-        // Bring this same Activity to the front; never type into an unfocused application.
-        rule.activityRule.scenario.onActivity { activity ->
-            activity.startActivity(
-                android.content
-                    .Intent(activity, MainActivity::class.java)
-                    .addFlags(
-                        android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
-                            android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    )
-            )
-        }
         awaitWindowCondition("Activity did not receive input focus before the scenario") {
             it.hasWindowFocus()
         }
@@ -258,17 +246,32 @@ class MainWorkspaceDeviceTest {
             }
         } catch (error: androidx.compose.ui.test.ComposeTimeoutException) {
             val windows =
-                shell("dumpsys window windows")
+                shell("dumpsys window")
                     .lineSequence()
                     .filter {
                         it.contains("mCurrentFocus") ||
                             it.contains("mFocusedApp") ||
-                            it.contains("mHasSurface") ||
+                            it.contains("mImeInputTarget") ||
+                            it.contains("mImeLayeringTarget") ||
                             it.contains("mObscuringWindow")
                     }
                     .take(20)
                     .joinToString("\n")
-            throw AssertionError("$message\n$windows", error)
+            val root =
+                androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+                    .uiAutomation
+                    .rootInActiveWindow
+            val visible = mutableListOf<String>()
+            fun describe(node: android.view.accessibility.AccessibilityNodeInfo?, depth: Int = 0) {
+                if (node == null || depth > 8 || visible.size >= 40) return
+                if (!node.text.isNullOrBlank()) visible += "${node.packageName}: ${node.text}"
+                for (i in 0 until node.childCount) describe(node.getChild(i), depth + 1)
+            }
+            describe(root)
+            throw AssertionError(
+                "$message\n$windows\nActive window: ${root?.packageName}\n${visible.joinToString("\n")}",
+                error,
+            )
         }
     }
 }
