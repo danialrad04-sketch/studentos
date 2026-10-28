@@ -15,7 +15,7 @@ enum class AppTab(
 ) {
     DASHBOARD("خانه", "⚡"),
     COPILOT("دستیار تحصیلی", "🤖"),
-    ACADEMIC_INTELLIGENCE("وضعیت تحصیلی", "🧠"),
+    ACADEMIC_INTELLIGENCE("پیشرفت و گزارش‌ها", "🧠"),
     PASSPORT("شناسنامه تحصیلی", "📜"),
     AGENDA("برنامهٔ هفته", "📅"),
     NOTES("یادداشت‌ها", "📝"),
@@ -26,7 +26,7 @@ enum class AppTab(
     GRADES("نمره‌ها و معدل", "📈"),
     SEMESTER_PLANNER("برنامه‌ریز ترم", "🧭"),
     CURRICULUM("چارت درسی", "🗺️"),
-    POMODORO("تمرکز", "⏱️"),
+    POMODORO("تمرکز و مطالعه", "⏱️"),
     GAMIFICATION("دستاوردها", "🏆"),
     HISTORY("ترم‌های قبل", "📚")
 }

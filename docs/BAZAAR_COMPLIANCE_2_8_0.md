@@ -1,0 +1,13 @@
+# Student OS 2.8.0 / 2017 — development candidate
+
+Package and production signing identity are unchanged. The owner reported Bazaar 2.4.2 / 2012 as published; its exact binary source remains unconfirmed. This candidate has not been submitted or published.
+
+This release adds adaptive seven-day study planning, course-bound recall cards with spaced review, and a weekly learning report. Home presents one next-study summary. Planning lives alongside the existing focus timer; recall lives inside the course workspace; weekly evidence lives in Progress and Reports. Existing agenda, notebook, task recurrence/reminders, grade calculators and file backup remain available.
+
+Room 12→13 adds four tables without changing earlier academic tables. Stable course IDs are preserved. New records are included in automatic local startup snapshots and portable file backup. Older backups do not erase them; newer local revisions and undo/archive tombstones are retained. Reset/deletion uses the existing local account boundary. Cloud/backend contracts are preserved, so this release does not claim live cross-device sync for new learning records; file backup is the supported transfer route.
+
+Planning uses student-entered deadlines, study amounts and free-time caps, subtracts registered class intervals and elapsed time, and leaves breaks. Missing class times and insufficient capacity are disclosed. The whole registered exam day is left unscheduled because an exam end time is not stored. Class patterns do not establish holidays or official term dates. A linked focus session is durably reserved until explicitly recorded/released; starting or finishing the timer never silently writes a study completion. Self-reported study minutes remain separate from recorded timer history to avoid double counting. Recall ratings are self-evaluation, not certified mastery.
+
+Account entry and Bazaar billing remain disabled under the existing public access policy. Core workflows and the new learning tools work locally without an API or subscription. Online model replies still require the owner's one-time server setup; a build does not activate a live provider. No new permissions are added.
+
+Required verification: unit/Compose tests, data-preserving migrations, legacy/round-trip/conflict backup tests, both lints, real backend/PostgreSQL and Firebase emulator tests, production-navigation instrumentation, actual signed/R8 offline installation/update/restart, package/signature policy and 16 KB ZIP/ELF alignment. Use exact-commit CI, release-evidence.json and checksums for this candidate. Emulator checks do not prove physical-device certification, live Google login, live sync or store approval. See ADAPTIVE_LEARNING_2_8_0.md.

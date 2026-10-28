@@ -71,6 +71,50 @@ class MainWorkspaceDeviceTest {
         }
 
     }
+    @Test fun studyGoalAndCourseReviewUseRealRoomThroughTheProductionNavigation() {
+        rule.waitUntil(30000) { rule.onAllNodesWithTag("local_onboarding").fetchSemanticsNodes().isNotEmpty() || rule.onAllNodesWithTag("primary_navigation").fetchSemanticsNodes().isNotEmpty() }
+        AppPreferencesRepository.getInstance(rule.activity).setNotificationsEnabled(false)
+        val vm=ViewModelProvider(rule.activity)[StudentViewModel::class.java]
+        val db=com.example.data.local.AppDatabase.getDatabase(rule.activity)
+        val today=com.example.data.repository.learningToday()
+        val courseId="device-learning-course"
+        kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO) {
+            val dao=db.studentDao()
+            dao.insertProfile(com.example.data.local.entity.StudentProfileEntity(name="دانشجوی مرور",isOnboardingCompleted=true))
+            val semester=dao.getCurrentSemesterSync() ?: com.example.data.local.entity.SemesterEntity("learning-term","ترم آزمون",isCurrent=true).also { dao.insertSemester(it) }
+            dao.deleteCourseById(courseId);dao.cleanupOrphans()
+            dao.insertCourse(com.example.data.local.entity.CourseEntity(id=courseId,name="درس مرور دستگاهی",semesterId=semester.id))
+            dao.insertCourseSession(com.example.data.local.entity.CourseSessionEntity(id="device-learning-class",courseId=courseId,day=0,start="09:00",end="11:00"))
+            dao.upsertReviewCard(com.example.data.local.entity.ReviewCardEntity("device-review-card",courseId,"پرسش روی دستگاه","پاسخ محفوظ روی دستگاه",today.format()))
+        }
+        rule.waitUntil(20000){rule.onAllNodesWithTag("primary_navigation").fetchSemanticsNodes().isNotEmpty()}
+        rule.waitUntil(15000){vm.courses.value.any{it.id==courseId}}
+        rule.runOnIdle{vm.openStudyPlanner()}
+        rule.waitUntil(15000){rule.onAllNodesWithTag("learning_planner").fetchSemanticsNodes().isNotEmpty()}
+        rule.onNodeWithTag("learning_add_goal").performScrollTo().performClick()
+        rule.onNodeWithText("درس مرور دستگاهی").performScrollTo().performClick()
+        rule.onNodeWithTag("learning_goal_minutes").performTextInput("۱۲۰")
+        rule.onNodeWithTag("learning_goal_date").performTextInput(com.example.domain.engine.StudentAgendaEngine.addDays(today,7).toPersianDigits())
+        rule.onNodeWithTag("learning_goal_save").performScrollTo().performClick()
+        rule.waitUntil(15000){rule.onAllNodesWithTag("learning_goal_save").fetchSemanticsNodes().isEmpty()}
+        hideKeyboardAndAwaitWindowFocus()
+        kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO) {
+            org.junit.Assert.assertEquals(120,db.studentDao().studyGoalsSnapshot().single{it.courseId==courseId}.totalMinutes)
+        }
+        rule.runOnIdle{vm.selectTab(AppTab.SCHEDULE)}
+        rule.waitUntil(15000){rule.onAllNodesWithText("درس مرور دستگاهی").fetchSemanticsNodes().isNotEmpty()}
+        rule.onNodeWithText("درس مرور دستگاهی").performScrollTo().performClick()
+        rule.onNodeWithTag("course_review_$courseId").performScrollTo().performClick()
+        rule.onNodeWithTag("review_reveal").performScrollTo().performClick()
+        rule.onNodeWithTag("review_answer").assertTextEquals("پاسخ محفوظ روی دستگاه")
+        rule.onNodeWithTag("review_rate_GOOD").performScrollTo().performClick()
+        rule.waitUntil(15000){kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO){db.studentDao().reviewCardsSnapshot().single{it.id=="device-review-card"}.repetitions==1}}
+        kotlinx.coroutines.runBlocking(kotlinx.coroutines.Dispatchers.IO) {
+            val card=db.studentDao().reviewCardsSnapshot().single{it.id=="device-review-card"}
+            org.junit.Assert.assertEquals(com.example.domain.engine.StudentAgendaEngine.addDays(today,1).format(),card.dueDate)
+        }
+    }
+
     private fun hideKeyboardAndAwaitWindowFocus() {
         val activity = rule.activity
         rule.activityRule.scenario.onActivity {

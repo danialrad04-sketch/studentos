@@ -856,6 +856,10 @@ class StudentRepository(
 
     suspend fun loadRichDemoData() {
         val performDemo = suspend {
+            dao.clearStudyGoals()
+            dao.clearStudyAvailability()
+            dao.clearStudyCompletions()
+            dao.clearReviewCards()
             dao.clearCourses()
             dao.clearAttendance()
             dao.clearGrades()

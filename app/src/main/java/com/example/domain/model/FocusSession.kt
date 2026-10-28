@@ -5,7 +5,8 @@ data class FocusSession(
     val durationSeconds: Int = 1500,
     val pausedSeconds: Int = 1500,
     val endsAtMillis: Long = 0,
-    val label: String = "تمرکز آزاد"
+    val label: String = "تمرکز آزاد",
+    val learningBlock: LearningBlock? = null
 ) {
     val isRunning: Boolean get() = endsAtMillis > 0
     fun remainingSeconds(now: Long): Int = if (isRunning) {

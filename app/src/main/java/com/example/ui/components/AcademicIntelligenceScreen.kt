@@ -47,7 +47,8 @@ fun AcademicIntelligenceScreen(
     risks: List<AcademicRisk>,
     onOpenTab: (AppTab) -> Unit,
     modifier: Modifier = Modifier,
-    semesterHistory: List<com.example.data.local.entity.SemesterEntity> = emptyList()
+    semesterHistory: List<com.example.data.local.entity.SemesterEntity> = emptyList(),
+    weeklyReport: (@Composable () -> Unit)? = null
 ) {
     val completion = if (totalRequiredCredits > 0) {
         (passedUnits.toFloat() / totalRequiredCredits.toFloat()).coerceIn(0f, 1f)
@@ -64,6 +65,7 @@ fun AcademicIntelligenceScreen(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(StudentSpacing.Lg)
     ) {
+        weeklyReport?.invoke()
         SemesterTrendCard(semesterHistory)
         AcademicCard {
             Column(modifier = Modifier.padding(StudentSpacing.Xxl)) {

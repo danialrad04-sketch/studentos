@@ -361,7 +361,18 @@ fun AppDialogManager(
                 val courseTasks = tasks.filter { it.courseId == activeCourse.id || (it.courseId.isBlank() && it.courseName == activeCourse.name) }
                 val courseExam = exams.find { it.courseName == activeCourse.name }
 
+                val learning by studentViewModel.learningWorkspace.collectAsStateWithLifecycle()
+                val learningOwner by studentViewModel.workspaceGeneration.collectAsStateWithLifecycle()
                 CourseWorkspaceDialogV2(
+                    reviewContent = {
+                        androidx.compose.runtime.key(learningOwner, activeCourse.id) {
+                            if (LearningStatus(learning, studentViewModel::retryLearning)) {
+                                CourseReviewEntry(activeCourse, learning.cards,
+                                    onSave = { card, done -> studentViewModel.learningAction({ it.saveCard(card) }, done) },
+                                    onRate = { card, rating, done -> studentViewModel.learningAction({ it.rate(card, rating) }, done) })
+                            }
+                        }
+                    },
                     course = activeCourse,
                     sessions = courseSessions,
                     attendance = courseAttendance,
