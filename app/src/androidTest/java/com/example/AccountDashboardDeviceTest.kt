@@ -63,9 +63,8 @@ class AccountDashboardDeviceTest {
             rule.runOnIdle { assertEquals(ThemeMode.DARK, preferences.themeMode.value) }
             rule.activityRule.scenario.recreate()
             rule.waitUntil(20000) {
-                rule.onAllNodesWithTag("primary_navigation").fetchSemanticsNodes().isNotEmpty()
+                rule.onAllNodesWithTag("account_dashboard").fetchSemanticsNodes().isNotEmpty()
             }
-            rule.onNodeWithContentDescription("حساب کاربری").performClick()
             rule.onNodeWithText("نام ذخیره‌شده در حساب").assertExists()
             rule.onNodeWithTag("account_theme_DARK").performScrollTo().assertIsSelected()
             rule.onNodeWithTag("setting_مطالعه و تمرکز").performScrollTo().performClick()
