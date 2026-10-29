@@ -90,4 +90,5 @@ internal fun studentDestinationSticker(tab: com.example.ui.models.AppTab): AppEm
     com.example.ui.models.AppTab.CURRICULUM -> AppEmojiType.CURRICULUM
     com.example.ui.models.AppTab.POMODORO -> AppEmojiType.POMODORO
     com.example.ui.models.AppTab.GAMIFICATION -> AppEmojiType.TROPHY
+    com.example.ui.models.AppTab.ACCOUNT -> AppEmojiType.PROFILE
 }

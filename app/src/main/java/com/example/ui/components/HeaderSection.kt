@@ -30,7 +30,8 @@ fun HeaderSection(
     onOpenSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    BoxWithConstraints(modifier.fillMaxWidth()) {
+    StudentGlassSurface(modifier.fillMaxWidth()) {
+    BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 4.dp)) {
     val showSearch = maxWidth >= 400.dp && LocalDensity.current.fontScale < 1.3f
     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onOpenMenu) { Icon(Icons.Rounded.Menu, "باز کردن منوی برنامه") }
@@ -47,6 +48,7 @@ fun HeaderSection(
         FilledTonalIconButton(onClick = onOpenAccount, shape = CircleShape, colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer), modifier = Modifier.semantics { contentDescription = "حساب کاربری" }) {
             Text(profile.name.trim().firstOrNull()?.toString() ?: "د", style = MaterialTheme.typography.titleMedium)
         }
+    }
     }
     }
 }

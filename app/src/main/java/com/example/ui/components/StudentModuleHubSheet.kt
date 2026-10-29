@@ -35,7 +35,7 @@ fun StudentModuleHubSheet(currentTab: AppTab, onSelectTab: (AppTab) -> Unit, onD
                     modifier = Modifier.fillMaxWidth().semantics { selected = tab == currentTab }
                 ) {
                     Row(Modifier.heightIn(min = 80.dp).padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        AppEmoji(studentDestinationSticker(tab), size = 36.dp)
+                        androidx.compose.material3.Icon(studentDestinationIcon(tab), null)
                         Text(tab.title, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                 }

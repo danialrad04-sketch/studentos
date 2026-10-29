@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.ui.models.AppTab
+import com.example.ui.theme.studentWorkspaceBackground
 
 /** One inset owner for app destinations; content never sits behind navigation. */
 @Composable
@@ -16,11 +17,12 @@ fun StudentAppScaffold(
     onOpenMore: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
-    BoxWithConstraints(modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier.fillMaxSize().studentWorkspaceBackground()) {
     val useRail = maxWidth >= androidx.compose.ui.unit.Dp(600f)
     Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.fillMaxSize(),
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onBackground,
         snackbarHost = snackbarHost,
         bottomBar = { if (!useRail) FloatingIslandNavigationBar(selectedTab, onTabSelected, onOpenMore = onOpenMore) }
     ) { insets ->

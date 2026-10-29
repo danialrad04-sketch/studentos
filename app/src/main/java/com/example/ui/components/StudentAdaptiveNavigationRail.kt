@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
+import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,7 +42,8 @@ fun StudentAdaptiveNavigationRail(
         AppTab.SCHEDULE,
         AppTab.TASKS,
         AppTab.GRADES,
-        AppTab.COPILOT
+        AppTab.COPILOT,
+        AppTab.ACCOUNT
     )
     val isSecondaryTab = destinations.none { it == selectedTab }
     val itemColors = NavigationRailItemDefaults.colors(
@@ -50,9 +52,10 @@ fun StudentAdaptiveNavigationRail(
         selectedTextColor = MaterialTheme.colorScheme.primary
     )
 
+    StudentGlassSurface(Modifier.fillMaxHeight().padding(8.dp)) {
     NavigationRail(
         modifier = modifier.fillMaxHeight().testTag("navigation_rail"),
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         header = {
             Text(
                 text = "Student OS",
@@ -67,7 +70,7 @@ fun StudentAdaptiveNavigationRail(
                     colors = itemColors,
                     selected = selectedTab == tab,
                     onClick = { onTabSelected(tab) },
-                    icon = { AppEmoji(studentDestinationSticker(tab), size = 32.dp) },
+                    icon = { androidx.compose.material3.Icon(studentDestinationIcon(tab), null) },
                     label = { Text(tab.title.split(" ").firstOrNull() ?: tab.title) }
                 )
             }
@@ -77,10 +80,12 @@ fun StudentAdaptiveNavigationRail(
                 modifier = Modifier.testTag("rail_more"),
                 selected = isSecondaryTab,
                 onClick = { onOpenMore?.invoke() ?: run { showAllModulesSheet = true } },
-                icon = { AppEmoji(AppEmojiType.MORE, size = 32.dp) },
+                icon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.GridView, null) },
                 label = { Text("بیشتر") }
             )
         }
+    }
+
     }
 
     if (showAllModulesSheet) {

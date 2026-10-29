@@ -280,6 +280,7 @@ fun MainAppScreen(
     }
 
     MyApplicationTheme(darkTheme = isDarkTheme) {
+        val reduceMotion = com.example.ui.theme.rememberReducedMotion()
         // Keep Android system navigation/status icons synchronized with the runtime theme.
         // This is required because the app theme can change without recreating the Activity.
         val currentView = LocalView.current
@@ -394,7 +395,7 @@ fun MainAppScreen(
                         profile = profile,
                         user = currentUser,
                         onSelectTab = { studentViewModel.selectTab(it) },
-                        onOpenAccount = { dialogState = AppDialogState.Auth },
+                        onOpenAccount = { studentViewModel.selectTab(AppTab.ACCOUNT) },
                         onOpenSettings = { dialogState = AppDialogState.SettingsAndRoadmap },
                         onOpenSupport = { dialogState = AppDialogState.SupportTickets }
                     ) {
@@ -415,7 +416,7 @@ fun MainAppScreen(
                         contentAlignment = Alignment.TopCenter
                     ) {
                         AnimatedContent(targetState = selectedTab,
-                            transitionSpec = { fadeIn(animationSpec=tween(220)) togetherWith fadeOut(animationSpec=tween(160)) },
+                            transitionSpec = { fadeIn(animationSpec=tween(if (reduceMotion) 0 else 220)) togetherWith fadeOut(animationSpec=tween(if (reduceMotion) 0 else 160)) },
                             label = "destination_viewport") { visibleTab ->
                         Column(
                             modifier = Modifier
@@ -436,7 +437,7 @@ fun MainAppScreen(
                                     profile = profile,
                                     notifCount = notifications.size,
                                     onOpenMenu = { showAppMenu = true },
-                                    onOpenAccount = { dialogState = AppDialogState.Auth },
+                                    onOpenAccount = { studentViewModel.selectTab(AppTab.ACCOUNT) },
                                     onOpenSearch = { dialogState = AppDialogState.CommandCenter },
                                     onOpenNotifications = { dialogState = AppDialogState.Notifications }
                                 )
@@ -542,7 +543,27 @@ fun MainAppScreen(
                                 onExportPayload = { dialogState = AppDialogState.ExportShare(it) },
                                 onOpenAppTour = { showAppTourGuide = true },
                                 onRequestNotificationPermission = { checkAndRequestNotificationPermission { } },
-                                onOpenPremium = { dialogState = AppDialogState.Upgrade }
+                                onOpenPremium = { dialogState = AppDialogState.Upgrade },
+                                accountContent = {
+                                    val focusMinutes by studentViewModel.defaultFocusMinutes.collectAsStateWithLifecycle()
+                                    com.example.ui.components.AccountDashboardScreen(
+                                        profile, currentUser, themeMode, notificationsEnabled,
+                                        courses.size, tasks.count { !it.isCompleted }, dailyStudyGoalMinutes, focusMinutes,
+                                        onEditProfile = { dialogState = AppDialogState.Profile },
+                                        onSelectTheme = studentViewModel::setThemeMode,
+                                        onToggleNotifications = { enabled ->
+                                            studentViewModel.setNotificationsEnabled(enabled)
+                                            if (enabled) checkAndRequestNotificationPermission { }
+                                        },
+                                        onOpenSettings = { dialogState = AppDialogState.SettingsSection(it) },
+                                        onOpenAccount = { dialogState = AppDialogState.Auth },
+                                        onOpenBackup = { dialogState = AppDialogState.BackupRestore },
+                                        onOpenSupport = { dialogState = AppDialogState.SupportTickets },
+                                        onOpenPrivacy = { dialogState = AppDialogState.PrivacyPolicy },
+                                        onOpenCourses = { studentViewModel.selectTab(AppTab.SCHEDULE) },
+                                        onOpenTasks = { studentViewModel.selectTab(AppTab.TASKS) }
+                                    )
+                                }
                             )
                         }
                         } // destination animation

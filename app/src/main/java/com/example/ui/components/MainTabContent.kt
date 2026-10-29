@@ -83,8 +83,10 @@ fun MainTabContent(
     onExportPayload: (ExportSourcePayload) -> Unit,
     onOpenAppTour: (() -> Unit)? = null,
     onRequestNotificationPermission: () -> Unit = {},
-    onOpenPremium: () -> Unit = {}
+    onOpenPremium: () -> Unit = {},
+    accountContent: @Composable () -> Unit = {}
 ) {
+    val motionDuration = if (com.example.ui.theme.rememberReducedMotion()) 0 else 180
     val learning by studentViewModel.learningWorkspace.collectAsStateWithLifecycle()
     val adaptivePlan by studentViewModel.adaptiveLearningPlan.collectAsStateWithLifecycle()
     val learningOwner by studentViewModel.workspaceGeneration.collectAsStateWithLifecycle()
@@ -94,10 +96,11 @@ fun MainTabContent(
     )
     AnimatedContent(
         targetState = selectedTab,
-        transitionSpec = { fadeIn() togetherWith fadeOut() },
+        transitionSpec = { fadeIn(androidx.compose.animation.core.tween(motionDuration)) togetherWith fadeOut(androidx.compose.animation.core.tween(motionDuration)) },
         label = "tab_content_transition"
     ) { currentTab ->
         when (currentTab) {
+            AppTab.ACCOUNT -> accountContent()
             AppTab.DASHBOARD -> {
                 val targetGpa by studentViewModel.targetGpaGoal.collectAsStateWithLifecycle()
                 ModernBentoDashboard(

@@ -77,14 +77,17 @@ fun AppDialogManager(
     MyApplicationTheme(darkTheme = isDark) {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
             when (dialogState) {
-        is AppDialogState.SettingsAndRoadmap -> {
+        is AppDialogState.SettingsAndRoadmap, is AppDialogState.SettingsSection -> {
             val dailyStudyGoalMinutes by studentViewModel.dailyStudyGoalMinutes.collectAsStateWithLifecycle()
             val defaultFocusMinutes by studentViewModel.defaultFocusMinutes.collectAsStateWithLifecycle()
             val targetGpaGoal by studentViewModel.targetGpaGoal.collectAsStateWithLifecycle()
             SettingsAndRoadmapDialog(
                 profile = profile,
-                initialSection = settingsSection,
-                onSectionChanged = { settingsSection = it },
+                initialSection = (dialogState as? AppDialogState.SettingsSection)?.section ?: settingsSection,
+                onSectionChanged = {
+                    settingsSection = it
+                    if (dialogState is AppDialogState.SettingsSection) onUpdateDialogState(AppDialogState.SettingsSection(it))
+                },
                 themeMode = themeMode,
                 onSelectThemeMode = { studentViewModel.setThemeMode(it) },
                 notificationsEnabled = notificationsEnabled,
