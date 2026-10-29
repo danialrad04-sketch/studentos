@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +39,7 @@ fun FloatingIslandNavigationBar(
     var showAllModulesSheet by remember { mutableStateOf(false) }
     val selectedIndex = primaryDestinations.indexOf(selectedTab).let { if (it < 0) 4 else it }
     val duration = if (rememberReducedMotion()) 0 else 220
+    val largeText = LocalDensity.current.fontScale > 1.5f
     val colors = MaterialTheme.colorScheme
     Box(
         modifier
@@ -111,7 +113,7 @@ fun FloatingIslandNavigationBar(
                                 tint = tint,
                             )
                             Text(
-                                primaryLabels[index],
+                                if (largeText && index == 3) "نمره" else primaryLabels[index],
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                                 color = if (selected) colors.primary else colors.onSurfaceVariant,
