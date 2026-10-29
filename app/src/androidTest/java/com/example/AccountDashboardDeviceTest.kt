@@ -64,10 +64,16 @@ class AccountDashboardDeviceTest {
                         hasAnyAncestor(hasTestTag("account_dashboard"))
                 )
                 .assertExists()
+            // Saving shows a transient Snackbar above navigation, over the theme cards.
+            // Wait for that real feedback to appear and leave before touching a covered control.
+            val savedFeedback = rule.onAllNodesWithText("مشخصات دانشجو ذخیره شد.")
+            rule.waitUntil(15000) { savedFeedback.fetchSemanticsNodes().isNotEmpty() }
+            rule.waitUntil(15000) { savedFeedback.fetchSemanticsNodes().isEmpty() }
             awaitAppWindowFocus()
             val darkChoice = rule.onNodeWithTag("account_theme_DARK").scrollAboveNavigation(rule)
             captureDevice("theme-before-touch")
             tapThroughAndroidInput(darkChoice)
+            rule.waitUntil(5000) { preferences.themeMode.value == ThemeMode.DARK }
             captureDevice("theme-after-touch")
             darkChoice.assertIsSelected()
             rule.runOnIdle { assertEquals(ThemeMode.DARK, preferences.themeMode.value) }
