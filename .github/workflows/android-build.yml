@@ -278,7 +278,7 @@ jobs:
           force-avd-creation: true
           disable-animations: true
           emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
-          script: ./gradlew connectedDebugAndroidTest --stacktrace
+          script: bash scripts/run_device_smoke.sh
 
       - name: Upload instrumentation reports
         if: always()

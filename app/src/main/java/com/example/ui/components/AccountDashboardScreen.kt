@@ -1,7 +1,6 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -218,9 +217,12 @@ private fun AccountThemePicker(selected: ThemeMode, onSelect: (ThemeMode) -> Uni
         val option: @Composable (ThemeMode, Modifier) -> Unit = { mode, modifier ->
             val active = selected == mode
             Surface(
-                modifier
-                    .testTag("account_theme_${mode.name}")
-                    .selectable(active, role = Role.RadioButton, onClick = { onSelect(mode) }),
+                selected = active,
+                onClick = { onSelect(mode) },
+                modifier =
+                    modifier.testTag("account_theme_${mode.name}").semantics {
+                        role = Role.RadioButton
+                    },
                 shape = RoundedCornerShape(18.dp),
                 color =
                     if (active) MaterialTheme.colorScheme.primaryContainer
