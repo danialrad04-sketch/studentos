@@ -183,6 +183,11 @@ class AccountDashboardExperienceTest {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                 StudentOsTheme(darkTheme = true) {
                     StudentAppScaffold(selected, { selected = it }, onOpenMore = { more = true }) {
+                        assertEquals(
+                            "Dark canvas content must inherit the semantic foreground",
+                            MaterialTheme.colorScheme.onBackground,
+                            LocalContentColor.current,
+                        )
                         Text(selected.title)
                     }
                 }

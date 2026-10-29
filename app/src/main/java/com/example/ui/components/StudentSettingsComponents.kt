@@ -31,6 +31,7 @@ fun StudentSettingsPage(title: String, onBack: () -> Unit, content: @Composable 
         Scaffold(
             modifier = Modifier.testTag("settings_page").studentWorkspaceBackground(),
             containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onBackground,
             topBar = {
                 TopAppBar(
                     title = { Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) },

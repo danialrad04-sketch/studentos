@@ -22,6 +22,7 @@ fun StudentAppScaffold(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onBackground,
         snackbarHost = snackbarHost,
         bottomBar = { if (!useRail) FloatingIslandNavigationBar(selectedTab, onTabSelected, onOpenMore = onOpenMore) }
     ) { insets ->
