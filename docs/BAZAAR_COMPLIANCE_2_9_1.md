@@ -1,0 +1,5 @@
+# Student OS 2.9.1 / 2019 — development candidate
+
+Restores the approved original sticker artwork in navigation, puts Account directly in the fifth phone tab, and overlays the capsule above the full page without a full-width backplate. A small native graphics-layer backdrop blur is used on hardware-accelerated Android12+, with a readable capsule fallback on older/software renderers. Measured end-of-scroll clearance keeps the last actions reachable. See NAVIGATION_OVERLAY_2_9_1.md.
+
+Package, production certificate, permissions, Room schema13, existing authentication/backend and public billing/access policies remain unchanged. No online AI or provider is activated. Verify unit/UI/native tests, both lints, PostgreSQL/Firebase emulators, actual signed/R8 offline install/update/restart and ZIP/ELF16KB alignment on the exact source. The selected2.4.2/2012 source baseline is not confirmed as the previously uploaded store binary. Emulator results do not certify physical devices or store approval. This candidate has not been published.

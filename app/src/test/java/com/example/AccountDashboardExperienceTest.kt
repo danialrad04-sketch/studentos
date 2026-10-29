@@ -52,6 +52,7 @@ class AccountDashboardExperienceTest {
                             Modifier.fillMaxSize()
                                 .verticalScroll(rememberScrollState())
                                 .padding(16.dp)
+                                .padding(bottom = LocalStudentNavigationClearance.current)
                         ) {
                             AccountDashboardScreen(
                                 StudentProfileEntity(
@@ -88,18 +89,18 @@ class AccountDashboardExperienceTest {
     fun lightDashboardHasRealRoutesAndSingleChoiceAppearanceControls() {
         content(false)
         rule.onRoot().captureRoboImage("build/outputs/visual-review/account-dashboard-light.png")
-        rule.onNodeWithTag("account_edit_profile").performScrollTo().performClick()
+        rule.onNodeWithTag("account_edit_profile").scrollAboveNavigation(rule).performClick()
         assertEquals("profile", action)
-        rule.onNodeWithTag("account_theme_DARK").performScrollTo().performClick().assertIsSelected()
+        rule.onNodeWithTag("account_theme_DARK").scrollAboveNavigation(rule).performClick().assertIsSelected()
         rule.onNodeWithTag("account_theme_SYSTEM").assertIsNotSelected()
-        rule.onNodeWithText("اعلان‌های درسی").performScrollTo().performClick()
+        rule.onNodeWithText("اعلان‌های درسی").scrollAboveNavigation(rule).performClick()
         rule.runOnIdle { assertFalse(notifications) }
         rule.onNodeWithText("یادآورهای برنامه خاموش‌اند").assertExists()
-        rule.onNodeWithTag("setting_مطالعه و تمرکز").performScrollTo().performClick()
+        rule.onNodeWithTag("setting_مطالعه و تمرکز").scrollAboveNavigation(rule).performClick()
         assertEquals("study", action)
-        rule.onNodeWithTag("setting_پشتیبان و بازیابی").performScrollTo().performClick()
+        rule.onNodeWithTag("setting_پشتیبان و بازیابی").scrollAboveNavigation(rule).performClick()
         assertEquals("backup", action)
-        rule.onNodeWithTag("setting_همهٔ تنظیمات").performScrollTo().performClick()
+        rule.onNodeWithTag("setting_همهٔ تنظیمات").scrollAboveNavigation(rule).performClick()
         assertEquals("home", action)
     }
 
@@ -122,7 +123,7 @@ class AccountDashboardExperienceTest {
             )) {
             rule
                 .onNodeWithTag("setting_$title")
-                .performScrollTo()
+                .scrollAboveNavigation(rule)
                 .assertIsDisplayed()
                 .performClick()
             assertEquals(expected, action)
@@ -136,18 +137,13 @@ class AccountDashboardExperienceTest {
     @Config(qualifiers = "w320dp-h700dp-xxhdpi", sdk = [35])
     fun narrowTwoHundredPercentNavigationKeepsFiveTargetsAboveSystemInsets() {
         var selected by mutableStateOf(AppTab.DASHBOARD)
-        var more = false
         rule.setContent {
             val d = LocalDensity.current
             CompositionLocalProvider(
                 LocalLayoutDirection provides LayoutDirection.Rtl,
                 LocalDensity provides Density(d.density, 2f),
             ) {
-                StudentOsTheme {
-                    StudentAppScaffold(selected, { selected = it }, onOpenMore = { more = true }) {
-                        Text("محتوا")
-                    }
-                }
+                StudentOsTheme { StudentAppScaffold(selected, { selected = it }) { Text("محتوا") } }
             }
         }
         for (tab in listOf(AppTab.DASHBOARD, AppTab.SCHEDULE, AppTab.TASKS, AppTab.GRADES)) {
@@ -156,7 +152,7 @@ class AccountDashboardExperienceTest {
             assertTrue(bounds.width >= 48 * rule.density.density)
         }
         val overflow = mutableListOf<String>()
-        for (label in listOf("خانه", "برنامه", "کارها", "نمره", "بیشتر")) {
+        for (label in listOf("خانه", "برنامه", "کارها", "نمره", "حساب")) {
             val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
             rule.onNodeWithText(label).performSemanticsAction(
                 SemanticsActions.GetTextLayoutResult
@@ -170,8 +166,8 @@ class AccountDashboardExperienceTest {
         }
         rule.onRoot().captureRoboImage("build/outputs/visual-review/navigation-320-rtl-200.png")
         assertTrue("Navigation label overflow: $overflow", overflow.isEmpty())
-        rule.onNodeWithTag("nav_more").assertIsDisplayed().performClick()
-        assertTrue(more)
+        rule.onNodeWithTag("nav_ACCOUNT").assertIsDisplayed().performClick().assertIsSelected()
+        assertEquals(AppTab.ACCOUNT, selected)
         rule.onRoot().captureRoboImage("build/outputs/visual-review/navigation-320-rtl-200.png")
     }
 
@@ -195,9 +191,9 @@ class AccountDashboardExperienceTest {
             }
         }
         rule.onNodeWithTag("navigation_rail").assertIsDisplayed()
-        rule.onNodeWithText("حساب").performScrollTo().performClick()
+        rule.onNodeWithText("حساب").scrollAboveNavigation(rule).performClick()
         assertEquals(AppTab.ACCOUNT, selected)
-        rule.onNodeWithTag("rail_more").performScrollTo().performClick()
+        rule.onNodeWithTag("rail_more").scrollAboveNavigation(rule).performClick()
         assertTrue(more)
         rule
             .onRoot()

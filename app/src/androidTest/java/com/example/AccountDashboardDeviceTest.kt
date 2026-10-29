@@ -49,7 +49,7 @@ class AccountDashboardDeviceTest {
             rule.runOnIdle { vm.selectTab(com.example.ui.models.AppTab.DASHBOARD) }
             rule.onNodeWithContentDescription("حساب کاربری").performClick()
             rule.onNodeWithTag("account_dashboard").assertExists()
-            rule.onNodeWithTag("account_edit_profile").performScrollTo().performClick()
+            rule.onNodeWithTag("account_edit_profile").scrollAboveNavigation(rule).performClick()
             rule
                 .onNodeWithText("نام و نام خانوادگی")
                 .performTextReplacement("نام ذخیره‌شده در حساب")
@@ -64,7 +64,7 @@ class AccountDashboardDeviceTest {
                         hasAnyAncestor(hasTestTag("account_dashboard"))
                 )
                 .assertExists()
-            rule.onNodeWithTag("account_theme_DARK").performScrollTo().performClick()
+            rule.onNodeWithTag("account_theme_DARK").scrollAboveNavigation(rule).performClick()
             rule.runOnIdle { assertEquals(ThemeMode.DARK, preferences.themeMode.value) }
             rule.activityRule.scenario.recreate()
             rule.waitUntil(20000) {
@@ -76,8 +76,8 @@ class AccountDashboardDeviceTest {
                         hasAnyAncestor(hasTestTag("account_dashboard"))
                 )
                 .assertExists()
-            rule.onNodeWithTag("account_theme_DARK").performScrollTo().assertIsSelected()
-            rule.onNodeWithTag("setting_مطالعه و تمرکز").performScrollTo().performClick()
+            rule.onNodeWithTag("account_theme_DARK").scrollAboveNavigation(rule).assertIsSelected()
+            rule.onNodeWithTag("setting_مطالعه و تمرکز").scrollAboveNavigation(rule).performClick()
             rule.onNodeWithText("هدف مطالعهٔ روزانه").assertExists()
             rule.onNodeWithContentDescription("بازگشت").performClick()
             // Settings back first returns to its index, then to the owning account destination.

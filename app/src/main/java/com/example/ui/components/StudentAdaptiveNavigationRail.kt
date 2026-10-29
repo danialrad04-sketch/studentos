@@ -70,7 +70,7 @@ fun StudentAdaptiveNavigationRail(
                     colors = itemColors,
                     selected = selectedTab == tab,
                     onClick = { onTabSelected(tab) },
-                    icon = { androidx.compose.material3.Icon(studentDestinationIcon(tab), null) },
+                    icon = { AppEmoji(studentDestinationSticker(tab), size = 28.dp) },
                     label = { Text(tab.title.split(" ").firstOrNull() ?: tab.title) }
                 )
             }
@@ -80,7 +80,7 @@ fun StudentAdaptiveNavigationRail(
                 modifier = Modifier.testTag("rail_more"),
                 selected = isSecondaryTab,
                 onClick = { onOpenMore?.invoke() ?: run { showAllModulesSheet = true } },
-                icon = { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.GridView, null) },
+                icon = { AppEmoji(AppEmojiType.MORE, size = 28.dp) },
                 label = { Text("بیشتر") }
             )
         }

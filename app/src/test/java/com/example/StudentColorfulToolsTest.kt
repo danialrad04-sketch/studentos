@@ -61,7 +61,6 @@ class StudentColorfulToolsTest {
 
     @Test fun colorfulHomeNavigationStillOpensEachRealDestination() {
         var selected: AppTab? = null
-        var more = false
         rule.setContent { StudentOsTheme { Surface(color = MaterialTheme.colorScheme.background) {
             Column(Modifier.fillMaxSize()) {
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)) {
@@ -69,14 +68,14 @@ class StudentColorfulToolsTest {
                     Spacer(Modifier.height(12.dp))
                     StudentHomeToolGrid { selected = it }
                 }
-                FloatingIslandNavigationBar(AppTab.DASHBOARD, { selected = it }, onOpenMore = { more = true })
+                FloatingIslandNavigationBar(AppTab.DASHBOARD, { selected = it })
             }
         } } }
         rule.onRoot().captureRoboImage("build/outputs/visual-review/colorful-home-light.png")
         rule.onNodeWithText("کارنامه").performClick()
         rule.runOnIdle { assertEquals(AppTab.GRADES, selected) }
-        rule.onNodeWithText("بیشتر").performClick()
-        rule.runOnIdle { assertTrue(more) }
+        rule.onNodeWithText("حساب").performClick()
+        rule.runOnIdle { assertEquals(AppTab.ACCOUNT, selected) }
         rule.onNodeWithTag("home_NOTES").performClick()
         rule.runOnIdle { assertEquals(AppTab.NOTES, selected) }
     }
