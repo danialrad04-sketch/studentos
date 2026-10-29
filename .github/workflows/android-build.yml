@@ -276,6 +276,7 @@ jobs:
           profile: pixel_2
           avd-name: studentos-api35
           force-avd-creation: true
+          disable-animations: true
           emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
           script: ./gradlew connectedDebugAndroidTest --stacktrace
 
