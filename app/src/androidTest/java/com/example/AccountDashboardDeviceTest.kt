@@ -64,7 +64,12 @@ class AccountDashboardDeviceTest {
                         hasAnyAncestor(hasTestTag("account_dashboard"))
                 )
                 .assertExists()
-            rule.onNodeWithTag("account_theme_DARK").scrollAboveNavigation(rule).performClick()
+            awaitAppWindowFocus()
+            rule
+                .onNodeWithTag("account_theme_DARK")
+                .scrollAboveNavigation(rule)
+                .performClick()
+                .assertIsSelected()
             rule.runOnIdle { assertEquals(ThemeMode.DARK, preferences.themeMode.value) }
             rule.activityRule.scenario.recreate()
             rule.waitUntil(20000) {
@@ -76,6 +81,7 @@ class AccountDashboardDeviceTest {
                         hasAnyAncestor(hasTestTag("account_dashboard"))
                 )
                 .assertExists()
+            awaitAppWindowFocus()
             rule.onNodeWithTag("account_theme_DARK").scrollAboveNavigation(rule).assertIsSelected()
             rule.onNodeWithTag("setting_مطالعه و تمرکز").scrollAboveNavigation(rule).performClick()
             rule.onNodeWithText("هدف مطالعهٔ روزانه").assertExists()
@@ -87,5 +93,14 @@ class AccountDashboardDeviceTest {
             preferences.setThemeMode(originalTheme)
             preferences.setNotificationsEnabled(originalNotifications)
         }
+    }
+
+    private fun awaitAppWindowFocus() {
+        rule.waitUntil(15000) {
+            var focused = false
+            rule.activityRule.scenario.onActivity { focused = it.hasWindowFocus() }
+            focused
+        }
+        rule.waitForIdle()
     }
 }

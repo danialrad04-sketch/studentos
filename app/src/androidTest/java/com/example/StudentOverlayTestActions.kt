@@ -1,8 +1,14 @@
 package com.example
 
+import androidx.compose.runtime.BroadcastFrameClock
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 /** Like an extra user scroll: place the target above the floating navigation before tapping. */
 fun SemanticsNodeInteraction.scrollAboveNavigation(
@@ -21,7 +27,6 @@ fun SemanticsNodeInteraction.scrollAboveNavigation(
     // A modal window owns its own viewport; the app bar behind it cannot obscure its controls.
     if (rootId(target) != rootId(bar)) return this
     val delta = target.boundsInRoot.bottom - bar.boundsInRoot.top + 8 * rule.density.density
-    if (delta <= 0) return this
     var parent = target.parent
     while (
         parent != null &&
@@ -30,9 +35,42 @@ fun SemanticsNodeInteraction.scrollAboveNavigation(
     ) parent = parent.parent
     val owner =
         checkNotNull(parent) { "The target needs a vertical scroll owner to clear navigation" }
-    rule
-        .onNode(SemanticsMatcher("vertical scroll owner") { it.id == owner.id })
-        .performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, delta) }
+    // ScrollBy launches an animation and returns immediately. Await the suspending variant
+    // so a following touch cannot be consumed merely to stop that animation.
+    val scroll = owner.config[SemanticsActions.ScrollByOffset]
+    val frameClock = BroadcastFrameClock()
+    var frameNanos = 0L
+    var job: Job? = null
+    var failure: Throwable? = null
+    rule.runOnIdle {
+        job =
+            CoroutineScope(Dispatchers.Unconfined + frameClock).launch {
+                try {
+                    scroll(Offset(0f, delta.coerceAtLeast(0f)))
+                } catch (error: Throwable) {
+                    failure = error
+                }
+            }
+    }
+    try {
+        rule.waitUntil(5000) {
+            rule.runOnIdle {
+                repeat(120) {
+                    if (frameClock.hasAwaiters) {
+                        frameNanos += 16_666_667L
+                        frameClock.sendFrame(frameNanos)
+                    }
+                }
+            }
+            job?.isCompleted == true
+        }
+        rule.waitForIdle()
+        rule.runOnIdle {
+            failure?.let { throw AssertionError("Overlay clearance scroll failed", it) }
+        }
+    } finally {
+        rule.runOnIdle { job?.cancel() }
+    }
     check(fetchSemanticsNode().boundsInRoot.bottom <= bar.boundsInRoot.top + 1f) {
         "The target remains obscured by navigation"
     }
