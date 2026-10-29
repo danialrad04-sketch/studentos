@@ -73,11 +73,12 @@ def onboard():
     return xml
 
 
-def assert_profile():
+def assert_profile(direct_account=False):
     xml = wait_ui(lambda x: 'خانه' in x)
     assert 'رد شدن' not in xml, 'Onboarding state was lost'
-    tap_node(xml, lambda a: a.get('text') == 'بیشتر')
-    xml = wait_ui(lambda x: 'حساب کاربری' in x)
+    # The selected legacy baseline has More; the new release has a direct Account tab.
+    tap_node(xml, lambda a: a.get('text') == ('حساب' if direct_account else 'بیشتر'))
+    xml = wait_ui(lambda x: ('حساب من' if direct_account else 'حساب کاربری') in x)
     assert MARKER in xml, 'Saved local profile was lost on update/restart'
     adb('shell', 'input', 'keyevent', '4')
     wait_ui(lambda x: 'خانه' in x)
@@ -96,9 +97,10 @@ def find_scroll(predicate):
 
 def inspect_licenses(out):
     xml = wait_ui(lambda x: 'خانه' in x)
-    tap_node(xml, lambda a: a.get('text') == 'بیشتر')
-    xml = wait_ui(lambda x: 'حساب کاربری' in x)
-    tap_node(xml, lambda a: a.get('text') == 'تنظیمات')
+    tap_node(xml, lambda a: a.get('text') == 'حساب')
+    xml = wait_ui(lambda x: 'حساب من' in x)
+    xml = find_scroll(lambda a: a.get('text') == 'همهٔ تنظیمات')
+    tap_node(xml, lambda a: a.get('text') == 'همهٔ تنظیمات')
     xml = find_scroll(lambda a: a.get('text') == 'راهنما و دربارهٔ برنامه')
     tap_node(xml, lambda a: a.get('text') == 'راهنما و دربارهٔ برنامه')
     xml = find_scroll(lambda a: a.get('text') == 'مجوز قلم‌ها')
@@ -134,13 +136,13 @@ def main():
     # Android itself checks signature/package compatibility during this real update.
     assert 'Success' in adb('install', '-r', args.candidate_apk)
     launch()
-    assert_profile()
+    assert_profile(direct_account=True)
     xml = wait_ui(lambda x: 'خانه' in x)
     assert '۲۴:۱۸ مانده' not in xml, 'Home still displays a fabricated countdown'
     assert 'هنوز کلاسی ثبت نشده' in xml, 'Empty home status should not invent a class'
     capture(args.output, 'after-upgrade-offline')
     launch()
-    assert_profile()
+    assert_profile(direct_account=True)
     adb('uninstall', PACKAGE)
     assert 'Success' in adb('install', args.candidate_apk)
     launch()

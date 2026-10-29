@@ -57,7 +57,7 @@ class ReleaseVisualTest {
                                 gpa = "۱۷٫۸۵", passedUnits = 34, totalRequiredCredits = 140,
                                 pomodoroSeconds = 1500, isPomodoroRunning = false,
                                 onTogglePomodoro = {}, onNavigateTab = {},
-                                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)
+                                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = com.example.ui.components.LocalStudentNavigationClearance.current)
                             )
                         }
                     }
@@ -76,7 +76,7 @@ class ReleaseVisualTest {
             CompositionLocalProvider(LocalDensity provides Density(density.density, scale)) {
                 StudentOsTheme(darkTheme = dark) {
                     StudentAppScaffold(AppTab.TASKS, {}) {
-                        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
+                        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp).padding(bottom = com.example.ui.components.LocalStudentNavigationClearance.current)) {
                             SubScreenHeaderSection(
                                 currentTab = AppTab.TASKS, onBackToDashboard = {}, onOpenSearch = {},
                                 onOpenNotifications = {}, notifCount = 1, isDarkTheme = dark, onToggleTheme = {}
@@ -89,12 +89,12 @@ class ReleaseVisualTest {
         }
         rule.waitForIdle()
         rule.onRoot().captureRoboImage("build/outputs/visual-review/tasks-${if (dark) "dark" else "light"}-$scale.png")
-        val add = rule.onNodeWithText("ثبت اولین تکلیف").performScrollTo().assertIsDisplayed()
+        val add = rule.onNodeWithText("ثبت اولین تکلیف").scrollAboveNavigation(rule).assertIsDisplayed()
         val buttonBounds = add.fetchSemanticsNode().boundsInRoot
         val navigationBounds = rule.onNodeWithTag("primary_navigation").fetchSemanticsNode().boundsInRoot
         assertTrue("The primary action must remain above navigation", buttonBounds.bottom <= navigationBounds.top)
         rule.onRoot().captureRoboImage("build/outputs/visual-review/tasks-bottom-${if (dark) "dark" else "light"}-$scale.png")
-        rule.onNode(hasText("عقب‌افتاده") and hasClickAction()).performScrollTo().assertIsDisplayed()
+        rule.onNode(hasText("عقب‌افتاده") and hasClickAction()).scrollAboveNavigation(rule).assertIsDisplayed()
         val chip = rule.onNode(hasText("عقب‌افتاده") and hasClickAction()).fetchSemanticsNode().boundsInRoot
         val viewport = rule.onRoot().fetchSemanticsNode().boundsInRoot
         assertTrue("Every filter must scroll into the viewport", chip.left >= viewport.left && chip.right <= viewport.right)

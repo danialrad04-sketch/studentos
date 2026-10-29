@@ -424,6 +424,7 @@ fun MainAppScreen(
                                 .fillMaxSize()
                                 .then(if (visibleTab in setOf(AppTab.COPILOT, AppTab.SEMESTER_PLANNER, AppTab.HISTORY)) Modifier else Modifier.verticalScroll(rememberScrollState()))
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .padding(bottom = com.example.ui.components.LocalStudentNavigationClearance.current)
                         ) {
                             val totalCurriculumUnits = when (val state = academicProgressState) {
                                 is com.example.ui.models.AcademicProgressUiState.Ready -> state.progress.totalRequiredCredits

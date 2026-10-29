@@ -11,11 +11,26 @@ import org.junit.Test
 
 class ReleaseNavigationTest {
     @get:Rule val rule = createComposeRule()
-    @Test fun gradesHasADirectNavigationEntry() {
+
+    @Test
+    fun gradesHasADirectNavigationEntry() {
         var selected = AppTab.DASHBOARD
-        rule.setContent { StudentOsTheme { FloatingIslandNavigationBar(AppTab.DASHBOARD,{selected=it}) } }
+        rule.setContent {
+            StudentOsTheme { FloatingIslandNavigationBar(AppTab.DASHBOARD, { selected = it }) }
+        }
         rule.onNodeWithText("کارنامه").assertHasClickAction().performClick()
-        assertEquals(AppTab.GRADES,selected)
+        assertEquals(AppTab.GRADES, selected)
         rule.onNodeWithText("خانه").assertIsSelected()
+    }
+
+    @Test
+    fun accountReplacesMoreAsADirectNavigationEntry() {
+        var selected = AppTab.DASHBOARD
+        rule.setContent {
+            StudentOsTheme { FloatingIslandNavigationBar(AppTab.DASHBOARD, { selected = it }) }
+        }
+        rule.onNodeWithText("بیشتر").assertDoesNotExist()
+        rule.onNodeWithTag("nav_ACCOUNT").assertIsDisplayed().performClick()
+        assertEquals(AppTab.ACCOUNT, selected)
     }
 }

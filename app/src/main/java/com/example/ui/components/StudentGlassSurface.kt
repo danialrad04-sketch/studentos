@@ -21,6 +21,7 @@ fun StudentGlassSurface(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(28.dp),
     elevated: Boolean = false,
+    surfaceAlpha: Float? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -28,7 +29,10 @@ fun StudentGlassSurface(
     Surface(
         modifier = modifier,
         shape = shape,
-        color = colors.surface.copy(alpha = if (dark) 0.88f else 0.86f),
+        color =
+            colors.surface.copy(
+                alpha = surfaceAlpha?.coerceIn(0f, 1f) ?: if (dark) 0.88f else 0.86f
+            ),
         contentColor = colors.onSurface,
         shadowElevation = if (elevated) 8.dp else 0.dp,
         border =

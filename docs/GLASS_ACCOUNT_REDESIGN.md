@@ -23,3 +23,5 @@ Study defaults, notification preference, profile editing, backup, account manage
 Focused UI tests cover real routes, radio selection, notification state, long Persian identity, dark 150% text, phone navigation at 320dp/200%, and account/tool access on a tablet rail. A native production-navigation test edits the Room profile, persists the theme, recreates the Activity and exercises section/back navigation. Existing root-viewport tests automatically cover the new destination. Inspect exact-revision screenshots and signed/R8 install/upgrade evidence before delivery; passing emulator checks do not certify physical devices or live services.
 
 UI UX Pro Max source revision: 28b3b8dee8c976df4fa3e94aed4e092ad43fcb03
+
+The phone navigation/background decision above describes2.9.0. The user's2.9.1 correction restores the original stickers, replaces More with Account, and overlays the capsule above the page with a native clipped backdrop blur where supported. See NAVIGATION_OVERLAY_2_9_1.md for the current design.
