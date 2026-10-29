@@ -58,14 +58,24 @@ class AccountDashboardDeviceTest {
             rule.waitUntil(15000) {
                 rule.onAllNodesWithTag("profile_editor").fetchSemanticsNodes().isEmpty()
             }
-            rule.onNodeWithText("نام ذخیره‌شده در حساب").assertExists()
+            rule
+                .onNode(
+                    hasText("نام ذخیره‌شده در حساب") and
+                        hasAnyAncestor(hasTestTag("account_dashboard"))
+                )
+                .assertExists()
             rule.onNodeWithTag("account_theme_DARK").performScrollTo().performClick()
             rule.runOnIdle { assertEquals(ThemeMode.DARK, preferences.themeMode.value) }
             rule.activityRule.scenario.recreate()
             rule.waitUntil(20000) {
                 rule.onAllNodesWithTag("account_dashboard").fetchSemanticsNodes().isNotEmpty()
             }
-            rule.onNodeWithText("نام ذخیره‌شده در حساب").assertExists()
+            rule
+                .onNode(
+                    hasText("نام ذخیره‌شده در حساب") and
+                        hasAnyAncestor(hasTestTag("account_dashboard"))
+                )
+                .assertExists()
             rule.onNodeWithTag("account_theme_DARK").performScrollTo().assertIsSelected()
             rule.onNodeWithTag("setting_مطالعه و تمرکز").performScrollTo().performClick()
             rule.onNodeWithText("هدف مطالعهٔ روزانه").assertExists()
