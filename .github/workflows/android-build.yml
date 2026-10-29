@@ -271,7 +271,9 @@ jobs:
           api-level: 35
           target: google_apis
           arch: x86_64
-          profile: pixel_7_pro
+          # Preserve API 35 / phone width while keeping SwiftShader within hosted resources.
+          # The 1440p launcher ANR stole window focus on a previous exact-source run.
+          profile: pixel_2
           avd-name: studentos-api35
           force-avd-creation: true
           emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect
