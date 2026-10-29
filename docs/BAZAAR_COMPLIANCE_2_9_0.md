@@ -1,0 +1,7 @@
+# Student OS 2.9.0 / 2018 — development candidate
+
+This update introduces a floating, rounded navigation capsule, consistent vector controls, shared frosted surfaces and a dedicated personal account dashboard. Existing bottom destinations remain stable. The dashboard reads the real profile and academic counts and connects theme, study/notification preferences, profile editing, backup/restore, account management, support and privacy to the existing production paths. Theme and profile persist across Activity recreation. See GLASS_ACCOUNT_REDESIGN.md for source references and verification scope.
+
+Package, production signing identity, Room schema 13, authentication providers, backend contracts and permission policy are unchanged. Account entry and Bazaar billing remain governed by the existing uniform public access policy. The new dashboard does not activate cloud login, live sync or an online AI provider. Existing learning data transfers by portable file backup.
+
+No publication is performed by preparing this candidate. Required verification: unit/Compose tests, both lints, backend/PostgreSQL and Firebase emulator checks, native production navigation/profile persistence, signed/R8 offline install/upgrade/restart, packaged permission/signature audit and ZIP/ELF 16 KB alignment. Preserve exact-source artifact evidence and checksums. The selected 2.4.2/code2012 upgrade source is not confirmed to be the previously uploaded store binary. Emulator results do not certify physical devices, live services or store approval.

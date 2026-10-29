@@ -58,13 +58,13 @@ fun StudentNavigationDrawer(
             drawerContent = {
                 ModalDrawerSheet(
                     modifier = Modifier.width(drawerWidth).testTag("app_drawer"),
-                    drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
-                    drawerContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                    drawerShape = RoundedCornerShape(topEnd = 32.dp, bottomEnd = 32.dp),
+                    drawerContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
                 ) {
                     Column(if (shortWindow) Modifier.fillMaxSize().verticalScroll(rememberScrollState()) else Modifier.fillMaxSize()) {
                         Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 16.dp, top = 12.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                             Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primaryContainer) {
-                                AppEmoji(AppEmojiType.GRAD_CAP, Modifier.padding(7.dp), size = 32.dp)
+                                Icon(Icons.Rounded.School, null, Modifier.padding(12.dp).size(24.dp), tint = MaterialTheme.colorScheme.primary)
                             }
                             Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
                                 Text("Student OS", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
@@ -90,13 +90,13 @@ fun StudentNavigationDrawer(
                                     NavigationDrawerItem(
                                         modifier = Modifier.testTag("drawer_${tab.name}"),
                                         label = { Text(tab.title, style = MaterialTheme.typography.bodyMedium, fontWeight = if (selectedTab == tab) FontWeight.Bold else FontWeight.Normal) },
-                                        icon = { AppEmoji(studentDestinationSticker(tab), size = 32.dp) },
+                                        icon = { Icon(studentDestinationIcon(tab), null, Modifier.size(24.dp)) },
                                         selected = selectedTab == tab,
                                         shape = RoundedCornerShape(12.dp),
                                         colors = NavigationDrawerItemDefaults.colors(
-                                            selectedContainerColor = com.example.ui.theme.studentStickerColors(studentDestinationSticker(tab)).container,
+                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                             selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            selectedTextColor = com.example.ui.theme.studentStickerColors(studentDestinationSticker(tab)).ink
+                                            selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer
                                         ),
                                         onClick = { select { onSelectTab(tab) } }
                                     )
@@ -109,15 +109,15 @@ fun StudentNavigationDrawer(
                         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             NavigationDrawerItem(
                                 label = { Column { Text(profile.name.ifBlank { user.displayName.ifBlank { "دانشجو" } }, fontWeight = FontWeight.Bold); Text("حساب کاربری", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } },
-                                icon = { AppEmoji(AppEmojiType.PROFILE, size = 32.dp) }, selected = false,
+                                icon = { Icon(Icons.Rounded.PersonOutline, null, Modifier.size(24.dp)) }, selected = selectedTab == AppTab.ACCOUNT,
                                 badge = { if (user.isGuest) Text("مهمان", style = MaterialTheme.typography.labelSmall) },
                                 onClick = { select(onOpenAccount) }
                             )
                             val settingsItem: @Composable (Modifier) -> Unit = { itemModifier ->
-                                NavigationDrawerItem(modifier = itemModifier, label = { Text("تنظیمات", style = MaterialTheme.typography.labelLarge) }, icon = { AppEmoji(AppEmojiType.SETTINGS, size = 28.dp) }, selected = false, onClick = { select(onOpenSettings) })
+                                NavigationDrawerItem(modifier = itemModifier, label = { Text("تنظیمات", style = MaterialTheme.typography.labelLarge) }, icon = { Icon(Icons.Rounded.Settings, null, Modifier.size(24.dp)) }, selected = false, onClick = { select(onOpenSettings) })
                             }
                             val supportItem: @Composable (Modifier) -> Unit = { itemModifier ->
-                                NavigationDrawerItem(modifier = itemModifier, label = { Text("پشتیبانی", style = MaterialTheme.typography.labelLarge) }, icon = { AppEmoji(AppEmojiType.HELP, size = 28.dp) }, selected = false, onClick = { select(onOpenSupport) })
+                                NavigationDrawerItem(modifier = itemModifier, label = { Text("پشتیبانی", style = MaterialTheme.typography.labelLarge) }, icon = { Icon(Icons.AutoMirrored.Rounded.HelpOutline, null, Modifier.size(24.dp)) }, selected = false, onClick = { select(onOpenSupport) })
                             }
                             if (LocalDensity.current.fontScale >= 1.3f) {
                                 settingsItem(Modifier.fillMaxWidth())

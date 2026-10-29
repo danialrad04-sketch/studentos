@@ -12,6 +12,7 @@ sealed interface AppDialogState {
     data object None : AppDialogState
     data object Profile : AppDialogState
     data object SettingsAndRoadmap : AppDialogState
+    data class SettingsSection(val section: String) : AppDialogState
     data object PastSemesters : AppDialogState
     data object Notifications : AppDialogState
     data object ApkInfo : AppDialogState

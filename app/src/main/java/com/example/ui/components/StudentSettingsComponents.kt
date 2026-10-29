@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.ui.theme.studentWorkspaceBackground
 import com.example.ui.theme.rememberReducedMotion
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,8 +29,8 @@ fun StudentSettingsPage(title: String, onBack: () -> Unit, content: @Composable 
     Dialog(onDismissRequest = onBack, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         BackHandler(onBack = onBack)
         Scaffold(
-            modifier = Modifier.testTag("settings_page"),
-            containerColor = MaterialTheme.colorScheme.background,
+            modifier = Modifier.testTag("settings_page").studentWorkspaceBackground(),
+            containerColor = androidx.compose.ui.graphics.Color.Transparent,
             topBar = {
                 TopAppBar(
                     title = { Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) },
@@ -49,7 +50,7 @@ fun StudentSettingsPage(title: String, onBack: () -> Unit, content: @Composable 
 fun StudentSettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(title, Modifier.padding(start = 8.dp).semantics { heading() }, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-        Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface, border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+        StudentGlassSurface(shape = RoundedCornerShape(24.dp)) {
             Column(Modifier.fillMaxWidth(), content = content)
         }
     }

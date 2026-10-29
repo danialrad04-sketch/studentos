@@ -1,8 +1,6 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
@@ -34,11 +32,9 @@ fun SubScreenHeaderSection(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+    StudentGlassSurface(modifier.fillMaxWidth()) {
     Row(
-        modifier.fillMaxWidth().padding(vertical = 4.dp)
-            .background(MaterialTheme.colorScheme.surfaceContainerLow, MaterialTheme.shapes.large)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
-            .padding(horizontal = 4.dp, vertical = 6.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onBackToDashboard) {
@@ -82,6 +78,7 @@ fun SubScreenHeaderSection(
             }
         }
     }
+    }
 }
 
 /** Shared page context used throughout the academic workspace. */
@@ -102,4 +99,5 @@ internal fun studentDestinationDescription(tab: AppTab): String = when (tab) {
     AppTab.CURRICULUM -> "واحدها و پیش‌نیازهای رشته"
     AppTab.GAMIFICATION -> "قدم‌های کوچک، پیشرفت ماندگار"
     AppTab.HISTORY -> "مرور ترم‌های گذشته"
+    AppTab.ACCOUNT -> "پروفایل، ظاهر و تنظیمات شخصی تو"
 }

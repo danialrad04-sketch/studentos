@@ -28,7 +28,8 @@ enum class AppTab(
     CURRICULUM("چارت درسی", "🗺️"),
     POMODORO("تمرکز و مطالعه", "⏱️"),
     GAMIFICATION("دستاوردها", "🏆"),
-    HISTORY("ترم‌های قبل", "📚")
+    HISTORY("ترم‌های قبل", "📚"),
+    ACCOUNT("حساب من", "👤")
 }
 
 data class SystemNotification(
@@ -44,6 +45,6 @@ enum class ThemeMode(
     val descriptionFa: String
 ) {
     SYSTEM("مطابق سیستم", "تنظیم خودکار بر اساس حالت روز/شب گوشی"),
-    LIGHT("روشن", "تم روشن Academic Premium با کنتراست متعادل"),
-    DARK("تاریک", "تم تیره Academic Premium برای محیط‌های کم‌نور")
+    LIGHT("روشن", "برای محیط‌های روشن"),
+    DARK("تاریک", "برای مطالعه در محیط کم‌نور")
 }
