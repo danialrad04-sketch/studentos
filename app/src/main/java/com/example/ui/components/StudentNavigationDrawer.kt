@@ -108,7 +108,7 @@ fun StudentNavigationDrawer(
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             NavigationDrawerItem(
-                                label = { Column { Text(profile.name.ifBlank { user.displayName.ifBlank { "دانشجو" } }, fontWeight = FontWeight.Bold); Text("حساب کاربری", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } },
+                                label = { Column { Text(profile.name.ifBlank { user.displayName.ifBlank { "دانشجو" } }, fontWeight = FontWeight.Bold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis); Text("حساب کاربری", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } },
                                 icon = { Icon(Icons.Rounded.PersonOutline, null, Modifier.size(24.dp)) }, selected = selectedTab == AppTab.ACCOUNT,
                                 badge = { if (user.isGuest) Text("مهمان", style = MaterialTheme.typography.labelSmall) },
                                 onClick = { select(onOpenAccount) }

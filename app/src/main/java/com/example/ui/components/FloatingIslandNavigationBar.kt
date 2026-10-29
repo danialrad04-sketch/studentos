@@ -114,6 +114,7 @@ fun FloatingIslandNavigationBar(
                             )
                             Text(
                                 if (largeText && index == 3) "نمره" else primaryLabels[index],
+                                modifier = Modifier.fillMaxWidth(),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                                 color = if (selected) colors.primary else colors.onSurfaceVariant,

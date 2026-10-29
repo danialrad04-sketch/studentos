@@ -155,6 +155,7 @@ class AccountDashboardExperienceTest {
             val bounds = rule.onNodeWithTag("nav_${tab.name}").fetchSemanticsNode().boundsInRoot
             assertTrue(bounds.width >= 48 * rule.density.density)
         }
+        val overflow = mutableListOf<String>()
         for (label in listOf("خانه", "برنامه", "کارها", "نمره", "بیشتر")) {
             val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
             rule.onNodeWithText(label).performSemanticsAction(
@@ -162,13 +163,13 @@ class AccountDashboardExperienceTest {
             ) {
                 it(layouts)
             }
-            assertEquals(
-                "A navigation label must not leave an orphan letter",
-                1,
-                layouts.single().lineCount,
-            )
-            assertFalse(layouts.single().hasVisualOverflow)
+            val result = layouts.single()
+            if (result.lineCount != 1 || result.hasVisualOverflow)
+                overflow +=
+                    "$label: lines=${result.lineCount}, widthOverflow=${result.didOverflowWidth}, heightOverflow=${result.didOverflowHeight}, size=${result.size}, intrinsic=${result.multiParagraph.maxIntrinsicWidth}"
         }
+        rule.onRoot().captureRoboImage("build/outputs/visual-review/navigation-320-rtl-200.png")
+        assertTrue("Navigation label overflow: $overflow", overflow.isEmpty())
         rule.onNodeWithTag("nav_more").assertIsDisplayed().performClick()
         assertTrue(more)
         rule.onRoot().captureRoboImage("build/outputs/visual-review/navigation-320-rtl-200.png")
