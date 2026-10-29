@@ -107,16 +107,15 @@ class AccountDashboardDeviceTest {
     private fun captureDevice(name: String) {
         val instrumentation =
             androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
-        val directory =
-            checkNotNull(
-                instrumentation.targetContext.getExternalFilesDir("navigation-diagnostics")
-            )
-        directory.mkdirs()
-        val bitmap = checkNotNull(instrumentation.uiAutomation.takeScreenshot())
-        java.io.File(directory, "$name.png").outputStream().use {
-            bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
+        // Keep images outside application data: AGP uninstalls the target after the suite.
+        val automation = instrumentation.uiAutomation
+        val directory = "/sdcard/Download/studentos-navigation-diagnostics"
+        for (command in listOf("mkdir -p $directory", "screencap -p $directory/$name.png")) {
+            android.os.ParcelFileDescriptor.AutoCloseInputStream(
+                    automation.executeShellCommand(command)
+                )
+                .use { it.readBytes() }
         }
-        bitmap.recycle()
     }
 
     /** Exercise the real window/input pipeline, including touch-mode and focus hand-off. */
