@@ -72,7 +72,6 @@ import com.example.ui.models.AcademicProgressUiState
 import com.example.ui.models.CurriculumMatchUiState
 import com.example.ui.theme.studentColors
 import com.example.ui.theme.Amber600
-import com.example.ui.theme.AcademicNavy
 import com.example.ui.theme.Emerald600
 import com.example.ui.theme.Rose600
 

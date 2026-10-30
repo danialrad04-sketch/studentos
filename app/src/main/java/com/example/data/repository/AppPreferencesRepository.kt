@@ -177,6 +177,15 @@ class AppPreferencesRepository(context: Context) {
         _focusSession.value = session
     }
 
+    fun toggleFocusSession(now: Long, expectedOwner: String? = null): com.example.domain.model.FocusSession? = synchronized(FOCUS_COMPLETION_LOCK) {
+        if(expectedOwner!=null && expectedOwner!=taskReminderGeneration.value) return@synchronized null
+        completeFocusSession(now)
+        val current=readFocusSession()
+        val next=if(current.isRunning) current.pause(now) else current.start(now)
+        saveFocusSession(next)
+        next
+    }
+
     fun completeFocusSession(now: Long): Boolean = synchronized(FOCUS_COMPLETION_LOCK) {
         // Read the persisted deadline so a worker and a recreated repository cannot claim it twice.
         val session = readFocusSession()

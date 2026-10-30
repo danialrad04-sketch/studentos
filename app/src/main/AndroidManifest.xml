@@ -36,6 +36,19 @@
             android:name=".ui.util.AlarmReceiver"
             android:exported="false" />
 
+        <receiver android:name=".widget.StudentTodayWidget" android:exported="false" android:label="@string/student_widget_today">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/student_widget_today" />
+        </receiver>
+        <receiver android:name=".widget.StudentTasksWidget" android:exported="false" android:label="@string/student_widget_tasks">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/student_widget_tasks" />
+        </receiver>
+        <receiver android:name=".widget.StudentFocusWidget" android:exported="false" android:label="@string/student_widget_focus">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/student_widget_focus" />
+        </receiver>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

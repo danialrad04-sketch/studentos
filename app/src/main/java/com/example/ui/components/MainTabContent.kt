@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.example.ui.v3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -293,8 +296,13 @@ fun MainTabContent(
                     onOpenCourseWorkspace = onOpenCourseWorkspace
                 )
             }
+            AppTab.LIBRARY -> StudentV3Workspace(studentViewModel)
             AppTab.TASKS -> {
-                TasksScreen(
+                var panel by rememberSaveable { mutableIntStateOf(0) }
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                V3PanelSelector(listOf("تکلیف‌ها", "پروژه‌ها"), panel) { panel=it }
+                if(panel==1) StudentV3Workspace(studentViewModel, V3Section.PROJECTS)
+                else TasksScreen(
                     tasks = tasks,
                     courses = courses,
                     exams = exams,
@@ -307,14 +315,22 @@ fun MainTabContent(
                     onDeleteTask = { studentViewModel.deleteTask(it) },
                     onOpenCourseWorkspace = onOpenCourseWorkspace
                 )
+                }
             }
             AppTab.EXAMS -> {
+                var panel by rememberSaveable { mutableIntStateOf(0) }
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                V3PanelSelector(listOf("تقویم امتحان", "تمرین و آزمون"), panel) { panel=it }
+                if(panel==1) StudentV3Workspace(studentViewModel, V3Section.PRACTICE)
+                else {
                 val reminders by studentViewModel.examReminderIds.collectAsStateWithLifecycle()
                 ExamsScreen(exams = exams, tasks = tasks, onSetReminder = { studentViewModel.scheduleExamReminder(it) },
                     onAddExam = { if (courses.isEmpty()) onOpenAddCourse() else onOpenExamEditor?.invoke(null) },
                     onEditExam = { onOpenExamEditor?.invoke(it.id.removePrefix("exam_")) },
                     onScheduleReminder = onScheduleExamReminder, reminderIds = reminders,
                     onCancelReminder = studentViewModel::cancelExamReminder)
+                }
+                }
             }
             AppTab.GRADES -> {
                 GradesScreen(

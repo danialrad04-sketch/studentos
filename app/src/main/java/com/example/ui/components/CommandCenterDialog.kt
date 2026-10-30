@@ -78,8 +78,6 @@ import com.example.data.local.entity.CourseEntity
 import com.example.data.local.entity.TaskEntity
 import com.example.ui.models.ExamItem
 import com.example.ui.theme.Amber500
-import com.example.ui.theme.AcademicNavy
-import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.Rose600
 
 /**

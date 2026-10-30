@@ -67,7 +67,8 @@ fun BackupRestoreDialog(
     onExportJson: suspend () -> String,
     onImportJson: (String, (Boolean, String) -> Unit) -> Unit,
     onRestoreFromCloud: ((Boolean, String) -> Unit) -> Unit = {},
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    portableContent: (@Composable () -> Unit)? = null
 ) {
     val context = LocalContext.current
     var selectedTab by remember { mutableIntStateOf(0) } // 0: Export, 1: Restore
@@ -107,6 +108,8 @@ fun BackupRestoreDialog(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            portableContent?.invoke()
+            androidx.compose.material3.HorizontalDivider()
             // Header
 
 
@@ -143,7 +146,7 @@ fun BackupRestoreDialog(
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            "شامل تمام ترم‌ها، دروس، نمرات، سوابق تحصیلی، تکالیف و تقویم امتحانات به صورت فایل ساخت‌یافته استاندارد.",
+                            "متن JSON شامل اطلاعات و تنظیمات است؛ برای انتقال خودِ جزوه‌ها و تصاویر، پشتیبان کامل ZIP بگیر.",
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 22.sp
@@ -203,7 +206,7 @@ fun BackupRestoreDialog(
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            "در صورت داشتن حساب کاربری، می‌توانید تمامی اطلاعات و دروس ذخیره‌شده را مستقیماً از فضای ابری بازگردانی کنید.",
+                            "اطلاعاتی که قبلاً با حساب کاربری همگام شده‌اند از اینجا بازیابی می‌شوند. جزوه‌ها، پروژه‌ها و تمرین‌های جدید را با پشتیبان کامل ZIP منتقل کن.",
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

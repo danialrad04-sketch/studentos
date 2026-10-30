@@ -1,0 +1,6 @@
+<resources>
+    <color name="student_widget_surface">#F7F8EE</color><color name="student_widget_ink">#22303A</color><color name="student_widget_action">#E4EACB</color>
+    <string name="student_widget_open">باز کردن</string><string name="student_widget_refresh">به‌روزرسانی</string>
+    <string name="student_widget_today">کلاس بعدی Student OS</string><string name="student_widget_tasks">کارهای امروز Student OS</string><string name="student_widget_focus">تمرکز Student OS</string>
+    <string name="student_widget_description">اطلاعات همین دستگاه و دسترسی سریع به برنامه</string>
+</resources>

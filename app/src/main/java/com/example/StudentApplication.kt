@@ -21,6 +21,8 @@ class StudentApplication : Application() {
         super.onCreate()
         container = AppContainer(this)
         BackendSyncScheduler.install(this, AppDatabase.getDatabase(this))
+        com.example.data.local.StudentSnapshotWorker.install(this,AppDatabase.getDatabase(this))
+        if(com.example.widget.StudentWidgets.installed(this)) com.example.widget.StudentWidgets.request(this)
 
         // Global Uncaught Exception Handler
         val previousDefaultHandler = Thread.getDefaultUncaughtExceptionHandler()

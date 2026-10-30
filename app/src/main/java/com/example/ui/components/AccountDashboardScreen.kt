@@ -119,6 +119,7 @@ fun AccountDashboardScreen(
             }
         }
         StudentSettingsGroup("مطالعه و یادآورها") {
+            com.example.ui.v3.StudentWidgetSettings()
             StudentSettingsRow(
                 "مطالعه و تمرکز",
                 "هدف روزانه ${dailyGoalMinutes.toString().toPersianDigits()} دقیقه · تمرکز ${focusMinutes.toString().toPersianDigits()} دقیقه",

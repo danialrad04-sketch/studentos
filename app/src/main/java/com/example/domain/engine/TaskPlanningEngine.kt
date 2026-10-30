@@ -12,6 +12,8 @@ object TaskPlanningEngine {
     val repeatIntervals = setOf(0, 1, 7, 14, 30)
 
     fun validate(task: TaskEntity) {
+        require(task.estimatedMinutes==0 || task.estimatedMinutes in 5..6000) { "زمان لازم باید ۵ تا ۶۰۰۰ دقیقه باشد." }
+        require(task.completedAt==null || (task.isCompleted && task.completedAt>=0))
         require(task.title.isNotBlank()) { "عنوان تکلیف را وارد کن." }
         require(JalaliCalendarUtil.parse(task.dueDate) != null) { "تاریخ تحویل معتبر نیست." }
         require(task.repeatEveryDays in repeatIntervals) { "بازهٔ تکرار معتبر نیست." }

@@ -48,10 +48,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -176,8 +179,7 @@ fun ModernBentoDashboard(
             onStartFocus = startFocus
         )
 
-        StudentWorkspaceShortcuts(onNavigateTab)
-
+        AcademicSectionHeader("قدم بعدی")
         if (learningSummary != null) learningSummary()
         else if (studyRecommendations.isNotEmpty()) StudyPlanPreviewCardV2(
             recommendations = studyRecommendations.take(1),
@@ -187,6 +189,7 @@ fun ModernBentoDashboard(
             onStartFocus = startFocus
         )
 
+        AcademicSectionHeader("خلاصهٔ پیشرفت")
         AcademicJourneyOverview(
             compact = true,
             declaredPassedUnits = passedUnits,
@@ -202,8 +205,10 @@ fun ModernBentoDashboard(
             onOpenFocus = startFocus
         )
 
-        AcademicSectionHeader("ابزارها")
-        StudentHomeToolGrid { tab ->
+        StudentWorkspaceShortcuts(onNavigateTab, showLibrary = true)
+        var toolsExpanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+        OutlinedButton(onClick={ toolsExpanded=!toolsExpanded },modifier=Modifier.fillMaxWidth().testTag("home_more_tools")) { Text(if(toolsExpanded) "بستن ابزارها" else "ابزارهای بیشتر") }
+        if(toolsExpanded) StudentHomeToolGrid { tab ->
             if (tab == AppTab.COPILOT && onOpenCopilot != null) onOpenCopilot() else onNavigateTab(tab)
         }
         onOpenAppTour?.let { openTour ->

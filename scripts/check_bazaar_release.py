@@ -71,6 +71,8 @@ def main():
     build_tools = max(versions, key=lambda p: tuple(int(n) for n in re.findall(r'\d+', p.name)))
     def run(name, *arguments):
         return subprocess.check_output([str(build_tools / name), *map(str, arguments)], text=True, stderr=subprocess.STDOUT)
+    if args.apk.stat().st_size > 100_000_000:
+        raise ValueError('APK exceeds the approved 100,000,000-byte ceiling')
     with zipfile.ZipFile(args.apk) as archive:
         if archive.testzip():
             raise ValueError('APK ZIP integrity failure')

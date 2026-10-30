@@ -75,8 +75,6 @@ import androidx.core.view.WindowCompat
 import com.example.util.CrashLogger
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.local.entity.CourseEntity
@@ -109,7 +107,7 @@ fun MainAppScreen(
 ) {
     androidx.compose.runtime.LaunchedEffect(notificationDestinations) {
         notificationDestinations?.collect { destination ->
-            if (destination == "TASKS") studentViewModel.selectTab(AppTab.TASKS)
+            if(destination in setOf("TASKS","SCHEDULE","POMODORO")) studentViewModel.selectTab(AppTab.valueOf(destination))
         }
     }
     val context = LocalContext.current
@@ -118,6 +116,7 @@ fun MainAppScreen(
     // Persistent Theme & System Theme detection
     val themeMode by studentViewModel.themeMode.collectAsStateWithLifecycle()
     val notificationsEnabled by studentViewModel.notificationsEnabled.collectAsStateWithLifecycle()
+    val workspaceBusy by studentViewModel.workspaceBusy.collectAsStateWithLifecycle()
     val systemInDark = isSystemInDarkTheme()
     val isDarkTheme = when (themeMode) {
         ThemeMode.SYSTEM -> systemInDark
@@ -126,9 +125,23 @@ fun MainAppScreen(
     }
 
     // Dialog state (Bug 4 Resolution: Single state variable eliminates Recomposition lag and Memory Leaks)
-    var dialogState by remember { mutableStateOf<AppDialogState>(AppDialogState.None) }
+    val workspaceDialogSaver = androidx.compose.runtime.saveable.Saver<AppDialogState, String>(
+        save = { when(it) { is AppDialogState.CourseWorkspace -> "course:${studentViewModel.workspaceGeneration.value}:${it.courseId}"; is AppDialogState.BackupRestore -> "backup:${studentViewModel.workspaceGeneration.value}"; else -> "none" } },
+        restore = { when { it.startsWith("course:${studentViewModel.workspaceGeneration.value}:") -> AppDialogState.CourseWorkspace(it.removePrefix("course:${studentViewModel.workspaceGeneration.value}:"));it=="backup:${studentViewModel.workspaceGeneration.value}" -> AppDialogState.BackupRestore;else -> AppDialogState.None } }
+    )
+    var dialogState by androidx.compose.runtime.saveable.rememberSaveable(stateSaver=workspaceDialogSaver) { mutableStateOf<AppDialogState>(AppDialogState.None) }
     var showOnboardingWizard by remember { mutableStateOf(false) }
     var showAppTourGuide by remember { mutableStateOf(false) }
+    val workspaceOwner by studentViewModel.workspaceGeneration.collectAsStateWithLifecycle()
+    var displayedOwner by remember { mutableStateOf(workspaceOwner) }
+    androidx.compose.runtime.LaunchedEffect(workspaceOwner) {
+        if(displayedOwner!=workspaceOwner) {
+            dialogState=AppDialogState.None
+            studentViewModel.setSearchQuery("")
+            showAppTourGuide=false
+        }
+        displayedOwner=workspaceOwner
+    }
     var showAppMenu by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -240,7 +253,10 @@ fun MainAppScreen(
     val weeklyWorkload by studentViewModel.weeklyWorkload.collectAsStateWithLifecycle()
     val candidateSemesterPlans by studentViewModel.candidateSemesterPlans.collectAsStateWithLifecycle()
     val searchQuery by studentViewModel.searchQuery.collectAsStateWithLifecycle()
-    val globalSearchResults by studentViewModel.globalSearchResults.collectAsStateWithLifecycle()
+    val searchFlow = remember(dialogState is AppDialogState.CommandCenter) {
+        if(dialogState is AppDialogState.CommandCenter) studentViewModel.globalSearchResults else kotlinx.coroutines.flow.flowOf(emptyList())
+    }
+    val globalSearchResults by searchFlow.collectAsStateWithLifecycle(initialValue=emptyList())
     val gamificationProfile by studentViewModel.gamificationProfile.collectAsStateWithLifecycle()
     val studyRecommendations by studentViewModel.studyRecommendations.collectAsStateWithLifecycle()
     val academicPriorities by studentViewModel.academicPriorities.collectAsStateWithLifecycle()
@@ -676,6 +692,7 @@ fun MainAppScreen(
                 onSendDeviceTestNotif = onSendDeviceTestNotif,
                 onRequestNotificationPermission = { checkAndRequestNotificationPermission { } }
             )
+            if(workspaceBusy) AlertDialog(onDismissRequest={},title={ Text("در حال آماده‌سازی اطلاعات") },text={ Column(verticalArrangement=Arrangement.spacedBy(12.dp)) { CircularProgressIndicator();Text("لطفاً تا پایان بررسی و ذخیرهٔ اطلاعات صبر کن.") } },confirmButton={},properties=androidx.compose.ui.window.DialogProperties(dismissOnBackPress=false,dismissOnClickOutside=false))
         }
     }
 }

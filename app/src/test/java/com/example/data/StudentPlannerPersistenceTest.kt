@@ -105,7 +105,7 @@ class StudentPlannerPersistenceTest {
             }).build())
         helper.writableDatabase
         helper.close()
-        val upgraded = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(AppDatabase.MIGRATION_10_11, AppDatabase.MIGRATION_11_12, AppDatabase.MIGRATION_12_13).allowMainThreadQueries().build()
+        val upgraded = Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(AppDatabase.MIGRATION_10_11, AppDatabase.MIGRATION_11_12, AppDatabase.MIGRATION_12_13, com.example.data.local.STUDENT_V3_MIGRATION).allowMainThreadQueries().build()
         try {
             val task = upgraded.studentDao().getTaskById(42)!!
             assertEquals("math", task.courseId)

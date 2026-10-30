@@ -39,7 +39,8 @@ import java.util.UUID
 class StudentRepository(
     val dao: StudentDao,
     val curriculumDao: CurriculumDao? = null,
-    val database: AppDatabase? = null
+    val database: AppDatabase? = null,
+    private val onLocalDataCleared: suspend () -> Unit = {}
 ) {
     private fun normalizeReferenceText(value: String): String =
         value.trim().replace("\u200C", "").replace("ي", "ی").replace("ك", "ک")
@@ -280,6 +281,7 @@ class StudentRepository(
     }
 
     suspend fun deleteCourse(courseId: String) = withContext(Dispatchers.IO) {
+        val action: suspend () -> Unit = {
         val course = dao.getCourseById(courseId)
         dao.deleteCourseById(courseId)
         dao.deleteSessionsByCourseId(courseId)
@@ -293,6 +295,9 @@ class StudentRepository(
             dao.deleteTasksForCourse(courseId, course.name)
         }
         dao.cleanupOrphans()
+        }
+        if(database!=null) database.withTransaction { action() } else action()
+        onLocalDataCleared()
     }
 
     suspend fun archiveCourse(courseId: String) = withContext(Dispatchers.IO) {
@@ -370,14 +375,15 @@ class StudentRepository(
         val persist: suspend () -> TaskEntity? = {
             val stored = dao.getTaskById(id)
             if (stored != null) {
-                val updated = stored.copy(isCompleted = completed ?: !stored.isCompleted)
+                val done = completed ?: !stored.isCompleted
+                val updated = stored.copy(isCompleted = done, completedAt = if (done) stored.completedAt ?: System.currentTimeMillis() else null)
                 dao.updateTask(updated)
                 val semester = stored.semesterId?.let { dao.getSemesterById(it) }
                 val course = stored.courseId.takeIf { it.isNotBlank() }?.let { dao.getCourseById(it) }
                 if (updated.isCompleted && (stored.semesterId == null || (semester?.isCurrent == true && !semester.isArchived)) &&
                     (stored.courseId.isBlank() || (course != null && !course.isArchived)) && dao.getNextOccurrence(stored.id) == null) {
                     com.example.domain.engine.TaskPlanningEngine.nextDate(stored.dueDate, stored.repeatEveryDays, today)?.let { next ->
-                        dao.insertTaskOccurrence(stored.copy(id = 0, dueDate = next, isCompleted = false, recurrenceParentId = stored.id))
+                        dao.insertTaskOccurrence(stored.copy(id = 0, dueDate = next, isCompleted = false, completedAt = null, recurrenceParentId = stored.id))
                     }
                 }
                 updated
@@ -509,9 +515,9 @@ class StudentRepository(
         LocalDataBackupManager.exportCompleteDatabaseJson(dao, curriculumDao)
     }
 
-    suspend fun restoreFullBackupJson(jsonString: String): Result<Int> = withContext(Dispatchers.IO) {
+    suspend fun restoreFullBackupJson(jsonString: String, canRestore: () -> Boolean = { true }): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            val restore = suspend { LocalDataBackupManager.restoreDatabaseFromJson(jsonString, dao, curriculumDao).getOrThrow() }
+            val restore = suspend { check(canRestore()) { "نشست تغییر کرده؛ بازیابی انجام نشد." };val value=LocalDataBackupManager.restoreDatabaseFromJson(jsonString, dao, curriculumDao).getOrThrow();check(canRestore());value }
             val count = if (database != null) database.withTransaction { restore() } else restore()
             Result.success(count)
         } catch (error: kotlinx.coroutines.CancellationException) { throw error }
@@ -852,10 +858,12 @@ class StudentRepository(
         } else {
             reset()
         }
+        onLocalDataCleared()
     }
 
     suspend fun loadRichDemoData() {
         val performDemo = suspend {
+            dao.clearV3Data()
             dao.clearStudyGoals()
             dao.clearStudyAvailability()
             dao.clearStudyCompletions()
@@ -952,6 +960,7 @@ class StudentRepository(
         } else {
             performDemo()
         }
+        onLocalDataCleared()
     }
 
     suspend fun clearAllUserData() {
@@ -960,6 +969,7 @@ class StudentRepository(
         } else {
             dao.clearAllUserData()
         }
+        onLocalDataCleared()
     }
 
     suspend fun clearToFreshSlate(
@@ -971,6 +981,7 @@ class StudentRepository(
         currentSemester: Int = 0
     ) {
         val performClear = suspend {
+            dao.clearV3Data()
             dao.clearCourses()
             dao.clearAttendance()
             dao.clearGrades()
@@ -1022,5 +1033,6 @@ class StudentRepository(
         } else {
             performClear()
         }
+        onLocalDataCleared()
     }
 }

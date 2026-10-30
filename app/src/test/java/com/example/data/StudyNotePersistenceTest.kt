@@ -73,7 +73,7 @@ class StudyNotePersistenceTest {
             }).build())
         helper.writableDatabase;helper.close()
         try {
-            val upgraded=Room.databaseBuilder(context,AppDatabase::class.java,name).addMigrations(AppDatabase.MIGRATION_11_12, AppDatabase.MIGRATION_12_13).allowMainThreadQueries().build()
+            val upgraded=Room.databaseBuilder(context,AppDatabase::class.java,name).addMigrations(AppDatabase.MIGRATION_11_12, AppDatabase.MIGRATION_12_13, com.example.data.local.STUDENT_V3_MIGRATION).allowMainThreadQueries().build()
             val note=upgraded.studentDao().getNoteById("legacy")!!
             assertEquals("متن حفظ‌شده",note.content);assertEquals(123L,note.updatedAt);assertFalse(note.isArchived)
             upgraded.studentDao().insertNote(note.copy(isArchived=true));upgraded.close()

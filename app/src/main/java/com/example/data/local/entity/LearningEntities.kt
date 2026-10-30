@@ -33,6 +33,7 @@ data class StudyCompletionEntity(
     val actualMinutes: Int,
     val updatedAt: Long = 0,
     val isDeleted: Boolean = false,
+    @androidx.room.ColumnInfo(defaultValue = "NULL") val workId: String? = null,
 ) : java.io.Serializable
 
 @Entity(tableName = "review_cards", indices = [Index("courseId")])

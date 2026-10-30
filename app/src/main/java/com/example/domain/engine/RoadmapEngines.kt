@@ -444,16 +444,16 @@ object GlobalSearchEngine {
         exams: List<ExamItem>,
         notes: String
     ): List<GlobalSearchResult> {
-        val trimmed = query.trim()
+        val trimmed = com.example.data.v3.normalizedStudentSearch(query)
         val results = mutableListOf<GlobalSearchResult>()
 
         // 1. Enrolled Courses
         courses.distinctBy { it.id }.forEach { course ->
             if (trimmed.isBlank() ||
-                course.name.contains(trimmed, ignoreCase = true) ||
-                course.courseCode.contains(trimmed, ignoreCase = true) ||
-                course.examLocation.contains(trimmed, ignoreCase = true) ||
-                course.professor.contains(trimmed, ignoreCase = true)
+                com.example.data.v3.normalizedStudentSearch(course.name).contains(trimmed) ||
+                com.example.data.v3.normalizedStudentSearch(course.courseCode).contains(trimmed) ||
+                com.example.data.v3.normalizedStudentSearch(course.examLocation).contains(trimmed) ||
+                com.example.data.v3.normalizedStudentSearch(course.professor).contains(trimmed)
             ) {
                 results.add(
                     GlobalSearchResult.CourseItem(
@@ -470,8 +470,8 @@ object GlobalSearchEngine {
         // 2. Official Curriculum Chart
         curriculumCourses.forEach { currCourse ->
             if (trimmed.isBlank() ||
-                currCourse.name.contains(trimmed, ignoreCase = true) ||
-                currCourse.courseCode.contains(trimmed, ignoreCase = true)
+                com.example.data.v3.normalizedStudentSearch(currCourse.name).contains(trimmed) ||
+                com.example.data.v3.normalizedStudentSearch(currCourse.courseCode).contains(trimmed)
             ) {
                 // Avoid duplication if already present as enrolled CourseItem
                 val alreadyAdded = results.any { it is GlobalSearchResult.CourseItem && it.name.trim().equals(currCourse.name.trim(), ignoreCase = true) }
@@ -492,8 +492,8 @@ object GlobalSearchEngine {
         // 3. Tasks
         tasks.forEach { task ->
             if (trimmed.isBlank() ||
-                task.title.contains(trimmed, ignoreCase = true) ||
-                task.courseName.contains(trimmed, ignoreCase = true)
+                com.example.data.v3.normalizedStudentSearch(task.title).contains(trimmed) ||
+                com.example.data.v3.normalizedStudentSearch(task.courseName).contains(trimmed)
             ) {
                 results.add(
                     GlobalSearchResult.TaskItem(
@@ -510,9 +510,9 @@ object GlobalSearchEngine {
         // 4. Exams
         exams.forEach { exam ->
             if (trimmed.isBlank() ||
-                exam.courseName.contains(trimmed, ignoreCase = true) ||
-                exam.solarDate.contains(trimmed, ignoreCase = true) ||
-                exam.location.contains(trimmed, ignoreCase = true)
+                com.example.data.v3.normalizedStudentSearch(exam.courseName).contains(trimmed) ||
+                com.example.data.v3.normalizedStudentSearch(exam.solarDate).contains(trimmed) ||
+                com.example.data.v3.normalizedStudentSearch(exam.location).contains(trimmed)
             ) {
                 results.add(
                     GlobalSearchResult.ExamItem(
@@ -528,7 +528,7 @@ object GlobalSearchEngine {
         // 5. Notes & Formulas
         if (notes.isNotBlank()) {
             notes.lines().filter { it.isNotBlank() }.forEach { line ->
-                if (trimmed.isBlank() || line.contains(trimmed, ignoreCase = true)) {
+                if (trimmed.isBlank() || com.example.data.v3.normalizedStudentSearch(line).contains(trimmed)) {
                     val title = if (line.contains(":")) line.substringBefore(":").trim() else "یادداشت فرمول"
                     val content = if (line.contains(":")) line.substringAfter(":").trim() else line.trim()
                     results.add(

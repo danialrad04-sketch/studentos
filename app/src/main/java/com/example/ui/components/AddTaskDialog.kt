@@ -20,7 +20,7 @@ import com.example.ui.components.datepicker.JalaliDatePickerField
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AddTaskDialog(courseNames: List<String>, onDismiss: () -> Unit, onSave: (String, String, String) -> Unit, initialTask: com.example.data.local.entity.TaskEntity? = null, isSaving: Boolean = false, onSavePlanned: ((String, String, String, Int, String) -> Unit)? = null) {
+fun AddTaskDialog(courseNames: List<String>, onDismiss: () -> Unit, onSave: (String, String, String) -> Unit, initialTask: com.example.data.local.entity.TaskEntity? = null, isSaving: Boolean = false, onSavePlanned: ((String, String, String, Int, String) -> Unit)? = null, onSaveEstimate: ((String, String, String, Int, String, Int) -> Unit)? = null) {
     val courses = courseNames.filter { it.isNotBlank() }.distinct().ifEmpty { listOf("عمومی", "پروژه", "امتحان") }
     var title by rememberSaveable { mutableStateOf(initialTask?.title.orEmpty()) }
     var course by rememberSaveable { mutableStateOf(initialTask?.courseName ?: courses.first()) }
@@ -28,8 +28,10 @@ fun AddTaskDialog(courseNames: List<String>, onDismiss: () -> Unit, onSave: (Str
     var repeatDays by rememberSaveable { mutableIntStateOf(initialTask?.repeatEveryDays ?: 0) }
     var reminderEnabled by rememberSaveable { mutableStateOf(!initialTask?.reminderTime.isNullOrBlank()) }
     var reminderTime by rememberSaveable { mutableStateOf(initialTask?.reminderTime?.ifBlank { "09:00" } ?: "09:00") }
+    var estimate by rememberSaveable { mutableStateOf(initialTask?.estimatedMinutes?.takeIf { it>0 }?.toString().orEmpty()) }
+    val effort = if(estimate.isBlank()) 0 else com.example.data.local.util.DateTimeNormalizer.normalizeDigits(estimate).toIntOrNull() ?: -1
     val normalizedTime = com.example.domain.util.AcademicInputValidator.time(reminderTime)
-    val valid = title.isNotBlank() && JalaliCalendarUtil.parse(dueDate) != null && (!reminderEnabled || normalizedTime != null)
+    val valid = (effort==0 || effort in 5..6000) && title.isNotBlank() && JalaliCalendarUtil.parse(dueDate) != null && (!reminderEnabled || normalizedTime != null)
     StudentGlassModalSheet(onDismiss = onDismiss, title = if (initialTask == null) "افزودن تکلیف" else "ویرایش تکلیف", subtitle = "یک کار روشن با موعد مشخص", maxWidth = 560.dp) {
         val dismiss = LocalStudentModalDismiss.current ?: onDismiss
         Column(Modifier.weight(1f, fill = false).fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -44,7 +46,8 @@ fun AddTaskDialog(courseNames: List<String>, onDismiss: () -> Unit, onSave: (Str
                 items(courses) { name -> FilterChip(selected = course == name, onClick = { course = name }, label = { Text(name) }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = MaterialTheme.colorScheme.primaryContainer, selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer)) }
             }
             JalaliDatePickerField(value = dueDate, onValueChange = { dueDate = it }, label = "موعد تحویل", placeholder = "تاریخ را انتخاب کن", modifier = Modifier.fillMaxWidth())
-            if (onSavePlanned != null) {
+            if(onSaveEstimate!=null) OutlinedTextField(estimate,{ estimate=it },Modifier.fillMaxWidth(),label={ Text("زمان لازم (دقیقه)") },supportingText={ Text("۵ تا ۶۰۰۰ دقیقه؛ برای برنامه‌ریزی زمانی این کار") },singleLine=true,isError=effort!=0 && effort !in 5..6000)
+            if (onSavePlanned != null || onSaveEstimate != null) {
                 Text("تکرار تکلیف", style = MaterialTheme.typography.titleSmall)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(0 to "بدون تکرار", 1 to "هر روز", 7 to "هر هفته", 14 to "هر دو هفته", 30 to "هر ۳۰ روز").forEach { (days, label) ->
@@ -65,7 +68,7 @@ fun AddTaskDialog(courseNames: List<String>, onDismiss: () -> Unit, onSave: (Str
         Spacer(Modifier.height(16.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedButton(onClick = dismiss, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text("انصراف") }
-            Button(onClick = { if (onSavePlanned != null) onSavePlanned(title.trim(), course, dueDate.trim(), repeatDays, if (reminderEnabled) normalizedTime.orEmpty() else "") else onSave(title.trim(), course, dueDate.trim()) }, enabled = valid && !isSaving, modifier = Modifier.weight(1.3f).heightIn(min = 48.dp).testTag("save_task")) {
+            Button(onClick = { if(onSaveEstimate!=null) onSaveEstimate(title.trim(),course,dueDate.trim(),repeatDays,if(reminderEnabled) normalizedTime.orEmpty() else "",effort) else if (onSavePlanned != null) onSavePlanned(title.trim(), course, dueDate.trim(), repeatDays, if (reminderEnabled) normalizedTime.orEmpty() else "") else onSave(title.trim(), course, dueDate.trim()) }, enabled = valid && !isSaving, modifier = Modifier.weight(1.3f).heightIn(min = 48.dp).testTag("save_task")) {
                 Icon(Icons.Rounded.Check, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(if (isSaving) "در حال ذخیره…" else if (initialTask == null) "ثبت تکلیف" else "ذخیره تغییرات")

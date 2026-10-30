@@ -63,6 +63,9 @@ class LearningRepository(
             db.withTransaction {
                 check(canWrite()) { "نشست تغییر کرده؛ صفحه را دوباره باز کنید." }
                 courseExists(block.courseId)
+                block.workId?.let { work ->
+                    require(if(work.startsWith("project:")) dao.projectsSnapshot().any { "project:${it.id}"==work && it.courseId==block.courseId && !it.isDeleted && it.completedAt==null } else dao.getAllTasksSync().any { "task:${it.id}"==work && it.courseId==block.courseId && !it.isCompleted }) { "کار مرتبط تغییر کرده؛ برنامه را دوباره باز کنید." }
+                }
                 require(JalaliCalendarUtil.parse(block.date)!! <= learningToday()) {
                     "جلسهٔ آینده هنوز انجام نشده است."
                 }
@@ -77,6 +80,7 @@ class LearningRepository(
                         block.minutes,
                         actualMinutes,
                         maxOf(System.currentTimeMillis(), (previous?.updatedAt ?: 0) + 1),
+                        workId = block.workId,
                     )
                 LearningValidation.completion(row)
                 dao.upsertStudyCompletion(row)

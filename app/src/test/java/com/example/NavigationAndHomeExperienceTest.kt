@@ -114,6 +114,7 @@ class NavigationAndHomeExperienceTest {
         }
         rule.onNodeWithText("افزودن درس و برنامه").performScrollTo().performClick()
         assertEquals(AppTab.SCHEDULE, selected)
+        rule.onNodeWithTag("home_more_tools").performScrollTo().performClick()
         rule.onNodeWithTag("home_tool_COPILOT").performScrollTo().performClick()
         assertEquals(AppTab.COPILOT, selected)
         rule.runOnIdle { selected = null; customCopilot = { customOpened = true } }
