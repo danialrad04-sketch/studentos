@@ -49,7 +49,11 @@ fun StudentFileReader(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                error = e.localizedMessage ?: "صفحه باز نشد."
+                error =
+                    e.localizedMessage?.takeIf { message ->
+                        message.any { it in '\u0600'..'\u06ff' }
+                    }
+                        ?: "صفحه خوانده نشد؛ سالم بودن فایل را بررسی کن یا پشتیبان کامل آن را بازیابی کن."
             }
         }
     val busy by vm.busy.collectAsStateCompat()
