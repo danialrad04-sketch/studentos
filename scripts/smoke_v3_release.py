@@ -48,6 +48,18 @@ def write_fixture(destination):
     return key
 
 
+def navigation_boundary(xml, height):
+    """Find the rendered capsule, rather than assuming it starts at 80% of the screen."""
+    labels={'خانه','برنامه','کارها','کارنامه','حساب'}
+    candidates=[]
+    for node in ET.fromstring(xml).iter('node'):
+        rect=list(map(int,re.findall(r'\d+',node.attrib.get('bounds',''))))
+        if len(rect)!=4 or not 0<rect[3]-rect[1]<height*.4: continue
+        if labels.issubset({child.attrib.get('text','') for child in node.iter('node')}):
+            candidates.append(rect)
+    return min(candidates,key=lambda rect:rect[3]-rect[1])[1] if candidates else int(height*.94)
+
+
 def tap_text(text, scroll=False):
     width, height = map(int, re.findall(r'(\d+)x(\d+)', adb('shell', 'wm', 'size'))[-1])
     for _ in range(18 if scroll else 1):
@@ -55,7 +67,7 @@ def tap_text(text, scroll=False):
         matches = [n.attrib for n in ET.fromstring(xml).iter('node') if n.attrib.get('text') == text]
         if matches:
             bounds = list(map(int, re.findall(r'\d+', matches[0]['bounds'])))
-            if not scroll or (bounds[1]+bounds[3])/2 < height*.80:
+            if not scroll or (bounds[1]>=0 and bounds[3]<=navigation_boundary(xml,height)-8):
                 tap_node(xml, lambda a: a.get('text') == text); return
         if scroll: adb('shell', 'input', 'swipe', width//2, int(height*.70), width//2, int(height*.34), 280)
     raise AssertionError(f'Visible control not found: {text}')
@@ -125,24 +137,24 @@ def main():
     wait_ui(lambda x: 'ذخیرهٔ پشتیبان کامل ZIP' not in x and 'در حال آماده‌سازی اطلاعات' not in x and 'بازیابی اطلاعات و فایل' not in x and 'حساب' in x, timeout=90)
     root_surface();tap_text('حساب')
     wait_ui(lambda x: 'V3Student' in x and 'حساب من' in x)
-    capture(args.output, 'v3-signed-restored-profile')
+    capture(args.output, 'v3-signed-restored-profile');print('PASS: full ZIP restore and persisted profile after restart',flush=True)
     drawer('کتابخانه');wait_ui(lambda x: 'V3 reader.pdf' in x);tap_text('مطالعه', scroll=True)
     wait_ui(lambda x: 'صفحهٔ 1 از V3 reader.pdf' in x)
-    capture(args.output, 'v3-signed-pdf-reader')
+    capture(args.output, 'v3-signed-pdf-reader');print('PASS: native PDF opened from the restored private blob',flush=True)
     drawer('تکلیف‌ها');wait_ui(lambda x: 'پروژه‌ها' in x);tap_text('پروژه‌ها')
     wait_ui(lambda x: 'V3Project' in x);tap_text('باز کردن پروژه', scroll=True)
-    wait_ui(lambda x: 'V3 milestone' in x);capture(args.output, 'v3-signed-project')
+    wait_ui(lambda x: 'V3 milestone' in x);capture(args.output, 'v3-signed-project');print('PASS: restored project and milestone',flush=True)
     drawer('امتحان‌ها');wait_ui(lambda x: 'تمرین و آزمون' in x);tap_text('تمرین و آزمون')
     wait_ui(lambda x: 'V3 question' in x);tap_text('شروع آزمون', scroll=True)
     wait_ui(lambda x: 'Correct' in x and 'زمان باقی‌مانده' in x);tap_text('Correct')
     tap_text('پایان و بررسی پاسخ‌ها', scroll=True);wait_ui(lambda x: 'آزمون پایان یابد' in x);tap_text('پایان آزمون')
-    wait_ui(lambda x: 'نتیجهٔ ثبت‌شده' in x and '1 درست' in x);capture(args.output, 'v3-signed-practice-result')
+    wait_ui(lambda x: 'نتیجهٔ ثبت‌شده' in x and '1 درست' in x);capture(args.output, 'v3-signed-practice-result');print('PASS: actual practice choice and persisted result',flush=True)
     open_backup();tap_text('ذخیرهٔ پشتیبان کامل ZIP')
     xml = wait_ui(lambda x: 'Save' in x or 'SAVE' in x)
     tap_node(xml, lambda a: a.get('text') in ('Save', 'SAVE') and a.get('enabled') == 'true')
     wait_ui(lambda x: 'پشتیبان کامل همراه فایل‌ها ذخیره شد' in x, timeout=90)
     adb('pull', '/sdcard/Download/StudentOS-full-backup.zip', args.output/'v3-r8-export.zip')
-    verify_export(args.output/'v3-r8-export.zip', key)
+    verify_export(args.output/'v3-r8-export.zip', key);print('PASS: exported full ZIP hashes, bytes, bookmark and practice result',flush=True)
     (args.output/'v3-result.txt').write_text('PASS: actual signed R8 full ZIP import/export, hashes, native PDF, project, real practice answer/result and persisted export; offline.\n')
 
 

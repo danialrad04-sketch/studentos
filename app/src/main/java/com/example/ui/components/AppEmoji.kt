@@ -94,7 +94,13 @@ internal fun studentDestinationSticker(tab: com.example.ui.models.AppTab): AppEm
     com.example.ui.models.AppTab.ACCOUNT -> AppEmojiType.PROFILE
 }
 
-/** Region decoding reuses the original artwork without allocating the full atlas for a widget. */
+/**
+ * Region decoding reuses the original PNGs without allocating the full atlas for a widget.
+ * Resources.openRawResource explicitly supports file-backed drawables (API documentation),
+ * despite its RawRes lint annotation. Both IDs below are packaged PNGs, verified on-device.
+ * https://developer.android.com/reference/android/content/res/Resources#openRawResource(int)
+ */
+@android.annotation.SuppressLint("ResourceType")
 internal fun studentWidgetSticker(context: android.content.Context, type: AppEmojiType): android.graphics.Bitmap {
     val resource=if(type.cell>=18) R.drawable.student_sticker_companions else R.drawable.student_sticker_atlas
     val rect=if(type.cell>=18) StudentCompanionBounds[type.cell-18] else StudentStickerBounds[type.cell]
