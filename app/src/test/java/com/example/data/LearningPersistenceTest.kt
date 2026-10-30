@@ -220,7 +220,7 @@ class LearningPersistenceTest {
         try {
             var upgraded =
                 Room.databaseBuilder(context, AppDatabase::class.java, name)
-                    .addMigrations(AppDatabase.MIGRATION_12_13)
+                    .addMigrations(AppDatabase.MIGRATION_12_13, com.example.data.local.STUDENT_V3_MIGRATION)
                     .allowMainThreadQueries()
                     .build()
             assertEquals("محفوظ", upgraded.studentDao().getNoteById("old")!!.content)

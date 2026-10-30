@@ -79,7 +79,6 @@ import com.example.domain.model.EvaluatedCurriculumCourse
 import com.example.domain.model.GlobalSearchResult
 import com.example.ui.theme.Amber500
 import com.example.ui.theme.Amber600
-import com.example.ui.theme.AcademicOlive
 import com.example.ui.theme.Rose600
 
 /**
@@ -98,7 +97,8 @@ fun SpotlightSearchDialog(
     onNavigateToExams: () -> Unit,
     onNavigateToNotes: () -> Unit,
     onExecuteCommand: (com.example.domain.model.AcademicCommand) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSelectResource: (GlobalSearchResult.ResourceItem) -> Unit = {}
 ) {
     var selectedFilter by remember { mutableStateOf<String?>("ALL") }
     val resolvedCommand = remember(searchQuery) { AcademicCommandEngine.resolve(searchQuery) }
@@ -113,7 +113,8 @@ fun SpotlightSearchDialog(
                     "CURRICULUM" -> result is GlobalSearchResult.CourseItem && result.state != CourseState.CURRENT
                     "TASK" -> result is GlobalSearchResult.TaskItem
                     "EXAM" -> result is GlobalSearchResult.ExamItem
-                    "NOTE" -> result is GlobalSearchResult.NoteFormulaItem
+                    "RESOURCE" -> result is GlobalSearchResult.ResourceItem
+                    "NOTE" -> result is GlobalSearchResult.NoteFormulaItem || (result is GlobalSearchResult.ResourceItem && result.kind == com.example.domain.model.StudentResourceKind.NOTE)
                     else -> true
                 }
             }
@@ -241,7 +242,8 @@ fun SpotlightSearchDialog(
                         "CURRICULUM" to "چارت مصوب",
                         "TASK" to "تکالیف",
                         "EXAM" to "امتحانات",
-                        "NOTE" to "فرمول‌ها"
+                        "NOTE" to "یادداشت‌ها",
+                        "RESOURCE" to "منابع و پروژه‌ها"
                     )
 
                     filters.forEach { (key, label) ->
@@ -328,6 +330,7 @@ fun SpotlightSearchDialog(
                     ) {
                         items(filteredResults, key = { result ->
                             when (result) {
+                                is GlobalSearchResult.ResourceItem -> "resource_${result.kind}_${result.id}"
                                 is GlobalSearchResult.CourseItem -> "course_${result.courseId}_${result.code}"
                                 is GlobalSearchResult.TaskItem -> "task_${result.taskId}"
                                 is GlobalSearchResult.ExamItem -> "exam_${result.examId}"
@@ -342,6 +345,7 @@ fun SpotlightSearchDialog(
                                             onSelectCourse(result.courseId)
                                             dismissModal()
                                         }
+                                        is GlobalSearchResult.ResourceItem -> onSelectResource(result)
                                         is GlobalSearchResult.TaskItem -> {
                                             onNavigateToTasks()
                                             dismissModal()
@@ -370,6 +374,7 @@ private fun SearchResultItemCard(
     onClick: () -> Unit
 ) {
     val title = when (result) {
+        is GlobalSearchResult.ResourceItem -> result.title
         is GlobalSearchResult.CourseItem -> result.name
         is GlobalSearchResult.TaskItem -> result.title
         is GlobalSearchResult.ExamItem -> "آزمون ${result.courseName}"
@@ -402,6 +407,7 @@ private fun SearchResultItemCard(
             ) {
                 // Category Icon Capsule
                 val (icon, tintColor, badgeText) = when (result) {
+                    is GlobalSearchResult.ResourceItem -> Triple(Icons.Default.Bookmark, MaterialTheme.colorScheme.secondary, result.kind.title)
                     is GlobalSearchResult.CourseItem -> {
                         if (result.state == CourseState.CURRENT) {
                             Triple(Icons.AutoMirrored.Filled.MenuBook, MaterialTheme.colorScheme.primary, "درس ترم")
@@ -458,6 +464,7 @@ private fun SearchResultItemCard(
                     Spacer(modifier = Modifier.height(2.dp))
 
                     val subtitle = when (result) {
+                        is GlobalSearchResult.ResourceItem -> result.courseName.ifBlank { "یادداشت عمومی" } + " · " + result.kind.title
                         is GlobalSearchResult.CourseItem -> "کد درس ${result.code} · ${result.units} واحد · وضعیت: ${result.state}"
                         is GlobalSearchResult.TaskItem -> "درس: ${result.courseName} · تحویل: ${result.deadline}"
                         is GlobalSearchResult.ExamItem -> "تاریخ: ${result.examDate} ساعت ${result.examTime}"

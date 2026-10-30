@@ -85,7 +85,11 @@ data class AcademicRisk(
 /**
  * Unified Search Result for Global Command Bar (Phase 24).
  */
+enum class StudentResourceKind(val title: String) { FILE("فایل"), PROJECT("پروژه"), QUESTION("سؤال"), NOTE("یادداشت") }
+
 sealed interface GlobalSearchResult {
+    data class ResourceItem(val id: String, val courseId: String, val title: String, val courseName: String, val kind: StudentResourceKind): GlobalSearchResult
+
     data class CourseItem(
         val courseId: String,
         val name: String,

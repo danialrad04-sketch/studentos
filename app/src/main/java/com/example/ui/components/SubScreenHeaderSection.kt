@@ -85,6 +85,7 @@ fun SubScreenHeaderSection(
 internal fun studentDestinationDescription(tab: AppTab): String = when (tab) {
     AppTab.DASHBOARD -> "نمای امروز و قدم بعدی"
     AppTab.AGENDA -> "کلاس، امتحان و تکلیف در یک هفته"
+    AppTab.LIBRARY -> "جزوه‌ها، نشانک‌ها و ادامهٔ مطالعه"
     AppTab.NOTES -> "نکته‌ها و خلاصه‌های درس، همیشه همراهت"
     AppTab.SCHEDULE -> "زمان و مکان کلاس‌ها"
     AppTab.TASKS -> "از برنامه تا انجام"

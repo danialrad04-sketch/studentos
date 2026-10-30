@@ -13,7 +13,7 @@ import androidx.room.Transaction
  * a single unified contract for Room Database binding and legacy callers.
  */
 @Dao
-interface StudentDao : CourseDao, TaskDao, AttendanceDao, ProfileDao, ExamDao, GradeDao, NoteDao, LearningDao {
+interface StudentDao : CourseDao, TaskDao, AttendanceDao, ProfileDao, ExamDao, GradeDao, NoteDao, LearningDao, StudentV3Dao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertSyncMetadata(metadata: com.example.data.local.entity.SyncMetadataEntity)
@@ -41,6 +41,13 @@ interface StudentDao : CourseDao, TaskDao, AttendanceDao, ProfileDao, ExamDao, G
 
     @Transaction
     suspend fun clearAllUserData() {
+        clearAttachments()
+        clearPageBookmarks()
+        clearProjects()
+        clearProjectSteps()
+        clearPracticeQuestions()
+        clearPracticeAttempts()
+
         clearStudyGoals()
         clearStudyAvailability()
         clearStudyCompletions()
@@ -78,6 +85,8 @@ interface StudentDao : CourseDao, TaskDao, AttendanceDao, ProfileDao, ExamDao, G
 
     @Transaction
     suspend fun cleanupOrphans() {
+        val now = System.currentTimeMillis()
+        cleanupV3Files(now);cleanupV3Projects(now);cleanupV3Questions(now);cleanupV3Attempts(now)
         cleanupStudyGoals()
         cleanupStudyCompletions()
         cleanupReviewCards()

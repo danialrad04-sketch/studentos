@@ -67,6 +67,7 @@ data class AdaptiveLearningPlan(
     val examDays: Set<String>,
     val capacityShortfall: Map<String, Int>,
     val unverifiedClassTimes: Boolean = false,
+    val workItems: List<PlannedCourseWork> = emptyList(),
 )
 
 /** Dated plans are projections from durable goals and confirmed work, never a second task store. */
@@ -114,8 +115,7 @@ object AdaptiveLearningEngine {
             reservedBlocks
                 .distinctBy { it.id }
                 .filter { b ->
-                    b.courseId in remaining &&
-                        b.minutes in 5..120 &&
+                    b.minutes in 5..120 &&
                         b.startMinute in 0..1439 &&
                         b.startMinute + b.minutes <= 1440 &&
                         JalaliCalendarUtil.parse(b.date) != null &&

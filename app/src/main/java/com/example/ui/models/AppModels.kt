@@ -19,6 +19,7 @@ enum class AppTab(
     PASSPORT("شناسنامه تحصیلی", "📜"),
     AGENDA("برنامهٔ هفته", "📅"),
     NOTES("یادداشت‌ها", "📝"),
+    LIBRARY("کتابخانه", "📚"),
     SCHEDULE("کلاس‌ها", "🗓️"),
     ATTENDANCE("حضور و غیاب", "🚨"),
     TASKS("تکلیف‌ها", "📋"),

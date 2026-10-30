@@ -64,3 +64,10 @@
 -dontwarn com.google.api.client.http.**
 -dontwarn java.lang.management.**
 -dontwarn org.joda.time.**
+
+# V3 portable formats use Moshi reflection; keep the durable field names across R8 builds.
+-keep class com.example.data.v3.StudentV3Snapshot { *; }
+-keep class com.example.data.v3.PortableManifest { *; }
+-keep class com.example.data.v3.PortableBlob { *; }
+-keep class com.example.widget.StudentWidgetWorker { public <init>(...); }
+-keep class com.example.data.local.StudentSnapshotWorker { public <init>(...); }

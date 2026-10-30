@@ -162,6 +162,7 @@ fun AppDialogManager(
         is AppDialogState.BackupRestore -> {
             val lastTimestamp by studentViewModel.lastSavedTimestamp.collectAsStateWithLifecycle()
             BackupRestoreDialog(
+                portableContent = { com.example.ui.v3.V3BackupControls(com.example.ui.v3.studentV3ViewModel(studentViewModel)) },
                 lastSavedTimestamp = lastTimestamp,
                 onExportJson = {
                     studentViewModel.exportDatabaseBackup()
@@ -265,6 +266,10 @@ fun AppDialogManager(
             val availableCourseNames = (listOf("عمومی") + courses.map { it.name }).distinct()
             AddTaskDialog(
                 courseNames = availableCourseNames,
+                onSaveEstimate = { title,name,date,repeat,time,minutes ->
+                    if(time.isNotBlank()) onRequestNotificationPermission()
+                    studentViewModel.saveTask(title,name,date,onSaved=dismiss,repeatEveryDays=repeat,reminderTime=time,estimatedMinutes=minutes)
+                },
                 isSaving = isSaving,
                 onDismiss = dismiss,
                 onSave = { title, cName, date ->
@@ -278,7 +283,10 @@ fun AppDialogManager(
         }
 
         is AppDialogState.EditTask -> {
-            AddTaskDialog(courseNames = (listOf("عمومی") + courses.map { it.name } + dialogState.task.courseName).distinct(),
+            AddTaskDialog(onSaveEstimate={ title,name,date,repeat,time,minutes ->
+                    if(time.isNotBlank()) onRequestNotificationPermission()
+                    studentViewModel.editTask(dialogState.task,title,name,date,dismiss,repeatEveryDays=repeat,reminderTime=time,estimatedMinutes=minutes)
+                }, courseNames = (listOf("عمومی") + courses.map { it.name } + dialogState.task.courseName).distinct(),
                 initialTask = dialogState.task, isSaving = isSaving, onDismiss = dismiss,
                 onSave = { title, name, date -> studentViewModel.editTask(dialogState.task, title, name, date, dismiss) },
                 onSavePlanned = { title, name, date, repeat, time ->
@@ -297,7 +305,14 @@ fun AppDialogManager(
         }
 
         is AppDialogState.CommandCenter -> {
+            var resource by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<com.example.domain.model.GlobalSearchResult.ResourceItem?>(null) }
+            resource?.let { selected ->
+                com.example.ui.v3.StudentResourceDialog(studentViewModel, selected,
+                    onDismiss = { resource=null },
+                    onNavigateAway = { resource=null; studentViewModel.setSearchQuery(""); dismiss() })
+            }
             SpotlightSearchDialog(
+                onSelectResource = { resource=it },
                 searchResults = globalSearchResults,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { studentViewModel.setSearchQuery(it) },
@@ -327,7 +342,7 @@ fun AppDialogManager(
                     dismiss()
                 },
                 onNavigateToNotes = {
-                    studentViewModel.selectTab(AppTab.POMODORO)
+                    studentViewModel.selectTab(AppTab.NOTES)
                     dismiss()
                 }
             )
@@ -369,6 +384,7 @@ fun AppDialogManager(
                 CourseWorkspaceDialogV2(
                     reviewContent = {
                         androidx.compose.runtime.key(learningOwner, activeCourse.id) {
+                            com.example.ui.v3.V3CourseTools(studentViewModel, activeCourse.id)
                             if (LearningStatus(learning, studentViewModel::retryLearning)) {
                                 CourseReviewEntry(activeCourse, learning.cards,
                                     onSave = { card, done -> studentViewModel.learningAction({ it.saveCard(card) }, done) },

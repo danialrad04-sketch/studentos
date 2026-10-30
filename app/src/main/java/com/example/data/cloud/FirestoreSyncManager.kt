@@ -606,7 +606,9 @@ object FirestoreSyncManager {
                             semesterId = if (doc.contains("semesterId")) semesterId else existing?.semesterId,
                             repeatEveryDays = doc.getLong("repeatEveryDays")?.takeIf { it in setOf(0L, 1L, 7L, 14L, 30L) }?.toInt() ?: existing?.repeatEveryDays ?: 0,
                             reminderTime = doc.getString("reminderTime") ?: existing?.reminderTime.orEmpty(),
-                            recurrenceParentId = if (doc.contains("recurrenceParentId")) doc.getLong("recurrenceParentId") else existing?.recurrenceParentId
+                            recurrenceParentId = if (doc.contains("recurrenceParentId")) doc.getLong("recurrenceParentId") else existing?.recurrenceParentId,
+                            projectId=existing?.projectId,estimatedMinutes=existing?.estimatedMinutes ?: 0,
+                            completedAt=if(isCompleted && existing?.isCompleted==true) existing.completedAt else null
                         )
                         if (runCatching { com.example.domain.engine.TaskPlanningEngine.validate(incoming) }.isSuccess && incoming != existing) {
                             val sibling = incoming.recurrenceParentId?.let { dao.getNextOccurrence(it) }

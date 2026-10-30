@@ -108,7 +108,7 @@ fun LearningPlannerScreen(
                         ) {
                             Text("جلسهٔ متصل به تایمر", style = MaterialTheme.typography.titleSmall)
                             Text(
-                                "${names[block.courseId]} · ${block.date} · ${block.minutes} دقیقهٔ پیشنهادی"
+                                "${names[block.courseId]}${block.workTitle.takeIf { it.isNotBlank() }?.let { " · $it" }.orEmpty()} · ${block.date} · ${block.minutes} دقیقهٔ پیشنهادی"
                             )
                             Text(
                                 if (timerRunning)
@@ -138,6 +138,20 @@ fun LearningPlannerScreen(
                 TextButton(onClick = { showGoals = true }) {
                     Text("تاریخ ${plan.overdueGoals.size} هدف گذشته است؛ هدف‌ها را اصلاح کن.")
                 }
+            if (plan.workItems.isNotEmpty()) {
+                com.example.ui.v3.V3Card("زمان پروژه و تکلیف", "زمان‌های ثبت‌شده در همین برنامه جا می‌گیرند؛ زمان کارهای بدون برآورد حدس زده نمی‌شود.") {
+                    plan.workItems.take(8).forEach { item ->
+                        Text(item.title, style = MaterialTheme.typography.titleSmall)
+                        Text(when {
+                            item.remainingMinutes == null -> "برای برنامه‌ریزی، مهلت و زمان لازم را در کار یا پروژه ثبت کن."
+                            item.overdue -> "مهلت گذشته است؛ تاریخ تحویل را بررسی کن."
+                            item.shortfallMinutes > 0 -> "${item.remainingMinutes} دقیقه مانده · ${item.shortfallMinutes} دقیقه کمبود ظرفیت"
+                            else -> "${item.remainingMinutes} دقیقه مانده · مهلت ${item.dueDate}"
+                        }, style=MaterialTheme.typography.bodyMedium)
+                    }
+                    if(plan.workItems.size>8) Text("${plan.workItems.size-8} کار دیگر؛ جزئیات در بخش کارها و پروژه‌ها")
+                }
+            }
             val crowded = plan.capacityShortfall.keys - plan.overdueGoals
             if (crowded.isNotEmpty())
                 TextButton(onClick = { showGoals = true }) {

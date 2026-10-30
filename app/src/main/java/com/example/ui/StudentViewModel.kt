@@ -64,6 +64,8 @@ import com.example.domain.model.DataConfidence
 import com.example.domain.model.PrerequisiteCondition
 import com.example.ui.models.AcademicProgressUiState
 import com.example.ui.models.CurriculumMatchUiState
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -215,8 +217,7 @@ class StudentViewModel @JvmOverloads constructor(
                     preferencesRepository.recordSuccessfulSave()
                     // Only backup if onboarding is actually completed and student profile is valid
                     if (preferencesRepository.isAutoBackupEnabled.value && p.isOnboardingCompleted) {
-                        val snapshot = repository.exportFullBackupJson()
-                        LocalDataBackupManager.saveLocalSnapshot(application, snapshot)
+                        com.example.data.local.StudentSnapshotWorker.request(application)
                     }
                 }
             } catch (e: Throwable) {
@@ -592,7 +593,7 @@ class StudentViewModel @JvmOverloads constructor(
         _searchQuery.value = query
     }
 
-    val globalSearchResults: StateFlow<List<GlobalSearchResult>> = combine(
+    private val baseSearchResults: StateFlow<List<GlobalSearchResult>> = combine(
         combine(_searchQuery, courses, curriculumMatchUiState) { query, coursesList, matchState ->
             Triple(query, coursesList, matchState)
         },
@@ -614,6 +615,11 @@ class StudentViewModel @JvmOverloads constructor(
             notes = studentProfile.notes
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val resourceSearchData = combine(repository.dao.observeAttachments(), repository.dao.observeProjects(), repository.dao.observePracticeQuestions(), repository.dao.getAllNotes()) { f,p,q,n -> com.example.data.v3.V3SearchData(f,p,q,n) }
+    val globalSearchResults: StateFlow<List<GlobalSearchResult>> = combine(baseSearchResults, _searchQuery, repository.dao.getAllCoursesIncludingArchived(), resourceSearchData) { base,query,courses,resources ->
+        base + com.example.data.v3.StudentV3Search.search(query,courses,resources)
+    }.flowOn(kotlinx.coroutines.Dispatchers.Default).stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),emptyList())
 
     // Selected Tab
     private val _selectedTab = MutableStateFlow(AppTab.DASHBOARD)
@@ -680,6 +686,7 @@ class StudentViewModel @JvmOverloads constructor(
 
     init {
         pomodoroJob = viewModelScope.launch {
+            focusSession.collectLatest {
             while (true) {
                 preferencesRepository.refreshStudyActivity()
                 val state = focusSession.value
@@ -688,7 +695,8 @@ class StudentViewModel @JvmOverloads constructor(
                 if (preferencesRepository.completeFocusSession(System.currentTimeMillis())) {
                     addNotification("جلسه تمرکز تمام شد", "چند دقیقه استراحت کنید؛ سپس سراغ کار بعدی بروید.")
                 }
-                delay(500)
+                delay(if(focusSession.value.isRunning) 1000 else 60000)
+            }
             }
         }
     }
@@ -720,9 +728,7 @@ class StudentViewModel @JvmOverloads constructor(
     }
 
     fun togglePomodoro() {
-        val state = focusSession.value
-        val next = if (state.isRunning) state.pause(System.currentTimeMillis()) else state.start(System.currentTimeMillis())
-        preferencesRepository.saveFocusSession(next)
+        val next = preferencesRepository.toggleFocusSession(System.currentTimeMillis()) ?: return
         _pomodoroSeconds.value = next.remainingSeconds(System.currentTimeMillis())
         _isPomodoroRunning.value = next.isRunning
         if (next.isRunning) com.example.data.local.AcademicReminderWorker.scheduleFocus(getApplication(), next.endsAtMillis)
@@ -845,7 +851,7 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    fun saveTask(title: String, courseName: String, dueDate: String, courseId: String? = null, onSaved: () -> Unit = {}, repeatEveryDays: Int = 0, reminderTime: String = "", onFailed: () -> Unit = {}) {
+    fun saveTask(title: String, courseName: String, dueDate: String, courseId: String? = null, onSaved: () -> Unit = {}, repeatEveryDays: Int = 0, reminderTime: String = "", onFailed: () -> Unit = {}, estimatedMinutes: Int = 0) {
         if (_isSavingRecord.value) { onFailed(); return }
         _isSavingRecord.value = true
         viewModelScope.launch {
@@ -855,7 +861,7 @@ class StudentViewModel @JvmOverloads constructor(
                 val resolvedCourse = courses.value.find { if (!courseId.isNullOrBlank()) it.id == courseId else it.name == courseName }
                 val currentSem = repository.getCurrentSemesterSync()
                 repository.saveTask(TaskEntity(title = title.trim(), courseName = resolvedCourse?.name ?: courseName,
-                    dueDate = date.format(), courseId = resolvedCourse?.id.orEmpty(), semesterId = currentSem?.id, repeatEveryDays = repeatEveryDays, reminderTime = reminderTime))
+                    dueDate = date.format(), courseId = resolvedCourse?.id.orEmpty(), semesterId = currentSem?.id, repeatEveryDays = repeatEveryDays, reminderTime = reminderTime, estimatedMinutes = estimatedMinutes))
                 triggerCloudSync()
                 onSaved()
                 _userMessage.emit("تکلیف ذخیره شد.")
@@ -865,14 +871,14 @@ class StudentViewModel @JvmOverloads constructor(
         }
     }
 
-    fun editTask(task: TaskEntity, title: String, courseName: String, dueDate: String, onSaved: () -> Unit = {}, repeatEveryDays: Int = task.repeatEveryDays, reminderTime: String = task.reminderTime) {
+    fun editTask(task: TaskEntity, title: String, courseName: String, dueDate: String, onSaved: () -> Unit = {}, repeatEveryDays: Int = task.repeatEveryDays, reminderTime: String = task.reminderTime, estimatedMinutes: Int = task.estimatedMinutes) {
         if (_isSavingRecord.value) return
         _isSavingRecord.value = true
         viewModelScope.launch {
             try {
                 val date = com.example.domain.util.JalaliCalendarUtil.parse(dueDate) ?: error("تاریخ تحویل معتبر نیست.")
                 val course = courses.value.find { it.name == courseName }
-                repository.updateTask(task.copy(title = title.trim(), courseName = courseName, dueDate = date.format(), courseId = course?.id.orEmpty(), repeatEveryDays = repeatEveryDays, reminderTime = reminderTime))
+                repository.updateTask(task.copy(title = title.trim(), courseName = courseName, dueDate = date.format(), courseId = course?.id.orEmpty(), repeatEveryDays = repeatEveryDays, reminderTime = reminderTime, estimatedMinutes = estimatedMinutes, projectId = if(course?.id==task.courseId) task.projectId else null))
                 triggerCloudSync()
                 onSaved()
                 _userMessage.emit("تغییرات تکلیف ذخیره شد.")
@@ -1076,12 +1082,14 @@ class StudentViewModel @JvmOverloads constructor(
     private val learningClock = kotlinx.coroutines.flow.flow {
         while (true) { emit(System.currentTimeMillis() / 60000); delay(30000) }
     }
-    val adaptiveLearningPlan = combine(learningWorkspace, coursesWithSessions, exams, learningClock, focusSession) { state, classes, exams, _, focus ->
+    private val learningWork = combine(repository.tasks, repository.dao.observeProjects(), learningClock) { tasks,projects,_ -> tasks to projects }
+    val adaptiveLearningPlan = combine(learningWorkspace, coursesWithSessions, exams, learningWork, focusSession) { state, classes, exams, work, focus ->
         val ids=classes.map { it.course.id }.toSet()
         val clock=java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("Asia/Tehran"))
-        com.example.domain.engine.AdaptiveLearningEngine.build(com.example.data.repository.learningToday(),
+        com.example.domain.engine.UnifiedLearningPlanner.build(com.example.data.repository.learningToday(),
             state.goals.filter { it.courseId in ids },state.availability,state.completions.filter { it.courseId in ids },
-            classes,exams.map { it.solarDate },clock.get(java.util.Calendar.HOUR_OF_DAY)*60+clock.get(java.util.Calendar.MINUTE), listOfNotNull(focus.learningBlock))
+            classes,exams.map { it.solarDate },work.first,work.second,
+            clock.get(java.util.Calendar.HOUR_OF_DAY)*60+clock.get(java.util.Calendar.MINUTE), listOfNotNull(focus.learningBlock))
     }.flowOn(kotlinx.coroutines.Dispatchers.Default).stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),
         com.example.domain.engine.AdaptiveLearningPlan(emptyList(),emptyMap(),emptySet(),emptySet(),emptyMap()))
 
@@ -1360,35 +1368,36 @@ class StudentViewModel @JvmOverloads constructor(
         preferencesRepository.clearAcademicChoices()
     }
 
-    fun resetToDefaults() {
+    private val workspaceMutex = kotlinx.coroutines.sync.Mutex()
+    private val _workspaceBusy = MutableStateFlow(false)
+    val workspaceBusy: StateFlow<Boolean> = _workspaceBusy.asStateFlow()
+    suspend fun <T> withWorkspaceChange(expectedOwner: String? = null, operation: suspend () -> T): T = workspaceMutex.withLock {
+        check(expectedOwner==null || expectedOwner==workspaceGeneration.value) { "نشست تغییر کرده؛ دوباره تلاش کنید." }
+        _workspaceBusy.value=true
+        try { operation() } finally { _workspaceBusy.value=false }
+    }
+    private fun resetWorkspace(action: suspend () -> Unit) {
         viewModelScope.launch {
-            repository.resetDefaults()
-            clearAcademicReminderState()
-            addNotification("بازنشانی سامانه", "کلیه اطلاعات به حالت پیش‌فرض بازگشت.")
+            try { withWorkspaceChange { clearAcademicReminderState();action() } }
+            catch(e: kotlinx.coroutines.CancellationException) { throw e }
+            catch(e: Exception) { _userMessage.emit(e.localizedMessage ?: "بازنشانی انجام نشد؛ دوباره تلاش کنید.") }
         }
     }
-
-    fun loadDemoData() {
-        viewModelScope.launch {
-            repository.loadRichDemoData()
-            clearAcademicReminderState()
-            addNotification("حالت دمو فعال شد", "داده‌های کامل و نمونه دانشگاهی بارگذاری شد 🎓")
-        }
+    fun resetToDefaults() = resetWorkspace { repository.resetDefaults();addNotification("بازنشانی", "اطلاعات به حالت اولیه برگشت.") }
+    fun loadDemoData() = resetWorkspace { repository.loadRichDemoData();addNotification("دادهٔ نمونه", "اطلاعات نمونه بارگذاری شد.") }
+    fun clearToFreshSlate(name: String="دانشجوی جدید",studentId: String="۴۰۳۰۰۰۰۱",university: String="دانشگاه سراسری",major: String="مهندسی",entryYear: Int=1403,currentSemester: Int=1) = resetWorkspace {
+        repository.clearToFreshSlate(name,studentId,university,major,entryYear,currentSemester)
+        addNotification("شروع تازه", "اطلاعات قبلی پاک شد؛ می‌توانی درس‌هایت را ثبت کنی.")
     }
-
-    fun clearToFreshSlate(
-        name: String = "دانشجوی جدید",
-        studentId: String = "۴۰۳۰۰۰۰۱",
-        university: String = "دانشگاه سراسری",
-        major: String = "مهندسی",
-        entryYear: Int = 1403,
-        currentSemester: Int = 1
-    ) {
-        viewModelScope.launch {
-            repository.clearToFreshSlate(name, studentId, university, major, entryYear, currentSemester)
-            clearAcademicReminderState()
-            addNotification("شروع نو و پاکسازی", "سیستم‌عامل تحصیلی با یک بوم پاک و آماده ثبت دروس شما آماده شد ✨")
-        }
+    suspend fun finishPortableRestore(json: String) = kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+        val settings=LocalDataBackupManager.readStudySettings(json)
+        clearAcademicReminderState()
+        settings?.let(preferencesRepository::restoreStudySettings)
+        preferencesRepository.recordSuccessfulSave()
+        val owner=workspaceGeneration.value
+        val current=LocalDataBackupManager.withStudySettings(repository.exportFullBackupJson(),preferencesRepository.exportStudySettings())
+        LocalDataBackupManager.saveLocalSnapshot(getApplication(),current,owner)
+        _userMessage.emit("اطلاعات و فایل‌های پشتیبان بازیابی شدند.")
     }
 
     fun setThemeMode(mode: ThemeMode) {
@@ -1425,25 +1434,17 @@ class StudentViewModel @JvmOverloads constructor(
     }
 
     fun importDatabaseBackup(jsonString: String, onResult: (Boolean, String) -> Unit) {
+        val owner=workspaceGeneration.value
         viewModelScope.launch {
-            val settings = try { LocalDataBackupManager.readStudySettings(jsonString) }
-            catch (e: Exception) {
-                onResult(false, e.localizedMessage ?: "اطلاعات مطالعه در فایل پشتیبان معتبر نیست.")
-                return@launch
-            }
-            val result = repository.restoreFullBackupJson(jsonString)
-            if (result.isSuccess) {
-                clearAcademicReminderState()
-                settings?.let { preferencesRepository.restoreStudySettings(it) }
-                preferencesRepository.recordSuccessfulSave()
-                LocalDataBackupManager.saveLocalSnapshot(application, jsonString)
-                _userMessage.emit("داده‌های شما با موفقیت از فایل پشتیبان بازیابی شدند.")
-                addNotification("بازیابی نسخه پشتیبان", "دیتابیس سیستم با موفقیت به‌روزرسانی و بازیابی شد.")
-                onResult(true, "بازیابی موفقیت‌آمیز بود.")
-            } else {
-                val errorMsg = result.exceptionOrNull()?.message ?: "خطا در پردازش فایل پشتیبان"
-                onResult(false, errorMsg)
-            }
+            try {
+                withWorkspaceChange(owner) {
+                    LocalDataBackupManager.readStudySettings(jsonString)?.validate()
+                    repository.restoreFullBackupJson(jsonString) { workspaceGeneration.value==owner }.getOrThrow()
+                    finishPortableRestore(jsonString)
+                }
+                onResult(true,"بازیابی موفقیت‌آمیز بود.")
+            } catch(e: kotlinx.coroutines.CancellationException) { throw e }
+            catch(e: Exception) { onResult(false,e.localizedMessage ?: "بازیابی انجام نشد؛ اطلاعات فعلی حفظ شد.") }
         }
     }
 
@@ -1609,6 +1610,7 @@ class StudentViewModel @JvmOverloads constructor(
 
     fun signOutUser() {
         viewModelScope.launch {
+            withWorkspaceChange {
             preferencesRepository.setGuestModeEnabled(true)
             clearAcademicReminderState()
             SyncStatusStore.markLocal(application)
@@ -1622,22 +1624,27 @@ class StudentViewModel @JvmOverloads constructor(
             repository.clearToFreshSlate("دانشجو", "", "", "", 1403, 1)
             
             addNotification("خروج از حساب", "از حساب کاربری خارج شدید و به حالت مهمان تغییر کردید.")
+            }
         }
     }
 
     fun deleteUserAccount(onCompleted: () -> Unit) {
         viewModelScope.launch {
+            withWorkspaceChange {
             val result = authManager.deleteUserAccount()
             if (result.isFailure) {
                 _userMessage.emit(result.exceptionOrNull()?.localizedMessage ?: "حذف حساب انجام نشد؛ دوباره وارد حساب شوید و تلاش کنید.")
-                return@launch
+                return@withWorkspaceChange
             }
-            clearAcademicReminderState()
-            SyncStatusStore.markLocal(application)
-            preferencesRepository.setGuestModeEnabled(true)
-            repository.clearToFreshSlate("دانشجوی جدید", "", "", "", 1403, 1)
+            kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                clearAcademicReminderState()
+                SyncStatusStore.markLocal(application)
+                preferencesRepository.setGuestModeEnabled(true)
+                repository.clearToFreshSlate("دانشجوی جدید", "", "", "", 1403, 1)
+            }
             _userMessage.emit("حساب کاربری حذف شد.")
             onCompleted()
+            }
         }
     }
 

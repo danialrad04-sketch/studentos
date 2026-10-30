@@ -31,8 +31,12 @@ class AppContainer(private val context: Context) {
         database.curriculumDao()
     }
 
+    val v3Files by lazy { com.example.data.v3.StudentV3Files(context.applicationContext) }
     val studentRepository: StudentRepository by lazy {
-        StudentRepository(studentDao, curriculumDao, database)
+        StudentRepository(studentDao, curriculumDao, database) {
+            v3Files.pruneUnreferenced { studentDao.attachmentsSnapshot().filter { !it.isPurged }.map { it.blobKey }.toSet() }
+            com.example.data.backup.LocalDataBackupManager.discardStaleSnapshot(context)
+        }
     }
 
     val preferencesRepository: AppPreferencesRepository by lazy {

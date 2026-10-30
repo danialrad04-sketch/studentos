@@ -1,6 +1,7 @@
 package com.example.data.backup
 
 import android.content.Context
+import com.example.data.v3.*
 import com.example.data.local.dao.CurriculumDao
 import com.example.data.local.dao.StudentDao
 import com.example.data.local.entity.AttendanceEntity
@@ -18,7 +19,9 @@ import com.example.data.local.entity.TaskEntity
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.withLock
 import java.io.File
 
 /**
@@ -26,6 +29,7 @@ import java.io.File
  */
 data class StudentOSBackupPayload(
     val version: Int = 1,
+    val v3: StudentV3Snapshot? = null,
     val exportedAt: Long = System.currentTimeMillis(),
     val appName: String = "Student OS",
     val profile: StudentProfileEntity? = null,
@@ -84,9 +88,10 @@ object LocalDataBackupManager {
         curriculumDao: CurriculumDao? = null
     ): String = withContext(Dispatchers.IO) {
         val payload = StudentOSBackupPayload(
-            version = 1,
+            version = 2,
             exportedAt = System.currentTimeMillis(),
             appName = "Student OS",
+            v3 = dao.v3Snapshot(),
             profile = dao.getProfileSync(),
             semesters = dao.getAllSemestersSync(),
             courses = dao.getAllCoursesIncludingArchivedSync(),
@@ -118,6 +123,8 @@ object LocalDataBackupManager {
         try {
             val payload = payloadAdapter.fromJson(jsonString)
                 ?: return@withContext Result.failure(IllegalArgumentException("Invalid JSON payload format"))
+            require(payload.version in 1..2) { "نسخهٔ پشتیبان پشتیبانی نمی‌شود." }
+            payload.v3?.let { StudentV3Validation.snapshot(it, (payload.courses.map { c -> c.id } + dao.getAllCoursesIncludingArchivedSync().map { c -> c.id }).toSet()) }
             payload.studySettings?.validate()
             payload.studyGoals.forEach(com.example.domain.engine.LearningValidation::goal)
             payload.studyAvailability.forEach(com.example.domain.engine.LearningValidation::availability)
@@ -149,7 +156,13 @@ object LocalDataBackupManager {
             if (payload.sessions.isNotEmpty()) dao.insertSessions(payload.sessions)
             if (payload.attendance.isNotEmpty()) dao.insertAllAttendance(payload.attendance)
             if (payload.grades.isNotEmpty()) dao.insertAllGrades(payload.grades)
-            if (payload.tasks.isNotEmpty()) dao.insertAllTasks(payload.tasks)
+            if (payload.tasks.isNotEmpty()) {
+                val local=dao.getAllTasksSync().associateBy { it.id }
+                dao.insertAllTasks(payload.tasks.map { row ->
+                    val old=local[row.id]?.takeIf { it.courseId==row.courseId }
+                    if(payload.version==1 && old!=null) row.copy(projectId=old.projectId,estimatedMinutes=old.estimatedMinutes,completedAt=if(row.isCompleted && old.isCompleted) old.completedAt else null) else row
+                })
+            }
             if (payload.professors.isNotEmpty()) dao.insertProfessors(payload.professors)
             if (payload.exams.isNotEmpty()) dao.insertExams(payload.exams)
             payload.notes.forEach { dao.insertNote(it) }
@@ -166,6 +179,7 @@ object LocalDataBackupManager {
             payload.studyAvailability.filter { it.updatedAt>(oldAvailability[it.weekday]?.updatedAt ?: -1) }.forEach { dao.upsertStudyAvailability(it) }
             payload.studyCompletions.filter { it.updatedAt>(oldCompletions[it.id]?.updatedAt ?: -1) }.forEach { dao.upsertStudyCompletion(it) }
             payload.reviewCards.filter { it.updatedAt>(oldCards[it.id]?.updatedAt ?: -1) }.forEach { dao.upsertReviewCard(it) }
+            payload.v3?.let { dao.mergeV3(it) }
             dao.cleanupOrphans()
             Result.success(1)
         } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Throwable) {
@@ -181,26 +195,43 @@ object LocalDataBackupManager {
         curriculumDao: CurriculumDao? = null
     ): Result<Int> = importCompleteDatabaseJson(jsonString, dao, curriculumDao)
 
-    suspend fun saveLocalSnapshot(context: Context, json: String): Boolean = withContext(Dispatchers.IO) {
-        try {
-            val file = File(context.filesDir, SNAPSHOT_FILE_NAME)
-            file.writeText(json)
-            true
-        } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Throwable) {
-            e.printStackTrace()
-            false
+    private val snapshotMutex=kotlinx.coroutines.sync.Mutex()
+    suspend fun saveLocalSnapshot(context: Context,json: String,owner: String = com.example.data.repository.AppPreferencesRepository.getInstance(context).taskReminderGeneration.value): Boolean = withContext(Dispatchers.IO) {
+        snapshotMutex.withLock {
+            val preferences=com.example.data.repository.AppPreferencesRepository.getInstance(context)
+            val atomic=android.util.AtomicFile(File(context.filesDir,SNAPSHOT_FILE_NAME))
+            var output: java.io.FileOutputStream?=null
+            try {
+                kotlinx.coroutines.currentCoroutineContext().ensureActive()
+                check(owner==preferences.taskReminderGeneration.value)
+                output=atomic.startWrite()
+                output.write(("StudentOS-local-v3:"+owner+"\n").toByteArray(Charsets.UTF_8));output.write(json.toByteArray(Charsets.UTF_8))
+                kotlinx.coroutines.currentCoroutineContext().ensureActive();check(owner==preferences.taskReminderGeneration.value)
+                atomic.finishWrite(output);true
+            } catch(e: kotlinx.coroutines.CancellationException) { output?.let(atomic::failWrite);throw e }
+            catch(e: Exception) { output?.let(atomic::failWrite);false }
         }
     }
-
+    suspend fun discardStaleSnapshot(context: Context) = withContext(Dispatchers.IO) {
+        snapshotMutex.withLock {
+            val atomic=android.util.AtomicFile(File(context.filesDir,SNAPSHOT_FILE_NAME))
+            val owner=com.example.data.repository.AppPreferencesRepository.getInstance(context).taskReminderGeneration.value
+            val prefix=runCatching { atomic.openRead().bufferedReader().use { it.readLine() } }.getOrNull()
+            if(prefix!="StudentOS-local-v3:$owner") atomic.delete()
+        }
+    }
     suspend fun loadLatestLocalSnapshot(context: Context): String? = withContext(Dispatchers.IO) {
-        try {
-            val file = File(context.filesDir, SNAPSHOT_FILE_NAME)
-            if (file.exists() && file.length() > 10) {
-                file.readText()
-            } else null
-        } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Throwable) {
-            e.printStackTrace()
-            null
+        snapshotMutex.withLock {
+            try {
+                android.util.AtomicFile(File(context.filesDir,SNAPSHOT_FILE_NAME)).openRead().bufferedReader().use { reader ->
+                    val first=reader.readLine() ?: return@withLock null
+                    if(first.startsWith("StudentOS-local-v3:")) {
+                        val owner=com.example.data.repository.AppPreferencesRepository.getInstance(context).taskReminderGeneration.value
+                        if(first.removePrefix("StudentOS-local-v3:")!=owner) null else reader.readText()
+                    } else first+"\n"+reader.readText() // Existing v2 installations retain legacy recovery.
+                }
+            } catch(e: kotlinx.coroutines.CancellationException) { throw e }
+            catch(e: Exception) { null }
         }
     }
 }

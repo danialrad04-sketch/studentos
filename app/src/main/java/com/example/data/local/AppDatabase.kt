@@ -53,9 +53,15 @@ import kotlinx.coroutines.launch
         com.example.data.local.entity.StudyAvailabilityEntity::class,
         com.example.data.local.entity.StudyCompletionEntity::class,
         com.example.data.local.entity.ReviewCardEntity::class,
+        com.example.data.local.entity.AttachmentEntity::class,
+        com.example.data.local.entity.PageBookmarkEntity::class,
+        com.example.data.local.entity.ProjectEntity::class,
+        com.example.data.local.entity.ProjectStepEntity::class,
+        com.example.data.local.entity.PracticeQuestionEntity::class,
+        com.example.data.local.entity.PracticeAttemptEntity::class,
         SyncMetadataEntity::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -759,7 +765,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "student_os_db"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, STUDENT_V3_MIGRATION)
                     .addCallback(DatabaseCallback(scope))
                     .build()
                 INSTANCE = instance

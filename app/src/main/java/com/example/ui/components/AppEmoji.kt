@@ -81,6 +81,7 @@ internal fun studentDestinationSticker(tab: com.example.ui.models.AppTab): AppEm
     com.example.ui.models.AppTab.ACADEMIC_INTELLIGENCE -> AppEmojiType.CHART
     com.example.ui.models.AppTab.PASSPORT -> AppEmojiType.GRAD_CAP
     com.example.ui.models.AppTab.AGENDA, com.example.ui.models.AppTab.SCHEDULE -> AppEmojiType.CALENDAR
+    com.example.ui.models.AppTab.LIBRARY -> AppEmojiType.HISTORY
     com.example.ui.models.AppTab.NOTES -> AppEmojiType.NOTES
     com.example.ui.models.AppTab.HISTORY -> AppEmojiType.HISTORY
     com.example.ui.models.AppTab.ATTENDANCE, com.example.ui.models.AppTab.TASKS -> AppEmojiType.CHECK
@@ -91,4 +92,25 @@ internal fun studentDestinationSticker(tab: com.example.ui.models.AppTab): AppEm
     com.example.ui.models.AppTab.POMODORO -> AppEmojiType.POMODORO
     com.example.ui.models.AppTab.GAMIFICATION -> AppEmojiType.TROPHY
     com.example.ui.models.AppTab.ACCOUNT -> AppEmojiType.PROFILE
+}
+
+/**
+ * Region decoding reuses the original PNGs without allocating the full atlas for a widget.
+ * Resources.openRawResource explicitly supports file-backed drawables (API documentation),
+ * despite its RawRes lint annotation. Both IDs below are packaged PNGs, verified on-device.
+ * https://developer.android.com/reference/android/content/res/Resources#openRawResource(int)
+ */
+@android.annotation.SuppressLint("ResourceType")
+internal fun studentWidgetSticker(context: android.content.Context, type: AppEmojiType): android.graphics.Bitmap {
+    val resource=if(type.cell>=18) R.drawable.student_sticker_companions else R.drawable.student_sticker_atlas
+    val rect=if(type.cell>=18) StudentCompanionBounds[type.cell-18] else StudentStickerBounds[type.cell]
+    context.resources.openRawResource(resource).use { input ->
+        @Suppress("DEPRECATION")
+        val decoder=checkNotNull(android.graphics.BitmapRegionDecoder.newInstance(input,false))
+        try {
+            val region=checkNotNull(decoder.decodeRegion(android.graphics.Rect(rect.left,rect.top,rect.right,rect.bottom),android.graphics.BitmapFactory.Options()))
+            val scale=96f/maxOf(region.width,region.height)
+            return android.graphics.Bitmap.createScaledBitmap(region,(region.width*scale).roundToInt().coerceAtLeast(1),(region.height*scale).roundToInt().coerceAtLeast(1),true).also { if(it!==region) region.recycle() }
+        } finally { decoder.recycle() }
+    }
 }

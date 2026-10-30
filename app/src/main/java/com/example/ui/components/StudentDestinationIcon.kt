@@ -19,6 +19,7 @@ internal fun studentDestinationIcon(tab: AppTab): ImageVector =
         AppTab.COPILOT -> Icons.Rounded.AutoAwesome
         AppTab.ACADEMIC_INTELLIGENCE -> Icons.Rounded.Insights
         AppTab.PASSPORT -> Icons.Rounded.School
+        AppTab.LIBRARY -> Icons.AutoMirrored.Rounded.MenuBook
         AppTab.NOTES -> Icons.Rounded.EditNote
         AppTab.ATTENDANCE -> Icons.AutoMirrored.Rounded.FactCheck
         AppTab.EXAMS -> Icons.Rounded.EventAvailable

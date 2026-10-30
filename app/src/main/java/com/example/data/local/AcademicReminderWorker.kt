@@ -16,8 +16,11 @@ class AcademicReminderWorker(context: Context, parameters: WorkerParameters) : C
     override suspend fun doWork(): Result {
         val prefs = AppPreferencesRepository.getInstance(applicationContext)
         if (inputData.getString("kind") == "focus") {
+            val owner=inputData.getString("owner_generation")
+            if(owner!=null && owner!=prefs.taskReminderGeneration.value) return Result.success()
             val endsAt = inputData.getLong("endsAt", 0)
             if (prefs.focusSession.value.endsAtMillis != endsAt || !prefs.completeFocusSession(System.currentTimeMillis())) return Result.success()
+            com.example.widget.StudentWidgets.request(applicationContext)
             if (prefs.notificationsEnabled.value) NotificationHelper.showSystemNotification(applicationContext,
                 "جلسه تمرکز تمام شد", "چند دقیقه استراحت کنید و سپس سراغ کار بعدی بروید.", notificationId = 41001)
             return Result.success()
@@ -43,7 +46,7 @@ class AcademicReminderWorker(context: Context, parameters: WorkerParameters) : C
         fun scheduleFocus(context: Context, endsAt: Long) {
             val request = OneTimeWorkRequestBuilder<AcademicReminderWorker>()
                 .setInitialDelay((endsAt - System.currentTimeMillis()).coerceAtLeast(0), TimeUnit.MILLISECONDS)
-                .setInputData(workDataOf("kind" to "focus", "endsAt" to endsAt)).addTag(TAG).build()
+                .setInputData(workDataOf("kind" to "focus", "endsAt" to endsAt, "owner_generation" to com.example.data.repository.AppPreferencesRepository.getInstance(context).taskReminderGeneration.value)).addTag(TAG).build()
             WorkManager.getInstance(context).enqueueUniqueWork(FOCUS_WORK, ExistingWorkPolicy.REPLACE, request)
         }
         fun cancelFocus(context: Context) { WorkManager.getInstance(context).cancelUniqueWork(FOCUS_WORK) }

@@ -16,7 +16,7 @@ import com.example.ui.theme.MyApplicationTheme
 class MainActivity : ComponentActivity() {
   private val notificationDestinations = kotlinx.coroutines.flow.MutableSharedFlow<String>(replay = 1)
   private fun acceptDestination(intent: android.content.Intent?) {
-    intent?.getStringExtra("destination_tab")?.takeIf { it == "TASKS" }?.let { notificationDestinations.tryEmit(it) }
+    intent?.getStringExtra("destination_tab")?.takeIf { it in setOf("TASKS","SCHEDULE","POMODORO") }?.let { notificationDestinations.tryEmit(it) }
   }
   override fun onNewIntent(intent: android.content.Intent) {
     super.onNewIntent(intent)

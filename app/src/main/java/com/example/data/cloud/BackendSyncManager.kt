@@ -51,7 +51,7 @@ object BackendSyncManager {
         "attendance" -> dao.getAllAttendanceSync()
         "grades" -> dao.getAllGradesSync()
         "exams" -> dao.getAllExamsSync()
-        "tasks" -> dao.getAllTasksSync()
+        "tasks" -> dao.getAllTasksSync().map { t -> mapOf("id" to t.id,"title" to t.title,"courseName" to t.courseName,"dueDate" to t.dueDate,"isCompleted" to t.isCompleted,"courseId" to t.courseId,"semesterId" to t.semesterId,"repeatEveryDays" to t.repeatEveryDays,"reminderTime" to t.reminderTime,"recurrenceParentId" to t.recurrenceParentId) }
         "notes" -> dao.getAllNotesSync()
         else -> null
     }
@@ -153,8 +153,12 @@ object BackendSyncManager {
                 val parents = items.mapNotNull { it.recurrenceParentId }
                 require(parents.distinct().size == parents.size) { "Duplicate task recurrence" }
                 AppDatabase.getDatabase(context).withTransaction {
+                    val local=dao.getAllTasksSync().associateBy { it.id }
                     dao.clearTasks()
-                    if (items.isNotEmpty()) dao.insertAllTasks(items)
+                    if (items.isNotEmpty()) dao.insertAllTasks(items.map { remote ->
+                        val old=local[remote.id]
+                        remote.copy(projectId=old?.projectId,estimatedMinutes=old?.estimatedMinutes ?: 0,completedAt=if(remote.isCompleted && old?.isCompleted==true) old.completedAt else null)
+                    })
                 }
             }
             "notes" -> {
