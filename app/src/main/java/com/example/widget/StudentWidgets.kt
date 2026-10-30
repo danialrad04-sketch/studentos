@@ -253,7 +253,19 @@ object StudentWidgets {
                             R.id.widget_body,
                             body + if (!focus) "\nبه‌روز: $stamp" else "",
                         )
-                        views.setInt(R.id.widget_body, "setMaxLines", if (compact) 2 else 5)
+                        val height =
+                            manager
+                                .getAppWidgetOptions(id)
+                                .getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 180)
+                        val bodyLines =
+                            when {
+                                compact -> 1
+                                height >= 240 -> 5
+                                height >= 220 -> 4
+                                height >= 200 -> 3
+                                else -> 2
+                            }
+                        views.setInt(R.id.widget_body, "setMaxLines", bodyLines)
                         views.setOnClickPendingIntent(
                             R.id.widget_open,
                             PendingIntent.getActivity(

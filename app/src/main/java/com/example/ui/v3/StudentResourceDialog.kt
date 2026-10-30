@@ -12,6 +12,7 @@ fun StudentResourceDialog(
     student: StudentViewModel,
     result: GlobalSearchResult.ResourceItem,
     onDismiss: () -> Unit,
+    onNavigateAway: () -> Unit = onDismiss,
 ) {
     if (result.kind == StudentResourceKind.NOTE) {
         val notes by student.studyNotes.collectAsStateWithLifecycle()
@@ -21,7 +22,7 @@ fun StudentResourceDialog(
                 Text(note.content)
                 TextButton({
                     student.selectTab(com.example.ui.models.AppTab.NOTES)
-                    onDismiss()
+                    onNavigateAway()
                 }) {
                     Text("رفتن به دفتر یادداشت‌ها")
                 }

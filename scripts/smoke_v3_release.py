@@ -119,7 +119,13 @@ def main():
     adb('shell', 'am', 'broadcast', '-a', 'android.intent.action.MEDIA_SCANNER_SCAN_FILE', '-d', 'file:///sdcard/Download/StudentOS-v3-r8.zip')
     open_backup();tap_text('بازیابی پشتیبان کامل');choose_download('StudentOS-v3-r8.zip')
     wait_ui(lambda x: 'بازیابی اطلاعات و فایل' in x);tap_text('بازیابی')
-    wait_ui(lambda x: 'V3Student' in x and 'در حال آماده‌سازی اطلاعات' not in x, timeout=90)
+    # The account stays scrolled after restore; its profile header is outside that viewport.
+    # Closing this sheet requires the committed workspace generation change. Then relaunch
+    # and verify the actual saved profile at the top, also exercising restart persistence.
+    wait_ui(lambda x: 'ذخیرهٔ پشتیبان کامل ZIP' not in x and 'در حال آماده‌سازی اطلاعات' not in x and 'بازیابی اطلاعات و فایل' not in x and 'حساب' in x, timeout=90)
+    root_surface();tap_text('حساب')
+    wait_ui(lambda x: 'V3Student' in x and 'حساب من' in x)
+    capture(args.output, 'v3-signed-restored-profile')
     drawer('کتابخانه');wait_ui(lambda x: 'V3 reader.pdf' in x);tap_text('مطالعه', scroll=True)
     wait_ui(lambda x: 'صفحهٔ 1 از V3 reader.pdf' in x)
     capture(args.output, 'v3-signed-pdf-reader')

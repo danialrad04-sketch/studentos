@@ -60,7 +60,7 @@ class StudentWidgetsDeviceTest {
                     views.forEach { hostView ->
                         AndroidView(
                             factory = { hostView },
-                            modifier = Modifier.fillMaxWidth().height(160.dp),
+                            modifier = Modifier.fillMaxWidth().height(180.dp),
                         )
                     }
                 }

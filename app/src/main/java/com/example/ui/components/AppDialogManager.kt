@@ -306,7 +306,11 @@ fun AppDialogManager(
 
         is AppDialogState.CommandCenter -> {
             var resource by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<com.example.domain.model.GlobalSearchResult.ResourceItem?>(null) }
-            resource?.let { selected -> com.example.ui.v3.StudentResourceDialog(studentViewModel, selected) { resource=null } }
+            resource?.let { selected ->
+                com.example.ui.v3.StudentResourceDialog(studentViewModel, selected,
+                    onDismiss = { resource=null },
+                    onNavigateAway = { resource=null; studentViewModel.setSearchQuery(""); dismiss() })
+            }
             SpotlightSearchDialog(
                 onSelectResource = { resource=it },
                 searchResults = globalSearchResults,

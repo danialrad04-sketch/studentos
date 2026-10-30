@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -139,7 +140,10 @@ class StudentV3ExperienceTest {
         rule
             .onNodeWithTag("student_modal")
             .captureRoboImage("build/outputs/visual-review/v3-invalid-question-after-touch.png")
-        rule.waitUntil(15000) { vm.message.value != null }
+        rule.waitUntil(15000) {
+            rule.onAllNodesWithText("پاسخ مرجع را وارد کن.").fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onAllNodesWithText("پاسخ مرجع را وارد کن.").onLast().assertIsDisplayed()
         rule.onNodeWithText("قانون دوم چیست؟").assertExists()
         assertTrue(runBlocking { db.studentDao().practiceQuestionsSnapshot().isEmpty() })
         rule.onNodeWithText("پاسخ مرجع").performTextInput("پاسخ مرجع کامل")
@@ -226,6 +230,62 @@ class StudentV3ExperienceTest {
         rule
             .onNodeWithTag("v3_reader")
             .captureRoboImage("build/outputs/visual-review/v3-reader-restored-light.png")
+    }
+
+    @Test
+    fun aWrongPracticeAnswerCanBeSentToTheRealCourseReview() {
+        runBlocking {
+            vm.repository.question(
+                PracticeQuestionEntity(
+                    "mistake",
+                    "math",
+                    "دو و دو؟",
+                    StudentV3Json.choices(listOf("چهار", "پنج")),
+                    "0",
+                    "MCQ",
+                )
+            )
+        }
+        mount(V3Section.PRACTICE)
+        rule.onNodeWithTag("v3_start_practice").scrollAboveNavigation(rule).performClick()
+        rule.waitUntil(15000) { rule.onAllNodesWithText("پنج").fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText("پنج").performClick()
+        rule.waitUntil(15000) {
+            runBlocking(Dispatchers.IO) {
+                db.studentDao().practiceAttemptsSnapshot().any {
+                    StudentV3Json.answers(it.answersJson)["mistake"] == "1"
+                }
+            }
+        }
+        rule.onNodeWithTag("v3_finish_practice").scrollAboveNavigation(rule).performClick()
+        rule.onNodeWithText("پایان آزمون").performClick()
+        rule.waitUntil(15000) {
+            rule.onAllNodesWithText("افزودن به مرور این درس").fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText("افزودن به مرور این درس").scrollAboveNavigation(rule).performClick()
+        rule.waitUntil(15000) {
+            runBlocking(Dispatchers.IO) {
+                db.studentDao().reviewCardsSnapshot().any {
+                    it.id == "practice:mistake" && it.answer == "چهار"
+                }
+            }
+        }
+        rule.waitUntil(15000) {
+            rule.onAllNodesWithText("در مرور این درس ثبت شد.").fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText("در مرور این درس ثبت شد.").assertExists()
+        rule.onNodeWithText("افزودن به مرور این درس").scrollAboveNavigation(rule).performClick()
+        rule.waitUntil(15000) {
+            !rule
+                .onNodeWithText("افزودن به مرور این درس")
+                .fetchSemanticsNode()
+                .config
+                .contains(androidx.compose.ui.semantics.SemanticsProperties.Disabled)
+        }
+        assertEquals(1, runBlocking(Dispatchers.IO) { db.studentDao().reviewCardsSnapshot().size })
+        rule
+            .onNodeWithTag("v3_attempt")
+            .captureRoboImage("build/outputs/visual-review/v3-mistake-to-review-light.png")
     }
 
     @Test

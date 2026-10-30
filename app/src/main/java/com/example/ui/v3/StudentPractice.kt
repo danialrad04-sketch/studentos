@@ -420,13 +420,26 @@ private fun StudentPracticeAttempt(
                             if (correct == true) "پاسخ درست" else "اشتباه یا بی‌پاسخ",
                             style = MaterialTheme.typography.labelLarge,
                         )
-                    if (correct == false)
+                    if (correct == false) {
+                        var reviewAdded by
+                            rememberSaveable(attempt.id, question.id) { mutableStateOf(false) }
                         OutlinedButton(
-                            { vm.perform({ addToReview(attempt.id, question.id) }) },
+                            {
+                                vm.perform({ addToReview(attempt.id, question.id) }) {
+                                    reviewAdded = true
+                                }
+                            },
                             enabled = !busy,
                         ) {
                             Text("افزودن به مرور این درس")
                         }
+                        if (reviewAdded)
+                            Text(
+                                "در مرور این درس ثبت شد.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                    }
                 }
             }
         }

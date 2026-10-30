@@ -1,1 +1,1 @@
-<resources><color name="student_widget_surface">#132B35</color><color name="student_widget_ink">#E4EEF0</color><color name="student_widget_action">#34442B</color></resources>
+<resources><color name="student_widget_ripple">#33E4EEF0</color><color name="student_widget_surface">#132B35</color><color name="student_widget_ink">#E4EEF0</color><color name="student_widget_action">#34442B</color></resources>

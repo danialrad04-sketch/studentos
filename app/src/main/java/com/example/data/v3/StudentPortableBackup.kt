@@ -65,11 +65,18 @@ class StudentPortableBackup(
                                     )
                                 ) + blobs
                         )
+                    require(stage.length() <= 32L * 1024 * 1024 && manifest.entries.size <= 10000) {
+                        "تعداد فایل‌ها یا حجم اطلاعات پشتیبان بیش از حد پشتیبانی‌شده است."
+                    }
+                    val manifestBytes = manifestAdapter.toJson(manifest).toByteArray(Charsets.UTF_8)
+                    require(manifestBytes.size <= 2 * 1024 * 1024) {
+                        "فهرست فایل‌های پشتیبان بیش از اندازه است."
+                    }
                     check(canWrite())
                     files.context.contentResolver.openOutputStream(uri, "wt")?.use { output ->
-                        ZipOutputStream(output).use { zip ->
+                        ZipOutputStream(ArchiveOutput(output)).use { zip ->
                             zip.putNextEntry(ZipEntry("manifest.json"))
-                            zip.write(manifestAdapter.toJson(manifest).toByteArray())
+                            zip.write(manifestBytes)
                             zip.closeEntry()
                             zip.putNextEntry(ZipEntry("metadata.json"))
                             stage.inputStream().use {
@@ -227,4 +234,29 @@ class StudentPortableBackup(
                 }
             }
         }
+
+    /** Compressed ZIP headers/deflate overhead must also fit the importer's archive ceiling. */
+    private class ArchiveOutput(private val output: java.io.OutputStream) : java.io.OutputStream() {
+        private var count = 0L
+
+        override fun write(value: Int) {
+            reserve(1)
+            output.write(value)
+        }
+
+        override fun write(bytes: ByteArray, offset: Int, length: Int) {
+            reserve(length)
+            output.write(bytes, offset, length)
+        }
+
+        private fun reserve(length: Int) {
+            require(length >= 0 && count <= 2L * 1024 * 1024 * 1024 - length) {
+                "اندازهٔ پشتیبان کامل از ۲ گیگابایت بیشتر شد؛ فایل‌های غیرضروری را پاک کن و دوباره تلاش کن."
+            }
+            count += length
+        }
+
+        override fun flush() = output.flush()
+        // The surrounding ContentResolver stream owns closing the document.
+    }
 }
