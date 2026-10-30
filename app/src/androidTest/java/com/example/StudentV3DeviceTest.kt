@@ -79,7 +79,11 @@ class StudentV3DeviceTest {
         rule.waitUntil(15000) {
             rule.onAllNodesWithText("درس آزمون نسخهٔ سه").fetchSemanticsNodes().isNotEmpty()
         }
-        rule.onAllNodesWithText("درس آزمون نسخهٔ سه").onFirst().performScrollTo().performClick()
+        rule
+            .onAllNodesWithText("درس آزمون نسخهٔ سه")
+            .onFirst()
+            .scrollAboveNavigation(rule)
+            .performClick()
     }
 
     private fun evidence(name: String) {
@@ -186,9 +190,9 @@ class StudentV3DeviceTest {
             }
             rule
                 .onNodeWithTag("v3_page_note")
-                .performScrollTo()
+                .scrollAboveNavigation(rule)
                 .performTextInput("نکتهٔ پایدار صفحهٔ دوم")
-            rule.onNodeWithTag("v3_save_bookmark").performScrollTo().performClick()
+            rule.onNodeWithTag("v3_save_bookmark").scrollAboveNavigation(rule).performClick()
             rule.waitUntil(15000) {
                 runBlocking(Dispatchers.IO) {
                     db.studentDao().pageBookmarksSnapshot().any {
@@ -208,7 +212,7 @@ class StudentV3DeviceTest {
             }
             rule
                 .onNodeWithTag("v3_page_note")
-                .performScrollTo()
+                .scrollAboveNavigation(rule)
                 .assertTextContains("نکتهٔ پایدار صفحهٔ دوم")
             assertEquals(
                 1,
@@ -253,7 +257,17 @@ class StudentV3DeviceTest {
                 }
             }
         }
-        rule.onNodeWithTag("v3_finish_practice").performScrollTo().performClick()
+        rule.waitUntil(15000) {
+            !rule
+                .onNodeWithTag("v3_finish_practice")
+                .fetchSemanticsNode()
+                .config
+                .contains(androidx.compose.ui.semantics.SemanticsProperties.Disabled)
+        }
+        rule.onNodeWithTag("v3_finish_practice").scrollAboveNavigation(rule).performClick()
+        rule.waitUntil(15000) {
+            rule.onAllNodesWithText("آزمون پایان یابد؟").fetchSemanticsNodes().isNotEmpty()
+        }
         rule.onNodeWithText("پایان آزمون").performClick()
         rule.waitUntil(15000) {
             runBlocking(Dispatchers.IO) {
@@ -261,6 +275,9 @@ class StudentV3DeviceTest {
                     it.courseId == courseId && it.finishedAt != null && it.correctCount == 1
                 }
             }
+        }
+        rule.waitUntil(15000) {
+            rule.onAllNodesWithText("نتیجهٔ ثبت‌شده").fetchSemanticsNodes().isNotEmpty()
         }
         rule.onNodeWithText("نتیجهٔ ثبت‌شده").assertExists()
         evidence("practice-result")

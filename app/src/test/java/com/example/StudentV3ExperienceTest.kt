@@ -37,6 +37,15 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class StudentV3ExperienceTest {
     @get:Rule val rule = createComposeRule()
+    @get:Rule(order = 2)
+    val failureImage =
+        object : org.junit.rules.TestWatcher() {
+            override fun failed(error: Throwable, description: org.junit.runner.Description) {
+                val path = "build/outputs/visual-review/v3-failure-${description.methodName}.png"
+                runCatching { rule.onNodeWithTag("v3_attempt").captureRoboImage(path) }
+                    .recoverCatching { rule.onRoot().captureRoboImage(path) }
+            }
+        }
     private lateinit var db: AppDatabase
     private val viewModels = androidx.lifecycle.ViewModelStore()
     private lateinit var vm: StudentV3ViewModel
@@ -103,14 +112,14 @@ class StudentV3ExperienceTest {
             rule.onAllNodesWithTag("v3_editor_save").fetchSemanticsNodes().isEmpty()
         }
         rule.onNodeWithText("باز کردن پروژه").scrollAboveNavigation(rule).performClick()
-        rule.onNodeWithTag("v3_add_step").performScrollTo().performClick()
+        rule.onNodeWithTag("v3_add_step").scrollAboveNavigation(rule).performClick()
         rule.onNodeWithText("این مرحله چه کاری دارد؟").performTextInput("آماده‌کردن داده‌ها")
         rule.onNodeWithTag("v3_editor_save").assertIsDisplayed().performClick()
         rule.waitUntil(15000) {
             runBlocking(Dispatchers.IO) { db.studentDao().projectStepsSnapshot().isNotEmpty() }
         }
         val stepId = runBlocking { db.studentDao().projectStepsSnapshot().single().id }
-        rule.onNodeWithTag("v3_step_$stepId").performScrollTo().performClick()
+        rule.onNodeWithTag("v3_step_$stepId").scrollAboveNavigation(rule).performClick()
         rule.waitUntil(15000) {
             runBlocking(Dispatchers.IO) {
                 db.studentDao().projectStepsSnapshot().single().completedAt != null
@@ -257,7 +266,17 @@ class StudentV3ExperienceTest {
                 }
             }
         }
+        rule.waitUntil(15000) {
+            !rule
+                .onNodeWithTag("v3_finish_practice")
+                .fetchSemanticsNode()
+                .config
+                .contains(androidx.compose.ui.semantics.SemanticsProperties.Disabled)
+        }
         rule.onNodeWithTag("v3_finish_practice").scrollAboveNavigation(rule).performClick()
+        rule.waitUntil(15000) {
+            rule.onAllNodesWithText("آزمون پایان یابد؟").fetchSemanticsNodes().isNotEmpty()
+        }
         rule.onNodeWithText("پایان آزمون").performClick()
         rule.waitUntil(15000) {
             rule.onAllNodesWithText("افزودن به مرور این درس").fetchSemanticsNodes().isNotEmpty()
@@ -315,14 +334,33 @@ class StudentV3ExperienceTest {
                 } == true
             }
         }
-        rule.onNodeWithTag("v3_finish_practice").performScrollTo().performClick()
+        rule.waitUntil(15000) {
+            !rule
+                .onNodeWithTag("v3_finish_practice")
+                .fetchSemanticsNode()
+                .config
+                .contains(androidx.compose.ui.semantics.SemanticsProperties.Disabled)
+        }
+        rule.onNodeWithTag("v3_finish_practice").scrollAboveNavigation(rule).performClick()
+        rule.waitUntil(15000) {
+            rule.onAllNodesWithText("آزمون پایان یابد؟").fetchSemanticsNodes().isNotEmpty()
+        }
         rule.onNodeWithText("پایان آزمون").performClick()
         rule.waitUntil(15000) {
             runBlocking(Dispatchers.IO) {
                 db.studentDao().practiceAttemptsSnapshot().single().finishedAt != null
             }
         }
+        rule.waitUntil(15000) {
+            rule.onAllNodesWithText("نتیجهٔ ثبت‌شده").fetchSemanticsNodes().isNotEmpty()
+        }
         rule.onNodeWithText("نتیجهٔ ثبت‌شده").assertExists()
+        assertEquals(
+            1,
+            runBlocking(Dispatchers.IO) {
+                db.studentDao().practiceAttemptsSnapshot().single().correctCount
+            },
+        )
         rule
             .onNodeWithTag("v3_attempt")
             .captureRoboImage("build/outputs/visual-review/v3-practice-result-light.png")
@@ -366,9 +404,14 @@ class StudentV3ExperienceTest {
         rule.waitUntil(15000) {
             rule.onAllNodesWithTag("v3_add_project").fetchSemanticsNodes().isNotEmpty()
         }
-        rule.onNodeWithTag("v3_add_project").performScrollTo().performClick()
+        rule.onNodeWithTag("v3_add_project").scrollAboveNavigation(rule).performClick()
         rule.onNodeWithText("نام پروژه").performTextInput("عنوان خصوصی حساب قبلی")
-        rule.runOnIdle { model = StudentV3ViewModel(app, canWrite = { true }, database = db) }
+        rule.runOnIdle {
+            model =
+                StudentV3ViewModel(app, canWrite = { true }, database = db).also {
+                    viewModels.put("replacement", it)
+                }
+        }
         rule.onNodeWithText("عنوان خصوصی حساب قبلی").assertDoesNotExist()
         rule.onNodeWithTag("v3_editor_save").assertDoesNotExist()
     }
