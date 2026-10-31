@@ -5,6 +5,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.text.style.TextOverflow
@@ -295,8 +297,8 @@ fun TaskCard(
             Modifier.fillMaxWidth().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                Checkbox(checked = task.isCompleted, onCheckedChange = { onToggle() })
+            Row(Modifier.fillMaxWidth().toggleable(value = task.isCompleted, role = Role.Checkbox, onValueChange = { onToggle() }), verticalAlignment = Alignment.Top) {
+                Checkbox(checked = task.isCompleted, onCheckedChange = null)
                 Text(
                     task.title,
                     Modifier.weight(1f).padding(top = 10.dp),

@@ -603,7 +603,7 @@ fun CourseCard(
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val surface = MaterialTheme.colorScheme.surfaceContainerLow
-    val ink = com.example.ui.theme.readableAccent(accentColor, surface)
+    val ink = com.example.ui.theme.readableAccent(accentColor, MaterialTheme.colorScheme.surfaceContainerHigh)
     Card(
         modifier = modifier.fillMaxWidth().tactileClickable { onClick() },
         shape = MaterialTheme.shapes.large,
