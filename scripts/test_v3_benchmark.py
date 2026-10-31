@@ -1,4 +1,6 @@
 import unittest
+from unittest.mock import patch
+import smoke_v3_release
 from benchmark_v3 import start_ms, pss_kib, frame_durations, compare
 from smoke_v3_release import fixture_pdf, write_fixture, navigation_boundary
 import tempfile
@@ -24,6 +26,17 @@ class V3EvidenceTest(unittest.TestCase):
         self.assertLess(1569,boundary-8) # Actual project text rejected by the old 80% heuristic.
         self.assertGreater(1780,boundary-8) # A covered control must still be rejected.
         self.assertEqual(int(1920*.94),navigation_boundary('<hierarchy/>',1920))
+    def test_question_below_initial_viewport_is_found_by_scrolling_without_tapping(self):
+        absent = '<hierarchy><node text="بانک سؤال این درس" bounds="[0,0][100,100]"/></hierarchy>'
+        visible = '<hierarchy><node text="V3 question" bounds="[20,800][700,900]"/></hierarchy>'
+        with patch.object(smoke_v3_release, 'dump', side_effect=[absent, visible]), patch.object(smoke_v3_release, 'adb', return_value='Physical size: 1080x1920') as adb:
+            self.assertEqual(visible, smoke_v3_release.find_visible_text('V3 question', scroll=True))
+            self.assertTrue(any('swipe' in call.args for call in adb.call_args_list))
+            self.assertFalse(any('tap' in call.args for call in adb.call_args_list))
+    def test_missing_question_still_fails_after_bounded_scroll_search(self):
+        with patch.object(smoke_v3_release, 'dump', return_value='<hierarchy/>'), patch.object(smoke_v3_release, 'adb', return_value='Physical size: 1080x1920'):
+            with self.assertRaises(AssertionError):
+                smoke_v3_release.find_visible_text('V3 question', scroll=True)
     def test_signed_smoke_fixture_has_complete_real_bytes_and_hashes(self):
         with tempfile.TemporaryDirectory() as tmp:
             file=Path(tmp)/'fixture.zip';key=write_fixture(file)

@@ -5,6 +5,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.text.style.TextOverflow
@@ -281,135 +283,98 @@ fun TaskCard(
     onDelete: () -> Unit,
     onOpenWorkspace: (() -> Unit)? = null,
     onEdit: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var deleting by remember { mutableStateOf(false) }
-    val containerColor = if (task.isCompleted) {
-        MaterialTheme.colorScheme.surfaceContainerLow
-    } else {
-        MaterialTheme.colorScheme.surfaceContainer
-    }
-
-    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 88.dp)
-            .tactileClickable { onToggle() },
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        border = BorderStroke(1.dp, if (isDark) MaterialTheme.colorScheme.outline.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outline),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 1.5.dp)
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors =
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = StudentSpacing.Md, vertical = StudentSpacing.Sm),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(
-                    checked = task.isCompleted,
-                    onCheckedChange = { onToggle() },
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = MaterialTheme.colorScheme.primary,
-                        uncheckedColor = MaterialTheme.colorScheme.outline
-                    )
+            Row(Modifier.fillMaxWidth().toggleable(value = task.isCompleted, role = Role.Checkbox, onValueChange = { onToggle() }), verticalAlignment = Alignment.Top) {
+                Checkbox(checked = task.isCompleted, onCheckedChange = null)
+                Text(
+                    task.title,
+                    Modifier.weight(1f).padding(top = 10.dp),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color =
+                        if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant
+                        else MaterialTheme.colorScheme.onSurface,
+                    textDecoration =
+                        if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None,
                 )
-
-                Spacer(modifier = Modifier.width(StudentSpacing.Sm))
-
-                Column {
-                    Text(
-                        text = task.title,
-                        style = MaterialTheme.typography.titleSmall,
-                        maxLines = 2,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        fontWeight = FontWeight.SemiBold,
-                        color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
-                        textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
-                    )
-
-                    if (task.repeatEveryDays > 0 || task.reminderTime.isNotBlank()) Text(
-                        listOfNotNull(if (task.repeatEveryDays > 0) "تکرار هر ${task.repeatEveryDays} روز" else null,
-                            if (task.reminderTime.isNotBlank()) "یادآور ${task.reminderTime} · تهران" else null).joinToString(" · "),
-                        style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Surface(
-                            shape = MaterialTheme.shapes.extraSmall,
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = if (onOpenWorkspace != null) {
-                                Modifier.clickable { onOpenWorkspace() }
-                            } else Modifier
-                        ) {
-                            Text(
-                                text = if (onOpenWorkspace != null) "${task.courseName} ↗" else task.courseName,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                modifier = Modifier
-                                    .widthIn(max = 150.dp)
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-
-                        if (task.dueDate.isNotBlank()) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.CalendarToday,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "موعد: ${task.dueDate}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                    }
-                }
             }
-
-            onEdit?.let { action ->
-                IconButton(onClick = action, modifier = Modifier.minimumInteractiveComponentSize()) {
-                    Icon(androidx.compose.material.icons.Icons.Default.Edit, contentDescription = "ویرایش تکلیف")
+            if (onOpenWorkspace != null) {
+                androidx.compose.material3.TextButton(onClick = onOpenWorkspace) {
+                    Text(task.courseName, style = MaterialTheme.typography.bodyMedium)
                 }
-            }
-            IconButton(
-                onClick = { deleting = true },
-                modifier = Modifier.minimumInteractiveComponentSize()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "حذف تکلیف",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
+            } else
+                Text(
+                    task.courseName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            if (task.dueDate.isNotBlank())
+                Text(
+                    "موعد: ${task.dueDate}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            if (task.repeatEveryDays > 0 || task.reminderTime.isNotBlank())
+                Text(
+                    listOfNotNull(
+                            if (task.repeatEveryDays > 0) "تکرار هر ${task.repeatEveryDays} روز"
+                            else null,
+                            if (task.reminderTime.isNotBlank())
+                                "یادآور ${task.reminderTime} · تهران"
+                            else null,
+                        )
+                        .joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                onEdit?.let { action ->
+                    IconButton(onClick = action) { Icon(Icons.Default.Edit, "ویرایش تکلیف") }
+                }
+                IconButton(onClick = { deleting = true }) {
+                    Icon(
+                        Icons.Default.Delete,
+                        "حذف تکلیف",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
-    if (deleting) androidx.compose.material3.AlertDialog(onDismissRequest = { deleting = false },
-        title = { Text("حذف تکلیف؟") }, text = { Text(task.title) },
-        confirmButton = { androidx.compose.material3.TextButton(onClick = { onDelete(); deleting = false }) { Text("حذف") } },
-        dismissButton = { androidx.compose.material3.TextButton(onClick = { deleting = false }) { Text("انصراف") } })
-
+    if (deleting)
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { deleting = false },
+            title = { Text("حذف تکلیف؟") },
+            text = { Text(task.title) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        onDelete()
+                        deleting = false
+                    }
+                ) {
+                    Text("حذف")
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { deleting = false }) {
+                    Text("انصراف")
+                }
+            },
+        )
 }
 
 @Preview(name = "TasksScreen Light", showBackground = true)

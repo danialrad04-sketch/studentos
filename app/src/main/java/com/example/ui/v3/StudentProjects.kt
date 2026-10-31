@@ -47,7 +47,11 @@ internal fun V3Editor(
             enabled = !busy,
             modifier = Modifier.fillMaxWidth().padding(top = 12.dp).testTag("v3_editor_save"),
         ) {
-            Text("ذخیره")
+            if (busy) {
+                CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                Spacer(Modifier.width(8.dp))
+            }
+            Text(if (busy) "در حال ذخیره…" else "ذخیره")
         }
     }
 }
@@ -115,6 +119,11 @@ fun ProjectEditor(vm: StudentV3ViewModel, row: ProjectEntity, onDismiss: () -> U
             label = { Text("زمان لازم (دقیقه)") },
             supportingText = { Text("با ثبت زمان و مهلت، پروژه وارد برنامهٔ مطالعه می‌شود.") },
             singleLine = true,
+            keyboardOptions =
+                androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+                    imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+                ),
         )
         OutlinedTextField(
             description,

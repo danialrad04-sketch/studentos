@@ -1,0 +1,7 @@
+# Student OS 3.0.1 / 2021 — development candidate
+
+Personal offline-first V3 adds native PDF/image libraries with saved reading progress, bookmarks and notes; projects with milestones and task links; a question bank with immutable timed attempts and self-rated short answers; shared effort-aware planning; integrated search and three home-screen widgets. Full checked ZIP backup includes documents; legacy JSON remains metadata-only. New data is local and is not advertised as cloud-synchronized.
+
+The five phone destinations, original stickers, Persian font, olive/petrol themes and floating navigation remain. Room migrates additively from13 to14. Existing package, production certificate, authentication/backend and public access policies remain. No paid API/provider is activated. APK ceiling is100,000,000bytes, independent of user-imported documents.
+
+Required gates: retained unit/UI/native regressions, migration and corrupt-backup rejection, both lints, backend/Firebase suites, signed/R8 install/update/PDF/practice/full archive round trip, and ZIP/ELF16KB checks. Comparable emulator startup, memory and frame data use source2.9.1; the selected2.4.2 source is not confirmed as the actual previously uploaded store binary. See workflow artifacts for exact-commit outcomes. This document is not itself passing evidence. Physical devices, live online providers and store approval require separate evidence. No publication is authorized by this candidate build.
