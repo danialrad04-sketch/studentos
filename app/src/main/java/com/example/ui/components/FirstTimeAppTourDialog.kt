@@ -24,6 +24,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -72,7 +74,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.luminance
 import com.example.ui.components.StudentDialog as Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.local.entity.StudentProfileEntity
@@ -93,17 +94,15 @@ fun FirstTimeAppTourDialog(
     onDismiss: () -> Unit,
     initialTargetGpa: Double? = null
 ) {
-    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-
-    val DarkOverlayBg = if (isDark) Color(0xFF0F172A) else Color(0xFFF8FAFC)
-    val TourCardBg = if (isDark) Color(0xFF1E293B) else Color(0xFFFFFFFF)
-    val TourBorder = if (isDark) Color(0xFF334155) else Color(0xFFE2E8F0)
-    val TourAccentPrimary = if (isDark) Color(0xFFC0CD8C) else Color(0xFF59652F)
-    val TourAccentSecondary = if (isDark) Color(0xFF38BDF8) else Color(0xFF0284C7)
-    val TourAccentSuccess = if (isDark) Color(0xFF10B981) else Color(0xFF059669)
-    val TourAccentWarning = if (isDark) Color(0xFFF59E0B) else Color(0xFFD97706)
-    val TourTextPrimary = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A)
-    val TourTextSecondary = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B)
+    val DarkOverlayBg = MaterialTheme.colorScheme.background
+    val TourCardBg = MaterialTheme.colorScheme.surfaceContainerLow
+    val TourBorder = MaterialTheme.colorScheme.outlineVariant
+    val TourAccentPrimary = MaterialTheme.colorScheme.primary
+    val TourAccentSecondary = MaterialTheme.colorScheme.secondary
+    val TourAccentSuccess = MaterialTheme.colorScheme.tertiary
+    val TourAccentWarning = MaterialTheme.colorScheme.tertiary
+    val TourTextPrimary = MaterialTheme.colorScheme.onSurface
+    val TourTextSecondary = MaterialTheme.colorScheme.onSurfaceVariant
 
     var currentStepIndex by remember { mutableIntStateOf(0) }
 
@@ -198,11 +197,13 @@ fun FirstTimeAppTourDialog(
             modifier = Modifier
                 .fillMaxSize()
                 .background(DarkOverlayBg.copy(alpha = 0.94f))
+                .imePadding()
                 .padding(horizontal = 16.dp, vertical = 24.dp),
             contentAlignment = Alignment.Center
         ) {
             Card(
                 modifier = Modifier
+                    .widthIn(max = 620.dp)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
                 shape = RoundedCornerShape(26.dp),
@@ -308,7 +309,7 @@ fun FirstTimeAppTourDialog(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(18.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
                             border = BorderStroke(1.dp, TourBorder)
                         ) {
                             Column(
@@ -328,15 +329,15 @@ fun FirstTimeAppTourDialog(
                                         unfocusedTextColor = TourTextPrimary,
                                         focusedBorderColor = TourAccentPrimary,
                                         unfocusedBorderColor = TourBorder,
-                                        focusedContainerColor = Color(0xFF1E293B),
-                                        unfocusedContainerColor = Color(0xFF1E293B),
+                                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                                         cursorColor = TourAccentPrimary
                                     )
                                 )
 
-                                Row(
+                                Column(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
                                     OutlinedTextField(
                                         value = studentNumber,
@@ -345,15 +346,15 @@ fun FirstTimeAppTourDialog(
                                         placeholder = { Text("40200000", fontSize = 10.5.sp, color = TourTextSecondary.copy(alpha = 0.6f)) },
                                         singleLine = true,
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        modifier = Modifier.weight(1f),
+                                        modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(12.dp),
                                         colors = OutlinedTextFieldDefaults.colors(
                                             focusedTextColor = TourTextPrimary,
                                             unfocusedTextColor = TourTextPrimary,
                                             focusedBorderColor = TourAccentPrimary,
                                             unfocusedBorderColor = TourBorder,
-                                            focusedContainerColor = Color(0xFF1E293B),
-                                            unfocusedContainerColor = Color(0xFF1E293B),
+                                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                                             cursorColor = TourAccentPrimary
                                         )
                                     )
@@ -365,15 +366,15 @@ fun FirstTimeAppTourDialog(
                                         placeholder = { Text("18.50", fontSize = 10.5.sp, color = TourTextSecondary.copy(alpha = 0.6f)) },
                                         singleLine = true,
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                        modifier = Modifier.weight(1f),
+                                        modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(12.dp),
                                         colors = OutlinedTextFieldDefaults.colors(
                                             focusedTextColor = TourTextPrimary,
                                             unfocusedTextColor = TourTextPrimary,
                                             focusedBorderColor = TourAccentPrimary,
                                             unfocusedBorderColor = TourBorder,
-                                            focusedContainerColor = Color(0xFF1E293B),
-                                            unfocusedContainerColor = Color(0xFF1E293B),
+                                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                                             cursorColor = TourAccentPrimary
                                         )
                                     )
@@ -392,8 +393,8 @@ fun FirstTimeAppTourDialog(
                                         unfocusedTextColor = TourTextPrimary,
                                         focusedBorderColor = TourAccentPrimary,
                                         unfocusedBorderColor = TourBorder,
-                                        focusedContainerColor = Color(0xFF1E293B),
-                                        unfocusedContainerColor = Color(0xFF1E293B),
+                                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                                         cursorColor = TourAccentPrimary
                                     )
                                 )
@@ -406,7 +407,7 @@ fun FirstTimeAppTourDialog(
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(14.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
                                     border = BorderStroke(0.8.dp, TourBorder)
                                 ) {
                                     Row(
@@ -494,20 +495,19 @@ fun FirstTimeAppTourDialog(
                             },
                             shape = RoundedCornerShape(14.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (currentStepIndex == tourSteps.size - 1) TourAccentSuccess else TourAccentPrimary
+                                containerColor = if (currentStepIndex == tourSteps.size - 1) TourAccentSuccess else TourAccentPrimary,
+                                contentColor = if (currentStepIndex == tourSteps.size - 1) MaterialTheme.colorScheme.onTertiary else MaterialTheme.colorScheme.onPrimary
                             )
                         ) {
                             Text(
                                 text = if (currentStepIndex == tourSteps.size - 1) "شروع کار با برنامه" else "مرحله بعد",
                                 fontSize = 12.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Icon(
                                 imageVector = if (currentStepIndex == tourSteps.size - 1) Icons.Default.CheckCircle else Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = null,
-                                tint = Color.White,
                                 modifier = Modifier.size(16.dp)
                             )
                         }

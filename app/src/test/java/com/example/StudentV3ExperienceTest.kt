@@ -95,6 +95,17 @@ class StudentV3ExperienceTest {
     }
 
     @Test
+    fun practiceDurationShowsInlineErrorAndRejectsOutOfRangeValues() {
+        mount(V3Section.PRACTICE)
+        val duration = rule.onNodeWithText("زمان آزمون (دقیقه)")
+        duration.scrollAboveNavigation(rule).performTextReplacement("۱۸۱")
+        rule.onNodeWithText("عددی بین ۵ تا ۱۸۰ وارد کن.").assertExists()
+        rule.onNodeWithTag("v3_start_practice").assertIsNotEnabled()
+        duration.performTextReplacement("۲۵")
+        rule.onNodeWithText("عددی بین ۵ تا ۱۸۰ وارد کن.").assertDoesNotExist()
+    }
+
+    @Test
     fun projectSaveAndStepCompletionWriteRealRoomData() {
         mount(V3Section.PROJECTS)
         rule.onNodeWithTag("v3_add_project").scrollAboveNavigation(rule).performClick()

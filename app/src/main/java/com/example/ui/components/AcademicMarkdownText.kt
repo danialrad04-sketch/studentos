@@ -316,14 +316,14 @@ private fun CodeBlockCard(codeText: String) {
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF0F172A))
-            .border(1.dp, Color(0xFF334155), RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp))
             .padding(10.dp)
     ) {
         Text(
             text = codeText.trim(),
             fontSize = 11.5.sp,
-            color = Color(0xFF38BDF8),
+            color = MaterialTheme.colorScheme.onSurface,
             lineHeight = 17.sp,
             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
             style = androidx.compose.ui.text.TextStyle(textDirection = TextDirection.Ltr)

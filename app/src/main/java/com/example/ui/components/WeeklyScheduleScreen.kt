@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -753,11 +754,11 @@ fun CourseCard(
                 if (onOpenWorkspace != null) {
                     Surface(
                         modifier = Modifier
-                            .height(34.dp)
+                            .heightIn(min = 48.dp)
                             .clickable { onOpenWorkspace() },
                         shape = RoundedCornerShape(10.dp),
                         color = accentColor,
-                        contentColor = Color.White
+                        contentColor = com.example.ui.theme.readableAccent(MaterialTheme.colorScheme.onPrimary, accentColor)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 10.dp),

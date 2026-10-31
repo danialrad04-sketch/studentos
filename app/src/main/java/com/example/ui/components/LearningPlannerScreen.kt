@@ -73,10 +73,7 @@ fun LearningPlannerScreen(
         modifier = Modifier.fillMaxWidth().testTag("learning_planner"),
     ) {
         Text("برنامهٔ مطالعه", style = MaterialTheme.typography.titleLarge)
-        Text(
-            "هدف درس و زمان آزادت را مشخص کن؛ برنامه با ثبت مطالعه تنظیم می‌شود.",
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        StudentInlineHelp("learning_intro", "هدف درس و زمان آزادت را مشخص کن؛ برنامه با ثبت مطالعه تنظیم می‌شود.")
         if (LearningStatus(state, onRetry)) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilledTonalButton(
