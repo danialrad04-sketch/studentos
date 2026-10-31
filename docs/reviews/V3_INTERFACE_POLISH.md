@@ -22,3 +22,9 @@ Final local Robolectric run: 49 tests, 0 failures/errors/skips. Covers Interface
 Inspected screenshots in `app/build/outputs/interface-polish/`: narrow 320dp light/dark dialog at 200% font, light tour form, light settings, profile form and dark project workspace. The first rendered dark dialog exposed a missing foreground token on its transparent Surface; fixed and rerendered successfully. Existing baseline settings/project images were compared before regeneration. Images are fresh captures, not replacements for golden comparisons.
 
 Physical-device keyboard/system-bar behavior has not been exercised in this local run. Native CI remains a separate check. Standalone `:app:lintDebug --no-parallel` passed with all checks enabled. The initial combined test/lint run encountered an internal IntelliJ/Lint service exception; no check or detector was disabled. No database schema, backend/authentication contract, signing identity, version number or sticker assets changed. No store release is published by this change.
+
+## 3.0.1 / 2021 layout follow-up
+
+Course cards now separate the full title, overflow menu, wrapping schedule/status badges, professor/location and workspace action. Task cards give the complete title/course/deadline their own rows and use an explicit completion checkbox. Shared summary titles/meta allow two lines; body height follows actual font metrics rather than a separate height cap. Course-workspace edit/delete actions move below the identity header.
+
+The weekly matrix sizes rows from their content instead of clipping everything into 76dp. Each overlapping course opens its own destination. Time-slot boundaries include real session start/end times, covering midday and early/late classes that the old fixed five slots omitted. Version and candidate packaging are now 3.0.1/2021; no publisher is dispatched. User explicitly authorized merge after checks and delivery of an installable APK.

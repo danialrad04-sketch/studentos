@@ -47,6 +47,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -569,6 +572,7 @@ fun WeeklyScheduleScreen(
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun CourseCard(
     course: CourseEntity,
@@ -579,16 +583,17 @@ fun CourseCard(
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     onOpenWorkspace: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val defaultPrimary = MaterialTheme.colorScheme.primary
-    val accentColor = remember(course.colorHex, defaultPrimary) {
-        try {
-            Color(android.graphics.Color.parseColor(course.colorHex))
-        } catch (_: Exception) {
-            defaultPrimary
+    val accentColor =
+        remember(course.colorHex, defaultPrimary) {
+            try {
+                Color(android.graphics.Color.parseColor(course.colorHex))
+            } catch (_: Exception) {
+                defaultPrimary
+            }
         }
-    }
 
     val displayStart = session?.start ?: "08:00"
     val displayEnd = session?.end ?: "10:00"
@@ -597,237 +602,130 @@ fun CourseCard(
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
-    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-
+    val surface = MaterialTheme.colorScheme.surfaceContainerLow
+    val ink = com.example.ui.theme.readableAccent(accentColor, surface)
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .tactileClickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDark) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surface
-        ),
-        border = androidx.compose.foundation.BorderStroke(
-            1.2.dp,
-            if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 2.dp else 3.5.dp, pressedElevation = 6.dp)
+        modifier = modifier.fillMaxWidth().tactileClickable { onClick() },
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = surface),
+        border =
+            androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            Modifier.fillMaxWidth().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // Colored accent line with rounded capsule
-                Box(
-                    modifier = Modifier
-                        .width(4.5.dp)
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(accentColor)
-                )
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        course.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    if (!isPrimarySession)
                         Text(
-                            text = course.name,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            "جلسهٔ دیگر این درس",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        if (!isPrimarySession) {
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
-                            ) {
-                                Text(
-                                    text = "جلسه ۲",
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        if (hasConflict) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.studentColors.attendanceCritical.copy(alpha = 0.18f),
-                                border = androidx.compose.foundation.BorderStroke(0.8.dp, MaterialTheme.studentColors.attendanceCritical.copy(alpha = 0.5f))
-                            ) {
-                                Text(
-                                    text = "تداخل زمانی",
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.studentColors.attendanceCritical,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
-
-                        // Notion-Style Property Pill
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = accentColor.copy(alpha = 0.15f),
-                            border = androidx.compose.foundation.BorderStroke(0.7.dp, accentColor.copy(alpha = 0.35f))
-                        ) {
-                            Text(
-                                text = "${course.units} واحد",
-                                style = NumericBadgeText,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = accentColor,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-
-                        // Professor or Location badge
-                        if (course.professor.isNotBlank()) {
-                            Text(
-                                text = "${course.professor}",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        } else if (displayLoc.isNotBlank()) {
-                            Text(
-                                text = "$displayLoc",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
                 }
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Time slot capsule with Plus Jakarta Sans and LTR protection
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = accentColor.copy(alpha = 0.12f),
-                    border = androidx.compose.foundation.BorderStroke(0.8.dp, accentColor.copy(alpha = 0.35f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Schedule,
-                            contentDescription = null,
-                            tint = accentColor,
-                            modifier = Modifier.padding(end = 4.dp).size(13.dp)
-                        )
-                        Text(
-                            text = "\u200E$displayStart - $displayEnd\u200E",
-                            style = NumericDisplayStat,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = accentColor
-                        )
-                    }
-                }
-
-                if (onOpenWorkspace != null) {
-                    Surface(
-                        modifier = Modifier
-                            .heightIn(min = 48.dp)
-                            .clickable { onOpenWorkspace() },
-                        shape = RoundedCornerShape(10.dp),
-                        color = accentColor,
-                        contentColor = com.example.ui.theme.readableAccent(MaterialTheme.colorScheme.onPrimary, accentColor)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.OpenInFull, contentDescription = null, modifier = Modifier.size(14.dp))
-                            Spacer(Modifier.width(5.dp))
-                            Text("کارپوشه درس", fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-
-                // Quick Action Context Menu (Edit / Delete / Open Workspace)
                 if (onEdit != null || onDelete != null || onOpenWorkspace != null) {
                     Box {
-                        IconButton(
-                            onClick = { showMenu = true },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = "عملیات درس",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(18.dp)
-                            )
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Default.MoreVert, "عملیات درس")
                         }
-
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            if (onOpenWorkspace != null) {
+                        DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                            onOpenWorkspace?.let { action ->
                                 DropdownMenuItem(
-                                    text = { Text("کارپوشه تخصصی ۳۶۰°", fontSize = 11.5.sp) },
+                                    text = { Text("کارپوشهٔ درس") },
                                     onClick = {
                                         showMenu = false
-                                        onOpenWorkspace()
+                                        action()
                                     },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.OpenInFull, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                                    }
                                 )
                             }
-                            if (onEdit != null) {
+                            onEdit?.let { action ->
                                 DropdownMenuItem(
-                                    text = { Text("ویرایش درس (ساعت، مکان، رنگ)", fontSize = 11.5.sp) },
+                                    text = { Text("ویرایش درس") },
                                     onClick = {
                                         showMenu = false
-                                        onEdit()
+                                        action()
                                     },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
-                                    }
                                 )
                             }
-                            if (onDelete != null) {
+                            if (onDelete != null)
                                 DropdownMenuItem(
-                                    text = { Text("حذف و اضافه (حذف درس)", fontSize = 11.5.sp, color = MaterialTheme.studentColors.attendanceCritical) },
+                                    text = {
+                                        Text("حذف درس", color = MaterialTheme.colorScheme.error)
+                                    },
                                     onClick = {
                                         showMenu = false
                                         showDeleteConfirm = true
                                     },
-                                    leadingIcon = {
-                                        Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = MaterialTheme.studentColors.attendanceCritical, modifier = Modifier.size(16.dp))
-                                    }
                                 )
-                            }
                         }
                     }
+                }
+            }
+            androidx.compose.foundation.layout.FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ) {
+                    Text(
+                        "\u200E$displayStart – $displayEnd\u200E",
+                        Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = ink,
+                    )
+                }
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ) {
+                    Text(
+                        "${course.units} واحد",
+                        Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                }
+                if (hasConflict)
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    ) {
+                        Text(
+                            "تداخل زمانی",
+                            Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
+            }
+            if (course.professor.isNotBlank())
+                Text(
+                    "استاد: ${course.professor}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            if (displayLoc.isNotBlank())
+                Text(
+                    "محل کلاس: $displayLoc",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            onOpenWorkspace?.let { action ->
+                FilledTonalButton(onClick = action, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Default.OpenInFull, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("کارپوشهٔ درس")
                 }
             }
         }
@@ -841,23 +739,20 @@ fun CourseCard(
                     imageVector = Icons.Default.WarningAmber,
                     contentDescription = null,
                     tint = MaterialTheme.studentColors.attendanceCritical,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(32.dp),
                 )
             },
             title = {
                 Text(
                     text = "حذف درس از برنامه هفتگی",
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             },
             text = {
-                StudentCardBody(
-                    text = "آیا می‌خواهید درس «${course.name}» را از برنامه ترم جاری حذف کنید؟",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 3,
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    "آیا می‌خواهید درس «${course.name}» را از برنامهٔ ترم جاری حذف کنید؟",
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             },
             confirmButton = {
@@ -866,8 +761,11 @@ fun CourseCard(
                         showDeleteConfirm = false
                         onDelete()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.studentColors.attendanceCritical),
-                    shape = RoundedCornerShape(10.dp)
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.studentColors.attendanceCritical
+                        ),
+                    shape = RoundedCornerShape(10.dp),
                 ) {
                     Text("حذف درس", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
@@ -877,61 +775,62 @@ fun CourseCard(
                     Text("انصراف", fontSize = 11.sp)
                 }
             },
-            shape = RoundedCornerShape(20.dp)
+            shape = RoundedCornerShape(20.dp),
         )
     }
 }
 
+internal fun weeklyGridSlots(items: List<ScheduleItem>): List<Pair<String, Pair<Int, Int>>> {
+    val boundaries = (listOf(480, 600, 720, 810, 930, 1050, 1170) +
+        items.filter { it.session.day in 0..6 && it.session.start.isNotBlank() && it.session.end.isNotBlank() }
+            .flatMap { listOf(DateTimeNormalizer.timeToMinutes(it.session.start), DateTimeNormalizer.timeToMinutes(it.session.end)) })
+        .distinct().sorted()
+    fun clock(value: Int) = "%02d:%02d".format(java.util.Locale.US, value / 60, value % 60)
+    return boundaries.zipWithNext().map { (start, end) -> "${clock(start)} – ${clock(end)}" to (start to end) }
+}
+
 @Composable
-fun WeeklyGridMatrixView(
-    scheduleItems: List<ScheduleItem>,
-    onCourseClick: (CourseEntity) -> Unit
-) {
+fun WeeklyGridMatrixView(scheduleItems: List<ScheduleItem>, onCourseClick: (CourseEntity) -> Unit) {
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
 
-    val timeSlots = listOf(
-        "08:00 - 10:00" to (8 * 60 to 10 * 60),
-        "10:00 - 12:00" to (10 * 60 to 12 * 60),
-        "13:30 - 15:30" to (13 * 60 + 30 to 15 * 60 + 30),
-        "15:30 - 17:30" to (15 * 60 + 30 to 17 * 60 + 30),
-        "17:30 - 19:30" to (17 * 60 + 30 to 19 * 60 + 30)
-    )
+    val timeSlots = remember(scheduleItems) { weeklyGridSlots(scheduleItems) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDark) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surface
-        ),
-        border = androidx.compose.foundation.BorderStroke(
-            1.2.dp,
-            if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 2.dp else 3.dp)
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    if (isDark) MaterialTheme.colorScheme.surfaceContainerHigh
+                    else MaterialTheme.colorScheme.surface
+            ),
+        border =
+            androidx.compose.foundation.BorderStroke(
+                1.2.dp,
+                if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                else MaterialTheme.colorScheme.outline.copy(alpha = 0.45f),
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 2.dp else 3.dp),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(12.dp)
+            modifier =
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(12.dp)
         ) {
             // Header Row: Days
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 // Time label column header
                 Box(
-                    modifier = Modifier
-                        .width(82.dp)
-                        .padding(6.dp),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.width(82.dp).padding(6.dp),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = "ساعت / روز",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
 
@@ -939,21 +838,26 @@ fun WeeklyGridMatrixView(
                     Surface(
                         modifier = Modifier.width(118.dp),
                         shape = RoundedCornerShape(10.dp),
-                        color = if (isDark) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f),
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp,
-                            if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-                        )
+                        color =
+                            if (isDark) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f),
+                        border =
+                            androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (isDark)
+                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                            ),
                     ) {
                         Box(
                             modifier = Modifier.padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = dayName,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
@@ -965,24 +869,27 @@ fun WeeklyGridMatrixView(
             // Time Slot Rows
             timeSlots.forEach { (slotLabel, timeRange) ->
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     // Time Label Cell
                     Surface(
-                        modifier = Modifier
-                            .width(82.dp)
-                            .height(76.dp),
+                        modifier = Modifier.width(82.dp).heightIn(min = 96.dp).fillMaxHeight(),
                         shape = RoundedCornerShape(10.dp),
-                        color = if (isDark) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
-                        border = androidx.compose.foundation.BorderStroke(
-                            1.dp,
-                            if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
-                        )
+                        color =
+                            if (isDark) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+                        border =
+                            androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (isDark)
+                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                            ),
                     ) {
                         Box(
                             modifier = Modifier.padding(4.dp),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = "\u200E$slotLabel\u200E",
@@ -990,95 +897,117 @@ fun WeeklyGridMatrixView(
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
                             )
                         }
                     }
 
                     // 5 Day Cells for this time slot
                     WEEKDAY_NAMES.forEachIndexed { dayIdx, _ ->
-                        val matchingItems = scheduleItems.filter { item ->
-                            if (item.session.day != dayIdx) return@filter false
-                            val sMin = DateTimeNormalizer.timeToMinutes(item.session.start)
-                            val eMin = DateTimeNormalizer.timeToMinutes(item.session.end)
-                            // check overlap with slot
-                            sMin < timeRange.second && eMin > timeRange.first
-                        }
+                        val matchingItems =
+                            scheduleItems.filter { item ->
+                                if (item.session.day != dayIdx) return@filter false
+                                val sMin = DateTimeNormalizer.timeToMinutes(item.session.start)
+                                val eMin = DateTimeNormalizer.timeToMinutes(item.session.end)
+                                // check overlap with slot
+                                sMin < timeRange.second && eMin > timeRange.first
+                            }
 
                         val firstItem = matchingItems.firstOrNull()
-                        val courseColor = if (firstItem != null) {
-                            try {
-                                Color(android.graphics.Color.parseColor(firstItem.course.colorHex))
-                            } catch (_: Exception) {
+                        val courseColor =
+                            if (firstItem != null) {
+                                try {
+                                    Color(
+                                        android.graphics.Color.parseColor(firstItem.course.colorHex)
+                                    )
+                                } catch (_: Exception) {
+                                    MaterialTheme.colorScheme.primary
+                                }
+                            } else {
                                 MaterialTheme.colorScheme.primary
                             }
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        }
 
                         Surface(
-                            modifier = Modifier
-                                .width(118.dp)
-                                .height(76.dp),
+                            modifier = Modifier.width(118.dp).heightIn(min = 96.dp).fillMaxHeight(),
                             shape = RoundedCornerShape(12.dp),
-                            color = if (matchingItems.isNotEmpty()) {
-                                courseColor.copy(alpha = if (isDark) 0.26f else 0.16f)
-                            } else {
-                                if (isDark) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f)
-                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
-                            },
-                            border = androidx.compose.foundation.BorderStroke(
-                                if (matchingItems.isNotEmpty()) 1.4.dp else 1.dp,
-                                if (matchingItems.isNotEmpty()) courseColor.copy(alpha = if (isDark) 0.85f else 0.70f)
-                                else if (isDark) MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.30f)
-                            )
+                            color =
+                                if (matchingItems.isNotEmpty()) {
+                                    courseColor.copy(alpha = if (isDark) 0.26f else 0.16f)
+                                } else {
+                                    if (isDark)
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.30f)
+                                    else
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
+                                },
+                            border =
+                                androidx.compose.foundation.BorderStroke(
+                                    if (matchingItems.isNotEmpty()) 1.4.dp else 1.dp,
+                                    if (matchingItems.isNotEmpty())
+                                        courseColor.copy(alpha = if (isDark) 0.85f else 0.70f)
+                                    else if (isDark)
+                                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+                                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.30f),
+                                ),
                         ) {
                             if (matchingItems.isEmpty()) {
                                 Box(contentAlignment = Alignment.Center) {
-                                    Text(text = "—", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                                    Text(
+                                        text = "—",
+                                        fontSize = 12.sp,
+                                        color =
+                                            MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                                alpha = 0.4f
+                                            ),
+                                    )
                                 }
                             } else {
                                 Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(6.dp)
-                                        .clickable { onCourseClick(firstItem!!.course) },
-                                    verticalArrangement = Arrangement.Center
+                                    modifier = Modifier.padding(8.dp),
+                                    verticalArrangement = Arrangement.Center,
                                 ) {
                                     matchingItems.forEach { item ->
-                                        val itemColor = try {
-                                            Color(android.graphics.Color.parseColor(item.course.colorHex))
-                                        } catch (_: Exception) {
-                                            MaterialTheme.colorScheme.primary
-                                        }
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        val itemColor =
+                                            try {
+                                                Color(
+                                                    android.graphics.Color.parseColor(
+                                                        item.course.colorHex
+                                                    )
+                                                )
+                                            } catch (_: Exception) {
+                                                MaterialTheme.colorScheme.primary
+                                            }
+                                        Column(
+                                            Modifier.fillMaxWidth()
+                                                .clickable { onCourseClick(item.course) }
+                                                .padding(vertical = 8.dp)
                                         ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(6.dp)
-                                                    .clip(CircleShape)
-                                                    .background(itemColor)
-                                            )
-                                            Text(
-                                                text = item.course.name,
-                                                fontSize = 10.5.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurface,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-                                        val sessionLoc = item.session.location
-                                        if (sessionLoc.isNotBlank()) {
-                                            Text(
-                                                text = "$sessionLoc",
-                                                fontSize = 9.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            ) {
+                                                Box(
+                                                    modifier =
+                                                        Modifier.size(6.dp)
+                                                            .clip(CircleShape)
+                                                            .background(itemColor)
+                                                )
+                                                Text(
+                                                    text = item.course.name,
+                                                    fontSize = 13.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    modifier = Modifier.weight(1f),
+                                                )
+                                            }
+                                            val sessionLoc = item.session.location
+                                            if (sessionLoc.isNotBlank()) {
+                                                Text(
+                                                    text = "$sessionLoc",
+                                                    fontSize = 12.sp,
+                                                    color =
+                                                        MaterialTheme.colorScheme.onSurfaceVariant,
+                                                )
+                                            }
                                         }
                                     }
                                 }
