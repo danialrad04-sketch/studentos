@@ -60,7 +60,7 @@ def navigation_boundary(xml, height):
     return min(candidates,key=lambda rect:rect[3]-rect[1])[1] if candidates else int(height*.94)
 
 
-def tap_text(text, scroll=False):
+def find_visible_text(text, scroll=False):
     width, height = map(int, re.findall(r'(\d+)x(\d+)', adb('shell', 'wm', 'size'))[-1])
     for _ in range(18 if scroll else 1):
         xml = dump()
@@ -68,9 +68,14 @@ def tap_text(text, scroll=False):
         if matches:
             bounds = list(map(int, re.findall(r'\d+', matches[0]['bounds'])))
             if not scroll or (bounds[1]>=0 and bounds[3]<=navigation_boundary(xml,height)-8):
-                tap_node(xml, lambda a: a.get('text') == text); return
+                return xml
         if scroll: adb('shell', 'input', 'swipe', width//2, int(height*.70), width//2, int(height*.34), 280)
     raise AssertionError(f'Visible control not found: {text}')
+
+
+def tap_text(text, scroll=False):
+    xml = find_visible_text(text, scroll)
+    tap_node(xml, lambda a: a.get('text') == text)
 
 
 def root_surface():
@@ -145,7 +150,9 @@ def main():
     wait_ui(lambda x: 'V3Project' in x);tap_text('باز کردن پروژه', scroll=True)
     wait_ui(lambda x: 'V3 milestone' in x);capture(args.output, 'v3-signed-project');print('PASS: restored project and milestone',flush=True)
     drawer('امتحان‌ها');wait_ui(lambda x: 'تمرین و آزمون' in x);tap_text('تمرین و آزمون')
-    wait_ui(lambda x: 'V3 question' in x);tap_text('شروع آزمون', scroll=True)
+    wait_ui(lambda x: 'بانک سؤال این درس' in x)
+    find_visible_text('V3 question', scroll=True)
+    tap_text('شروع آزمون', scroll=True)
     wait_ui(lambda x: 'Correct' in x and 'زمان باقی‌مانده' in x);tap_text('Correct')
     tap_text('پایان و بررسی پاسخ‌ها', scroll=True);wait_ui(lambda x: 'آزمون پایان یابد' in x);tap_text('پایان آزمون')
     wait_ui(lambda x: 'نتیجهٔ ثبت‌شده' in x and '1 درست' in x);capture(args.output, 'v3-signed-practice-result');print('PASS: actual practice choice and persisted result',flush=True)
