@@ -291,7 +291,8 @@ fun AddEditCourseDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "پیشنهاد عنوان‌های پرتکرار",
+                            text = "عنوان‌های پرتکرار",
+                            modifier = Modifier.weight(1f),
                             fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

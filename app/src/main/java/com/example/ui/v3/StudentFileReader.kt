@@ -102,6 +102,11 @@ fun StudentFileReader(
                 enabled = !busy,
                 label = { Text("شمارهٔ صفحه") },
                 singleLine = true,
+                keyboardOptions =
+                    androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+                        imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+                    ),
             )
             TextButton(
                 {

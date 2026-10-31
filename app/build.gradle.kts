@@ -18,8 +18,8 @@ android {
     buildConfigField("String", "PREMIUM_FUNCTIONS_REGION", "\"us-central1\"")
     minSdk = 24
     targetSdk = 36
-    versionCode = providers.gradleProperty("VERSION_CODE").orElse("2020").get().toInt()
-    versionName = providers.gradleProperty("VERSION_NAME").orElse("3.0.0").get()
+    versionCode = providers.gradleProperty("VERSION_CODE").orElse("2021").get().toInt()
+    versionName = providers.gradleProperty("VERSION_NAME").orElse("3.0.1").get()
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

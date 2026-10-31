@@ -28,17 +28,20 @@ fun StudentPracticeContent(
     var minutes by rememberSaveable(courseId) { mutableStateOf("25") }
     var archived by rememberSaveable(courseId) { mutableStateOf(false) }
     val busy by vm.busy.collectAsStateWithLifecycle()
+    val duration =
+        com.example.data.local.util.DateTimeNormalizer.normalizeDigits(minutes).trim().toIntOrNull()
+    val durationValid = duration != null && duration in 5..180
     val questions =
         state.data.questions.filter {
             it.courseId == courseId &&
                 it.isArchived == archived &&
                 normalizedStudentSearch(it.prompt).contains(normalizedStudentSearch(query))
         }
-    V3Card(
-        "بانک سؤال این درس",
-        "سؤال اضافه کن، آزمون بده و نکته‌های دشوار را به مرور بفرست.",
-        sticker = com.example.ui.components.AppEmojiType.TARGET,
-    ) {
+    V3Card("بانک سؤال این درس", sticker = com.example.ui.components.AppEmojiType.TARGET) {
+        com.example.ui.components.StudentInlineHelp(
+            "practice_intro",
+            "سؤال اضافه کن، آزمون بده و نکته‌های دشوار را به مرور بفرست.",
+        )
         FilledTonalButton(
             { editorId = UUID.randomUUID().toString() },
             enabled = writable,
@@ -89,8 +92,21 @@ fun StudentPracticeContent(
         OutlinedTextField(
             minutes,
             { minutes = it },
-            label = { Text("زمان آزمون، ۵ تا ۱۸۰ دقیقه") },
+            label = { Text("زمان آزمون (دقیقه)") },
+            enabled = !busy,
+            isError = minutes.isNotBlank() && !durationValid,
+            supportingText = {
+                Text(
+                    if (minutes.isNotBlank() && !durationValid) "عددی بین ۵ تا ۱۸۰ وارد کن."
+                    else "از ۵ تا ۱۸۰ دقیقه"
+                )
+            },
             singleLine = true,
+            keyboardOptions =
+                androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+                    imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+                ),
             modifier = Modifier.fillMaxWidth(),
         )
         Button(
@@ -99,13 +115,15 @@ fun StudentPracticeContent(
                     active =
                         startPractice(
                             courseId,
-                            com.example.data.local.util.DateTimeNormalizer.normalizeDigits(minutes)
-                                .toIntOrNull() ?: 0,
+                            duration ?: 0,
                         )
                 })
             },
             enabled =
-                writable && state.data.questions.any { it.courseId == courseId && !it.isArchived },
+                writable &&
+                    !busy &&
+                    durationValid &&
+                    state.data.questions.any { it.courseId == courseId && !it.isArchived },
             modifier = Modifier.testTag("v3_start_practice"),
         ) {
             Text("شروع آزمون")
@@ -223,6 +241,11 @@ private fun QuestionEditor(
                 label = { Text("گزینهٔ درست") },
                 supportingText = { Text("شمارهٔ گزینه را از ۱ وارد کن.") },
                 singleLine = true,
+                keyboardOptions =
+                    androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
+                        imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+                    ),
             )
         } else
             OutlinedTextField(

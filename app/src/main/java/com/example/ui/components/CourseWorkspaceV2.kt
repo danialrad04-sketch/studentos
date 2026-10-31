@@ -155,26 +155,17 @@ fun CourseWorkspaceDialogV2(
                         Text(
                             course.name,
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Black,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            fontWeight = FontWeight.Bold
                         )
-                    }
-                    IconButton(onClick = { onEditCourse(course) }, modifier = Modifier.minimumInteractiveComponentSize()) {
-                        Icon(Icons.Default.Edit, "ویرایش درس")
-                    }
-                    if (onDeleteCourse != null) {
-                        IconButton(onClick = { showDeleteConfirm = true }, modifier = Modifier.minimumInteractiveComponentSize()) {
-                            Icon(
-                                Icons.Default.DeleteOutline,
-                                "حذف درس",
-                                tint = MaterialTheme.studentColors.attendanceCritical
-                            )
-                        }
                     }
                     IconButton(onClick = dismissWindow, modifier = Modifier.minimumInteractiveComponentSize()) {
                         Icon(Icons.Default.ArrowBack, "بستن")
                     }
+                }
+
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = { onEditCourse(course) }) { Text("ویرایش درس") }
+                    if (onDeleteCourse != null) TextButton(onClick = { showDeleteConfirm = true }) { Text("حذف درس", color = MaterialTheme.colorScheme.error) }
                 }
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))

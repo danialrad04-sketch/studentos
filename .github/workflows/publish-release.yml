@@ -9,15 +9,15 @@ on:
       tag:
         description: "Release tag matching version_name"
         required: true
-        default: "v3.0.0"
+        default: "v3.0.1"
       version_code:
         description: "Must exceed every previously distributed build"
         required: true
-        default: "2020"
+        default: "2021"
       version_name:
         description: "Android version name"
         required: true
-        default: "3.0.0"
+        default: "3.0.1"
 
 permissions:
   contents: write

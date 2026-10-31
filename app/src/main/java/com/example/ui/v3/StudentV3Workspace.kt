@@ -25,6 +25,7 @@ import com.example.data.local.entity.*
 import com.example.data.v3.*
 import com.example.ui.StudentViewModel
 import com.example.ui.components.*
+import com.example.ui.theme.studentWorkspaceBackground
 import java.util.UUID
 
 enum class V3Section(val title: String) {
@@ -44,24 +45,24 @@ internal fun V3Card(
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (sticker != null) {
                 val palette = com.example.ui.theme.studentStickerColors(sticker)
-                Surface(
-                    shape = MaterialTheme.shapes.medium,
-                    color = palette.container,
-                    contentColor = palette.ink,
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Row(
-                        Modifier.fillMaxWidth().padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+                    Surface(
+                        shape = MaterialTheme.shapes.medium,
+                        color = palette.container,
+                        contentColor = palette.ink,
                     ) {
-                        AppEmoji(sticker, size = 32.dp)
-                        Text(
-                            title,
-                            Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                        )
+                        AppEmoji(sticker, size = 32.dp, modifier = Modifier.padding(10.dp))
                     }
+                    Text(
+                        title,
+                        Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
                 }
             } else
                 Text(
@@ -634,25 +635,40 @@ internal fun StudentV3Dialog(
     requestClose: ((() -> Unit) -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    StudentDialog(onDismiss, DialogProperties(usePlatformDefaultWidth = false)) {
+    StudentDialog(
+        onDismiss,
+        DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
         val dismiss = LocalStudentModalDismiss.current ?: onDismiss
         val close = { if (requestClose != null) requestClose.invoke(dismiss) else dismiss() }
         androidx.activity.compose.BackHandler(enabled = requestClose != null, onBack = close)
-        Surface(Modifier.fillMaxSize().testTag(tag), color = MaterialTheme.colorScheme.background) {
-            Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
+        Surface(
+            Modifier.fillMaxSize().testTag(tag).studentWorkspaceBackground(),
+            color = androidx.compose.ui.graphics.Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.onBackground,
+        ) {
+            Column(
+                Modifier.fillMaxSize().safeDrawingPadding().imePadding(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 Row(
-                    Modifier.fillMaxWidth().padding(8.dp),
+                    Modifier.widthIn(max = 840.dp).fillMaxWidth().padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(close) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "بازگشت") }
                     Text(
                         title,
+                        modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                     )
                 }
                 Column(
-                    Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp),
+                    Modifier.weight(1f)
+                        .widthIn(max = 840.dp)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     content()
