@@ -330,8 +330,6 @@ fun CourseWorkspaceDialogV2(
                                             Text(
                                                 exam.location,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                                 modifier = Modifier.weight(1f)
                                             )
                                         }
@@ -369,13 +367,12 @@ fun CourseWorkspaceDialogV2(
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             if (course.professor.isNotBlank()) {
-                                StudentCardMeta("استاد: " + course.professor, style = MaterialTheme.typography.bodyMedium)
+                                Text("استاد: " + course.professor, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             if (!course.notes.isNullOrBlank()) {
-                                StudentCardBody(
+                                Text(
                                     text = course.notes.orEmpty(),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    maxLines = 3,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }

@@ -35,6 +35,7 @@ fun StudentFileReader(
             mutableStateOf(bookmarks.find { it.page == page }?.note.orEmpty())
         }
     var noteDirty by rememberSaveable(file.id, page) { mutableStateOf(false) }
+    var pageInputError by rememberSaveable(file.id) { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var reload by remember { mutableIntStateOf(0) }
     var zoom by remember(page) { mutableFloatStateOf(1f) }
@@ -97,10 +98,12 @@ fun StudentFileReader(
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(
                 pageInput,
-                { pageInput = it },
+                { pageInput = it; pageInputError = false },
                 modifier = Modifier.weight(1f),
                 enabled = !busy,
                 label = { Text("شمارهٔ صفحه") },
+                isError = pageInputError,
+                supportingText = if (pageInputError) { { Text("شماره‌ای از ۱ تا ${file.pageCount} وارد کن.") } } else null,
                 singleLine = true,
                 keyboardOptions =
                     androidx.compose.foundation.text.KeyboardOptions(
@@ -111,10 +114,10 @@ fun StudentFileReader(
             TextButton(
                 {
                     val number =
-                        com.example.data.local.util.DateTimeNormalizer.normalizeDigits(pageInput)
+                        com.example.data.local.util.DateTimeNormalizer.normalizeDigits(pageInput).trim()
                             .toIntOrNull()
-                    if (number != null && number in 1..file.pageCount) go(number - 1)
-                    else error = "شمارهٔ صفحه معتبر نیست."
+                    pageInputError = number == null || number !in 1..file.pageCount
+                    if (!pageInputError) go(number!! - 1)
                 },
                 enabled = !busy,
             ) {

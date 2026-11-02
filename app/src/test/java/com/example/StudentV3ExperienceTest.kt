@@ -217,6 +217,15 @@ class StudentV3ExperienceTest {
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
+        rule.onNodeWithText("شمارهٔ صفحه").performTextInput("۹۹۹")
+        rule.onNodeWithText("برو").performClick()
+        rule.onNodeWithText("شماره‌ای از ۱ تا 1 وارد کن.").assertExists()
+        rule.onNodeWithText("صفحه نمایش داده نشد").assertDoesNotExist()
+        rule.onNodeWithContentDescription("صفحهٔ 1 از ${row.title}").assertExists()
+        rule.onNodeWithTag("v3_reader").captureRoboImage("build/outputs/visual-review/reader-invalid-page-light.png")
+        rule.onNodeWithText("شمارهٔ صفحه").performTextReplacement(" ۱ ")
+        rule.onNodeWithText("برو").performClick()
+        rule.onNodeWithText("شماره‌ای از ۱ تا 1 وارد کن.").assertDoesNotExist()
         rule
             .onNodeWithTag("v3_page_note")
             .scrollAboveNavigation(rule)
