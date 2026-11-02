@@ -147,12 +147,11 @@ fun AttendanceRadarScreen(
 
     Column(modifier = modifier.fillMaxWidth()) {
         // Section Header
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "پایش حضور و غیاب",
                     style = MaterialTheme.typography.titleMedium,
@@ -163,8 +162,7 @@ fun AttendanceRadarScreen(
                     text = "مدیریت استرس غیبت و محافظت از کارت حضور در جلسه امتحانات",
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+
                 )
             }
 

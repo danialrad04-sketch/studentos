@@ -102,11 +102,12 @@ fun CourseWorkspaceDialogV2(
     var taskDate by remember { mutableStateOf("") }
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
-    val accent = remember(course.colorHex) {
+    val rawAccent = remember(course.colorHex) {
         runCatching {
             Color(android.graphics.Color.parseColor(course.colorHex))
         }.getOrDefault(AcademicOlive)
     }
+    val accent = com.example.ui.theme.readableAccent(rawAccent, MaterialTheme.colorScheme.background)
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val openTasks = tasks.count { !it.isCompleted }
     val completedTasks = tasks.count { it.isCompleted }
@@ -330,8 +331,6 @@ fun CourseWorkspaceDialogV2(
                                             Text(
                                                 exam.location,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                                 modifier = Modifier.weight(1f)
                                             )
                                         }
@@ -369,13 +368,12 @@ fun CourseWorkspaceDialogV2(
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             if (course.professor.isNotBlank()) {
-                                StudentCardMeta("استاد: " + course.professor, style = MaterialTheme.typography.bodyMedium)
+                                Text("استاد: " + course.professor, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             if (!course.notes.isNullOrBlank()) {
-                                StudentCardBody(
+                                Text(
                                     text = course.notes.orEmpty(),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    maxLines = 3,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }

@@ -33,6 +33,23 @@ import org.robolectric.annotation.GraphicsMode
 class StudentWorkspaceExperienceTest {
     @get:Rule val rule=createComposeRule()
     private val course=CourseEntity(id="math",name="ریاضی مهندسی",units=3,colorHex="#FFFF00")
+    @Test fun courseDetailsShowTheWholeNoteAndExamLocation() {
+        val note = (1..6).joinToString("\n") { "سطر $it از یادداشت کامل درس" }
+        val location = "ساختمان مرکزی دانشگاه، دانشکدهٔ مهندسی، طبقهٔ سوم، انتهای راهرو، سالن امتحانات شمارهٔ ۲۰۴"
+        rule.setContent { StudentOsTheme(darkTheme = false) {
+            CourseWorkspaceDialogV2(course.copy(notes = note), null, null, emptyList(),
+                ExamItem("exam", course.name, "۱۴۰۵/۰۹/۱۰", "09:00", location, 3),
+                onDismiss = {}, onEditCourse = {}, onChangeAttendance = {}, onToggleTask = {}, onAddTask = { _, _ -> }, onStartFocus = {})
+        } }
+        for (text in listOf(location, note)) {
+            rule.onNode(hasScrollToIndexAction()).performScrollToNode(hasText(text))
+            val node = rule.onNodeWithText(text, useUnmergedTree = true)
+            val layouts = mutableListOf<androidx.compose.ui.text.TextLayoutResult>()
+            node.performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.GetTextLayoutResult) { it(layouts) }
+            assertFalse(layouts.single().hasVisualOverflow)
+        }
+        rule.onAllNodes(isDialog()).onFirst().captureRoboImage("build/outputs/visual-review/course-details-full-note-light.png")
+    }
     @Test fun failedNoteSaveKeepsTheDraftAndOnlySuccessfulAcknowledgementClosesIt() {
         var complete:((Boolean)->Unit)?=null
         rule.setContent { StudentOsTheme { Surface(Modifier.fillMaxSize(),color=androidx.compose.material3.MaterialTheme.colorScheme.background) { Column(Modifier.verticalScroll(rememberScrollState())) {

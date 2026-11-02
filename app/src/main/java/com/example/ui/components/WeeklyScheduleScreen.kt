@@ -89,6 +89,7 @@ data class ScheduleItem(
     val isPrimary: Boolean = true
 )
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun WeeklyScheduleScreen(
     courses: List<CourseEntity>,
@@ -217,23 +218,19 @@ fun WeeklyScheduleScreen(
             border = CardDefaults.outlinedCardBorder().copy(width = 0.9.dp)
         ) {
             Column(modifier = Modifier.padding(14.dp)) {
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f, fill = false)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
                                 text = "برنامه هفتگی و انتخاب واحد",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
                             )
                             Surface(
                                 shape = RoundedCornerShape(10.dp),
@@ -256,14 +253,12 @@ fun WeeklyScheduleScreen(
                             text = "کلاس‌ها به ترتیب ساعت شروع",
                             fontSize = 10.5.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    androidx.compose.foundation.layout.FlowRow(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         // View mode toggle chips (Day / List / Matrix Grid)
                         Surface(
@@ -275,7 +270,7 @@ fun WeeklyScheduleScreen(
                                     onClick = { viewMode = 0 },
                                     modifier = Modifier
                                         .minimumInteractiveComponentSize()
-                                        .size(30.dp)
+                                        .size(48.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(if (viewMode == 0) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                                 ) {
@@ -289,7 +284,7 @@ fun WeeklyScheduleScreen(
                                 IconButton(
                                     onClick = { viewMode = 1 },
                                     modifier = Modifier
-                                        .size(30.dp)
+                                        .size(48.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(if (viewMode == 1) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                                 ) {
@@ -303,7 +298,7 @@ fun WeeklyScheduleScreen(
                                 IconButton(
                                     onClick = { viewMode = 2 },
                                     modifier = Modifier
-                                        .size(30.dp)
+                                        .size(48.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(if (viewMode == 2) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                                 ) {
