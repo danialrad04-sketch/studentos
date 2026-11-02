@@ -601,12 +601,11 @@ fun EditGradeDialog(
                 border = BorderStroke(1.dp, if (totalScore >= 10) MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.3f) else Rose600.copy(alpha = 0.3f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 14.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
                         text = "نمره نهایی برآوردشده:",
@@ -622,6 +621,7 @@ fun EditGradeDialog(
                 }
             }
 
+        }
             Spacer(modifier = Modifier.height(20.dp))
 
             Row(
@@ -649,7 +649,6 @@ fun EditGradeDialog(
                     )
                 }
             }
-        }
     }
 }
 

@@ -49,6 +49,15 @@ class GradeLayoutPolishTest {
         assertTrue(edited)
         rule.onRoot().captureRoboImage("build/outputs/visual-review/grade-layout-$dark-$scale.png")
     }
+    @Test @Config(sdk = [35], qualifiers = "w320dp-h480dp-xxhdpi")
+    fun gradeSaveStaysVisibleInShortWindow() {
+        org.robolectric.RuntimeEnvironment.setFontScale(2f)
+        rule.setContent { StudentOsTheme(darkTheme = true) {
+            com.example.ui.components.EditGradeDialog(GradeEntity(courseName = "ریاضی مهندسی"), {}, { _, _ -> })
+        } }
+        rule.onNodeWithText("ثبت نمره").assertIsDisplayed()
+        rule.onAllNodes(isDialog()).onFirst().captureRoboImage("build/outputs/visual-review/grade-editor-short-large.png")
+    }
     @Test fun lightNarrowCard() = render(false, 1f)
     @Test fun darkLargeCard() = render(true, 2f)
 }
