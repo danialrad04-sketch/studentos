@@ -281,12 +281,11 @@ fun PastSemestersHistoryDialog(
                                                 containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
                                             )
                                         ) {
-                                            Row(
+                                            Column(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .padding(horizontal = 12.dp, vertical = 8.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.SpaceBetween
+                                                verticalArrangement = Arrangement.spacedBy(12.dp)
                                             ) {
                                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                                     Box(
@@ -310,9 +309,8 @@ fun PastSemestersHistoryDialog(
                                                     )
                                                 }
 
-                                                Row(
-                                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                                    verticalAlignment = Alignment.CenterVertically
+                                                Column(
+                                                    verticalArrangement = Arrangement.spacedBy(12.dp)
                                                 ) {
                                                     OutlinedTextField(
                                                         value = item.units,
@@ -320,7 +318,7 @@ fun PastSemestersHistoryDialog(
                                                             pastSummaries[termIndex] = item.copy(units = newVal.filter { it.isDigit() })
                                                         },
                                                         label = { Text("واحد", style = MaterialTheme.typography.labelSmall) },
-                                                        modifier = Modifier.width(76.dp),
+                                                        modifier = Modifier.fillMaxWidth(),
                                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                                         singleLine = true,
                                                         shape = RoundedCornerShape(8.dp)
@@ -332,7 +330,7 @@ fun PastSemestersHistoryDialog(
                                                             pastSummaries[termIndex] = item.copy(gpa = newVal)
                                                         },
                                                         label = { Text("معدل", style = MaterialTheme.typography.labelSmall) },
-                                                        modifier = Modifier.width(84.dp),
+                                                        modifier = Modifier.fillMaxWidth(),
                                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                                         singleLine = true,
                                                         shape = RoundedCornerShape(8.dp)

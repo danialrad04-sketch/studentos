@@ -136,7 +136,7 @@ fun GradesScreen(
                     },
                     shape = StudentShapeTokens.Compact,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                    modifier = Modifier.height(42.dp)
+                    modifier = Modifier.heightIn(min = 48.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Share,
@@ -428,170 +428,41 @@ fun GradesScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun CourseGradeCard(
+internal fun CourseGradeCard(
     grade: GradeEntity,
     totalScore: Double,
     isPassed: Boolean,
     onEdit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 122.dp, max = 182.dp)
-            .clickable { onEdit() },
-        shape = RoundedCornerShape(20.dp),
+        modifier = modifier.fillMaxWidth().clickable { onEdit() },
+        shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        shadowElevation = if (isDark) 0.dp else 1.5.dp,
-        border = BorderStroke(
-            1.dp,
-            if (isPassed) {
-                if (isDark) Color(0x33FFFFFF) else Color(0xFFCBD5E1)
-            } else {
-                MaterialTheme.colorScheme.error.copy(alpha = 0.65f)
-            }
-        )
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            // Header Row: Course Name, Units Badge, Pass Status Badge
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = grade.courseName,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                    ) {
-                        Text(
-                            text = "${grade.units} واحد",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(grade.courseName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer) {
+                    Text("${grade.units} واحد", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), style = MaterialTheme.typography.labelLarge)
                 }
-
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = if (isPassed) MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.16f) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)
-                ) {
-                    Text(
-                        text = if (isPassed) "قبولی قطعی ✅" else "مردود ❌",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isPassed) MaterialTheme.studentColors.attendanceSafe else MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
+                Surface(shape = MaterialTheme.shapes.small,
+                    color = if (isPassed) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.errorContainer,
+                    contentColor = if (isPassed) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onErrorContainer) {
+                    Text(if (isPassed) "قبول" else "مردود", Modifier.padding(horizontal = 12.dp, vertical = 8.dp), style = MaterialTheme.typography.labelLarge)
                 }
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Score Metrics Row: Midterm (6) | Final (14) | Total (20)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Midterm Score Pill
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(StudentShapeTokens.Compact)
-                        .background(MaterialTheme.colorScheme.surfaceContainer)
-                        .padding(vertical = 8.dp, horizontal = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "بارم میان‌ترم",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = String.format(Locale.US, "%.1f", grade.midtermGrade),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-
-                // Final Score Pill
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainer)
-                        .padding(vertical = 8.dp, horizontal = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "بارم پایان‌ترم",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = String.format(Locale.US, "%.1f", grade.finalGrade),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-
-                // Total Final Grade Pill
-                Box(
-                    modifier = Modifier
-                        .weight(1.2f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(if (isPassed) MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.12f) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f))
-                        .border(
-                            0.8.dp,
-                            if (isPassed) MaterialTheme.studentColors.attendanceSafe.copy(alpha = 0.3f) else MaterialTheme.colorScheme.error.copy(alpha = 0.3f),
-                            RoundedCornerShape(12.dp)
-                        )
-                        .padding(vertical = 8.dp, horizontal = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "نمره نهایی",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (isPassed) MaterialTheme.studentColors.attendanceSafe else MaterialTheme.colorScheme.error,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "${String.format(Locale.US, "%.1f", totalScore)} از ۲۰",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Black,
-                            color = if (isPassed) MaterialTheme.studentColors.attendanceSafe else MaterialTheme.colorScheme.error
-                        )
-                    }
+            val values = listOf("نمرهٔ میان‌ترم" to grade.midtermGrade, "نمرهٔ پایان‌ترم" to grade.finalGrade, "نمرهٔ کل از ۲۰" to totalScore)
+            values.forEach { (label, value) ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(String.format(Locale.US, "%.1f", value), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
             }
+            Text("ویرایش نمره", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         }
     }
 }
